@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motorjellemző-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="D">Furat D</label><input id="D" type="range" min="60" max="100" step="0.5" value="82" aria-label="Furat D"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="s">Löket s</label><input id="s" type="range" min="60" max="100" step="0.5" value="93" aria-label="Löket s"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="i">Hengerszám i</label><input id="i" type="range" min="1" max="8" step="1" value="4" aria-label="Hengerszám i"><output id="i_o" for="i"></output></div>
+<div class="row"><label for="Vc">Kompressziótérfogat V_c</label><input id="Vc" type="range" min="30" max="80" step="0.5" value="50" aria-label="Kompressziótérfogat V_c"><output id="Vc_o" for="Vc"></output></div>
+<div class="row"><label for="pe">Effektív középnyomás p_e</label><input id="pe" type="range" min="5" max="25" step="0.5" value="12" aria-label="Effektív középnyomás p_e"><output id="pe_o" for="pe"></output></div>
+<div class="row"><label for="n">Fordulatszám n</label><input id="n" type="range" min="1000" max="6500" step="50" value="4000" aria-label="Fordulatszám n"><output id="n_o" for="n"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Motorjellemző-kalkulátor: furat, löket, hengerszám, kompressziótérfogat, középnyomás és fordulatszám alapján lökettérfogat, sűrítési arány, teljesítmény és nyomaték."></svg>
+<p class="small">Idealizált számítás a fejezet képleteivel; valós motornál p_e a fordulatszámmal változik (jelleggörbe). Ellenőrző értékek: 82/93 mm, 4 henger → 491,1 cm³, 1964 cm³; p_e = 12 bar, 2,0 l, 4000 1/min → 80 kW, 191 Nm.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"D":"mm", "s":"mm", "i":"", "Vc":"cm³", "pe":"bar", "n":"1/min"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const Vh=Math.pow(v.D/10,2)*Math.PI/4*(v.s/10), VH=v.i*Vh, E=(Vh+v.Vc)/v.Vc, P=v.pe*VH/1000*v.n/1200, M=9549*P/v.n;
+const L=css("--line"),F=css("--fg");
+// hengervázlat: furat és löket méretarányosan (1 mm = 1,5 px), V_c sötétebb sáv
+const k=1.5, cx=110, top=40, w=v.D*k, hc=v.Vc/(Math.PI*Math.pow(v.D/10,2)/4)*10*k, hs=v.s*k;
+el("rect",{x:cx-w/2-8,y:top,width:w+16,height:14,fill:css("--grid"),stroke:L});
+el("rect",{x:cx-w/2,y:top+14,width:w,height:hc,fill:css("--grid"),stroke:"none"});
+el("rect",{x:cx-w/2,y:top+14+hc,width:w,height:hs,fill:"none",stroke:F,"stroke-dasharray":"4 3"});
+el("line",{x1:cx-w/2,y1:top+14,x2:cx-w/2,y2:top+14+hc+hs+30,stroke:L,"stroke-width":2});
+el("line",{x1:cx+w/2,y1:top+14,x2:cx+w/2,y2:top+14+hc+hs+30,stroke:L,"stroke-width":2});
+el("rect",{x:cx-w/2+2,y:top+14+hc+hs,width:w-4,height:26,fill:"#ccc",stroke:L});
+el("text",{x:cx,y:top+14+hc/2+4,"font-size":10,"text-anchor":"middle"},"V_c");
+el("text",{x:cx,y:top+14+hc+hs/2+4,"font-size":11,"text-anchor":"middle"},"V_h");
+el("text",{x:cx+w/2+12,y:top+14+hc+4,"font-size":10},"FHP");el("text",{x:cx+w/2+12,y:top+14+hc+hs+4,"font-size":10},"AHP");
+el("text",{x:cx,y:top+14+hc+hs+48,"font-size":11,"text-anchor":"middle"},"D = "+fmt(v.D,1)+" mm, s = "+fmt(v.s,1)+" mm");
+// P(n), M(n)
+const X0=285,X1=520,Y0=260,Y1=30,X=n=>X0+(X1-X0)*(n-1000)/5500;
+const Pmax=Math.max(60,v.pe*VH/1000*6500/1200*1.1), Mmax=Math.max(100,M*1.4), YP=p=>Y0-(Y0-Y1)*p/Pmax, YM=m=>Y0-(Y0-Y1)*m/Mmax;
+el("line",{x1:X0,y1:Y0,x2:X1,y2:Y0,stroke:L});el("line",{x1:X0,y1:Y0,x2:X0,y2:Y1,stroke:L});el("line",{x1:X1,y1:Y0,x2:X1,y2:Y1,stroke:L});
+for(let q=1000;q<=6500;q+=1000)el("text",{x:X(q),y:Y0+14,"font-size":10,"text-anchor":"middle"},q);
+el("text",{x:(X0+X1)/2,y:Y0+30,"font-size":11,"text-anchor":"middle"},"n (1/min)");
+for(let j=0;j<=4;j++){const p=Pmax*j/4,m=Mmax*j/4;el("text",{x:X0-4,y:YP(p)+4,"font-size":10,"text-anchor":"end"},fmt(p,0));el("text",{x:X1+4,y:YM(m)+4,"font-size":10,"text-anchor":"start"},fmt(m,0));}
+el("text",{x:X0-4,y:Y1-8,"font-size":10,"text-anchor":"start"},"P_e (kW) – folytonos");
+el("text",{x:X1,y:Y1-8,"font-size":10,"text-anchor":"end"},"M (Nm) – szaggatott");
+el("path",{d:"M"+X(1000)+" "+YP(v.pe*VH/1000*1000/1200)+"L"+X(6500)+" "+YP(v.pe*VH/1000*6500/1200),stroke:F,"stroke-width":2.2,fill:"none"});
+el("path",{d:"M"+X(1000)+" "+YM(M)+"L"+X(6500)+" "+YM(M),stroke:css("--hl2"),"stroke-width":2.2,"stroke-dasharray":"7 4",fill:"none"});
+el("circle",{cx:X(v.n),cy:YP(P),r:5,fill:css("--bg"),stroke:F,"stroke-width":2});
+el("rect",{x:X(v.n)-5,y:YM(M)-5,width:10,height:10,fill:css("--bg"),stroke:css("--hl2"),"stroke-width":2});
+status("V<sub>h</sub> = <b>"+fmt(Vh,1)+" cm³</b>, V<sub>H</sub> = <b>"+fmt(VH,1)+" cm³</b> ("+fmt(VH/1000,2)+" l), ε = <b>"+fmt(E,2)+"</b><br>P<sub>e</sub> = <b>"+fmt(P,1)+" kW</b>, M = <b>"+fmt(M,1)+" Nm</b> (állandó p<sub>e</sub> mellett M nem függ n-től, P<sub>e</sub> arányos n-nel).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

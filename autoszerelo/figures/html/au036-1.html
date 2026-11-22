@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Görgős szabadonfutó</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="irany">irány</label><select id="irany" aria-label="irány"><option value="zar" selected>záró irány</option><option value="szabad">szabadonfutó irány</option></select></div>
+<div class="row"><label for="fut">lejátszás</label><input id="fut" type="checkbox" checked aria-label="lejátszás"></div>
+<div class="row"><label for="alk">alkalmazás</label><select id="alk" aria-label="alkalmazás"><option value="indito" selected>indítómotor</option><option value="gen">generátor-szabadonfutó tárcsa</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 330" role="img" aria-label="Görgős szabadonfutó: egyik irányban a görgők az ékrésbe szorulnak és összekapcsolják a gyűrűket, másik irányban kiszabadulnak."></svg>
+<p class="small">Sematikus animáció; az ék emelkedése eltúlozva. A szabadonfutás iránya a beépítéstől függ.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+svg = FIG.svg;
+if (!window.T){ window.A=0; window.B=0; window.T=setInterval(draw,50); }
+const N=5, RI=60, RW=91, RN=80, RO=126, RR=12, SEC=72, RAMP=60, cx0=170, cy0=165;
+const lock = v.irany==="zar";
+if (v.fut){ window.A += lock? 3 : -3; if(lock) window.B += 3; }
+const A=window.A, B=window.B;   // fok: belső és külső gyűrű elfordulása
+const ln=css("--line"), fg=css("--fg");
+function rc(t){ let f=((t%SEC)+SEC)%SEC; return f<=RAMP ? RW-(RW-RN)*f/RAMP : RN+(RW-RN)*(f-RAMP)/(SEC-RAMP); }
+function P(r,t){ const a=-t*Math.PI/180; return [cx0+r*Math.cos(a), cy0+r*Math.sin(a)]; }
+// külső gyűrű
+let d=""; for(let i=0;i<=360;i+=2){ const p=P(rc(i),i+B); d+=(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1);}
+el("circle",{cx:cx0,cy:cy0,r:RO,fill:css("--grid"),stroke:ln,"stroke-width":2});
+el("path",{d:d+"Z",fill:css("--bg"),stroke:ln,"stroke-width":2});
+// belső gyűrű jelölővel
+el("circle",{cx:cx0,cy:cy0,r:RI,fill:"none",stroke:ln,"stroke-width":2});
+const m=P(RI-12,A); el("circle",{cx:m[0],cy:m[1],r:5,fill:css("--hl")});
+const mb=P(RO-8,B+36); el("circle",{cx:mb[0],cy:mb[1],r:5,fill:css("--hl2")});
+const a0 = lock ? (RW-(RI+2*RR))/(RW-RN)*RAMP : 20;
+for(let k=0;k<N;k++){ const t=k*SEC+a0+B; const p=P(RI+RR,t);
+  el("circle",{cx:p[0],cy:p[1],r:RR,fill:fg});
+  const s=P(RI+RR,k*SEC+2+B); el("line",{x1:s[0],y1:s[1],x2:p[0],y2:p[1],stroke:ln,"stroke-dasharray":"3 2","stroke-width":1.5}); }
+el("text",{x:330,y:40,"font-size":14,"font-weight":"bold"}, lock?"Záró irány":"Szabadonfutó irány");
+el("text",{x:330,y:62,"font-size":13}, lock?"belső gyűrű ↺: a görgők az ékbe szorulnak":"belső gyűrű ↻: a görgők a tág résbe gördülnek");
+el("text",{x:330,y:82,"font-size":13}, lock?"→ a külső gyűrű együtt forog":"→ a külső gyűrű áll, a rugók összenyomódnak");
+el("text",{x:330,y:118,"font-size":12,fill:css("--muted")},"kék pont: belső gyűrű, narancs pont: külső gyűrű");
+const app = {
+ indito:"Indítómotor: indításkor az indítómotor fogaskereke hajtja a lendkereket (záró irány). Amikor a motor beindul, a lendkerék gyorsabban forgatja a fogaskereket – a szabadonfutó old, így a motor nem pörgeti túl az indítómotort.",
+ gen:"Generátor-szabadonfutó tárcsa: gyorsításkor a szíjtárcsa hajtja a generátort (záró irány); lassításkor és a főtengely forgási egyenetlenségeinél a generátor forgórésze a tehetetlensége miatt tovább fut (szabadonfutó irány), így kisebb a szíj terhelése."};
+status(app[v.alk]);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

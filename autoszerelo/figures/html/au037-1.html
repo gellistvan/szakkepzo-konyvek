@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szíj- és fogaskerékhajtás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mod">hajtás</label><select id="mod" aria-label="hajtás"><option value="szij" selected>szíjhajtás (d₁, d₂, s)</option><option value="fog">fogaskerékpár (z₁, z₂)</option><option value="ket">kétfokozatú (i₁, i₂)</option></select></div>
+<div class="row"><label for="d1">d₁ hajtó tárcsa</label><input id="d1" type="range" min="40" max="300" step="5" value="150" aria-label="d₁ hajtó tárcsa"><output id="d1_o" for="d1"></output></div>
+<div class="row"><label for="d2">d₂ hajtott tárcsa</label><input id="d2" type="range" min="40" max="300" step="5" value="60" aria-label="d₂ hajtott tárcsa"><output id="d2_o" for="d2"></output></div>
+<div class="row"><label for="s">csúszás s</label><input id="s" type="range" min="0" max="0.1" step="0.01" value="0.02" aria-label="csúszás s"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="z1">z₁ hajtó fogszám</label><input id="z1" type="range" min="10" max="80" step="1" value="20" aria-label="z₁ hajtó fogszám"><output id="z1_o" for="z1"></output></div>
+<div class="row"><label for="z2">z₂ hajtott fogszám</label><input id="z2" type="range" min="10" max="120" step="1" value="60" aria-label="z₂ hajtott fogszám"><output id="z2_o" for="z2"></output></div>
+<div class="row"><label for="i1">i₁ (1. fokozat)</label><input id="i1" type="range" min="1" max="5" step="0.1" value="2.5" aria-label="i₁ (1. fokozat)"><output id="i1_o" for="i1"></output></div>
+<div class="row"><label for="i2">i₂ (2. fokozat)</label><input id="i2" type="range" min="1" max="5" step="0.1" value="3" aria-label="i₂ (2. fokozat)"><output id="i2_o" for="i2"></output></div>
+<div class="row"><label for="n1">n₁ hajtó fordulatszám</label><input id="n1" type="range" min="0" max="6000" step="50" value="3000" aria-label="n₁ hajtó fordulatszám"><output id="n1_o" for="n1"></output></div>
+<div class="row"><label for="M1">M₁ hajtó nyomaték</label><input id="M1" type="range" min="0" max="300" step="5" value="80" aria-label="M₁ hajtó nyomaték"><output id="M1_o" for="M1"></output></div>
+<div class="row"><label for="eta">hatásfok η</label><input id="eta" type="range" min="0.8" max="1.0" step="0.01" value="0.98" aria-label="hatásfok η"><output id="eta_o" for="eta"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 300" role="img" aria-label="Szíjhajtás: 150 mm-es főtengelytárcsa 60 mm-es generátortárcsát hajt, i = 0,408, a generátor 7350 1/min-tel forog."></svg>
+<p class="small">Alapállás: 1. példa (7350 1/min). 2. példa: fogaskerékpár, z₁ = 20, z₂ = 60, n₁ = 1200 1/min, M₁ = 80 Nm, η = 0,98 → 400 1/min, 235 Nm. 4. feladat: kétfokozatú, i₁ = 2,5, i₂ = 3, n₁ = 1500 1/min → 200 1/min. Az animáció lassított, a fordulatszám-arány valós.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"d1":"mm", "d2":"mm", "s":"", "z1":"", "z2":"", "i1":"", "i2":"", "n1":"1/min", "M1":"Nm", "eta":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+svg = FIG.svg;
+if(!window.T){window.a1=0;window.a2=0;window.T=setInterval(draw,40);}
+const ln=css("--line"), fg=css("--fg");
+let i, n2, M2, txt="", nOut;
+if(v.mod==="szij"){ const ie=v.d2/v.d1; i=ie/(1-v.s); n2=v.n1/i; M2=v.M1*i*v.eta;
+  txt=`i<sub>elm</sub> = d<sub>2</sub>/d<sub>1</sub> = ${fmt(ie,3)}; i<sub>valós</sub> = i<sub>elm</sub>/(1−s) = <b>${fmt(i,3)}</b>; n<sub>2</sub> = n<sub>1</sub>/i<sub>valós</sub> ≈ <b>${fmt(n2,0)} 1/min</b> (csúszás nélkül ${fmt(v.n1/ie,0)}); M<sub>2</sub> = M<sub>1</sub>·i·η ≈ ${fmt(M2,1)} Nm`; }
+else if(v.mod==="fog"){ i=v.z2/v.z1; n2=v.n1/i; M2=v.M1*i*v.eta;
+  txt=`i = z<sub>2</sub>/z<sub>1</sub> = <b>${fmt(i,3)}</b>; n<sub>2</sub> = n<sub>1</sub>/i ≈ <b>${fmt(n2,0)} 1/min</b>; M<sub>2</sub> = M<sub>1</sub>·i·η ≈ <b>${fmt(M2,0)} Nm</b> (fogaskerék: nincs csúszás)`; }
+else { i=v.i1*v.i2; n2=v.n1/i; M2=v.M1*i*v.eta;
+  txt=`i<sub>össz</sub> = i<sub>1</sub>·i<sub>2</sub> = ${fmt(v.i1,1)}·${fmt(v.i2,1)} = <b>${fmt(i,2)}</b>; n<sub>ki</sub> = n<sub>be</sub>/i<sub>össz</sub> ≈ <b>${fmt(n2,0)} 1/min</b>; M<sub>ki</sub> = M<sub>be</sub>·i·η ≈ ${fmt(M2,0)} Nm`; }
+const kind = Math.abs(i-1)<0.005 ? "i = 1: azonos fordulatszám" : (i>1 ? "lassító hajtás (i > 1)" : "gyorsító hajtás (i < 1)");
+status(txt+"<br><b>"+kind+"</b>");
+// animáció: a valós fordulatszám-arány (lassítva)
+const k=0.006; window.a1+=v.n1*k; window.a2+=n2*k;
+let r1,r2;
+if(v.mod==="szij"){ r1=Math.max(18,v.d1*0.45); r2=Math.max(12,v.d2*0.45); }
+else if(v.mod==="fog"){ r1=Math.max(18,v.z1*2.2); r2=Math.max(18,v.z2*2.2); }
+else { r1=40; r2=Math.min(110,40*Math.min(i,3)); }
+const x1=40+r1+10, x2=Math.max(x1+r1+r2+30, 330), y=150;
+if(v.mod==="szij"){ el("line",{x1:x1,y1:y-r1,x2:x2,y2:y-r2,stroke:ln,"stroke-width":4});el("line",{x1:x1,y1:y+r1,x2:x2,y2:y+r2,stroke:ln,"stroke-width":4}); }
+[[x1,r1,window.a1,fg,"hajtó"],[x2,r2,window.a2,css("--bg"),"hajtott"]].forEach(([x,r,a,f,l],j)=>{
+  el("circle",{cx:x,cy:y,r:r,fill:f,stroke:ln,"stroke-width":2});
+  if(v.mod!=="szij"){ const n=j?(v.mod==="fog"?v.z2:Math.round(20*Math.min(i,3))):(v.mod==="fog"?v.z1:20);
+    for(let q=0;q<Math.min(n,90);q++){const t=2*Math.PI*q/n+(j?-1:1)*a*Math.PI/180; el("line",{x1:x+r*Math.cos(t),y1:y+r*Math.sin(t),x2:x+(r+6)*Math.cos(t),y2:y+(r+6)*Math.sin(t),stroke:ln,"stroke-width":2});}}
+  const t=(j&&v.mod!=="szij"?-1:1)*a*Math.PI/180; el("line",{x1:x,y1:y,x2:x+r*0.8*Math.cos(t),y2:y+r*0.8*Math.sin(t),stroke:j?ln:css("--bg"),"stroke-width":3});
+  el("text",{x:x,y:y+r+24,"text-anchor":"middle","font-size":13},l);
+});
+el("text",{x:470,y:40,"font-size":13},v.mod==="szij"?"szíjhajtás":(v.mod==="fog"?"fogaskerékpár (forgásirány megfordul)":"kétfokozatú hajtómű (egyenértékű)"));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

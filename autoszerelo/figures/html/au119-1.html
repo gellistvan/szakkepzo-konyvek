@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fék-blending kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="areq">Kért lassulás</label><input id="areq" type="range" min="0.5" max="6" step="0.1" value="2" aria-label="Kért lassulás"><output id="areq_o" for="areq"></output></div>
+<div class="row"><label for="vv">Pillanatnyi sebesség</label><input id="vv" type="range" min="0" max="130" step="1" value="80" aria-label="Pillanatnyi sebesség"><output id="vv_o" for="vv"></output></div>
+<div class="row"><label for="soc">Töltöttség (SoC)</label><input id="soc" type="range" min="20" max="100" step="1" value="60" aria-label="Töltöttség (SoC)"><output id="soc_o" for="soc"></output></div>
+<div class="row"><label for="tt">Akkumulátor-hőmérséklet</label><input id="tt" type="range" min="-15" max="40" step="1" value="20" aria-label="Akkumulátor-hőmérséklet"><output id="tt_o" for="tt"></output></div>
+<div class="row"><label for="pk">Rekuperációs teljesítményhatár</label><input id="pk" type="range" min="20" max="150" step="5" value="60" aria-label="Rekuperációs teljesítményhatár"><output id="pk_o" for="pk"></output></div>
+<div class="row"><label for="mm">Járműtömeg</label><input id="mm" type="range" min="1000" max="2500" step="50" value="1600" aria-label="Járműtömeg"><output id="mm_o" for="mm"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="A kért lassulás megosztása rekuperatív és súrlódó fékezés között a sebesség függvényében"></svg>
+<p class="small">Tanulási modell, nem gyártói stratégia: a_reku = min(k·P/(m·v); 3 m/s²; kért lassulás), 10 km/h alatt lecseng; SoC 90 % fölött és hideg akkumulátornál k < 1. A valós határokat a gyártó adja (ellenőrizendő: gyártói adat).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"areq":"m/s²", "vv":"km/h", "soc":"%", "tt":"°C", "pk":"kW", "mm":"kg"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const ks=Math.min(1,Math.max(0,(100-v.soc)/10)), kt=v.tt<0?0.3:(v.tt<10?0.6:1.0), k=ks*kt;
+function ar(vk){const vm=Math.max(vk/3.6,1e-6);let a=Math.min(k*v.pk*1000/(v.mm*vm),3.0);
+  const f=Math.min(1,Math.max(0,(vk-3)/7));return Math.min(a*f,v.areq);}
+const X0=50,X1=545,Y0=15,Y1=255,ymax=Math.max(3,v.areq*1.15),X=s=>X0+(X1-X0)*s/130,Y=a=>Y1-(Y1-Y0)*a/ymax;
+el("rect",{x:X0,y:Y0,width:X1-X0,height:Y1-Y0,fill:"none",stroke:css("--line")});
+let d="M"+X(0)+" "+Y(0);for(let s=0;s<=130;s+=1)d+=" L"+X(s)+" "+Y(ar(s));d+=" L"+X(130)+" "+Y(0)+" Z";
+el("path",{d:d,fill:css("--hl"),opacity:0.35});
+let e="M"+X(0)+" "+Y(v.areq);for(let s=130;s>=0;s-=1)e+=" L"+X(s)+" "+Y(ar(s));e+=" Z";
+el("path",{d:e,fill:css("--hl2"),opacity:0.3});
+el("line",{x1:X0,x2:X1,y1:Y(v.areq),y2:Y(v.areq),stroke:css("--fg"),"stroke-width":2,"stroke-dasharray":"8 3 2 3"});
+el("line",{x1:X(v.vv),x2:X(v.vv),y1:Y0,y2:Y1,stroke:css("--fg"),"stroke-width":1.5});
+for(let s=0;s<=130;s+=20)el("text",{x:X(s),y:Y1+16,"font-size":11,"text-anchor":"middle"},String(s));
+for(let a=0;a<=ymax;a+=1)el("text",{x:X0-6,y:Y(a)+4,"font-size":11,"text-anchor":"end"},fmt(a,0));
+el("text",{x:(X0+X1)/2,y:292,"font-size":12,"text-anchor":"middle"},"sebesség (km/h) – kék: rekuperatív, narancs: súrlódó fék; függőleges vonal: pillanatnyi sebesség");
+const a1=ar(v.vv), pr=v.mm*a1*v.vv/3.6/1000, share=v.areq>0?100*(1-a1/v.areq):0;
+status("v = "+fmt(v.vv,0)+" km/h-nál: rekuperatív lassulás <b>"+fmt(a1,2)+" m/s²</b>, rekuperált teljesítmény ≈ <b>"+fmt(pr,1)+" kW</b>, "+
+ "a súrlódó fék részaránya <b>"+fmt(share,0)+" %</b>. Korlátozó tényező: SoC "+fmt(ks*100,0)+" %, hőmérséklet "+fmt(kt*100,0)+" %.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

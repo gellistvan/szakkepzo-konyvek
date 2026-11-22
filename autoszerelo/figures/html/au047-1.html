@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forgó mágneses mező</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="wt">Időpillanat ωt</label><input id="wt" type="range" min="0" max="360" step="5" value="0" aria-label="Időpillanat ωt"><output id="wt_o" for="wt"></output></div>
+<div class="row"><label for="play">Lejátszás (animáció)</label><input id="play" type="checkbox" aria-label="Lejátszás (animáció)"></div>
+<div class="row"><label for="swap">Fázissorrend csere (L2 ↔ L3)</label><input id="swap" type="checkbox" aria-label="Fázissorrend csere (L2 ↔ L3)"></div>
+<div class="row"><label for="f">Frekvencia f</label><input id="f" type="range" min="10" max="400" step="10" value="50" aria-label="Frekvencia f"><output id="f_o" for="f"></output></div>
+<div class="row"><label for="p">Póluspárok száma p</label><select id="p" aria-label="Póluspárok száma p"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="6">6</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Csillag- és háromszögkapcsolás fázis- és vonali feszültségekkel; három eltolt tekercs áramaiból forgó eredő mágneses tér"></svg>
+<p class="small">Idealizált modell: szinuszos áramok, térben 120°-ra lévő tekercsek, egy póluspár rajza. A póluspár-szám csak a kijelzett n_s értéket változtatja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"wt":"°", "f":"Hz"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(v.play&&!window._tm){window._tm=setInterval(()=>{const s=document.getElementById("wt");s.value=(+s.value+5)%360;draw();},70);}
+if(!v.play&&window._tm){clearInterval(window._tm);window._tm=null;}
+const w=v.wt*Math.PI/180,cx=140,cy=150,R=110,ord=v.swap?[0,2,1]:[0,1,2],names=["U","V","W"],cols=[css("--hl"),css("--hl2"),css("--ok")];
+el("circle",{cx:cx,cy:cy,r:R,fill:"none",stroke:css("--grid"),"stroke-width":14});
+let bx=0,by=0;const I=[];
+for(let k=0;k<3;k++){const th=k*2*Math.PI/3,c=Math.cos(th),s=-Math.sin(th),i=Math.cos(w-ord[k]*2*Math.PI/3);I.push(i);bx+=i*c;by+=i*s;
+  el("text",{x:cx+(R+22)*c,y:cy+(R+22)*s+5,"font-size":14,"text-anchor":"middle",fill:cols[k]},names[k]);
+  el("line",{x1:cx,y1:cy,x2:cx+60*i*c,y2:cy+60*i*s,stroke:cols[k],"stroke-width":2,"stroke-dasharray":"5 3"});}
+el("line",{x1:cx,y1:cy,x2:cx+60*bx,y2:cy+60*by,stroke:css("--fg"),"stroke-width":5});
+el("circle",{cx:cx+60*bx,cy:cy+60*by,r:5,fill:css("--fg")});
+// idődiagram a három áramról, kurzorral
+const X0=300,X1=520,Y0=40,Y1=260,X=a=>X0+(X1-X0)*a/360,Y=q=>(Y0+Y1)/2-(Y1-Y0)/2.4*q;
+el("rect",{x:X0,y:Y0,width:X1-X0,height:Y1-Y0,fill:"none",stroke:css("--line")});
+for(let k=0;k<3;k++){let d="";for(let a=0;a<=360;a+=4){d+=(a?"L":"M")+X(a).toFixed(1)+" "+Y(Math.cos(a*Math.PI/180-ord[k]*2*Math.PI/3)).toFixed(1);}
+  el("path",{d:d,fill:"none",stroke:cols[k],"stroke-width":2,"stroke-dasharray":["","6 3","2 3"][k]});
+  el("text",{x:X1+3,y:Y0+14+16*k,"font-size":12,fill:cols[k]},"i_"+names[k]);}
+el("line",{x1:X(v.wt),x2:X(v.wt),y1:Y0,y2:Y1,stroke:css("--bad"),"stroke-width":2});
+el("text",{x:(X0+X1)/2,y:Y1+18,"font-size":12,"text-anchor":"middle"},"ωt: 0 … 360°");
+el("text",{x:(X0+X1)/2,y:24,"font-size":12,"text-anchor":"middle"},"tekercsáramok (normált)");
+const ns=60*v.f/v.p;
+status("Eredő tér: nagysága állandó (1,5 × egy tekercs csúcsa), iránya <b>"+fmt(((Math.atan2(-by,bx)*180/Math.PI)+360)%360,0)+"°</b>; forgásirány: <b>"+(v.swap?"az óramutatóval egyező (fázissorrend cserélve)":"az óramutatóval ellentétes")+"</b>. Szinkron fordulatszám n<sub>s</sub> = 60·f/p = <b>"+fmt(ns,0)+" 1/min</b>.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

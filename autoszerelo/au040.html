@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>11.2 Kirchhoff-törvények, összetett hálózatok, osztók és
+hídkapcsolás – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz4">IV. RÉSZ – Elektrotechnika, elektronika és villamos mérések</a> › <a href="index.html#auch10">11 Villamos alapfogalmak és egyenáramú hálózatok</a></p>
+<div class="links"><a class="prev" rel="prev" href="au039.html">← 11.1 Villamos alapfogalmak, Ohm-törvény, munka, teljesítmény és hatásfok</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au041.html">11.3 Generátorok, belső ellenállás és a szuperpozíció →</a></div>
+</nav>
+<h2 data-number="11.2" id="au040"><span
+class="header-section-number">11.2</span> Kirchhoff-törvények, összetett
+hálózatok, osztók és hídkapcsolás</h2>
+<h3 data-number="11.2.1" id="motiváció"><span
+class="header-section-number">11.2.1</span> Motiváció</h3>
+<p>Egy dízel jármű hideg reggelen nehezen indul, a műhelyben arra
+gyanakszunk, hogy az indítórendszerben túl nagy a feszültségesés. Máskor
+a hűtőfolyadék-hőmérséklet jelzője hideg motornál is magas értéket
+mutat, pedig a motor nem melegedett túl. Ilyenkor nem elég a feszültség,
+áram és ellenállás fogalmát ismerni; azt kell pontosan látni, hogyan
+oszlik meg a feszültség egy áramkörben, és hogyan ágazik el az áram. Ezt
+tanítják a Kirchhoff-törvények, a soros és párhuzamos kapcsolás eredője,
+valamint az osztókapcsolások. A hibás csatlakozókon fellépő átmeneti
+ellenállás jelensége is ezek nélkül érthetetlen marad, pedig a
+járművillamossági hibák jelentős része itt keletkezik.</p>
+<h3 data-number="11.2.2"
+id="szemléletes-kép-a-járművillamossági-áramkör-mint-úthálózat"><span
+class="header-section-number">11.2.2</span> Szemléletes kép: a
+járművillamossági áramkör mint úthálózat</h3>
+<p>Képzeljük el a fedélzeti hálózatot úgy, mintha egy városi úthálózat
+lenne: az akkumulátor a szivattyútelep, a vezetékek az utak, a
+fogyasztók pedig kapuk, amelyek akadályozzák a forgalmat. A
+csomópontokban az autók nem tűnhetnek el; ahány autó bemegy, annyinak ki
+is kell jönnie. A zárt körben haladva, bármilyen útvonalon visszatérünk,
+a szintkülönbségek összege nulla. Ezt a két szabályt fogalmazzák meg
+villamos mennyiségekkel Kirchhoff törvényei.</p>
+<figure>
+<img src="assets/au040-diagram-1.png"
+alt="Vegyes kapcsolás Kirchhoff-elemzéshez (szemléltető) - A rajz tanulási vázlat: U=12 V, R1 soros, R2 és R3 párhuzamosan kapcsolva. Az áramirányok és hurkok a szövegben. Nem gyártói kapcsolási rajz." />
+<figcaption aria-hidden="true">Vegyes kapcsolás Kirchhoff-elemzéshez
+(szemléltető) - A rajz tanulási vázlat: U=12 V, R1 soros, R2 és R3
+párhuzamosan kapcsolva. Az áramirányok és hurkok a szövegben. Nem
+gyártói kapcsolási rajz.</figcaption>
+</figure>
+<p>Az ábrán az akkumulátor bal oldalon látható, a 30-as kapocs a felső,
+a 31-es kapocs az alsó sín. A biztosíték, a kapcsoló és az R₁ ellenállás
+soros ágban van, majd az R₂ és R₃ ellenállás párhuzamosan ágazik el. Az
+X pont csomópont, ahol az R₁-en átfolyó teljes áram kettéválik: egy
+része R₂-n, másik része R₃-on folyik tovább, majd a két ág újra egyesül
+a testsínen. Ezt az áramot számoljuk ki a következőkben.</p>
+<p><strong>Definíció.</strong> <strong>Csomópont:</strong> a kapcsolás
+olyan pontja, ahol legalább három vezeték vagy alkatrész-kivezetés
+találkozik. A fenti rajzon ilyen az X pont, valamint a 30-as és 31-es
+sín csatlakozási pontja, ha a testvezetékeket is beleszámítjuk.</p>
+<p><strong>Definíció.</strong> <strong>Hurok:</strong> a kapcsolási
+rajzon kijelölhető, zárt vezetékút, amelyen elindulva ugyanoda jutunk
+vissza, és egyetlen elemet sem érintünk kétszer.</p>
+<h3 data-number="11.2.3" id="kirchhoff-törvényei"><span
+class="header-section-number">11.2.3</span> Kirchhoff törvényei</h3>
+<p><strong>Összefüggés.</strong> <strong>Kirchhoff I. (csomóponti)
+törvénye:</strong> egy csomópontban a befolyó és elfolyó áramok algebrai
+összege nulla:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∑</mo><msub><mi>I</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mo>∑</mo><msub><mi>I</mi><mtext mathvariant="normal">ki</mtext></msub></mrow><annotation encoding="application/x-tex">
+\sum I_{\text{be}} = \sum I_{\text{ki}}
+</annotation></semantics></math></p>
+<p>Ha a befolyó áramot pozitívnak, az elfolyót negatívnak vesszük, akkor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∑</mo><mi>I</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\sum I = 0</annotation></semantics></math>.
+Ez az elektromos töltésmegmaradás kifejezése: a csomópontban töltés nem
+halmozódhat fel, nem tűnhet el.</p>
+<p><strong>Összefüggés.</strong> <strong>Kirchhoff II.
+(huroktörvénye):</strong> egy zárt hurokban a feszültségemelkedések és
+feszültségesések előjeles összege nulla:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∑</mo><msub><mi>U</mi><mi>i</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">
+\sum U_i = 0
+</annotation></semantics></math></p>
+<p>Ez az energiamegmaradásból következik: ha egy töltésegységet
+körbeviszünk a hurkon, a teljes elektromos energiaváltozás nulla kell
+legyen. A gyakorlatban a feszültségforrás által adott feszültség egyenlő
+a hurkon lévő fogyasztókon eső feszültségek összegével.</p>
+<p>A <a href="au039.html">Villamos alapfogalmak, Ohm-törvény, munka,
+teljesítmény és hatásfok</a> alfejezetben az Ohm-törvényt már
+használtuk:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mi>I</mi><mo>⋅</mo><mi>R</mi></mrow><annotation encoding="application/x-tex">
+U = I \cdot R
+</annotation></semantics></math></p>
+<p>Ezt kapcsoljuk össze a két Kirchhoff-törvénnyel.</p>
+<p><strong>Szabály.</strong> <strong>Vegyes kapcsolás megoldási
+sorrendje:</strong><br />
+1. Keressük meg a tisztán soros és tisztán párhuzamos részeket, és
+vonjuk össze azokat eredő ellenállássá.<br />
+2. Számítsuk ki a teljes áramkört: az akkumulátor-feszültséget osszuk el
+a teljes eredő ellenállással.<br />
+3. Visszafelé haladva bontsuk ki az összevont részeket, számítva az
+osztóképleteket.<br />
+4. Ellenőrizzük a Kirchhoff-törvényekkel, hogy a csomópontban az áramok
+összege nulla, és a hurokban a feszültségek összege nulla.</p>
+<h3 data-number="11.2.4"
+id="soros-és-párhuzamos-kapcsolás-eredő-ellenállás"><span
+class="header-section-number">11.2.4</span> Soros és párhuzamos
+kapcsolás, eredő ellenállás</h3>
+<p><strong>Definíció.</strong> <strong>Soros kapcsolás:</strong> az
+elemek azonos áramú hurokban követik egymást, nincs köztük csomópont.
+Mindegyik elem árama azonos.</p>
+<p><strong>Összefüggés.</strong> Soros kapcsolás eredője:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">eredő</mtext></msub><mo>=</mo><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub><mo>+</mo><mi>…</mi><mo>+</mo><msub><mi>R</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">
+R_{\text{eredő}} = R_1 + R_2 + \dots + R_n
+</annotation></semantics></math></p>
+<p><strong>Definíció.</strong> <strong>Párhuzamos kapcsolás:</strong> az
+alkatrészek mindkét kivezetése közös csomópontokhoz csatlakozik, így az
+áram szétágazik.</p>
+<p><strong>Összefüggés.</strong> Párhuzamos kapcsolás eredője, két
+ellenállásra a gyakorlatban jól használható törtes alak:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><msub><mi>R</mi><mtext mathvariant="normal">eredő</mtext></msub></mfrac><mo>=</mo><mfrac><mn>1</mn><msub><mi>R</mi><mn>1</mn></msub></mfrac><mo>+</mo><mfrac><mn>1</mn><msub><mi>R</mi><mn>2</mn></msub></mfrac></mrow><annotation encoding="application/x-tex">
+\frac{1}{R_{\text{eredő}}} = \frac{1}{R_1} + \frac{1}{R_2}
+</annotation></semantics></math></p>
+<p>amiből</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">eredő</mtext></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>⋅</mo><msub><mi>R</mi><mn>2</mn></msub></mrow><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+R_{\text{eredő}} = \frac{R_1 \cdot R_2}{R_1 + R_2}
+</annotation></semantics></math></p>
+<p>Több párhuzamos ellenállás esetén a reciprokos képletet kell
+használni:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><msub><mi>R</mi><mtext mathvariant="normal">eredő</mtext></msub></mfrac><mo>=</mo><mfrac><mn>1</mn><msub><mi>R</mi><mn>1</mn></msub></mfrac><mo>+</mo><mfrac><mn>1</mn><msub><mi>R</mi><mn>2</mn></msub></mfrac><mo>+</mo><mi>…</mi><mo>+</mo><mfrac><mn>1</mn><msub><mi>R</mi><mi>n</mi></msub></mfrac></mrow><annotation encoding="application/x-tex">
+\frac{1}{R_{\text{eredő}}} = \frac{1}{R_1} + \frac{1}{R_2} + \dots + \frac{1}{R_n}
+</annotation></semantics></math></p>
+<h3 data-number="11.2.5" id="feszültségosztó-és-áramosztó"><span
+class="header-section-number">11.2.5</span> Feszültségosztó és
+áramosztó</h3>
+<p><strong>Összefüggés.</strong> <strong>Feszültségosztó (terheletlen
+soros osztó):</strong> ha az U feszültség két sorosan kapcsolt
+ellenálláson oszlik meg, akkor az R₂-n eső feszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>2</mn></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>2</mn></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+U_2 = U \cdot \frac{R_2}{R_1 + R_2}
+</annotation></semantics></math></p>
+<p>Vagy általánosan, az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>x</mi></msub><annotation encoding="application/x-tex">R_x</annotation></semantics></math>
+ellenálláson eső feszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>x</mi></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mi>x</mi></msub><mrow><mo>∑</mo><mi>R</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+U_x = U \cdot \frac{R_x}{\sum R}
+</annotation></semantics></math></p>
+<p><strong>Összefüggés.</strong> <strong>Áramosztó:</strong> ha az I
+áram két párhuzamos ellenálláson oszlik meg, akkor az R₁ ág árama:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mn>1</mn></msub><mo>=</mo><mi>I</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>2</mn></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+I_1 = I \cdot \frac{R_2}{R_1 + R_2}
+</annotation></semantics></math></p>
+<p>és az R₂ ág árama:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mn>2</mn></msub><mo>=</mo><mi>I</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>1</mn></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+I_2 = I \cdot \frac{R_1}{R_1 + R_2}
+</annotation></semantics></math></p>
+<p>Fontos tanulság: a párhuzamos ágak közül a <strong>kisebb ellenállás
+ágán folyik a nagyobb áram</strong>, mert a szorzatban a másik ág
+ellenállása szerepel. Ez a gépjármű-villamosságban is megmutatkozik: ha
+egy fogyasztóval párhuzamosan (pl. nedves, sérült szigetelésen át) kis
+ellenállású átvezetés keletkezik, azon nagy áram folyik, a közös
+vezetéken és biztosítékon nő a feszültségesés, ezért a többi fogyasztó
+is halványabb lesz, vagy kiold a biztosíték.</p>
+<h3 data-number="11.2.6" id="wheatstone-híd"><span
+class="header-section-number">11.2.6</span> Wheatstone-híd</h3>
+<p><strong>Definíció.</strong> <strong>Wheatstone-híd:</strong> két
+feszültségosztó párhuzamos kapcsolása, ahol a két osztópont közé egy
+mérőműszer vagy érzékelő kerül. A hidat akkor nevezzük kiegyenlítettnek,
+ha a két közbülső csomópont feszültsége azonos, ezért a középső ágban
+nem folyik áram. Ezt az állapotot használják ki például régi huzalos
+légtömegmérőkben, hőmérséklet-érzékelős hidakban vagy nyúlásmérő
+bélyeges mérésben.</p>
+<p><strong>Összefüggés.</strong> Kiegyenlítési feltétel négy
+hídellenállásra:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><msub><mi>R</mi><mn>1</mn></msub><msub><mi>R</mi><mn>2</mn></msub></mfrac><mo>=</mo><mfrac><msub><mi>R</mi><mn>3</mn></msub><msub><mi>R</mi><mn>4</mn></msub></mfrac></mrow><annotation encoding="application/x-tex">
+\frac{R_1}{R_2} = \frac{R_3}{R_4}
+</annotation></semantics></math></p>
+<p>Ekkor a híd A és B pontja között a feszültség nulla. Ha az egyik
+ellenállás megváltozik, a híd kimozdul, és az A-B feszültség eltér
+nullától. A járműtechnikában a régi huzalos légtömegmérőnél a levegő
+sebessége hűti a huzalt, megváltoztatja az ellenállását, amely a hídban
+feszültségváltozást okoz; ezt az értéket dolgozza fel a motorvezérlő. Ma
+már gyakoribb a digitális jelű légtömegmérő, de a híd elve a mérőhidas
+érzékelőkben és a feszültségosztós jeladókban tovább él.</p>
+<h3 data-number="11.2.7" id="az-áram-hőhatása"><span
+class="header-section-number">11.2.7</span> Az áram hőhatása</h3>
+<p>Amikor az áram ellenálláson folyik át, a töltéshordozók ütköznek a
+rácsszerkezettel, és az elektromos energia hővé alakul. Ezt a
+Joule-törvény írja le.</p>
+<p><strong>Összefüggés.</strong> <strong>Joule-törvény:</strong> az
+ellenálláson t idő alatt keletkező hő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mi>U</mi><mo>⋅</mo><mi>I</mi><mo>⋅</mo><mi>t</mi><mo>=</mo><msup><mi>I</mi><mn>2</mn></msup><mo>⋅</mo><mi>R</mi><mo>⋅</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">
+W = U \cdot I \cdot t = I^2 \cdot R \cdot t
+</annotation></semantics></math></p>
+<p>ha az ellenállás állandó. A teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mi>U</mi><mo>⋅</mo><mi>I</mi><mo>=</mo><msup><mi>I</mi><mn>2</mn></msup><mo>⋅</mo><mi>R</mi></mrow><annotation encoding="application/x-tex">
+P = U \cdot I = I^2 \cdot R
+</annotation></semantics></math></p>
+<p><strong>Megjegyzés.</strong> A régi mértékegység, a kalória
+átszámítása:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">cal</mtext><mo>≈</mo><mn>4</mn><mo>,</mo><mn>19</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J</mtext></mrow><annotation encoding="application/x-tex">1\,\text{cal} \approx 4{,}19\,\text{J}</annotation></semantics></math>
+(ellenőrizendő: pontos érték). A járműjavításban leggyakrabban J és W
+egységet használunk.</p>
+<p><strong>Hőterjedés.</strong> A keletkező hő három módon távozik:
+<strong>hővezetéssel</strong> (pl. az izzítógyertya fém teste átadja a
+hőt a hengerfejnek), <strong>hőáramlással</strong> (pl. a hűtőlevegő
+elszállítja a hőt a biztosító környezetéből) és
+<strong>hősugárzással</strong> (pl. az izzószál, az izzítógyertya
+fűtőspirálja sugároz). A járművillamossági alkatrészek tervezésénél
+mindhárom tényezőt figyelembe kell venni.</p>
+<p><strong>Alkalmazások.</strong><br />
+- <strong>Izzítógyertya:</strong> a dízel hidegindításakor a
+fűtőspirálon átfolyó áram felhevíti a hegyét, ami hidegindításkor segíti
+a befecskendezett tüzelőanyag párolgását és öngyulladását (a
+dízelmotorban az öngyulladást a sűrítés hőmérséklete adja, a gyertya nem
+gyújt). Jellemző árama több amper, teljesítménye típusonként néhány száz
+W (ellenőrizendő: gyártói adat).<br />
+- <strong>Biztosító:</strong> az olvadószál méretezése pontosan a
+Joule-hőre épül: a névleges áram fölött a szál elolvad, és megszakítja
+az áramkört, mielőtt a vezeték vagy a fogyasztó károsodna.<br />
+- <strong>Fűtés:</strong> ablakfűtés, ülésfűtés, visszapillantó tükör
+fűtés, dízel üzemanyag-szűrő fűtés, kartergáz-fűtés – mindegyik
+ellenállásfűtés.</p>
+<h3 data-number="11.2.8"
+id="átmeneti-ellenállás-és-feszültségesés-mérés"><span
+class="header-section-number">11.2.8</span> Átmeneti ellenállás és
+feszültségesés-mérés</h3>
+<p><strong>Definíció.</strong> <strong>Átmeneti ellenállás:</strong> a
+csatlakozó, kapocs, biztosítéktartó vagy testpont érintkezési felületén
+keletkező, a tervezettnél nagyobb ellenállás. Okozhatja oxidáció,
+fellazult csavar, korrózió, szennyeződés, melegedés miatt visszamaradt
+lágyulás.</p>
+<p><strong>Előírás.</strong> A jármű elektromos rendszerén a
+feszültségeséseket terhelés alatt, a gyártó által megadott határértékek
+szerint kell ellenőrizni. Példaként: 12 V-os indítókörben a pozitív ágon
+mért esés jellemzően nem haladhatja meg a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>
+értéket, a testoldalon pedig a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{V}</annotation></semantics></math>
+értéket (ellenőrizendő: gyártói javítási adat).</p>
+<p><strong>Szabály.</strong> <strong>Feszültségesés-mérés elve:</strong>
+a feszültségmérőt mindig a vizsgált szakasz két végére kell kötni,
+miközben az áramkör terhelt. Ha a mért feszültségesés nagyobb, mint az
+előírt, az átmeneti ellenállás jelenlétét jelzi, még akkor is, ha
+ellenállásmérővel kis értéket mérnénk, mert az ellenállásmérés nem hozza
+létre a valódi terhelő áramot.</p>
+<p><strong>Figyelem.</strong> Az átmeneti ellenállás melegedést okoz:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><msup><mi>I</mi><mn>2</mn></msup><mi>R</mi></mrow><annotation encoding="application/x-tex">P=I^2R</annotation></semantics></math>.
+Nagy áramú körben egy kis ellenállás is jelentős hőt termel, ami tovább
+rongálja az érintkezést, és akár tüzet is okozhat. A fellazult,
+megpörkölődött csatlakozót nem szabad csak összehúzni; a sérült
+csatlakozót a gyártó szerint ki kell cserélni.</p>
+<p><strong>Továbbvitt eredmény.</strong> A feszültségosztó és az
+átmeneti ellenállás itt tanult elvét használjuk a <a
+href="au041.html">Generátorok, belső ellenállás és a szuperpozíció</a>
+alfejezetben, amikor a generátor belső ellenállását és a
+kapocsfeszültség-változást vizsgáljuk. A feszültségosztó a diódás és
+Zener-diódás áramköröknél a <a href="au049.html">Félvezetők, diódák,
+Zener-dióda és egyenirányítók</a>, a mérőműszerek feszültségmérő
+bekötésénél a <a href="au053.html">Méréstechnikai alapok: műszerek,
+mérési hibák, multiméter és lakatfogó</a>, valamint a jármű elektromos
+hálózat áramútjainak kapocsjelöléses elemzésénél a(z) <a
+href="au098.html">A fedélzeti hálózat felépítése, kapocsjelölés és
+áramútrajz</a> alfejezetben tér vissza.</p>
+<h3 data-number="11.2.9" id="kidolgozott-példák"><span
+class="header-section-number">11.2.9</span> Kidolgozott példák</h3>
+<h4 data-number="11.2.9.1"
+id="példa-vegyes-kapcsolás-eredője-áramai-és-feszültségei"><span
+class="header-section-number">11.2.9.1</span> 1. példa: vegyes kapcsolás
+eredője, áramai és feszültségei</h4>
+<p><strong>Adott:</strong> az ábrán látható 12 V-os hálózat,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1 = 100\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>200</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2 = 200\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>3</mn></msub><mo>=</mo><mn>300</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_3 = 300\,\Omega</annotation></semantics></math>.<br />
+<strong>Keresett:</strong> az eredő ellenállás, a teljes áram, az egyes
+ellenállások feszültsége és árama.<br />
+<strong>Megoldás:</strong></p>
+<p>Először: a párhuzamos R₂-R₃ rész eredője:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>23</mn></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mn>2</mn></msub><msub><mi>R</mi><mn>3</mn></msub></mrow><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>+</mo><msub><mi>R</mi><mn>3</mn></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>200</mn><mo>⋅</mo><mn>300</mn></mrow><mrow><mn>200</mn><mo>+</mo><mn>300</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mn>500</mn></mfrac><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">
+R_{23} = \frac{R_2 R_3}{R_2 + R_3} = \frac{200 \cdot 300}{200 + 300} = \frac{60\,000}{500} = 120\,\Omega
+</annotation></semantics></math></p>
+<p>A teljes eredő R₁ soros R₂₃-vel:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">ö</mtext></msub><mo>=</mo><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>23</mn></msub><mo>=</mo><mn>100</mn><mo>+</mo><mn>120</mn><mo>=</mo><mn>220</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">
+R_{\text{ö}} = R_1 + R_{23} = 100 + 120 = 220\,\Omega
+</annotation></semantics></math></p>
+<p>Főáram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>U</mi><msub><mi>R</mi><mtext mathvariant="normal">ö</mtext></msub></mfrac><mo>=</mo><mfrac><mn>12</mn><mn>220</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0545</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>54</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">
+I = \frac{U}{R_{\text{ö}}} = \frac{12}{220} = 0{,}0545\,\text{A} = 54{,}5\,\text{mA}
+</annotation></semantics></math></p>
+<p>R₁ feszültsége:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>R</mi><mn>1</mn></mrow></msub><mo>=</mo><mi>I</mi><mo>⋅</mo><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>0545</mn><mo>⋅</mo><mn>100</mn><mo>=</mo><mn>5</mn><mo>,</mo><mn>45</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{R1} = I \cdot R_1 = 0{,}0545 \cdot 100 = 5{,}45\,\text{V}
+</annotation></semantics></math></p>
+<p>A párhuzamos rész feszültsége:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>23</mn></msub><mo>=</mo><mi>U</mi><mo>−</mo><msub><mi>U</mi><mrow><mi>R</mi><mn>1</mn></mrow></msub><mo>=</mo><mn>12</mn><mo>−</mo><mn>5</mn><mo>,</mo><mn>45</mn><mo>=</mo><mn>6</mn><mo>,</mo><mn>55</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{23} = U - U_{R1} = 12 - 5{,}45 = 6{,}55\,\text{V}
+</annotation></semantics></math></p>
+<p>R₂ és R₃ árama:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>R</mi><mn>2</mn></mrow></msub><mo>=</mo><mfrac><msub><mi>U</mi><mn>23</mn></msub><msub><mi>R</mi><mn>2</mn></msub></mfrac><mo>=</mo><mfrac><mrow><mn>6</mn><mo>,</mo><mn>55</mn></mrow><mn>200</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0328</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>32</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">
+I_{R2} = \frac{U_{23}}{R_2} = \frac{6{,}55}{200} = 0{,}0328\,\text{A} = 32{,}8\,\text{mA}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>R</mi><mn>3</mn></mrow></msub><mo>=</mo><mfrac><msub><mi>U</mi><mn>23</mn></msub><msub><mi>R</mi><mn>3</mn></msub></mfrac><mo>=</mo><mfrac><mrow><mn>6</mn><mo>,</mo><mn>55</mn></mrow><mn>300</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0218</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>21</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">
+I_{R3} = \frac{U_{23}}{R_3} = \frac{6{,}55}{300} = 0{,}0218\,\text{A} = 21{,}8\,\text{mA}
+</annotation></semantics></math></p>
+<p>Ellenőrzés: a csomóponti törvény szerint
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>R</mi><mn>2</mn></mrow></msub><mo>+</mo><msub><mi>I</mi><mrow><mi>R</mi><mn>3</mn></mrow></msub><mo>=</mo><mn>32</mn><mo>,</mo><mn>8</mn><mo>+</mo><mn>21</mn><mo>,</mo><mn>8</mn><mo>=</mo><mn>54</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I_{R2}+I_{R3}=32{,}8+21{,}8=54{,}6\,\text{mA}</annotation></semantics></math>,
+ami jó egyezésben van az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>54</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">54{,}5\,\text{mA}</annotation></semantics></math>
+főárammal. A kerekítésből adódó eltérés elfogadható. A huroktörvény
+szerint
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>,</mo><mn>45</mn><mo>+</mo><mn>6</mn><mo>,</mo><mn>55</mn><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5{,}45 + 6{,}55 = 12\,\text{V}</annotation></semantics></math>.
+∎</p>
+<h4 data-number="11.2.9.2"
+id="példa-feszültségosztó-a-hűtőfolyadék-ntc-érzékelőjénél"><span
+class="header-section-number">11.2.9.2</span> 2. példa: feszültségosztó
+a hűtőfolyadék NTC-érzékelőjénél</h4>
+<p><strong>Adott:</strong> a motorvezérlő 5 V-os tápfeszültségét egy
+felhúzó ellenálláson át NTC hőmérséklet-érzékelőre kötik, amely a test
+felé osztja le a feszültséget.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U=5\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=2{,}2\,\text{k}\Omega</annotation></semantics></math>,
+az NTC ellenállása hidegen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">NTC,hideg</mtext></msub><mo>=</mo><mn>5</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{NTC,hideg}}=5{,}0\,\text{k}\Omega</annotation></semantics></math>,
+melegen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">NTC,meleg</mtext></msub><mo>=</mo><mn>500</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{NTC,meleg}}=500\,\Omega</annotation></semantics></math>.<br />
+<strong>Keresett:</strong> a jelkimenet feszültsége hidegen és
+melegen.<br />
+<strong>Megoldás:</strong> a feszültségosztó képlet:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">jel</mtext></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+U_{\text{jel}} = U \cdot \frac{R_{\text{NTC}}}{R_1 + R_{\text{NTC}}}
+</annotation></semantics></math></p>
+<p>Hidegen:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">jel,hideg</mtext></msub><mo>=</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>5000</mn><mrow><mn>2200</mn><mo>+</mo><mn>5000</mn></mrow></mfrac><mo>=</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>5000</mn><mn>7200</mn></mfrac></mrow><annotation encoding="application/x-tex">
+U_{\text{jel,hideg}} = 5 \cdot \frac{5000}{2200+5000} = 5 \cdot \frac{5000}{7200}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mn>5</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>694</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>47</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+= 5 \cdot 0{,}694 = 3{,}47\,\text{V}
+</annotation></semantics></math></p>
+<p>Melegen:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">jel,meleg</mtext></msub><mo>=</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>500</mn><mrow><mn>2200</mn><mo>+</mo><mn>500</mn></mrow></mfrac><mo>=</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>500</mn><mn>2700</mn></mfrac></mrow><annotation encoding="application/x-tex">
+U_{\text{jel,meleg}} = 5 \cdot \frac{500}{2200+500} = 5 \cdot \frac{500}{2700}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mn>5</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>185</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>926</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+= 5 \cdot 0{,}185 = 0{,}926\,\text{V}
+</annotation></semantics></math></p>
+<p>Az eredmény jól mutatja a negatív hőmérsékleti együtthatójú (NTC)
+érzékelő működését: a hőmérséklet növekedésekor az ellenállása csökken,
+ezért a jel feszültsége csökken. A motorvezérlő ezt a csökkenő
+feszültséget értelmezi hőmérsékletként. ∎</p>
+<h4 data-number="11.2.9.3"
+id="példa-hőképződés-egy-izzítógyertyán"><span
+class="header-section-number">11.2.9.3</span> 3. példa: hőképződés egy
+izzítógyertyán</h4>
+<p><strong>Adott:</strong> 12 V-os dízel indítási rendszer, az
+izzítógyertya ellenállása melegen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R = 0{,}8\,\Omega</annotation></semantics></math>,
+áramfelvétele
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 15\,\text{A}</annotation></semantics></math>.
+A gyertya 8 másodpercig működik.<br />
+<strong>Keresett:</strong> a teljesítmény és a hő.<br />
+<strong>Megoldás:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><msup><mi>I</mi><mn>2</mn></msup><mo>⋅</mo><mi>R</mi><mo>=</mo><msup><mn>15</mn><mn>2</mn></msup><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>=</mo><mn>225</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>=</mo><mn>180</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P = I^2 \cdot R = 15^2 \cdot 0{,}8 = 225 \cdot 0{,}8 = 180\,\text{W}
+</annotation></semantics></math></p>
+<p>A hő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mi>P</mi><mo>⋅</mo><mi>t</mi><mo>=</mo><mn>180</mn><mo>⋅</mo><mn>8</mn><mo>=</mo><mn>1440</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J</mtext></mrow><annotation encoding="application/x-tex">
+W = P \cdot t = 180 \cdot 8 = 1440\,\text{J}
+</annotation></semantics></math></p>
+<p>Ez a hő jórészt a fűtőtestben és annak környezetében jelenik meg. Ha
+ezt 100 g vízre számítjuk át, a hőmérséklet-emelkedés:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>T</mi><mo>=</mo><mfrac><mi>W</mi><mrow><mi>c</mi><mo>⋅</mo><mi>m</mi></mrow></mfrac><mo>=</mo><mfrac><mn>1440</mn><mrow><mn>4</mn><mo>,</mo><mn>19</mn><mo>⋅</mo><mn>100</mn></mrow></mfrac><mo>≈</mo><mn>3</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">K</mtext></mrow><annotation encoding="application/x-tex">
+\Delta T = \frac{W}{c \cdot m} = \frac{1440}{4{,}19 \cdot 100} \approx 3{,}4\,\text{K}
+</annotation></semantics></math></p>
+<p>Ez csak szemléltető átszámítás, az izzítógyertya valós hőmérséklete
+sokkal magasabb, mert a hő nem vízbe, hanem fém és égéstéri levegő
+környezetbe távozik, és a hőátadási feltételek eltérnek. ∎</p>
+<h4 data-number="11.2.9.4"
+id="példa-wheatstone-híd-egyensúlya-és-kimozdulása"><span
+class="header-section-number">11.2.9.4</span> 4. példa: Wheatstone-híd
+egyensúlya és kimozdulása</h4>
+<p><strong>Adott:</strong> híd,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U=5\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=100\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>200</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2=200\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>3</mn></msub><mo>=</mo><mn>150</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_3=150\,\Omega</annotation></semantics></math>.<br />
+<strong>Keresett:</strong><br />
+a) Mekkora
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>4</mn></msub><annotation encoding="application/x-tex">R_4</annotation></semantics></math>
+értéknél egyensúlyozott a híd?<br />
+b) Ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>4</mn></msub><mo>=</mo><mn>350</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_4=350\,\Omega</annotation></semantics></math>,
+mekkora a híd A–B pontja közötti feszültség?<br />
+<strong>Megoldás:</strong><br />
+a) Egyensúly:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><msub><mi>R</mi><mn>1</mn></msub><msub><mi>R</mi><mn>2</mn></msub></mfrac><mo>=</mo><mfrac><msub><mi>R</mi><mn>3</mn></msub><msub><mi>R</mi><mn>4</mn></msub></mfrac></mrow><annotation encoding="application/x-tex">
+\frac{R_1}{R_2} = \frac{R_3}{R_4}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>4</mn></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mn>2</mn></msub><msub><mi>R</mi><mn>3</mn></msub></mrow><msub><mi>R</mi><mn>1</mn></msub></mfrac><mo>=</mo><mfrac><mrow><mn>200</mn><mo>⋅</mo><mn>150</mn></mrow><mn>100</mn></mfrac><mo>=</mo><mn>300</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">
+R_4 = \frac{R_2 R_3}{R_1} = \frac{200 \cdot 150}{100} = 300\,\Omega
+</annotation></semantics></math></p>
+<ol start="2" type="a">
+<li>A két osztópont feszültsége:</li>
+</ol>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>A</mi></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>2</mn></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>200</mn><mrow><mn>100</mn><mo>+</mo><mn>200</mn></mrow></mfrac><mo>=</mo><mn>5</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>667</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>33</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_A = U \cdot \frac{R_2}{R_1 + R_2} = 5 \cdot \frac{200}{100+200} = 5 \cdot 0{,}667 = 3{,}33\,\text{V}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>B</mi></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>4</mn></msub><mrow><msub><mi>R</mi><mn>3</mn></msub><mo>+</mo><msub><mi>R</mi><mn>4</mn></msub></mrow></mfrac><mo>=</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>350</mn><mrow><mn>150</mn><mo>+</mo><mn>350</mn></mrow></mfrac><mo>=</mo><mn>5</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>7</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_B = U \cdot \frac{R_4}{R_3 + R_4} = 5 \cdot \frac{350}{150+350} = 5 \cdot 0{,}7 = 3{,}50\,\text{V}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>A</mi><mi>B</mi></mrow></msub><mo>=</mo><msub><mi>U</mi><mi>A</mi></msub><mo>−</mo><msub><mi>U</mi><mi>B</mi></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>33</mn><mo>−</mo><mn>3</mn><mo>,</mo><mn>50</mn><mo>=</mo><mi>−</mi><mn>0</mn><mo>,</mo><mn>17</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{AB} = U_A - U_B = 3{,}33 - 3{,}50 = -0{,}17\,\text{V}
+</annotation></semantics></math></p>
+<p>A negatív előjel csak a mérési irányt jelzi; a híd kimozdulásának
+nagysága
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>17</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}17\,\text{V}</annotation></semantics></math>.
+Ez a feszültségkülönbség jelzésként szolgál a vezérlőegység számára.
+∎</p>
+<h3 data-number="11.2.10" id="minőségellenőrzés"><span
+class="header-section-number">11.2.10</span> Minőségellenőrzés</h3>
+<p><strong>Ellenőrzőlista:</strong><br />
+- A kiszámított eredő ellenállás kisebb-e a legkisebb párhuzamos elem
+ellenállásánál?<br />
+- A csomóponti törvény szerint a befolyó és elfolyó áramok összege
+nulla-e?<br />
+- A huroktörvény szerint a tápfeszültség egyenlő a soros
+feszültségesések összegével?<br />
+- Az osztóképletben a kiválasztott ellenállás van-e a számlálóban?<br />
+- A feszültségesés-mérésnél terhelés alatt mérünk-e?<br />
+- A mértékegységek végig szerepelnek-e minden lépésnél?</p>
+<h3 data-number="11.2.11" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">11.2.11</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy középkategóriás dízel járműnél a hűtőfolyadék-hőmérséklet-jelző
+indítás után azonnal magas értéket mutat. A diagnosztikai műszer élő
+adatai szerint a hőmérséklet-érzékelő jele
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{V}</annotation></semantics></math>,
+ami erősen túl magas hőmérsékletet jelent, pedig a motor hideg. Az első
+gondolat az érzékelő cseréje lenne. A feszültségosztó elvét alkalmazva
+ellenőrizzük a felhúzó ellenállást és a csatlakozó érintkezését.
+Kiderül, hogy az érzékelő csatlakozójába víz jutott, a jelvezeték és a
+test között oxidos, nedves szivárgóút alakult ki (az 5 kΩ-os érzékelővel
+párhuzamosan kb. 145 Ω), ezért az alsó ág eredője kb. 140 Ω-ra esik, és
+a jel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{V}</annotation></semantics></math>
+körülire csökken:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>140</mn><mrow><mn>2200</mn><mo>+</mo><mn>140</mn></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5\,\text{V}\cdot\frac{140}{2200+140}\approx 0{,}3\,\text{V}</annotation></semantics></math>.
+A motorvezérlő ezt tévesen magas hőmérsékletnek értelmezi. Ha viszont a
+testágba soros átmeneti ellenállás kerülne (pl.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>80</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">80\,\Omega</annotation></semantics></math>),
+a jel kissé nőne
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>47</mn><mo>→</mo><mn>3</mn><mo>,</mo><mn>49</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">3{,}47 \to 3{,}49\,\text{V}</annotation></semantics></math>),
+a vezérlő hidegebbnek látná a motort; szakadásnál a jel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5\,\text{V}</annotation></semantics></math>-ra
+ugrik. A csatlakozó tisztítása és tömítése után a jel visszatér a helyes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">3{,}5\,\text{V}</annotation></semantics></math>
+körüli értékre, a hiba megszűnik.</p>
+<p>Egy másik esetben az indítómotor lassan forgat. Az indítókör pozitív
+ágán a feszültségesést terhelés alatt megmérve
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}9\,\text{V}</annotation></semantics></math>
+esést kapunk a gyári
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>
+határérték helyett. A melegedő csatlakozó az akkumulátor pozitív
+sarujánál mozogni kezdett, megégett. A saru és a csatlakozó felület
+cseréje, tisztítása és korrózióvédelme után az esés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}15\,\text{V}</annotation></semantics></math>-ra
+csökken, az indítómotor újra megfelelő fordulatszámmal forgat.</p>
+<h3 data-number="11.2.12"
+id="gyakorlati-útmutató-feszültségesés-mérés-csatlakozókon"><span
+class="header-section-number">11.2.12</span> Gyakorlati útmutató:
+feszültségesés-mérés csatlakozókon</h3>
+<p><strong>Cél:</strong> átmeneti ellenállás kimutatása a jármű 12 V-os
+elektromos hálózatának nagyáramú körében.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> gyártmány, típusszám,
+alvázszám, motorszám, gyártási év, a vizsgált áramkör kapocsjelölései. A
+mérési határértékeket a gyártó javítási kézikönyvéből kell
+kikeresni.</p>
+<p><strong>Szükséges eszközök:</strong> multiméter (DC V, mV tartomány),
+mérőzsinórok, csatlakozó- és sorkapocstisztító, korrózióvédő kenőanyag,
+szigetelőkesztyű, feszültségmentesített mérési pontok azonosításához
+kapcsolási rajz.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák. A feszültség alatt álló
+járművillamossági mérésnél tűzveszély és rövidzárlat-veszély áll fenn; a
+multimétert a megfelelő méréshatárba kell állítani, a mérőzsinórokat
+hibaüzenet és sérülés nélküli állapotban kell használni. Az akkumulátor
+lekötésekor először a negatív pólust kell leoldani, felszereléskor
+utoljára kell visszakötni (ellenőrizendő: gyártói előírás az
+adatmentésre és a rendszerek tanítására).</p>
+<p><strong>Környezetvédelem.</strong> A korrodált csatlakozókból
+eltávolított szennyeződést, oxidot és a cserélt alkatrészeket veszélyes
+hulladékként, a műhely szabályzata szerint kell gyűjteni. A
+tisztítószert biztonsági adatlapja szerint kell kezelni.</p>
+<p><strong>Munkalépések:</strong><br />
+1. Győződjünk meg arról, hogy a jármű rögzítőfékje behúzott, a
+sebességváltó üresben van, és a kerekek kiékeltek.<br />
+2. Az áramkör terhelését a vizsgálathoz megfelelően hozzuk létre:
+világításnál a fogyasztó bekapcsolásával; indítókörnél a motor
+beindulását a gyártói eljárással akadályozzuk meg (ellenőrizendő), a
+mérőzsinórokat a forgó alkatrészektől (szíj, ventilátor) távol vezetjük,
+a segítő csak a mérő jelzésére és legfeljebb kb. 5 s-ig indítózik
+(ellenőrizendő: gyártói adat). Automata váltónál a választókar P
+állásban van.<br />
+3. A multimétert DC V tartományba, lehetőleg mV felbontásra
+állítsuk.<br />
+4. A pozitív ág méréséhez kössük a műszer egyik mérőzsinórját a vizsgált
+csatlakozó feszültségforrás felőli oldalára, a másikat a fogyasztó
+felőli oldalára.<br />
+5. A testoldali esésnél a mérőzsinórt a fogyasztó testpontja és az
+akkumulátor negatív pólusa közé kötjük.<br />
+6. A terhelést kapcsoljuk be, és olvassuk le a feszültségesést.
+Jegyezzük fel az értéket.<br />
+7. Hasonlítsuk össze a gyártói határértékkel. Például indítókörben:
+pozitív ágon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>,
+testoldalon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{V}</annotation></semantics></math>
+alatt (ellenőrizendő).<br />
+8. Ha az érték nagy, keressük meg a melegedő csatlakozót, bontsuk meg,
+tisztítsuk meg, és ha kell, cseréljük ki a sérült érintkezőt.<br />
+9. Mérés után végezzük el a javítást, húzzuk meg a gyártó által előírt
+nyomatékkal a kötést (ellenőrizendő), majd mérjünk újra.<br />
+10. Dokumentáljuk a mért értékeket a munkalapon: előtti és utáni
+feszültségesés, javítás módja, alkatrészek.</p>
+<figure id="fig-au040-1">
+<div class="fig-interactive"><iframe src="figures/html/au040-1.html" title="Feszültségesés-mérés indítókörön: pozitív ág és testoldal mérőzsinór-helyzete terhelés alatt." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au040-1.png" style="width:95.0%"
+alt="Feszültségesés-mérés indítókörön: pozitív ág és testoldal mérőzsinór-helyzete terhelés alatt." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au040-1.png" style="width:95.0%"
+alt="Feszültségesés-mérés indítókörön: pozitív ág és testoldal mérőzsinór-helyzete terhelés alatt." /></details></div>
+<figcaption>Feszültségesés-mérés az indítókörön: a mérőzsinórok helye a
+pozitív ágon és a testoldalon, valamint a csatlakozón át mért helyes és
+a vezeték végein mért hibás elrendezés</figcaption>
+</figure>
+<p>Az ábra a 4–5. lépést mutatja: a pozitív ágon az akkumulátor + pólusa
+és az indítómotor 30-as kapcsa, a testoldalon az indítómotor háza és az
+akkumulátor − pólusa közé kötjük a műszert, terhelés (indítózás) alatt.
+A részlet a tipikus hibát szemlélteti: a csatlakozón át kell mérni, mert
+a vezeték két végén mérve a saru átmeneti ellenállása kimarad. A
+HTML-változatban a mérőpontok választhatók, a műszer szimulált
+(szemléltető) átmeneti ellenállásokkal számol.</p>
+<p><strong>Tipikus hiba:</strong><br />
+- Az ellenállásmérővel végzett hideg ellenőrzés értéke jó lehet, de a
+meleg, terhelt állapotot nem mutatja.<br />
+- A mérést nem a csatlakozón, hanem a vezeték két végén végzik, így a
+csatlakozó érintkezési hibája kimutathatatlan.<br />
+- A testoldali esés mérését elfelejtik, pedig a világítás és az
+indítómotor hibái gyakran testoldali átmeneti ellenállásból
+fakadnak.</p>
+<h3 data-number="11.2.13" id="tipikus-hibák"><span
+class="header-section-number">11.2.13</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>A csomóponti törvényt a huroktörvénnyel keverik.</strong>
+Gyakran hallani: „a csomópontban a feszültségek összege nulla.” Ez
+helytelen. A csomópontban az áramok összege nulla, a feszültségek
+összegét a hurokra kell felírni. A szerelői számítás így téves
+egyenletet ad.</p></li>
+<li><p><strong>A feszültségosztó képletét rosszul állítják fel.</strong>
+A leggyakoribb hiba, hogy az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>1</mn></msub><annotation encoding="application/x-tex">R_1</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>2</mn></msub><annotation encoding="application/x-tex">R_2</annotation></semantics></math>
+közül a rossz ellenállást teszik a számlálóba. A számlálóba mindig az az
+ellenállás kerül, amelyen a feszültséget keressük. Egy
+járműműszer-jeladónál ezért fontos, hogy a jelvonal a test felőli
+oldalon legyen, különben a vezérlő teljesen más értéket lát.</p></li>
+<li><p><strong>A párhuzamos eredőt egyszerűen összeadással
+számolják.</strong> Párhuzamos kapcsolásnál az eredő mindig kisebb a
+legkisebb ellenállásnál. Ha valaki
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>200</mn><mo>+</mo><mn>300</mn><mo>=</mo><mn>500</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">200+300=500\,\Omega</annotation></semantics></math>
+eredőt kap, azzal a teljes áramot is tévesen számítja. Az ilyen
+számítási hibát könnyű felismerni a nagyságrend-ellenőrzéssel.</p></li>
+<li><p><strong>A feszültségesés-mérést feszültségmentes állapotban vagy
+ellenállásmérővel végzik.</strong> Az átmeneti ellenállás csak terhelés
+alatt, feszültségesés-módszerrel látszik megbízhatóan. Az ellenállásmérő
+kis árama nem hozza létre azt a melegedést és oxidréteg-átütési
+állapotot, mint a valódi terhelés.</p></li>
+</ol>
+<h3 data-number="11.2.14" id="önellenőrzés"><span
+class="header-section-number">11.2.14</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e: „A csomóponti törvény szerint egy zárt hurokban a
+feszültségek összege nulla.”<br />
+</li>
+<li>Számítsd ki két párhuzamos ellenállás,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=100\,\Omega</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>250</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2=250\,\Omega</annotation></semantics></math>,
+eredőjét.<br />
+</li>
+<li>Egy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\,\text{V}</annotation></semantics></math>-os
+feszültségosztóban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=3\,\text{k}\Omega</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2=1\,\text{k}\Omega</annotation></semantics></math>
+van sorosan, a kimenet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>2</mn></msub><annotation encoding="application/x-tex">R_2</annotation></semantics></math>-n. Mekkora
+a kimeneti feszültség?<br />
+</li>
+<li>Miért kell a feszültségesést terhelés alatt mérni?<br />
+</li>
+<li>Mikor kiegyenlített egy Wheatstone-híd?<br />
+</li>
+<li>Mi a hiba ebben az állításban: „Ha egy csatlakozó ellenállása megnő,
+a melegedése csökken, mert kevesebb áram folyik.”</li>
+<li>Melyik irányba mozdul a jel testzárlatnál (párhuzamos szivárgásnál),
+illetve soros átmeneti ellenállásnál egy felhúzó ellenállásos
+NTC-osztón?</li>
+</ol>
+<h3 data-number="11.2.15" id="feladatok"><span
+class="header-section-number">11.2.15</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong><br />
+Számítsa ki három sorosan kapcsolt ellenállás
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=120\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>220</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2=220\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>3</mn></msub><mo>=</mo><mn>330</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_3=330\,\Omega</annotation></semantics></math>)
+eredőjét. Mekkora áram folyik az áramkörben
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U=12\,\text{V}</annotation></semantics></math>
+feszültség hatására?</p>
+<p><strong>2. feladat (A)</strong><br />
+Egy feszültségosztó
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U=5\,\text{V}</annotation></semantics></math>
+feszültségen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=1{,}5\,\text{k}\Omega</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2=1{,}0\,\text{k}\Omega</annotation></semantics></math>
+ellenállásokból áll. Mekkora a feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>2</mn></msub><annotation encoding="application/x-tex">R_2</annotation></semantics></math>-n?</p>
+<p><strong>3. feladat (B)</strong><br />
+Az ábrán látható vegyes kapcsolásban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U=12\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>47</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=47\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2=100\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>3</mn></msub><mo>=</mo><mn>150</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_3=150\,\Omega</annotation></semantics></math>.
+Számítsa ki az eredő ellenállást, a főáramot, és minden ellenállás
+áramát és feszültségét.</p>
+<p><strong>4. feladat (B)</strong><br />
+Egy párhuzamos kapcsolás ágába
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I=2{,}5\,\text{A}</annotation></semantics></math>
+teljes áram folyik be. Az ágak ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>6</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=6\,\Omega</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>3</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2=3\,\Omega</annotation></semantics></math>.
+Számítsa ki az áramosztóval mindkét ág áramát, és ellenőrizze a
+csomóponti törvényt.</p>
+<p><strong>5. feladat (C)</strong><br />
+Wheatstone-hídban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U=10\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_1=100\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><mn>200</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_2=200\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>3</mn></msub><mo>=</mo><mn>150</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_3=150\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>4</mn></msub><mo>=</mo><mn>320</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_4=320\,\Omega</annotation></semantics></math>.
+Számítsa ki a híd A–B pontja közötti feszültséget, és állapítsa meg,
+hogy az A vagy a B pont van magasabb potenciálon, illetve mekkora az
+egyensúlyi
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>4</mn></msub><annotation encoding="application/x-tex">R_4</annotation></semantics></math>
+értéke.</p>
+<p><strong>6. feladat (D)</strong><br />
+Egy jármű világítási körén a fényszóró bal oldalon párásodik, és
+észrevehetően halványabb. A jobb oldali izzó feszültségét mérve az izzó
+kapcsain terhelés alatt
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>13</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">13{,}2\,\text{V}</annotation></semantics></math>-ot
+kapunk, a bal oldalinál csak
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">10{,}1\,\text{V}</annotation></semantics></math>-ot.
+Az izzótest felé vezető csatlakozón
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}4\,\text{V}</annotation></semantics></math>
+feszültségesést mérünk, a testoldalon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>-ot.
+Mi a legvalószínűbb hiba, milyen méréssel igazolja, és hogyan javítja? A
+határérték a gyártó szerint pozitív oldalon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>,
+testoldalon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{V}</annotation></semantics></math>
+(ellenőrizendő).</p>
+<h3 data-number="11.2.16" id="megoldások"><span
+class="header-section-number">11.2.16</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Hamis. A huroktörvény mondja ki, hogy a feszültségek algebrai
+összege egy zárt hurokban nulla. A csomóponti törvény az áramokra
+vonatkozik.<br />
+</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">eredő</mtext></msub><mo>=</mo><mfrac><mrow><mn>100</mn><mo>⋅</mo><mn>250</mn></mrow><mrow><mn>100</mn><mo>+</mo><mn>250</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>25</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mn>350</mn></mfrac><mo>≈</mo><mn>71</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{eredő}} = \frac{100 \cdot 250}{100+250} = \frac{25\,000}{350} \approx 71{,}4\,\Omega</annotation></semantics></math>.
+Értéke kisebb a kisebbik ellenállásnál.<br />
+</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>2</mn></msub><mo>=</mo><mn>12</mn><mo>⋅</mo><mfrac><mn>1</mn><mrow><mn>3</mn><mo>+</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mn>12</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>25</mn><mo>=</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_2 = 12 \cdot \frac{1}{3+1} = 12 \cdot 0{,}25 = 3\,\text{V}</annotation></semantics></math>.<br />
+</li>
+<li>Mert az átmeneti ellenállás feszültségesése csak akkor mutatkozik
+meg, ha tényleges terhelő áram folyik; az ellenállásmérő kis árama nem
+hozza létre a valós igénybevételt.<br />
+</li>
+<li>Ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><msub><mi>R</mi><mn>1</mn></msub><msub><mi>R</mi><mn>2</mn></msub></mfrac><mo>=</mo><mfrac><msub><mi>R</mi><mn>3</mn></msub><msub><mi>R</mi><mn>4</mn></msub></mfrac></mrow><annotation encoding="application/x-tex">\frac{R_1}{R_2} = \frac{R_3}{R_4}</annotation></semantics></math>,
+vagyis a két feszültségosztó azonos arányban osztja le a
+tápfeszültséget, így a középső ágban nincs áram.<br />
+</li>
+<li>A hiba: ha a csatlakozó ellenállása nő, akkor a rajta eső feszültség
+nő, és a melegedés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><msup><mi>I</mi><mn>2</mn></msup><mi>R</mi></mrow><annotation encoding="application/x-tex">P=I^2R</annotation></semantics></math>
+szerint a növekvő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>-rel
+és az áram hatásával együtt általában nő, nem csökken. Az áram kis
+mértékű csökkenése nem kompenzálja az ellenállásnövekedés okozta
+hőtermelést.</li>
+<li>Párhuzamos szivárgásnál az alsó ág eredője csökken, így a
+jelfeszültség csökken (a vezérlő melegebbnek látja a motort); soros
+átmeneti ellenállásnál az alsó ág ellenállása nő, a jel nő (hidegebb),
+szakadásnál 5 V-ra ugrik.</li>
+</ol>
+<p><strong>1. feladat (A)</strong><br />
+Soros eredő:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">ö</mtext></msub><mo>=</mo><mn>120</mn><mo>+</mo><mn>220</mn><mo>+</mo><mn>330</mn><mo>=</mo><mn>670</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{ö}} = 120 + 220 + 330 = 670\,\Omega</annotation></semantics></math>.<br />
+Áram:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>U</mi><msub><mi>R</mi><mtext mathvariant="normal">ö</mtext></msub></mfrac><mo>=</mo><mfrac><mn>12</mn><mn>670</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0179</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>17</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I = \frac{U}{R_{\text{ö}}} = \frac{12}{670} = 0{,}0179\,\text{A} = 17{,}9\,\text{mA}</annotation></semantics></math>.<br />
+Ellenőrzés: a soros ellenállások feszültségeinek összege
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>1</mn></msub><mo>+</mo><msub><mi>U</mi><mn>2</mn></msub><mo>+</mo><msub><mi>U</mi><mn>3</mn></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>0179</mn><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>120</mn><mo>+</mo><mn>220</mn><mo>+</mo><mn>330</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn><mo>,</mo><mn>0179</mn><mo>⋅</mo><mn>670</mn><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_1+U_2+U_3 = 0{,}0179 \cdot (120+220+330) = 0{,}0179 \cdot 670 = 12\,\text{V}</annotation></semantics></math>.</p>
+<p><strong>2. feladat (A)</strong><br />
+Feszültségosztó:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>2</mn></msub><mo>=</mo><mn>5</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn><mo>,</mo><mn>0</mn></mrow><mrow><mn>1</mn><mo>,</mo><mn>5</mn><mo>+</mo><mn>1</mn><mo>,</mo><mn>0</mn></mrow></mfrac><mo>=</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mo>,</mo><mn>5</mn></mrow></mfrac><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_2 = 5 \cdot \frac{1{,}0}{1{,}5+1{,}0} = 5 \cdot \frac{1}{2{,}5} = 2\,\text{V}</annotation></semantics></math>.<br />
+Ellenőrzés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>1</mn></msub><annotation encoding="application/x-tex">R_1</annotation></semantics></math>
+feszültsége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn><mo>,</mo><mn>5</mn></mrow><mrow><mn>2</mn><mo>,</mo><mn>5</mn></mrow></mfrac><mo>=</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5 \cdot \frac{1{,}5}{2{,}5} = 3\,\text{V}</annotation></semantics></math>,
+összegük
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>+</mo><mn>3</mn><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2+3=5\,\text{V}</annotation></semantics></math>.</p>
+<p><strong>3. feladat (B)</strong><br />
+A párhuzamos
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>2</mn></msub><annotation encoding="application/x-tex">R_2</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>3</mn></msub><annotation encoding="application/x-tex">R_3</annotation></semantics></math>
+eredője:<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>23</mn></msub><mo>=</mo><mfrac><mrow><mn>100</mn><mo>⋅</mo><mn>150</mn></mrow><mrow><mn>100</mn><mo>+</mo><mn>150</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>15</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mn>250</mn></mfrac><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{23} = \frac{100 \cdot 150}{100+150} = \frac{15\,000}{250} = 60\,\Omega</annotation></semantics></math>.<br />
+Teljes eredő:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">ö</mtext></msub><mo>=</mo><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>23</mn></msub><mo>=</mo><mn>47</mn><mo>+</mo><mn>60</mn><mo>=</mo><mn>107</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{ö}} = R_1 + R_{23} = 47 + 60 = 107\,\Omega</annotation></semantics></math>.<br />
+Főáram:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mn>12</mn><mn>107</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>112</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>112</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I = \frac{12}{107} = 0{,}112\,\text{A} = 112\,\text{mA}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>1</mn></msub><mo>=</mo><mi>I</mi><mo>⋅</mo><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>112</mn><mo>⋅</mo><mn>47</mn><mo>=</mo><mn>5</mn><mo>,</mo><mn>27</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_1 = I \cdot R_1 = 0{,}112 \cdot 47 = 5{,}27\,\text{V}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>23</mn></msub><mo>=</mo><mi>U</mi><mo>−</mo><msub><mi>U</mi><mn>1</mn></msub><mo>=</mo><mn>12</mn><mo>−</mo><mn>5</mn><mo>,</mo><mn>27</mn><mo>=</mo><mn>6</mn><mo>,</mo><mn>73</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{23} = U - U_1 = 12 - 5{,}27 = 6{,}73\,\text{V}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>R</mi><mn>2</mn></mrow></msub><mo>=</mo><mfrac><mrow><mn>6</mn><mo>,</mo><mn>73</mn></mrow><mn>100</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0673</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>67</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I_{R2} = \frac{6{,}73}{100} = 0{,}0673\,\text{A} = 67{,}3\,\text{mA}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>R</mi><mn>3</mn></mrow></msub><mo>=</mo><mfrac><mrow><mn>6</mn><mo>,</mo><mn>73</mn></mrow><mn>150</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0449</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>44</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I_{R3} = \frac{6{,}73}{150} = 0{,}0449\,\text{A} = 44{,}9\,\text{mA}</annotation></semantics></math>.<br />
+Ellenőrzés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>R</mi><mn>2</mn></mrow></msub><mo>+</mo><msub><mi>I</mi><mrow><mi>R</mi><mn>3</mn></mrow></msub><mo>=</mo><mn>112</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>≈</mo><mn>112</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I_{R2}+I_{R3}=112{,}2\,\text{mA} \approx 112\,\text{mA}</annotation></semantics></math>,
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>,</mo><mn>27</mn><mo>+</mo><mn>6</mn><mo>,</mo><mn>73</mn><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5{,}27+6{,}73=12\,\text{V}</annotation></semantics></math>.
+A kerekítésből adódó kis eltérés elfogadható.</p>
+<p><strong>4. feladat (B)</strong><br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mn>1</mn></msub><mo>=</mo><mi>I</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>2</mn></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>3</mn><mrow><mn>6</mn><mo>+</mo><mn>3</mn></mrow></mfrac><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>3</mn><mn>9</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>833</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_1 = I \cdot \frac{R_2}{R_1+R_2} = 2{,}5 \cdot \frac{3}{6+3} = 2{,}5 \cdot \frac{3}{9} = 0{,}833\,\text{A}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mn>2</mn></msub><mo>=</mo><mi>I</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>1</mn></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mfrac><mn>6</mn><mn>9</mn></mfrac><mo>=</mo><mn>1</mn><mo>,</mo><mn>667</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_2 = I \cdot \frac{R_1}{R_1+R_2} = 2{,}5 \cdot \frac{6}{9} = 1{,}667\,\text{A}</annotation></semantics></math>.<br />
+Ellenőrzés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>833</mn><mo>+</mo><mn>1</mn><mo>,</mo><mn>667</mn><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">0{,}833+1{,}667=2{,}5\,\text{A}</annotation></semantics></math>,
+a csomóponti törvény teljesül.</p>
+<p><strong>5. feladat (C)</strong><br />
+A két osztópont feszültsége:<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>A</mi></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>2</mn></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mn>10</mn><mo>⋅</mo><mfrac><mn>200</mn><mrow><mn>100</mn><mo>+</mo><mn>200</mn></mrow></mfrac><mo>=</mo><mn>10</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>667</mn><mo>=</mo><mn>6</mn><mo>,</mo><mn>67</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_A = U \cdot \frac{R_2}{R_1+R_2} = 10 \cdot \frac{200}{100+200} = 10 \cdot 0{,}667 = 6{,}67\,\text{V}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>B</mi></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mn>4</mn></msub><mrow><msub><mi>R</mi><mn>3</mn></msub><mo>+</mo><msub><mi>R</mi><mn>4</mn></msub></mrow></mfrac><mo>=</mo><mn>10</mn><mo>⋅</mo><mfrac><mn>320</mn><mrow><mn>150</mn><mo>+</mo><mn>320</mn></mrow></mfrac><mo>=</mo><mn>10</mn><mo>⋅</mo><mfrac><mn>320</mn><mn>470</mn></mfrac><mo>=</mo><mn>6</mn><mo>,</mo><mn>81</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_B = U \cdot \frac{R_4}{R_3+R_4} = 10 \cdot \frac{320}{150+320} = 10 \cdot \frac{320}{470} = 6{,}81\,\text{V}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>A</mi><mi>B</mi></mrow></msub><mo>=</mo><msub><mi>U</mi><mi>A</mi></msub><mo>−</mo><msub><mi>U</mi><mi>B</mi></msub><mo>=</mo><mn>6</mn><mo>,</mo><mn>67</mn><mo>−</mo><mn>6</mn><mo>,</mo><mn>81</mn><mo>=</mo><mi>−</mi><mn>0</mn><mo>,</mo><mn>14</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{AB} = U_A - U_B = 6{,}67 - 6{,}81 = -0{,}14\,\text{V}</annotation></semantics></math>.<br />
+A B pont magasabb potenciálon van, mert az A-hoz képest negatív a
+különbség.<br />
+Az egyensúlyi ellenállás:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>4</mn></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mn>2</mn></msub><msub><mi>R</mi><mn>3</mn></msub></mrow><msub><mi>R</mi><mn>1</mn></msub></mfrac><mo>=</mo><mfrac><mrow><mn>200</mn><mo>⋅</mo><mn>150</mn></mrow><mn>100</mn></mfrac><mo>=</mo><mn>300</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_4 = \frac{R_2 R_3}{R_1} = \frac{200 \cdot 150}{100} = 300\,\Omega</annotation></semantics></math>.</p>
+<p><strong>6. feladat (D)</strong><br />
+A tünetek: a bal oldali izzó feszültsége jóval alacsonyabb, mint a jobb
+oldali, a csatlakozó felé vezető pozitív ágon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}4\,\text{V}</annotation></semantics></math>,
+a testoldalon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>
+esés mérhető. A gyártói határértékeket túllépő feszültségesés
+csatlakozó-átmeneti ellenállásra utal, különösen a pozitív oldalon. A
+párásodás és a halvány fény is megerősíti, hogy a csatlakozó nagy
+valószínűséggel melegszik és oxidálódott.<br />
+Méréssel igazoljuk: a fényszóró izzó foglalatához vezető pozitív ág
+csatlakozójának két oldalán, terhelés alatt, mV felbontású multiméterrel
+mérjük a feszültségesést. Ha az esés a határérték felett van, akkor a
+csatlakozó szétszedése után szemrevételezéssel ellenőrizzük az
+érintkezők oxidációját, megolvadt szigetelését.<br />
+Javítás: a csatlakozót feszültségmentes állapotban bontjuk, az
+érintkezőket cseréljük vagy alaposan megtisztítjuk, korrózióvédő
+kenőanyaggal kezeljük, majd a gyártó szerinti meghúzási nyomatékkal
+rögzítjük. Végül újra megmérjük a feszültségesést. A helyes eredménynek
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>,
+illetve testoldalon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{V}</annotation></semantics></math>
+alatt kell lennie (ellenőrizendő). A javítás után ellenőrizzük az izzó
+fényét és a munkalapon dokumentálunk.</p>
+<h3 data-number="11.2.17" id="rövid-összefoglaló"><span
+class="header-section-number">11.2.17</span> Rövid összefoglaló</h3>
+<p>A Kirchhoff-törvények a járművillamossági hibakeresés alapjai. A
+csomóponti törvény szerint egy csomópontban a befolyó és elfolyó áramok
+összege nulla, a huroktörvény szerint pedig egy zárt hurokban a
+feszültségek előjeles összege nulla. A soros kapcsolású ellenállások
+összeadódnak, a párhuzamosok eredője kisebb a legkisebb ellenállásnál;
+két ellenállásra
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">eredő</mtext></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mn>1</mn></msub><msub><mi>R</mi><mn>2</mn></msub></mrow><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">R_{\text{eredő}} = \frac{R_1 R_2}{R_1+R_2}</annotation></semantics></math>.
+A feszültségosztó képlet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>x</mi></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mi>x</mi></msub><mrow><mo>∑</mo><mi>R</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">U_x = U \cdot \frac{R_x}{\sum R}</annotation></semantics></math>,
+az áramosztó
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>x</mi></msub><mo>=</mo><mi>I</mi><mo>⋅</mo><mfrac><msub><mi>R</mi><mtext mathvariant="normal">másik</mtext></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">I_x = I \cdot \frac{R_{\text{másik}}}{R_1+R_2}</annotation></semantics></math>.
+A Wheatstone-híd akkor kiegyenlített, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><msub><mi>R</mi><mn>1</mn></msub><msub><mi>R</mi><mn>2</mn></msub></mfrac><mo>=</mo><mfrac><msub><mi>R</mi><mn>3</mn></msub><msub><mi>R</mi><mn>4</mn></msub></mfrac></mrow><annotation encoding="application/x-tex">\frac{R_1}{R_2} = \frac{R_3}{R_4}</annotation></semantics></math>.
+Az áram hőhatása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><msup><mi>I</mi><mn>2</mn></msup><mi>R</mi></mrow><annotation encoding="application/x-tex">P=I^2R</annotation></semantics></math>,
+a hővezetés, hőáramlás és hősugárzás határozza meg az izzítógyertya, a
+biztosító és a fűtőbetétek működését. A csatlakozókon fellépő átmeneti
+ellenállást terhelés alatti feszültségesés-méréssel mutatjuk ki; a
+melegedő, oxidált csatlakozót ki kell cserélni. A feszültségosztó és a
+feszültségesés-mérés elvét a generátor, a félvezetős áramkörök, a
+méréstechnika és a fedélzeti hálózat diagnosztikája alfejezetekben
+használjuk tovább.</p>
+<h3 data-number="11.2.18" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">11.2.18</span> Források és ellenőrzési
+hiányok</h3>
+<p><strong>Forrástípusok:</strong> MSZ EN 60617 / IEC 60617 rajzjelek
+(kapcsolási rajz), gyártói javítási kézikönyvek feszültségesési
+határértékei, elektrotechnikai tankönyvi alapok.</p>
+<p><strong>Ellenőrizendő állítások:</strong><br />
+- a kalória pontos átszámítása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>1868</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J/cal</mtext></mrow><annotation encoding="application/x-tex">4{,}1868\,\text{J/cal}</annotation></semantics></math>;<br />
+- az indítókör feszültségesési határértékei (pozitív
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>,
+test
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{V}</annotation></semantics></math>)
+gyártótól függenek;<br />
+- a 12 V-os jármű elektromos rendszer mérési biztonsági
+követelményei;<br />
+- a példaként használt izzítógyertya ellenállása és árama
+típusfüggő.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au039.html">← 11.1 Villamos alapfogalmak, Ohm-törvény, munka, teljesítmény és hatásfok</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au041.html">11.3 Generátorok, belső ellenállás és a szuperpozíció →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>37.5 Dízeldiagnosztika: adagolás, common rail, PDE és EDC –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz9">IX. RÉSZ – Járműkarbantartás, hatósági vizsgálat és diagnosztika</a> › <a href="index.html#auch36">37 Motordiagnosztika</a></p>
+<div class="links"><a class="prev" rel="prev" href="au135.html">← 37.4 Gázelemzés és füstölésmérés</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au137.html">37.6 Levegőellátás, kipufogórendszer, turbófeltöltő és fogyasztásmérés diagnosztikája →</a></div>
+</nav>
+<h2 data-number="37.5" id="au136"><span
+class="header-section-number">37.5</span> Dízeldiagnosztika: adagolás,
+common rail, PDE és EDC</h2>
+<h3 data-number="37.5.1" id="motiváció"><span
+class="header-section-number">37.5.1</span> Motiváció</h3>
+<p>Egy dízelautó hidegen nehezen indul, melegen gyenge, néha fekete
+füstöt ereszt. A rendszerteszter szerint a „rail-nyomás túl alacsony”,
+vagy az injektorok korrekciós értékei szélső tartományba kerültek.
+Ilyenkor a hiba lehet egyszerű szűrő, levegő a szívóági csőben, kopott
+injektor vagy a nagynyomású szivattyú. Ebben az alfejezetben
+megtanuljuk, hogyan dolgozzuk fel a dízeltüzelőanyag-rendszer hibáit,
+hogyan mérjük a szállításkezdetet, a rail-nyomást, az injektorok
+visszafolyó mennyiségét, és hogyan vizsgáljuk a szivattyú-porlasztó
+egységet (PDE) és az EDC-rendszert.</p>
+<h3 data-number="37.5.2" id="szemléletes-kép"><span
+class="header-section-number">37.5.2</span> Szemléletes kép</h3>
+<p>Képzeljünk el egy common rail dízelt. A tankban egy elektromos
+tápszivattyú dolgozik, a motorra szerelt nagynyomású szivattyú egy közös
+csőbe (rail) nyomja az üzemanyagot, amelyen nyomásérzékelő és
+szabályozószelep ül. A railből négy, elektronikusan vezérelt injektor
+kapja az üzemanyagot. A diagnosztikai műszeren egyszerre látjuk a kért
+és a tényleges rail-nyomást, az injektorok korrekciós értékeit, a
+szivattyú vezérlő jelének kitöltési tényezőjét. A fizikai méréshez le
+kell választani az injektorok visszafolyó csövét, és mérni a visszafolyó
+üzemanyag mennyiségét. Az alábbi folyamatábra a hibakeresés sorrendjét
+szemlélteti.</p>
+<figure>
+<img src="assets/au136-diagram-1.png"
+alt="Common rail hibakeresési sorrend nehezen induló, gyenge dízelmotorra - Szemléltető sorrend; a konkrét lépések a gyártói diagnosztika szerint változhatnak." />
+<figcaption aria-hidden="true">Common rail hibakeresési sorrend nehezen
+induló, gyenge dízelmotorra - Szemléltető sorrend; a konkrét lépések a
+gyártói diagnosztika szerint változhatnak.</figcaption>
+</figure>
+<p>A folyamatábra lépéseit a későbbi hibakeresési esetben is
+használjuk.</p>
+<h3 data-number="37.5.3" id="definíciók-és-összefüggések"><span
+class="header-section-number">37.5.3</span> Definíciók és
+összefüggések</h3>
+<p><strong>Definíció.</strong> A dízeldiagnosztika során a tüneteket
+három fő területre bontjuk: <strong>alacsony nyomású oldal</strong>
+(tankbeli tápszivattyú, szűrő, szívócsövek), <strong>nagynyomású
+oldal</strong> (nagynyomású szivattyú, rail, injektorok), valamint
+<strong>szabályozás</strong> (EDC vezérlő, jeladók, beavatkozók,
+kódolás).</p>
+<p><strong>Definíció.</strong> A <strong>szállításkezdet</strong> (start
+of delivery) az az időpont, amikor a befecskendező szivattyú vagy a
+szivattyú-porlasztó egység elindítja az üzemanyag-adagolást a
+nagynyomású cső felé. A <strong>befecskendezési szög</strong> (injection
+timing) a befecskendezés kezdetének szöghelyzete a főtengely felső
+holtpontja (TDC) előtt vagy után fokban. A <strong>statikus
+szög</strong> a berendezés beszerelési, mechanikus időzítése; a
+<strong>dinamikus szög</strong> a tényleges, működés közbeni érték,
+amelyet nyomásjelből vagy elektromos vezérlésből mérünk.</p>
+<p><strong>Összefüggés.</strong> A befecskendezési szög hibája
+befolyásolja a gyulladást, a zajt, a füstölést és a teljesítményt. Túl
+késői befecskendezés: fehér vagy fekete füst, gyenge teljesítmény, magas
+kipufogógáz-hőmérséklet. Túl korai befecskendezés: erős égési zaj
+(dízelkopogás), magas égési csúcsnyomás, esetleg megnövekedett
+NOx-kibocsátás. A pontos szög a gyártói adat, és a motor
+fordulatszámával, terhelésével változik.</p>
+<p><strong>Definíció.</strong> A <strong>nyomáshullám-elemzés</strong> a
+befecskendező csőben terjedő nyomáshullámok mérése piezoelektromos
+nyomásérzékelővel. A befecskendezéskor a nyomáshullám a fúvóka felé
+halad, visszaverődik, és a hullámok interferálhatnak. A mért görbéből
+meghatározható a szállításkezdet, a fúvóka nyitási nyomása és a
+hullámforma. Ezt a módszert főként hagyományos soros vagy elosztó
+befecskendező rendszereknél alkalmazzák.</p>
+<p><strong>Definíció.</strong> A <strong>common rail visszafolyó
+mennyiség</strong> (return flow) az injektorok belső szivárgásából és a
+nyomásszabályozó visszavezetéséből származó üzemanyag-mennyiség
+időegységenként. A kopott injektor túl nagy belső szivárgása csökkenti a
+rail-nyomást, és indítási nehézséget okozhat.</p>
+<p><strong>Definíció.</strong> A <strong>PDE</strong>
+(Pumpe-Düse-Einheit, szivattyú-porlasztó egység) hengerenkénti
+befecskendezési rendszer, amelyben a szivattyúelem és a porlasztó egy
+egységben van, és a vezérműtengely bütyke működteti.</p>
+<p><strong>Definíció.</strong> Az <strong>EDC</strong> (Electronic
+Diesel Control) elektronikus dízelmotor-szabályozó rendszer, amely a
+jeladók (fordulatszám, pedálállás, hűtővíz-hőmérséklet, légtömeg,
+rail-nyomás stb.) jelei alapján szabályozza a befecskendezési
+mennyiséget, a befecskendezési szöget és a rail-nyomást.</p>
+<h3 data-number="37.5.4"
+id="dízeldiagnosztika-sajátosságai-és-nem-fedélzeti-vizsgálatok"><span
+class="header-section-number">37.5.4</span> Dízeldiagnosztika
+sajátosságai és nem fedélzeti vizsgálatok</h3>
+<p>A dízelmotor befecskendező rendszere nagy pontosságú hidraulikus
+rendszer. A régebbi dízelekben nem minden hiba látható az EOBD-ben, mert
+az EOBD csak a kibocsátást befolyásoló hibákat jelzi. Ezért a
+diagnosztika gyakran <strong>nem fedélzeti mérésekkel</strong> kezdődik:
+előnyomás-mérés, visszafolyási mérés, porlasztóvizsgálat,
+nyomáshullám-elemzés.</p>
+<p><strong>Fordulatszám és TDC jel mérése.</strong> A szállításkezdet
+méréséhez referenciajelet kell venni. Modern rendszereknél ezt a
+főtengely- és vezérműtengely-jeladó jele adja, régebbi rendszereknél
+optikai vagy mágneses jeladót szerelünk a főtengelyre vagy a
+szivattyútengelyre. A nyomáshullám-jelhez viszonyítva kapjuk meg a
+befecskendezési szög fokát. A mérést az 1. henger felső holtpontjához
+(TDC) kalibráljuk.</p>
+<p>A <strong>nyomáshullám-elemzés</strong> során a befecskendező csőre
+szerelt piezoelektromos érzékelő jele az oszcilloszkópon: az adagolási
+nyomás emelkedése, a fúvóka nyitási csúcsa, majd a hullámok. A mérési
+görbét a gyártói specifikációval vetjük össze. A görbe emelkedésének
+kezdete a szállításkezdet, a csúcs a fúvóka nyitási nyomásához
+kötődik.</p>
+<p><strong>Porlasztóvizsgálat próbapadon.</strong> A porlasztócsúcsot
+(fúvókát) leszereljük, és próbapadra tesszük. A próbapad kézi vagy
+motoros szivattyúval nyomást épít, a nyomásmérőn leolvassuk a
+nyitónyomást, ellenőrizzük a porlasztási képet, a csepegést és a
+tömítettséget. A nyitónyomás jellemzően 150–300 bar között van
+(ellenőrizendő: gyártói adat). A porlasztási képnek egyenletes, kúpos
+ködnek kell lennie, csepegés nélkül.</p>
+<p><strong>Figyelem.</strong> A porlasztósugár bőrbe hatolva súlyos,
+akár amputációhoz vezető sérülést okoz: a kezet soha ne tartsuk a sugár
+útjába, a fúvókát zárt, átlátszó védőburkolatú, elszívott gyűjtőedénybe
+porlasszuk, védőszemüveget és vegyszerálló kesztyűt viseljünk; a ködöt
+ne lélegezzük be (tűzveszély, szikra és nyílt láng kizárva).
+Sugársérülés gyanújánál azonnal orvoshoz kell fordulni.</p>
+<p><strong>PDE vizsgálat.</strong> A PDE egységekben a szivattyú és a
+porlasztó egy egységben van, ezért a próbapadon csak magasabb nyomású
+vizsgálóberendezéssel (PDE-próbapad) lehet vizsgálni, vagy a motoron
+mért visszafolyási és üzemanyag-nyomás értékek alapján. A hengerenkénti
+PDE-k cseréjénél be kell kódolni a korrekciós értékeket.</p>
+<h3 data-number="37.5.5" id="common-rail-diagnosztika"><span
+class="header-section-number">37.5.5</span> Common rail
+diagnosztika</h3>
+<p>A common rail rendszer diagnosztikai sorrendje a következő (a
+folyamatábra is ezt szemlélteti):</p>
+<ol type="1">
+<li>Hibakódok kiolvasása rendszerteszterrel.</li>
+<li>Alacsony nyomású oldal ellenőrzése: tankbeli tápszivattyú nyomása,
+szűrő állapota, légtelenítés.</li>
+<li>Rail-nyomás tényleges értékének összehasonlítása a kért értékkel,
+alapjáraton, terhelésen és indításkor.</li>
+<li>Injektorok visszafolyó mennyiségének mérése.</li>
+<li>A nagynyomású szivattyú és a szabályozószelepek
+(mennyiségszabályozó, nyomásszabályozó) vizsgálata.</li>
+<li>Injektor-korrekciók (IMA kódolás) ellenőrzése.</li>
+</ol>
+<p><strong>Alacsony nyomású oldal.</strong> A tankban lévő elektromos
+szivattyú jellemzően 3–5 bar nyomást ad (ellenőrizendő: gyártói adat). A
+szűrő előtt és után mért nyomáskülönbség nő, ha a szűrő eldugult. A
+szívási oldali levegőbeszivárgás instabil járást okoz. A mérést
+nyomásmérővel vagy diagnosztikai műszerrel (üzemanyag-előnyomás
+paraméter) végezzük.</p>
+<p><strong>Rail-nyomás mérése.</strong> A diagnosztikai műszer mutatja a
+kért és a tényleges rail-nyomást. Indításkor a rail-nyomásnak gyorsan
+fel kell épülnie a minimális indítási nyomásra (például 250–300 bar,
+ellenőrizendő). Ha a szivattyú vagy a nyomásszabályozó hibás, a nyomás
+nem éri el a kért értéket. A nyomásszabályozó szelepet (DRV) az ECU
+elektromos jellel (PWM) vezérli; a hiba gyakran a szelep tömítetlensége
+vagy a vezérlés hibája.</p>
+<p><strong>Injektor visszafolyó mennyiség mérése.</strong>
+Szétválasztjuk a visszafolyó csövet az injektoroknál, és mérőedényekbe
+gyűjtjük az üzemanyagot. A motort indítóval forgatjuk, vagy járó motor
+mellett mérünk. A megengedett érték rendszer- és üzemállapotfüggő
+(tanulási példa: 25 ml/perc hengerenként); a hengerek közötti arányt is
+értékeljük (ellenőrizendő: gyártói eljárás). A megnövekedett
+visszafolyás belső tömítetlenségre utal. A mérési eljárást a Gyakorlati
+útmutató tartalmazza.</p>
+<p><strong>Injektor-korrekciók.</strong> A modern EDC az injektorok
+gyártási szórását egyedi kódolási értékekkel (IMA vagy QR kód)
+kompenzálja. Ha injektort cserélünk, be kell kódolni a korrekciós
+értéket, különben durva járás, kopogás vagy megnövekedett fogyasztás
+lehet.</p>
+<p><strong>Nagynyomású szivattyú és szabályozószelepek.</strong> A
+szivattyú kopása alacsony rail-nyomást okoz teljes terhelésnél. A
+szívóoldali mennyiségszabályozó (VCV) a bemenő mennyiséget szabályozza;
+ha beragad, a nyomás nem szabályozható. A nyomásoldali szabályozó
+(PCV/DRV) a rail nyomást engedi le. Mindkettőt elektromos jellel (PWM)
+vezérli az ECU; diagnosztikai műszerrel a vezérlési kitöltési tényezőt
+és a tényleges nyomást követhetjük.</p>
+<h3 data-number="37.5.6" id="kidolgozott-példák"><span
+class="header-section-number">37.5.6</span> Kidolgozott példák</h3>
+<p><strong>1. példa – Injektor visszafolyó mennyiség
+kiértékelése.</strong> Egy common rail motor indításkor a kért
+rail-nyomás 300 bar, de a tényleges csak 180 bar. A visszafolyó mérésnél
+a következő értékeket kapjuk: 1. henger 20 ml/perc, 2. 15 ml/perc, 3. 18
+ml/perc, 4. 120 ml/perc. Mekkora a teljes visszafolyás, és melyik
+injektor gyanús?</p>
+<p><strong>Számítás.</strong> Teljes visszafolyás:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mo>+</mo><mn>15</mn><mo>+</mo><mn>18</mn><mo>+</mo><mn>120</mn><mo>=</mo><mn>173</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ml/perc</mtext></mrow><annotation encoding="application/x-tex">20 + 15 + 18 + 120 = 173\,\text{ml/perc}</annotation></semantics></math>.
+A 4. henger visszafolyása (120 ml/perc) sokkal nagyobb, mint a többi
+(15–20 ml/perc). A gyártói határérték például 25 ml/perc hengerenként
+(ellenőrizendő); a 4. injektor belső tömítetlen, ez okozhatja a
+rail-nyomás esését. Cserélni kell az injektort. ∎</p>
+<p><strong>2. példa – Befecskendezési szög számítása
+nyomáshullám-elemzésből.</strong> Egy hagyományos elosztó befecskendező
+rendszerű dízelen a referenciajelet 10 000 Hz mintavételi frekvenciával
+rögzítjük. A referenciajel az 1. henger TDC-je előtt 30°-nál jelentkezik
+(jelölő a lendkeréken). A jel és a nyomásemelkedés kezdete között 12
+minta telik el. A motor fordulatszáma 2000 1/min. Mekkora a mért
+befecskendezési szög? (A példa egyszerűsített: 1 minta = 1,2°, a ±1°-os
+tűréshez ennél jóval nagyobb, legalább 50 kHz-es mintavétel kell.)</p>
+<p><strong>Számítás.</strong> Mintavételi idő:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>12</mn><mi>/</mi><mn>10</mn><mspace width="0.167em"></mspace><mn>000</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>0012</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">t = 12/10\,000 = 0{,}0012\,\text{s}</annotation></semantics></math>.
+Fordulatszám:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>2000</mn><mspace width="0.167em"></mspace><mn>1</mn><mi>/</mi><mtext mathvariant="normal">min</mtext><mo>=</mo><mn>33</mn><mo>,</mo><mn>33</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ford/s</mtext></mrow><annotation encoding="application/x-tex">n = 2000\,1/\text{min} = 33{,}33\,\text{ford/s}</annotation></semantics></math>,
+így egy fordulat ideje
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>33</mn><mo>,</mo><mn>33</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>03</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">T = 1/33{,}33 = 0{,}03\,\text{s}</annotation></semantics></math>.
+A szög:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mi>/</mi><mi>T</mi><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>0012</mn><mi>/</mi><mn>0</mn><mo>,</mo><mn>03</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>=</mo><mn>14</mn><mo>,</mo><msup><mn>4</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi = (t/T)\cdot 360^{\circ} = (0{,}0012/0{,}03)\cdot 360^{\circ} = 14{,}4^{\circ}</annotation></semantics></math>.
+A nyomásemelkedés a referenciajel után
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><msup><mn>4</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">14{,}4^{\circ}</annotation></semantics></math>-kal
+érkezik, ezért a befecskendezés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>30</mn><mo>∘</mo></msup><mo>−</mo><mn>14</mn><mo>,</mo><msup><mn>4</mn><mo>∘</mo></msup><mo>=</mo><mn>15</mn><mo>,</mo><msup><mn>6</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">30^{\circ} - 14{,}4^{\circ} = 15{,}6^{\circ}</annotation></semantics></math>-kal
+TDC előtt kezdődik. A gyártói specifikáció például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>10</mn><mo>∘</mo></msup><mo>±</mo><msup><mn>1</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">10^{\circ}\pm 1^{\circ}</annotation></semantics></math>
+TDC előtt (ellenőrizendő); a mért érték túl korai, ezért a szivattyú
+időzítését korrigálni kell, vagy a dinamikus időzítő hibás. ∎</p>
+<p><strong>Hibás példa.</strong> Valaki a nyomáshullám-elemzésnél a TDC
+jelet nem kalibrálta, és a nyomáshullám csúcsát vette
+szállításkezdetnek, nem az emelkedés kezdetét. Ez félrevezető, mert a
+csúcs a fúvóka nyitásához kötődik, ami a szállításkezdet után van. A
+helyes mérés az emelkedés kezdetét veszi alapul.</p>
+<h3 data-number="37.5.7" id="előírások"><span
+class="header-section-number">37.5.7</span> Előírások</h3>
+<p><strong>Előírás.</strong> A dízeltüzelőanyag-rendszeren végzett munka
+előtt a nagynyomású részt nyomásmentesíteni kell a gyártói utasítás
+szerint. A nagynyomású üzemanyagsugár bőrbe hatolva súlyos sérülést
+okoz.</p>
+<p><strong>Előírás.</strong> A befecskendezési rendszer javításánál csak
+a gyártó által előírt alkatrészeket és kódolási eljárást szabad
+alkalmazni; az injektorok korrekciós kódjait a vezérlőegységbe be kell
+írni (ellenőrizendő: gyártói adat).</p>
+<p><strong>Előírás.</strong> Az EOBD/OBD rendszer a dízeleknél a
+kibocsátással összefüggő hibákat jelzi; a diagnosztikai hibakódok
+értelmezése az ISO 15031 szabvány alapján történik (a szabvány pontos
+száma ellenőrizendő).</p>
+<h3 data-number="37.5.8" id="minőségellenőrzés"><span
+class="header-section-number">37.5.8</span> Minőségellenőrzés</h3>
+<p>A dízeldiagnosztikai méréseknél mindig a gyártói értékekhez
+viszonyítunk: - Rail-nyomás alapjáraton, indításkor, teljes terhelésen
+(példaértékek) - Injektor visszafolyó mennyiség (ml/perc) - Alacsony
+nyomás (bar) - Szállításkezdet szögértéke (°) - Porlasztó nyitónyomása
+(bar) - Vezérlési jelek (PWM kitöltési tényező %)</p>
+<p>A méréseket dokumentálni kell, és a hibakódok törlését csak a javítás
+után szabad elvégezni, utána próbaúttal ellenőrizni.</p>
+<h3 data-number="37.5.9" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">37.5.9</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Eset: Nehezen induló, gyenge dízelmotor</strong></p>
+<p>Egy öreg common rail dízelautó hidegen nehezen indul, melegen gyenge,
+néha fekete füst. A tulajdonos szerint a szűrő cseréje volt esedékes, de
+nem segített. A műhelyben a következőket végezzük:</p>
+<ol type="1">
+<li><strong>Hibakód kiolvasása:</strong> nincs kibocsátási hibakód, de a
+fedélzeti adatoknál az üzemanyag-előnyomás alacsony (2,5 bar a kért 3,5
+bar helyett).</li>
+<li><strong>Alacsony nyomású oldal ellenőrzése:</strong> az
+üzemanyagszűrő házában sok szennyeződés, a szűrő eldugult. Cseréjük és
+légtelenítés, az előnyomás 3,6 bar-ra emelkedik, az indítás javul, de a
+teljesítmény még nem jó.</li>
+<li><strong>Rail-nyomás mérés teljes terhelésnél:</strong> kért 1600
+bar, tényleges 1450 bar (ellenőrizendő értékek) – eltérés.</li>
+<li><strong>Injektor visszafolyó mérés:</strong> 1. henger 22 ml/perc,
+2. 18 ml/perc, 3. 21 ml/perc, 4. 110 ml/perc. A gyártói határérték 25
+ml/perc; a 4. injektor belső tömítetlen.</li>
+<li><strong>Javítás:</strong> a 4. injektor cseréje, korrekciós kód
+beírása, üzemanyagszűrő csere.</li>
+<li><strong>Ellenőrzés:</strong> próbaút után az indítás könnyű, a
+teljesítmény visszatért, a rail-nyomás eléri a kért értéket, a
+visszafolyó mennyiség minden hengernél 20 ml/perc alatt van.</li>
+<li><strong>Megelőzés:</strong> üzemanyagszűrő csere az előírt
+ciklusban, jó minőségű üzemanyag, a rail-nyomás eltérésének korai
+jelzése.</li>
+</ol>
+<h3 data-number="37.5.10"
+id="gyakorlati-útmutató-common-rail-visszafolyó-mennyiség-mérése"><span
+class="header-section-number">37.5.10</span> Gyakorlati útmutató: Common
+rail visszafolyó mennyiség mérése</h3>
+<p><strong>Cél:</strong> Az injektorok belső tömítetlenségének
+kimutatása.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> Kiolvassuk a gyártói
+adatokat (motorkód, rendszer típusa, injektor-korrekciós kódok).</p>
+<p><strong>Szükséges szerszámok, műszerek:</strong> mérőedények (50–100
+ml-es, ml osztással), csatlakozó-leszorító szerszám, diagnosztikai
+műszer, gyűjtőedény, tömítések, nitril kesztyű, védőszemüveg.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Munkavédelmi és környezetvédelmi lépések:</strong> A motor
+járása közben a forgó részek és forró felületek miatt óvatosan
+dolgozunk. Az üzemanyag-gőz tűzveszélyes, nyílt láng és szikra tilos. A
+kifolyt üzemanyagot veszélyes hulladékként gyűjtjük. A nagynyomású
+rendszeren végzett munka előtt a gyártói nyomásmentesítést el kell
+végezni; a visszafolyó mérésnél a rendszer nyomása alacsony, de a
+motortér biztonságát meg kell őrizni.</p>
+<figure id="fig-au136-1">
+<div class="fig-interactive"><iframe src="figures/html/au136-1.html" title="Common rail motor injektorainak visszafolyó csonkjai átlátszó tömlőkkel mérőhengerekhez kötve; a nagynyomású csöveket nem bontjuk, a gyári visszafolyó vezetéket lezárjuk; a leolvasott mennyiségek közül a 4. injektoré kiugró." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au136-1.png" style="width:95.0%"
+alt="Common rail motor injektorainak visszafolyó csonkjai átlátszó tömlőkkel mérőhengerekhez kötve; a nagynyomású csöveket nem bontjuk, a gyári visszafolyó vezetéket lezárjuk; a leolvasott mennyiségek közül a 4. injektoré kiugró." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au136-1.png" style="width:95.0%"
+alt="Common rail motor injektorainak visszafolyó csonkjai átlátszó tömlőkkel mérőhengerekhez kötve; a nagynyomású csöveket nem bontjuk, a gyári visszafolyó vezetéket lezárjuk; a leolvasott mennyiségek közül a 4. injektoré kiugró." /></details></div>
+<figcaption>Common rail injektorok visszafolyó mennyiségének mérése
+mérőhengerekkel (sematikus vonalrajz)</figcaption>
+</figure>
+<p>Az (a) részábrán a vastag nagynyomású csöveket (⊘) nem bontjuk; csak
+a gyári visszafolyó vezetéket választjuk le és zárjuk le, az injektorok
+visszafolyó csonkjaira átlátszó tömlőkön át azonos magasságban álló
+mérőhengerek kerülnek. A (b) részábra az 1. kidolgozott példa
+leolvasását mutatja: a 4. injektor 120 ml/perc értéke messze a
+hengerenkénti példahatár (25 ml/perc, ellenőrizendő) fölött van. A
+HTML-változatban a mérőhengerek töltődése lejátszható, és a hibás
+injektor kiválasztható.</p>
+<p><strong>Mérés lépései:</strong></p>
+<ol type="1">
+<li>Győződjön meg róla, hogy a motor hideg, a gyújtás ki van kapcsolva,
+a kulcsot távol tartjuk.</li>
+<li>Végezze el a gyártói nyomásmentesítést a nagynyomású
+rendszeren.</li>
+<li>Azonosítsa az injektorok visszafolyó csövét (rendszerint a fúvókák
+tetején lévő vékony műanyag cső).</li>
+<li>Válassza le a visszafolyó csövet az injektoroknál, és zárja le a cső
+nyitott végét, hogy ne szivárogjon.</li>
+<li>Csatlakoztasson mérőedényeket az injektorok visszafolyó
+csatlakozójához.</li>
+<li>Indítsa el a motort, és járassa alapjáraton a gyártó által megadott
+ideig (például 1 percig).</li>
+<li>Állítsa le a motort, és olvassa le az egyes edényekben lévő
+üzemanyag mennyiségét.</li>
+<li>Hasonlítsa össze a hengerenkénti értékeket a gyártói határértékkel
+(például 25 ml/perc, ellenőrizendő).</li>
+<li>Ha egy henger értéke kiugró, az injektor belső tömítetlen, cserére
+szorul.</li>
+<li>Szerelje vissza a csöveket új tömítésekkel, légtelenítse a
+rendszert.</li>
+<li>Törölje a hibakódokat, majd próbaúttal ellenőrizze.</li>
+</ol>
+<p><strong>Dokumentálás:</strong> Munkalapon rögzítsük a mért értékeket,
+a határértéket, az elvégzett javítást.</p>
+<h3 data-number="37.5.11" id="tipikus-hibák"><span
+class="header-section-number">37.5.11</span> Tipikus hibák</h3>
+<p><strong>Hiba 1.</strong> A nyomásszabályozó szelep elektromos
+csatlakozóját leválasztva a rendszert nyomás alatt bontja.
+<strong>Helyes gyakorlat:</strong> Mindig a gyártói nyomásmentesítés
+után, védőkesztyűben és védőszemüvegben dolgozunk.</p>
+<p><strong>Hiba 2.</strong> Az injektor visszafolyó mérésénél a motort
+nem a megadott ideig járatja, ezért az értékek nem összehasonlíthatók.
+<strong>Helyes gyakorlat:</strong> Pontosan azonos ideig mérünk, és a
+gyártói határértékkel vetünk össze.</p>
+<p><strong>Hiba 3.</strong> Az EOBD hibakódok alapján azonnal injektort
+cserél, pedig a hiba a szűrőben van. <strong>Helyes gyakorlat:</strong>
+Először az alacsony nyomású oldalt és a rail-nyomást ellenőrizzük,
+mielőtt drága nagynyomású alkatrészeket cserélnénk.</p>
+<p><strong>Hiba 4.</strong> Az injektor korrekciós kódját nem írja be a
+vezérlőegységbe csere után. <strong>Helyes gyakorlat:</strong> A kód
+beírása kötelező, különben durva járás és magas fogyasztás
+jelentkezhet.</p>
+<h3 data-number="37.5.12" id="önellenőrzés"><span
+class="header-section-number">37.5.12</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Mi a különbség a statikus és dinamikus befecskendezési szög
+között?</li>
+<li>Miért fontos a rail-nyomás mérés indításkor?</li>
+<li>Nagyságrendileg mennyi lehet egy tipikus injektor visszafolyó
+mennyisége?</li>
+<li>Milyen értékeket kell kódolni az injektor cseréjekor?</li>
+<li>Mi a veszélye a nagynyomású dízeltüzelőanyag-sugárnak?</li>
+<li>Ha a diagnosztikai műszer „rail-nyomás túl alacsony” hibát mutat,
+milyen sorrendben vizsgálná?</li>
+</ol>
+<p>A válaszok a Megoldások részben.</p>
+<h3 data-number="37.5.13" id="feladatok"><span
+class="header-section-number">37.5.13</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Sorolja fel a common rail
+diagnosztika három fő vizsgálati területét, és adjon meg mindegyikhez
+egy tipikus mérést.</p>
+<p><strong>2. feladat (A).</strong> Egy injektor visszafolyó mérésénél
+az alábbi értékeket kapjuk: 1. henger 25 ml/perc, 2. 28 ml/perc, 3. 33
+ml/perc, 4. 22 ml/perc. A gyártói határérték 30 ml/perc. Melyik injektor
+hibás?</p>
+<p><strong>3. feladat (B).</strong> Egy hagyományos dízelen a
+szállításkezdetet nyomáshullám-elemzéssel mérjük. A referenciajelet 10
+000 Hz mintavételi frekvenciával rögzítjük; a jel az 1. henger TDC-je
+előtt 30°-nál jelentkezik. A jel és a nyomásemelkedés kezdete között 12
+minta telik el. Mekkora a befecskendezési szög (TDC előtt), ha a motor
+fordulatszáma 2000 1/min? (Emlékeztető: 1 fordulat = 360°, az idő a
+minták száma / mintavételi frekvencia.)</p>
+<p><strong>4. feladat (B).</strong> Egy common rail motor indításkor a
+rail-nyomás 260 bar, de a minimális indítási nyomás 300 bar
+(példaérték). Milyen okok lehetnek? Hogyan ellenőrzi az alacsony nyomású
+oldalt?</p>
+<p><strong>5. feladat (C).</strong> Hasonlítsa össze a hagyományos
+elosztó befecskendező és a common rail rendszer diagnosztikai
+lehetőségeit. Miért kevésbé jelentős a nyomáshullám-elemzés a common
+railnél?</p>
+<p><strong>6. feladat (D, gyakorlati hibakereső).</strong> Egy dízelautó
+melegen gyenge, füstöl. A diagnosztikai műszer szerint a rail-nyomás
+alacsonyabb a kértnél, de az injektorok visszafolyása normális. A
+tápszivattyú cseréje már megtörtént. Melyik komponensre gyanakszik?
+Hogyan igazolná?</p>
+<h3 data-number="37.5.14" id="megoldások"><span
+class="header-section-number">37.5.14</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok:</strong></p>
+<ol type="1">
+<li>Statikus a beszerelési időzítés, dinamikus a tényleges működés
+közbeni szög.</li>
+<li>Indításkor a minimális rail-nyomás el kell érje az indítási
+küszöböt; ha nem, a motor nem indul.</li>
+<li>A megengedett visszafolyás rendszer- és üzemállapotfüggő (tanulási
+példa: 25 ml/perc hengerenként), és a hengerek közötti arányt is
+értékelni kell (ellenőrizendő: gyártói eljárás).</li>
+<li>Az injektor korrekciós kódját (IMA kód).</li>
+<li>A sugár bőrbe hatol, súlyos sérülést okoz.</li>
+<li>Sorrend: alacsony nyomású oldal, rail-nyomás, visszafolyás,
+szabályozószelepek.</li>
+</ol>
+<p><strong>1. feladat megoldása.</strong> Alacsony nyomású oldal
+(előnyomás mérése), nagynyomású oldal (rail-nyomás mérése), szabályozás
+(injektor visszafolyás és korrekciók).</p>
+<p><strong>2. feladat megoldása.</strong> A 3. henger visszafolyása (33
+ml/perc) meghaladja a 30 ml/perc határértéket, és a többi hengerhez
+(22–28 ml/perc) képest is kiugró, így a 3. injektor belső
+tömítetlen.</p>
+<p><strong>3. feladat megoldása.</strong> Mintavételi idő:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>12</mn><mi>/</mi><mn>10</mn><mspace width="0.167em"></mspace><mn>000</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>0012</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">t = 12/10\,000 = 0{,}0012\,\text{s}</annotation></semantics></math>.
+Fordulatszám:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>2000</mn><mspace width="0.167em"></mspace><mn>1</mn><mi>/</mi><mtext mathvariant="normal">min</mtext><mo>=</mo><mn>33</mn><mo>,</mo><mn>33</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ford/s</mtext></mrow><annotation encoding="application/x-tex">n = 2000\,1/\text{min} = 33{,}33\,\text{ford/s}</annotation></semantics></math>,
+egy fordulat ideje
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>03</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">T = 0{,}03\,\text{s}</annotation></semantics></math>.
+A szög:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mi>/</mi><mi>T</mi><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>0012</mn><mi>/</mi><mn>0</mn><mo>,</mo><mn>03</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>=</mo><mn>14</mn><mo>,</mo><msup><mn>4</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi = (t/T)\cdot 360^{\circ} = (0{,}0012/0{,}03)\cdot 360^{\circ} = 14{,}4^{\circ}</annotation></semantics></math>.
+A nyomásemelkedés a referenciajel (30° TDC előtt) után
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><msup><mn>4</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">14{,}4^{\circ}</annotation></semantics></math>-kal
+érkezik, így a befecskendezés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>30</mn><mo>∘</mo></msup><mo>−</mo><mn>14</mn><mo>,</mo><msup><mn>4</mn><mo>∘</mo></msup><mo>=</mo><mn>15</mn><mo>,</mo><msup><mn>6</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">30^{\circ} - 14{,}4^{\circ} = 15{,}6^{\circ}</annotation></semantics></math>-kal
+TDC előtt kezdődik. A gyártói specifikáció például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>10</mn><mo>∘</mo></msup><mo>±</mo><msup><mn>1</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">10^{\circ}\pm 1^{\circ}</annotation></semantics></math>
+TDC előtt; a mért érték túl korai, állítani kell.</p>
+<p><strong>4. feladat megoldása.</strong> A rail-nyomás nem éri el az
+indítási küszöböt. Okok: gyenge tápszivattyú, eldugult szűrő, levegő a
+rendszerben, nagynyomású szivattyú kopott, nyomásszabályozó tömítetlen,
+injektor túl nagy visszafolyás. Alacsony nyomású oldal ellenőrzése:
+előnyomás mérése (például 3,5 bar), szűrő állapota, szívó ág
+tömítettsége.</p>
+<p><strong>5. feladat megoldása.</strong> A hagyományos elosztó
+befecskendezőnél a szállításkezdet mechanikus időzítésű, a
+nyomáshullám-elemzéssel jól mérhető a tényleges időzítés. A common
+railnél az időzítést elektronika vezérli, a nyomás és a befecskendezési
+időtartam sokkal rugalmasabb, a nyomáshullámok a railben és a csövekben
+kevésbé információsak, mert a nyomás a railben állandó, és az injektorok
+egyenként nyitnak. A common rail diagnosztikában a rail-nyomás és az
+injektor-visszafolyás a fő.</p>
+<p><strong>6. feladat megoldása.</strong> Ha a visszafolyás normális és
+a tápszivattyú új, a nagynyomású szivattyú kopott vagy a
+nyomásszabályozó szelep hibás. Ellenőrzés: a rail-nyomás tényleges/kért
+eltérése teljes terhelésnél, a nyomásszabályozó PWM jelének vizsgálata
+oszcilloszkóppal, a szivattyú visszafolyó mennyisége (ha van külön cső),
+vagy a szivattyú kimenő nyomásának mérése.</p>
+<h3 data-number="37.5.15" id="rövid-összefoglaló"><span
+class="header-section-number">37.5.15</span> Rövid összefoglaló</h3>
+<p>A dízeldiagnosztikában a tüneteket alacsony nyomású, nagynyomású és
+szabályozási okokra bontjuk. A nem fedélzeti mérések (előnyomás,
+visszafolyó mennyiség, porlasztóvizsgálat, nyomáshullám-elemzés) a
+régebbi rendszereknél, a common railnél pedig a fedélzeti adatok
+(kért/tényleges rail-nyomás, injektor-korrekciók, vezérlőjelek)
+kiegészítik egymást. Az injektorok visszafolyó mennyiségét mérve a belső
+tömítetlenség kimutatható. A hibakeresés során először az alacsony
+nyomású oldalt, majd a rail-nyomást, a visszafolyást, a
+szabályozószelepeket és a kódolást ellenőrizzük. A nagynyomású
+rendszeren csak a gyártói nyomásmentesítés után szabad dolgozni; a nagy
+nyomású üzemanyagsugár bőrbe hatolva súlyos sérülést okoz. A gyártói
+javítási adatok elsőbbséget élveznek. A PDE egységek vizsgálata
+speciális próbapadot igényel, cseréjüknél korrekciós kódot kell beírni.
+<strong>Továbbvitt eredmény.</strong> A common rail vizsgálati sorrendet
+(hibakód, alacsony nyomás, rail-nyomás, visszafolyás,
+szabályozószelepek, kódolás) használjuk a <a
+href="au165.html">Gyakorlati vizsgafelkészülés</a> komplex hibakeresési
+feladataiban (és az outline szerinti további felhasználó
+alfejezetekben). ∎</p>
+<h3 data-number="37.5.16" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">37.5.16</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: gyártói javítási utasítások és diagnosztikai
+kézikönyvek, a Bosch/Denso stb. oktatóanyagai, az ISO 15031 szabvány az
+OBD-re, a járművek kipufogógáz-kibocsátására vonatkozó hatályos
+előírások.</p>
+<p>Ellenőrizendő: a rail-nyomás értékei (indítási, alapjárati, teljes
+terhelési), az injektor visszafolyási határértékek, a nyomásszabályozó
+és mennyiségszabályozó vezérlési paraméterek, a porlasztó nyitónyomása,
+a PDE vizsgálati adatok, a szűrőcsere-intervallum, a korrekciós kód
+beírásának művelete.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au135.html">← 37.4 Gázelemzés és füstölésmérés</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au137.html">37.6 Levegőellátás, kipufogórendszer, turbófeltöltő és fogyasztásmérés diagnosztikája →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

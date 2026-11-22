@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feszültségesés-mérés az indító- és töltőkörben</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pont">Mérési pár</label><select id="pont" aria-label="Mérési pár"><option value="1" selected>1 – pozitív indítókábel</option><option value="2">2 – testoldal</option><option value="3">3 – B+ → akku +</option></select></div>
+<div class="row"><label for="terh">Terhelés be (indítás / töltés)</label><input id="terh" type="checkbox" checked aria-label="Terhelés be (indítás / töltés)"></div>
+<div class="row"><label for="csere">Zsinórok felcserélve</label><input id="csere" type="checkbox" aria-label="Zsinórok felcserélve"></div>
+<div class="row"><label for="rp">R+ (pozitív kábel)</label><input id="rp" type="range" min="0" max="10" step="0.5" value="2" aria-label="R+ (pozitív kábel)"><output id="rp_o" for="rp"></output></div>
+<div class="row"><label for="rn">R− (testoldal)</label><input id="rn" type="range" min="0" max="10" step="0.5" value="2" aria-label="R− (testoldal)"><output id="rn_o" for="rn"></output></div>
+<div class="row"><label for="rb">R_B+ (töltőkábel)</label><input id="rb" type="range" min="0" max="40" step="0.5" value="27.5" aria-label="R_B+ (töltőkábel)"><output id="rb_o" for="rb"></output></div>
+<div class="row"><label for="iind">Indítóáram</label><input id="iind" type="range" min="50" max="250" step="5" value="140" aria-label="Indítóáram"><output id="iind_o" for="iind"></output></div>
+<div class="row"><label for="ich">Töltőáram</label><input id="ich" type="range" min="5" max="80" step="1" value="40" aria-label="Töltőáram"><output id="ich_o" for="ich"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 290" role="img" aria-label="Indító- és töltőkör a pozitív és testoldali feszültségesés mérési pontjaival."></svg>
+<p class="small">A fejezet adatai: 140 A · 0,004 Ω = 0,56 V (az alapbeállításban R+ + R− = 4 mΩ); 14,2 V − 13,1 V = 1,1 V (az alapbeállítás 40 A · 27,5 mΩ – szemléltető, nem mért érték). Határok: indítókábel 0,5 V, B+ – akku + 0,3 V (tanulási példák, ellenőrizendő: gyártói adat).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"rp":"mΩ", "rn":"mΩ", "rb":"mΩ", "iind":"A", "ich":"A"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P=v.pont, load=v.terh, sw=v.csere;
+const line=css("--line"), hl=css("--hl"), bad=css("--bad"), ok=css("--ok");
+let I=0,R=0,lim=0.5,name="";
+if(P==1){I=load?v.iind:0;R=v.rp/1000;name="akku + → indítómotor 30 (pozitív oldal)";}
+if(P==2){I=load?v.iind:0;R=v.rn/1000;name="motorház → akku − (testoldal)";}
+if(P==3){I=load?v.ich:0;R=v.rb/1000;lim=0.3;name="generátor B+ → akku + (töltőkör)";}
+let U=I*R; const disp=sw?-U:U;
+// vázlat
+function box(x,y,w,h,t){el("rect",{x:x,y:y,width:w,height:h,fill:"none",stroke:line,"stroke-width":2});el("text",{x:x+w/2,y:y+h/2+5,"text-anchor":"middle","font-size":13},t);}
+box(30,150,90,60,"akku");el("text",{x:40,y:170,"font-size":16},"+");el("text",{x:100,y:170,"font-size":16},"−");
+el("circle",{cx:430,cy:180,r:34,fill:"none",stroke:line,"stroke-width":2});el("text",{x:430,y:185,"text-anchor":"middle","font-size":13},"M");
+el("circle",{cx:430,cy:60,r:28,fill:"none",stroke:line,"stroke-width":2});el("text",{x:430,y:65,"text-anchor":"middle","font-size":13},"G");
+const w=(p)=>({stroke:(P==p?hl:line),"stroke-width":(P==p?6:3),fill:"none"});
+el("path",Object.assign({d:"M45,150 V120 H400 V160"},w(1)));
+el("path",Object.assign({d:"M105,150 V138 H140 V262 H430 V214"},w(2)));
+el("path",Object.assign({d:"M402,60 H160 V120"},w(3)));
+el("text",{x:300,y:112,"font-size":12},"R+ = "+fmt(v.rp,1)+" mΩ");
+el("text",{x:270,y:280,"font-size":12},"R− = "+fmt(v.rn,1)+" mΩ");
+el("text",{x:220,y:52,"font-size":12},"R_B+ = "+fmt(v.rb,1)+" mΩ");
+// műszer
+el("rect",{x:200,y:150,width:120,height:60,rx:8,fill:"none",stroke:line,"stroke-width":2});
+el("text",{x:260,y:190,"text-anchor":"middle","font-size":22,"font-family":"monospace"},(disp<0?"−":"")+fmt(Math.abs(disp),2)+" V");
+el("text",{x:260,y:228,"text-anchor":"middle","font-size":12},"mérési pár "+P);
+let m="<b>"+name+"</b>: U = I·R = "+fmt(I,0)+" A · "+fmt(R*1000,1)+" mΩ = <b>"+fmt(U,2)+" V</b>. ";
+if(!load) m+='<span class="bad">Terhelés nélkül nem folyik áram, ezért 0 V-ot mérünk – a rossz kötés így nem derül ki!</span>';
+else if(U>lim) m+='<span class="bad">Nagyobb a határnál ('+fmt(lim,1)+' V): rossz kötés, korrodált saru vagy kábel.</span>';
+else m+='<span class="ok">A határon belül ('+fmt(lim,1)+' V).</span>';
+if(sw) m+=' A zsinórok felcserélve: a műszer negatív előjelet mutat.';
+status(m);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

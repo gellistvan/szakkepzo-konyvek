@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiterített hossz hajlításhoz</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="s">Lemezvastagság s</label><input id="s" type="range" min="0.5" max="6" step="0.5" value="3" aria-label="Lemezvastagság s"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="ri">Belső sugár r_i</label><input id="ri" type="range" min="0.5" max="20" step="0.5" value="5" aria-label="Belső sugár r_i"><output id="ri_o" for="ri"></output></div>
+<div class="row"><label for="ph">Hajlítási szög φ</label><input id="ph" type="range" min="30" max="150" step="5" value="90" aria-label="Hajlítási szög φ"><output id="ph_o" for="ph"></output></div>
+<div class="row"><label for="l1">l₁ (semleges szál)</label><input id="l1" type="range" min="5" max="100" step="1" value="40" aria-label="l₁ (semleges szál)"><output id="l1_o" for="l1"></output></div>
+<div class="row"><label for="l2">l₂ (semleges szál)</label><input id="l2" type="range" min="5" max="100" step="1" value="25" aria-label="l₂ (semleges szál)"><output id="l2_o" for="l2"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 280" role="img" aria-label="Hajlított lemez metszete a semleges szállal; kiterített hossz számítása."></svg>
+<p class="small">Alapállás: 1. példa (s = 3, r<sub>i</sub> = 5, 90°, 40 + 25 → 75,2 mm); 4. feladat: s = 2, r<sub>i</sub> = 3, l₁ = 30, l₂ = 18 → 54,3 mm. Tanulási közelítés; a pontos kiterítést anyag- és szerszámfüggő tényezővel számolják.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"s":"mm", "ri":"mm", "ph":"°", "l1":"mm", "l2":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const s=v.s, ri=v.ri, ph=v.ph*Math.PI/180, l1=v.l1, l2=v.l2, rm=ri+s/2, arc=ph*rm, Lk=l1+l2+arc;
+// geometria: A szár +x irányban (a görbületi középpont alatt), az ív -90°-tól óramutató szerint φ-vel, B szár az ív végétől
+const pts=(r)=>{const P=[];P.push([l2,-r]);for(let i=0;i<=24;i++){const t=-Math.PI/2-ph*i/24;P.push([r*Math.cos(t),r*Math.sin(t)]);}
+  const te=-Math.PI/2-ph, d=[Math.sin(te),-Math.cos(te)];P.push([r*Math.cos(te)+l1*d[0],r*Math.sin(te)+l1*d[1]]);return P;};
+const I=pts(ri), O=pts(ri+s), M=pts(rm), all=I.concat(O);
+let x0=Math.min(...all.map(p=>p[0])),x1=Math.max(...all.map(p=>p[0])),y0=Math.min(...all.map(p=>p[1])),y1=Math.max(...all.map(p=>p[1]));
+const k=Math.min(300/(x1-x0||1),240/(y1-y0||1)), X=x=>20+(x-x0)*k, Y=y=>260-(y-y0)*k;
+el("polygon",{points:I.concat(O.slice().reverse()).map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:css("--grid"),stroke:css("--fg"),"stroke-width":1.5});
+el("polyline",{points:M.map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"none",stroke:css("--hl2"),"stroke-width":2,"stroke-dasharray":"6 4"});
+el("text",{x:20,y:16,"font-size":12},"metszet (méretarányos); szaggatott: semleges szál");
+// kiterített sáv
+const W=200, sc=W/Math.max(Lk,1), bx=340;
+el("rect",{x:bx,y:120,width:l1*sc,height:24,fill:css("--grid"),stroke:css("--fg")});
+el("rect",{x:bx+l1*sc,y:120,width:arc*sc,height:24,fill:css("--hl2"),stroke:css("--fg")});
+el("rect",{x:bx+(l1+arc)*sc,y:120,width:l2*sc,height:24,fill:css("--grid"),stroke:css("--fg")});
+el("text",{x:bx+W/2,y:112,"font-size":12,"text-anchor":"middle"},"kiterített: "+fmt(Lk,1)+" mm");
+let wrong="";
+if(Math.abs(v.ph-90)<0.5){const o=l1+l2+2*(ri+s);wrong="<br><span class='bad'>✘ Külső méretekből (l₁+r_i+s) + (l₂+r_i+s) = "+fmt(o,1)+" mm – ez "+fmt(o-Lk,1)+" mm-rel túl hosszú.</span>";}
+status("r<sub>m</sub> = r<sub>i</sub> + s/2 = "+fmt(rm,2)+" mm; ív = φ·r<sub>m</sub> = "+fmt(arc,1)+" mm; <b>L = l₁ + l₂ + ív = "+fmt(l1,1)+" + "+fmt(l2,1)+" + "+fmt(arc,1)+" = "+fmt(Lk,1)+" mm</b>"+wrong);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

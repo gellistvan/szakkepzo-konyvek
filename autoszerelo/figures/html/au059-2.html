@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kétütemű vezérlési kördiagram</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="eo">Kipufogó nyit AHP előtt</label><input id="eo" type="range" min="60" max="110" step="1" value="90" aria-label="Kipufogó nyit AHP előtt"><output id="eo_o" for="eo"></output></div>
+<div class="row"><label for="to">Átömlő nyit AHP előtt</label><input id="to" type="range" min="40" max="80" step="1" value="60" aria-label="Átömlő nyit AHP előtt"><output id="to_o" for="to"></output></div>
+<div class="row"><label for="io">Szívás nyit FHP előtt</label><input id="io" type="range" min="40" max="160" step="1" value="65" aria-label="Szívás nyit FHP előtt"><output id="io_o" for="io"></output></div>
+<div class="row"><label for="ic">Szívás zár FHP után</label><input id="ic" type="range" min="20" max="90" step="1" value="65" aria-label="Szívás zár FHP után"><output id="ic_o" for="ic"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 330" role="img" aria-label="Két kördiagram a kipufogó-, átömlő- és szívócsatorna nyitási íveivel."></svg>
+<p class="small">Példaértékek (szemléltető), ellenőrizendő: gyártói adat. A dugattyú éle által vezérelt csatornák nyitása és zárása mindig szimmetrikus a holtpontra; aszimmetria csak külön szervvel (membránszelep, forgótárcsa, kipufogóoldali szelep) érhető el.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"eo":"°", "to":"°", "io":"°", "ic":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const L=css("--line"),F=css("--fg"),cx=190,cy=168,R0=105;
+const P=(a,r)=>[cx+r*Math.sin(a*Math.PI/180),cy-r*Math.cos(a*Math.PI/180)];
+const arc=(a0,a1,r,w,c,da)=>{let d="";for(let k=0;k<=60;k++){const p=P(a0+(a1-a0)*k/60,r);d+=(k?"L":"M")+p[0]+" "+p[1];}el("path",{d:d,fill:"none",stroke:c,"stroke-width":w,"stroke-dasharray":da||""});};
+el("circle",{cx:cx,cy:cy,r:R0*1.2,fill:"none",stroke:css("--grid")});
+el("line",{x1:cx,y1:cy-R0*1.35,x2:cx,y2:cy+R0*1.35,stroke:L,"stroke-dasharray":"8 3 2 3"});
+el("text",{x:cx,y:cy-R0*1.38,"font-size":12,"text-anchor":"middle"},"FHP 0°");el("text",{x:cx,y:cy+R0*1.38+12,"font-size":12,"text-anchor":"middle"},"AHP 180°");
+// a kipufogó és az átömlő dugattyúvezérelt: AHP-ra szimmetrikus
+arc(180-v.eo,180+v.eo,R0,9,F);arc(180-v.to,180+v.to,R0*0.8,4,css("--hl"),"10 5");arc(-v.io,v.ic,R0*0.55,6,css("--hl2"),"3 4");
+const lg=[["kipufogó",F,9,""],["átömlő",css("--hl"),4,"10 5"],["szívás",css("--hl2"),6,"3 4"]];
+lg.forEach((g,i)=>{el("line",{x1:380,y1:60+i*24,x2:410,y2:60+i*24,stroke:g[1],"stroke-width":g[2],"stroke-dasharray":g[3]});el("text",{x:416,y:64+i*24,"font-size":11},g[0]);});
+const sym=(v.io===v.ic);
+el("text",{x:380,y:150,"font-size":12},"Kipufogó: "+(2*v.eo)+"°, átömlő: "+(2*v.to)+"°");
+el("text",{x:380,y:170,"font-size":12},"Szívás: "+(v.io+v.ic)+"°");el("text",{x:380,y:190,"font-size":12},"("+v.io+"° e. / "+v.ic+"° u.)");el("text",{x:380,y:220,"font-size":11},"0° = FHP, óramutató szerint");
+status(sym?"<span class='ok'>Szimmetrikus vezérlési diagram:</span> a szívás az FHP-ra, a kipufogás és az átömlés az AHP-ra szimmetrikus – ez a tisztán dugattyúvezérelt háromcsatornás motor esete.":
+"<b>Aszimmetrikus szívás</b> (membránszelep vagy forgótárcsa szükséges): a szívás "+(v.io>v.ic?"korábban nyit, mint ahogy FHP után zár":"később nyit")+" – a visszaáramlást a szelep akadályozza meg, a töltés javul. A kipufogó és az átömlő dugattyúvezérelt, ezért szimmetrikus marad.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

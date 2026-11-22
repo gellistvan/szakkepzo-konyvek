@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>33.4 Töltés: AC és DC töltés, töltőcsatlakozók, töltési módok –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz8">VIII. RÉSZ – Hibrid és elektromos járművek</a> › <a href="index.html#auch32">33 Hibrid és elektromos hajtás</a></p>
+<div class="links"><a class="prev" rel="prev" href="au119.html">← 33.3 Villamos hajtás: villanymotor, inverter, DC/DC átalakító, regeneratív fékezés és hőmenedzsment</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au121.html">34.1 HV-veszélyek, jogosultság és munkaszervezés →</a></div>
+</nav>
+<h2 data-number="33.4" id="au120"><span
+class="header-section-number">33.4</span> Töltés: AC és DC töltés,
+töltőcsatlakozók, töltési módok</h2>
+<h3 data-number="33.4.1" id="motiváció"><span
+class="header-section-number">33.4.1</span> Motiváció</h3>
+<p>Egy villanyautó-tulajdonos azzal jön a műhelybe, hogy az autó otthon
+„egész éjjel töltött”, mégsem lett meg a várt hatótáv, a fali csatlakozó
+pedig melegedett. Egy másik ügyfél a gyorstöltő oszlopnál azt
+tapasztalja, hogy a kijelző szerint 150 kW-os töltő 20 perc alatt alig
+töltött 40%-ot, pedig a táblázat szerint gyorsabbnak kellett volna
+lennie. Szerelőként ilyenkor nem elég annyit mondani, hogy „az
+elektromos autó ilyen”: ismerni kell a töltési módokat, a csatlakozók
+jeleit, a fedélzeti töltő és a BMS szerepét, valamint a töltési idő
+valósághű számítását. Ez az alfejezet ezt az ismeretet építi fel a
+gyakorlati diagnosztikához.</p>
+<h3 data-number="33.4.2" id="szemléletes-kép"><span
+class="header-section-number">33.4.2</span> Szemléletes kép</h3>
+<p>Képzelj el egy láncot az elektromos hálózattól az akkumulátorig. Az
+AC-töltésnél az energia útja:</p>
+<figure>
+<img src="assets/au120-diagram-1.png"
+alt="Elektromos jármű töltési folyamata (AC) - Szemléltető folyamatábra; a valós töltési menet a jármű- és töltőoldali kommunikációval pontosabb." />
+<figcaption aria-hidden="true">Elektromos jármű töltési folyamata (AC) -
+Szemléltető folyamatábra; a valós töltési menet a jármű- és töltőoldali
+kommunikációval pontosabb.</figcaption>
+</figure>
+<p>Az áramút: hálózati csatlakozó → töltőkábel (Mode 2/3) → a jármű
+fedélzeti töltője (on-board charger, OBC) → nagyfeszültségű egyenáramú
+(DC) csatlakozás az akkumulátorra. DC-gyorstöltésnél a fedélzeti töltő
+kimarad: a töltőoszlop külső AC/DC-átalakítója közvetlenül a
+HV-akkumulátorra dolgozik. A töltési teljesítményt mindkét esetben a
+jármű akkumulátor-felügyeleti rendszere (BMS) és a töltőoldali
+szabályzás közösen határozza meg.</p>
+<h3 data-number="33.4.3" id="definíciók-és-alapfogalmak"><span
+class="header-section-number">33.4.3</span> Definíciók és
+alapfogalmak</h3>
+<p><strong>Definíció.</strong> A <strong>töltési mód</strong> (charging
+mode) az elektromos járművek töltésére szolgáló villamos kapcsolódási és
+védelmi elrendezések osztályozása az IEC 61851 szabványsorozat szerint
+(ellenőrizendő: a szabvány aktuális kiadása). A gyakorlatban négy módot
+különböztetünk meg: Mode 1, Mode 2, Mode 3, Mode 4.</p>
+<p><strong>Definíció.</strong> A <strong>fedélzeti töltő</strong>
+(on-board charger, OBC) a járműbe épített váltakozó/egyenáramú (AC/DC)
+átalakító, amely a hálózati váltakozó feszültségből az akkumulátor
+számára megfelelő egyenfeszültséget és töltőáramot állít elő. A
+fedélzeti töltő teljesítménye korlátozza az AC-töltés sebességét;
+tipikus egyfázisú 3,7 kW, háromfázisú 11 kW vagy 22 kW (ellenőrizendő:
+gyártói adat).</p>
+<p><strong>Definíció.</strong> A <strong>DC-gyorstöltés</strong> (DC
+fast charging) olyan töltési mód, amelyben a töltőoszlop saját, nagy
+teljesítményű AC/DC-átalakítóval rendelkezik, és a jármű fedélzeti
+töltőjét megkerülve közvetlenül a HV-akkumulátorra kapcsolódik. Ezt Mode
+4-nek nevezik.</p>
+<p><strong>Összefüggés.</strong> A töltési idő első közelítésben:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><msub><mi>E</mi><mtext mathvariant="normal">hasznos</mtext></msub><mrow><msub><mi>P</mi><mtext mathvariant="normal">töltő</mtext></msub><mo>⋅</mo><msub><mi>η</mi><mtext mathvariant="normal">töltés</mtext></msub></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">t = \frac{E_{\text{hasznos}}}{P_{\text{töltő}} \cdot \eta_{\text{töltés}}},</annotation></semantics></math></p>
+<p>ahol: -
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+a töltési idő (h), -
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mtext mathvariant="normal">hasznos</mtext></msub><annotation encoding="application/x-tex">E_{\text{hasznos}}</annotation></semantics></math>
+a betárolandó energia (kWh), -
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">töltő</mtext></msub><annotation encoding="application/x-tex">P_{\text{töltő}}</annotation></semantics></math>
+a töltő vagy a fedélzeti töltő névleges teljesítménye (kW), -
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mtext mathvariant="normal">töltés</mtext></msub><annotation encoding="application/x-tex">\eta_{\text{töltés}}</annotation></semantics></math>
+a töltő és a vezeték veszteségeit együttesen figyelembe vevő hatásfok
+(jellemzően 0,85–0,95, ellenőrizendő).</p>
+<p><strong>Megjegyzés.</strong> A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">töltő</mtext></msub><annotation encoding="application/x-tex">P_{\text{töltő}}</annotation></semantics></math>
+AC-töltésnél a fedélzeti töltő teljesítménye, DC-töltésnél a töltőoszlop
+teljesítménye, de a valós töltési görbe miatt ez utóbbi nem állandó.</p>
+<h3 data-number="33.4.4" id="töltési-módok-és-csatlakozók"><span
+class="header-section-number">33.4.4</span> Töltési módok és
+csatlakozók</h3>
+<p>Az alábbi táblázat a négy töltési mód jellemzőit foglalja össze
+példaértékekkel.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mód</th>
+<th>Csatlakozó/töltő</th>
+<th>Áram, feszültség</th>
+<th>Védelem</th>
+<th>Jellemző teljesítmény</th>
+<th>Megjegyzés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mode 1</td>
+<td>Háztartási aljzat (Schuko)</td>
+<td>max. 10–16 A, 230 V AC</td>
+<td>csak a lakáshálózat védelme</td>
+<td>2,3–3,6 kW</td>
+<td>elektromos járműhöz EU-ban általában nem ajánlott</td>
+</tr>
+<tr>
+<td>Mode 2</td>
+<td>Háztartási aljzat + kábelbe épített IC-CPD</td>
+<td>10–16 A (ritkán 32 A), 230 V AC</td>
+<td>IC-CPD</td>
+<td>2,3–7,2 kW</td>
+<td>otthoni, hordozható megoldás</td>
+</tr>
+<tr>
+<td>Mode 3</td>
+<td>Dedikált töltőállomás/wallbox, Type 2 csatlakozó</td>
+<td>16–63 A, 1 vagy 3 fázis</td>
+<td>töltőbe épített</td>
+<td>3,6–22 kW AC</td>
+<td>EU szabványos AC-töltés</td>
+</tr>
+<tr>
+<td>Mode 4</td>
+<td>DC-gyorstöltő, CCS Combo 2 / CHAdeMO</td>
+<td>100–500 A DC</td>
+<td>töltőbe épített, külső AC/DC</td>
+<td>50–350 kW DC</td>
+<td>fedélzeti töltő nélkül, közvetlen DC</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: IEC 61851, járműgyártói
+adat).</p>
+<p>A <strong>Mode 1</strong> a járművet háztartási aljzatból
+közvetlenül, külön töltésszabályzó nélkül tölti. Ez azért problémás,
+mert a lakáshálózati védelem nem érzékeli a jármű földelési hibáját, és
+a tartós nagy áram melegítheti az aljzatot. Modern elektromos autók ezt
+a módot gyakran elutasítják.</p>
+<p>A <strong>Mode 2</strong> gyakorlatilag egy hordozható töltőkábel,
+amelybe egy kis elektronika, az úgynevezett IC-CPD (in-cable control and
+protection device) van beépítve. Az IC-CPD figyeli a földelést, a
+hőmérsékletet, és megszakítja a töltést, ha hibát észlel. Magyarországon
+gyakori otthoni töltési mód.</p>
+<p>A <strong>Mode 3</strong> a dedikált töltőállomás vagy fali töltő
+(wallbox) használata. Itt a kommunikáció és a védelem a töltőben,
+illetve a járműben van. A csatlakozó Európában leggyakrabban
+<strong>Type 2</strong> (IEC 62196-2), amely egy- és háromfázisú
+AC-töltést is támogat.</p>
+<p>A <strong>Mode 4</strong> a DC-gyorstöltő. A csatlakozó Európában a
+<strong>CCS Combo 2</strong>, amely a Type 2 felső részét egészíti ki
+két nagy egyenáramú lábbal. Japánban és régebbi járműveken a
+<strong>CHAdeMO</strong> található. A CCS a jármű és a töltő közötti
+digitális kommunikációra <strong>PLC</strong>-t (power line
+communication) használ, míg a CHAdeMO hagyományos CAN-alapú jelet
+(ellenőrizendő).</p>
+<figure id="fig-au120-2">
+<div class="fig-interactive"><iframe src="figures/html/au120-2.html" title="Type 2 és CCS2 töltőaljzat érintkezőnevekkel, a CP és PP kiemelve; Mode 2 töltőkábel kábelbe épített védődobozzal; a négy töltési mód piktogramja." loading="lazy" style="width:100%;border:0;height:600px"></iframe><noscript><img src="figures/img/au120-2.png" style="width:90.0%"
+alt="Type 2 és CCS2 töltőaljzat érintkezőnevekkel, a CP és PP kiemelve; Mode 2 töltőkábel kábelbe épített védődobozzal; a négy töltési mód piktogramja." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au120-2.png" style="width:90.0%"
+alt="Type 2 és CCS2 töltőaljzat érintkezőnevekkel, a CP és PP kiemelve; Mode 2 töltőkábel kábelbe épített védődobozzal; a négy töltési mód piktogramja." /></details></div>
+<figcaption>Töltőcsatlakozók sematikus elölnézete: (a) Type 2 aljzat a
+CP, PP és PE jelérintkezővel és a négy AC-teljesítményérintkezővel (L1,
+L2, L3, N); (b) CCS Combo 2: felül a Type 2 jelrésze, alul két nagy
+DC-érintkező; (c) CHAdeMO vázlat; (d) Mode 2 töltőkábel kábelbe épített
+vezérlő- és védődobozzal (IC-CPD); (e) a Mode 1–4 töltési módok
+piktogramja</figcaption>
+</figure>
+<p>Az ábrán látszik, hogy a CP és a PP a két kis jelérintkező a Type 2
+(és a CCS2) felső részén; a gyakorlati útmutató méréseit ezeken és a
+PE-n kell végezni. Az érintkezők pontos kiosztását a mérés előtt a
+gyártói rajzon és az IEC 62196-2/-3 szerint ellenőrizni kell. Az
+interaktív változatban rámutatásra az érintkező neve és szerepe jelenik
+meg.</p>
+<h4 data-number="33.4.4.1" id="kommunikáció-a-töltés-során"><span
+class="header-section-number">33.4.4.1</span> Kommunikáció a töltés
+során</h4>
+<p>Az AC-töltésnél a jármű és a töltő közötti összeköttetést két jel
+biztosítja:</p>
+<ul>
+<li><strong>CP (Control Pilot):</strong> 1 kHz-es négyszögjel, amelynek
+kitöltési tényezője arányos a töltő által engedélyezett maximális
+árammal. 10–85 % kitöltésnél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mi>/</mi><mi>%</mi><mo>⋅</mo><mi>D</mi></mrow><annotation encoding="application/x-tex">I = 0{,}6\,\text{A}/\% \cdot D</annotation></semantics></math>:
+10% → 6 A, 25% → 15 A, 26,7% → 16 A, 53,3% → 32 A, 85% → 51 A; 5%
+kitöltés digitális kommunikációt jelent (ellenőrizendő: IEC
+61851-1).</li>
+<li><strong>PP (Proximity Pilot):</strong> ellenállás-jel, amely a kábel
+csatlakoztatottságát és a kábel töltőáram-korlátját jelzi.</li>
+</ul>
+<figure id="fig-au120-1">
+<div class="fig-interactive"><iframe src="figures/html/au120-1.html" title="A Control Pilot jel A, B és C állapota és a kitöltési tényező." loading="lazy" style="width:100%;border:0;height:520px"></iframe><noscript><img src="figures/img/au120-1.png" style="width:90.0%"
+alt="A Control Pilot jel A, B és C állapota és a kitöltési tényező." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au120-1.png" style="width:90.0%"
+alt="A Control Pilot jel A, B és C állapota és a kitöltési tényező." /></details></div>
+<figcaption>A CP-jel A, B és C állapota (felül) és az egyszerűsített
+CP-kör (alul): A állapotban +12 V állandó, B állapotban (jármű
+csatlakoztatva) +9 V / −12 V-os 1 kHz-es PWM, C állapotban (töltés, S2
+zárva) +6 V / −12 V; a 26,7 %-os kitöltés 16 A engedélyezett áramnak
+felel meg (szemléltető jel; ellenőrizendő: IEC 61851-1)</figcaption>
+</figure>
+<p>A CP-jel felső szintjét a jármű ellenállásai húzzák le: a dióda után
+az R2 (kb. 2,74 kΩ) már csatlakoztatáskor +9 V-ra, az S2 kapcsolóval
+bekötött R3 (kb. 1,3 kΩ) töltéskérésnél +6 V-ra. A kitöltési tényezőből
+10–85 % között
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mi>/</mi><mi>%</mi><mo>⋅</mo><mi>D</mi></mrow><annotation encoding="application/x-tex">I = 0{,}6\,\text{A}/\% \cdot D</annotation></semantics></math>
+adja a megengedett áramot (pl. 26,7 % → 16 A); névlegesen 5 % kitöltés
+digitális kommunikációt jelent (ellenőrizendő: IEC 61851-1). Az
+interaktív kalkulátorban a kitöltés és az állapot (A, B, C, E)
+állítható, és a program kiírja a feszültségszinteket és az engedélyezett
+áramot.</p>
+<p>Csatlakoztatáskor a jármű a CP-vezeték és a védővezető közé egy
+ellenállást kapcsol, ettől a CP-jel pozitív csúcsa +12 V-ról kb. +9 V-ra
+esik (B állapot: jármű csatlakoztatva); amikor a jármű tölteni kész, egy
+további ellenállást kapcsol be, a csúcs kb. +6 V-ra esik (C állapot:
+töltés), és ekkor kapcsolja be a töltő a hálózati feszültséget. A CP–PE
+rövidzár vagy a hiányzó negatív félhullám hibaállapot, ilyenkor a töltő
+nem kapcsol be (ellenőrizendő: IEC 61851-1). A töltő a jelszintet
+érzékeli, majd a BMS a CP jel alapján korlátozza a fedélzeti töltő
+áramfelvételét. DC-töltésnél a jármű a BMS által kért áramot és
+feszültséget digitálisan küldi a töltőoszlopnak, és a töltő ezt
+szabályozza.</p>
+<p><strong>Előírás.</strong> Az Európai Unióban az alternatív
+üzemanyagok infrastruktúrájáról szóló (EU) 2023/1804 rendelet (AFIR; a
+korábbi 2014/94/EU irányelv helyébe lépett) a nyilvános töltőpontokra
+AC-töltésnél a Type 2, DC-töltésnél a CCS2 (Combo 2) csatlakozót írja
+elő (ellenőrizendő: hatályos szöveg). A töltési módokat az IEC 61851
+szabvány rendezi; a jármű elektromos biztonságát az ECE R100 előírás
+(ellenőrizendő: aktuális változat) követeli meg. A lakossági villamos
+hálózatra és a wallbox-szerelésre a hazai villamos biztonsági szabványok
+(MSZ HD 60364 sorozat) és az áramszolgáltatói előírások vonatkoznak.</p>
+<h3 data-number="33.4.5" id="töltési-görbe-és-teljesítmény"><span
+class="header-section-number">33.4.5</span> Töltési görbe és
+teljesítmény</h3>
+<p>A töltési teljesítmény nem állandó. AC-töltésnél a fedélzeti töltő
+teljesítménye közel állandó, amíg a BMS nem korlátozza az akkumulátor
+magas töltöttségi szintjénél. DC-gyorstöltésnél a töltési görbe
+határozottan csökken: az akkumulátor hidegen vagy magas hőmérsékleten
+nem fogad el nagy áramot, és ahogy a feszültsége nő, a BMS a
+cellavédelem miatt visszaveszi az áramot.</p>
+<figure>
+<img src="assets/au120-plot-1.png"
+alt="DC gyorstöltési görbe (szemléltető) - Szemléltető, egyszerűsített töltési görbe (nem mért adat): kb. 10–40% között plató, utána fokozatos, 80% fölött meredek csökkenés; a valós érték a gyártói BMS-stratégia, hőmérséklet és akkumulátorkopás függvénye." />
+<figcaption aria-hidden="true">DC gyorstöltési görbe (szemléltető) -
+Szemléltető, egyszerűsített töltési görbe (nem mért adat): kb. 10–40%
+között plató, utána fokozatos, 80% fölött meredek csökkenés; a valós
+érték a gyártói BMS-stratégia, hőmérséklet és akkumulátorkopás
+függvénye.</figcaption>
+</figure>
+<p>A görbe jól mutatja, hogy a 150 kW-os töltő csak alacsony
+töltöttségnél, ideális hőmérsékleten adja le a névleges teljesítményt:
+kb. 10–40% között a teljesítmény közel állandó (plató), utána
+fokozatosan csökken. A 80% fölött a lassulás drasztikus: 85%-nál már
+csak kb. 35 kW, 95%-nál kb. 15 kW.</p>
+<h3 data-number="33.4.6" id="kidolgozott-számítási-példák"><span
+class="header-section-number">33.4.6</span> Kidolgozott számítási
+példák</h3>
+<h4 data-number="33.4.6.1"
+id="példa-ac-töltési-idő-otthoni-wallboxról"><span
+class="header-section-number">33.4.6.1</span> 1. példa – AC-töltési idő
+otthoni wallboxról</h4>
+<p><strong>Adott:</strong> egy elektromos jármű akkumulátorának hasznos
+kapacitása 60 kWh, a fedélzeti töltője háromfázisú 11 kW, a töltési
+hatásfokot 0,90-nak vesszük. Az ügyfél 20% SoC-ról 80% SoC-ra szeretne
+tölteni.</p>
+<p>Az energiaigény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">hasznos</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>80</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>20</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mo>=</mo><mn>36</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">E_{\text{hasznos}} = (0{,}80 - 0{,}20) \cdot 60\,\text{kWh} = 36\,\text{kWh}.</annotation></semantics></math></p>
+<p>A töltési idő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><msub><mi>E</mi><mtext mathvariant="normal">hasznos</mtext></msub><mrow><msub><mi>P</mi><mtext mathvariant="normal">töltő</mtext></msub><mo>⋅</mo><msub><mi>η</mi><mtext mathvariant="normal">töltés</mtext></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>36</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><mrow><mn>11</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>90</mn></mrow></mfrac><mo>=</mo><mfrac><mn>36</mn><mrow><mn>9</mn><mo>,</mo><mn>9</mn></mrow></mfrac><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>3</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t = \frac{E_{\text{hasznos}}}{P_{\text{töltő}} \cdot \eta_{\text{töltés}}} = \frac{36\,\text{kWh}}{11\,\text{kW} \cdot 0{,}90} = \frac{36}{9{,}9}\,\text{h} \approx 3{,}6\,\text{h}.</annotation></semantics></math></p>
+<p><strong>Ellenőrzés:</strong> 3,6 h ≈ 3 óra 36 perc, ami reális egy 11
+kW-os otthoni töltőnél.</p>
+<h4 data-number="33.4.6.2"
+id="példa-dc-gyorstöltés-átlagos-teljesítménnyel"><span
+class="header-section-number">33.4.6.2</span> 2. példa – DC-gyorstöltés
+átlagos teljesítménnyel</h4>
+<p>Ugyanez a jármű egy 150 kW-os CCS-töltőn tölt 10% SoC-ról 70% SoC-ra.
+Az energiaigény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">hasznos</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>70</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>10</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mo>=</mo><mn>36</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">E_{\text{hasznos}} = (0{,}70 - 0{,}10) \cdot 60\,\text{kWh} = 36\,\text{kWh}.</annotation></semantics></math></p>
+<p>A névleges 150 kW nem állandó; a töltési görbéből (a SoC szerinti
+időátlaggal) az átlagos teljesítmény ebben a tartományban körülbelül 125
+kW (ellenőrizendő: járműmodelltől függő). A töltési idő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mn>36</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><mrow><mn>125</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>92</mn></mrow></mfrac><mo>≈</mo><mfrac><mn>36</mn><mn>115</mn></mfrac><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>0</mn><mo>,</mo><mn>31</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>19</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">min</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t = \frac{36\,\text{kWh}}{125\,\text{kW} \cdot 0{,}92} \approx \frac{36}{115}\,\text{h} \approx 0{,}31\,\text{h} \approx 19\,\text{min}.</annotation></semantics></math></p>
+<p><strong>Hibás számítás ellenpélda.</strong> Ha valaki a 150 kW-os
+csúcsteljesítménnyel számol lineárisan:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>36</mn><mi>/</mi><mn>150</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>24</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>14</mn><mo>,</mo><mn>4</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">min</mtext></mrow><annotation encoding="application/x-tex">36/150 = 0,24\ \text{h} \approx 14,4\ \text{min}</annotation></semantics></math>.
+Ez alábecsüli a valós időt, mert a görbe ellaposodik, és a hatásfok sem
+100%.</p>
+<h4 data-number="33.4.6.3" id="példa-háztartási-mode-2-töltőkábel"><span
+class="header-section-number">33.4.6.3</span> 3. példa – háztartási Mode
+2 töltőkábel</h4>
+<p>Egyfázisú, 230 V-os aljzatból a Mode 2 töltőkábel 12 A-t vesz fel. A
+hálózati felvett teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">hálózat</mtext></msub><mo>=</mo><mi>U</mi><mo>⋅</mo><mi>I</mi><mo>=</mo><mn>230</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>2760</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>76</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{hálózat}} = U \cdot I = 230\,\text{V} \cdot 12\,\text{A} = 2760\,\text{W} = 2{,}76\,\text{kW}.</annotation></semantics></math></p>
+<p>A járműhöz a fedélzeti töltő hatásfokával (0,90) jut:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">hasznos</mtext></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>76</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>90</mn><mo>=</mo><mn>2</mn><mo>,</mo><mn>48</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{hasznos}} = 2{,}76\,\text{kW} \cdot 0{,}90 = 2{,}48\,\text{kW}.</annotation></semantics></math></p>
+<p>Ha 10 kWh betárolandó energia szükséges, az idő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><mrow><mn>2</mn><mo>,</mo><mn>48</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext></mrow></mfrac><mo>≈</mo><mn>4</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t = \frac{10\,\text{kWh}}{2{,}48\,\text{kW}} \approx 4{,}0\,\text{h}.</annotation></semantics></math></p>
+<p>Ez jól mutatja, miért fontos a dedikált áramkör és a wallbox: a 2,48
+kW-os töltés egy 8 órás éjszaka alatt kb. 20 kWh-t tárol be (8 h · 2,48
+kW), ami egy 60 kWh-s akkumulátornak csak kb. harmada.</p>
+<h3 data-number="33.4.7" id="töltés-biztonsága"><span
+class="header-section-number">33.4.7</span> Töltés biztonsága</h3>
+<p><strong>Figyelem.</strong> A töltés során a jármű és a töltő együtt
+alkot villamos rendszert. A sérült, megtört vagy házilag javított
+töltőkábel, a nem megfelelő hosszabbító és a túlterhelt háztartási
+aljzat tüzet okozhat. A töltőkábel csatlakozója töltés közben reteszelve
+van; a jármű csak a kommunikáció megszakadása és a feszültségmentesítés
+után oldja a reteszt (ellenőrizendő: gyártói leírás).</p>
+<p><strong>Tilos.</strong> Háztartási elosztóból, sorba kötött
+hosszabbítókból, vagy a megengedettnél nagyobb beállított árammal
+töltött járművet felügyelet nélkül hagyni. A töltőberendezés hálózati
+oldalát, a wallboxot, a DC-töltőoszlopot csak megfelelő villamos
+képzettséggel rendelkező személy szerelheti, vizsgálhatja és
+javíthatja.</p>
+<p><strong>Szabály.</strong> A Mode 2 töltőkábel használata előtt
+ellenőrizni kell: - a hálózati aljzat és az azt védő kismegszakító
+terhelhetőségét (lakossági aljzaton jellemzően 10–16 A; tartós
+terhelésre a gyártói adat szerint), - a földelés meglétét, - a kábel és
+a csatlakozók sérülésmentességét, - a töltőkábel beállított
+áramkorlátját, amely ne haladja meg az aljzat és a kábel
+terhelhetőségét.</p>
+<p><strong>HV-biztonság.</strong> A jármű fedélzeti töltője a
+nagyfeszültségű (HV) rendszer része. A töltőberendezés csatlakoztatása
+előtt a jármű oldalán lévő töltőcsatlakozó nem HV-veszélyes, mert a
+feszültség csak a CP/PP kézfogás és a reteszelés után jelenik meg. A
+fedélzeti töltő és az akkumulátor közötti DC-körön, valamint a
+DC-gyorstöltő csatlakozóján azonban már nagyfeszültség van; ezt csak
+kiképzett személy, feszültségmentesítés után, gyártói utasítás szerint
+vizsgálhatja.</p>
+<p><strong>Környezetvédelem.</strong> A töltés során a jármű nem bocsát
+ki helyi szennyező anyagot, de a villamos energia előállítása környezeti
+terheléssel jár. A töltőberendezés elektromos hulladék, a jármű
+HV-akkumulátora pedig veszélyes hulladéknak minősülhet; az elhasznált
+töltőkábeleket és elektronikát szelektíven, az akkumulátort a gyártói
+vagy hatósági előírás szerint kell gyűjteni (ellenőrizendő:
+hulladékgazdálkodási jogszabály).</p>
+<h3 data-number="33.4.8" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">33.4.8</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Eset – „Lassan tölt, és leold a kismegszakító.”</strong>
+Budapest környéki ügyfél elektromos autóját egy régi családi ház
+garázsában tölti Mode 2 kábellel. Reggelre nem éri el a 80%-ot, és néha
+a 16 A-es kismegszakító leold.</p>
+<p>A szervizben átnézzük a járművet: a fedélzeti töltő és a BMS hibát
+nem jelez. A töltőkábel IC-CPD-jén a beállított áram 16 A, de a hálózati
+aljzat közelében lévő hosszabbító és a régi szerelés melegedik. A mérés
+szerint a feszültség a töltés alatt 215 V-ra esik, a felvett áram 15,8
+A, ami a hosszabbítón 90°C feletti kötéshőmérsékletet okoz
+(ellenőrizendő: hőmérséklet-mérés).</p>
+<p><strong>Ok:</strong> a háztartási aljzat és a hosszabbító nem
+alkalmas folyamatos 16 A-es terhelésre, és a kábel ellenállása
+feszültségesést okoz.</p>
+<p><strong>Javítás:</strong> a jármű oldali beállítás módosítása nem
+elég; az ügyfélnek dedikált, legalább 2,5 mm²-es vezetéken, 16 A-es B
+karakterisztikájú kismegszakítóval és áram-védőkapcsolóval (a töltőpont
+szabványa szerinti típus, ellenőrizendő: MSZ HD 60364-7-722) védett
+áramkört és 3,6 kW-os wallboxot telepítünk. A töltési idő így
+megbízhatóan 4–6 óra lesz, a melegedés megszűnik.</p>
+<p><strong>Tanulság:</strong> a „lassú töltés” gyakran nem a jármű
+hibája, hanem a töltőoldali infrastruktúráé. A diagnosztikát a jármű
+oldalán kell kezdeni, de a hálózati oldal mérését csak jogosult
+villanyszerelő végezheti.</p>
+<h3 data-number="33.4.9"
+id="gyakorlati-útmutató-a-töltőcsatlakozó-és-a-fedélzeti-töltő-ellenőrzése-járműoldalról"><span
+class="header-section-number">33.4.9</span> Gyakorlati útmutató – a
+töltőcsatlakozó és a fedélzeti töltő ellenőrzése járműoldalról</h3>
+<p><strong>Cél:</strong> annak megállapítása, hogy a jármű
+töltőcsatlakozója, a CP/PP kommunikáció és a fedélzeti töltő
+teljesítménye megfelelő-e, ha a töltés nem indul vagy lassú.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> jármű típusa, VIN-száma,
+akkumulátor-kapacitás, fedélzeti töltő névleges teljesítménye (gyártói
+adat – ellenőrizendő).</p>
+<p><strong>Szerszámok és mérőeszközök:</strong> diagnosztikai
+rendszerteszter (töltőmodul adatokkal), multiméter, lakatfogó,
+hőmérő/hőkamera, töltőkábel-tesztadapter, szigetelésvizsgáló (ha a
+gyártó előírja).</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák. A HV-rendszeren csak
+arra kiképzett, jogosult személy dolgozhat. A hálózati aljzat és a
+wallbox vizsgálata villanyszerelői jogosultságot igényel.</p>
+<h4 data-number="33.4.9.1" id="számozott-munkalépések"><span
+class="header-section-number">33.4.9.1</span> Számozott
+munkalépések</h4>
+<ol type="1">
+<li>Készítsd elő a járművet: gyújtás ki, kulcs távol, rögzítőfék be, a
+jármű alatt nem dolgozunk.</li>
+<li>Csatlakoztasd a rendszertesztert, olvasd ki a nagyfeszültségű
+rendszer és a töltőmodul hibakódjait.</li>
+<li>Szemrevételezéssel ellenőrizd a töltőcsatlakozó érintkezőit: nincs-e
+égésnyom, deformáció, víz, szennyeződés.</li>
+<li>Csatlakoztass gyári vagy tanműhelyi tesztadaptert, és mérj
+multiméterrel:
+<ul>
+<li>CP jel: 1 kHz, a kitöltési tényező a várt érték (példa: 26,7% → 16
+A);</li>
+<li>PP jel: a kábel típusának megfelelő ellenállás.</li>
+</ul></li>
+<li>Indíts töltést, és lakatfogóval mérd a fedélzeti töltő bemeneti
+AC-áramát. Példaérték: 11 kW-os háromfázisú fedélzeti töltőnél
+fázisonként kb. 16 A 400 V-on (ellenőrizendő: gyártói adat).</li>
+<li>A rendszerteszter élő adatában kövesd a BMS töltőáram-igényét és a
+fedélzeti töltő kimeneti feszültségét. Példaérték: 350–400 V DC, az
+akkumulátor feszültségtartománya szerint.</li>
+<li>Ellenőrizd a csatlakozó hőmérsékletét töltés alatt: a környezetnél
+20–30°C-nál nagyobb melegedés szennyezett vagy laza érintkezőre utal
+(ellenőrizendő).</li>
+<li>Hasonlítsd össze a mért töltési teljesítményt az elvárttal. Ha a
+hálózati feszültség vagy a CP jel nem megfelelő, a töltő visszaveszi az
+áramot.</li>
+<li>Fejezd be a töltést, állítsd le a rendszert, töröld a hibakódokat,
+ha a hiba oka megszűnt, és végezz próbatöltést.</li>
+</ol>
+<h4 data-number="33.4.9.2" id="ellenőrzési-pontok"><span
+class="header-section-number">33.4.9.2</span> Ellenőrzési pontok</h4>
+<ul>
+<li>CP kitöltési tényező: a töltőoszlop engedélyének megfelelő.</li>
+<li>PP jel: a kábel csatlakoztatott és a kábelkorlát beállítása
+helyes.</li>
+<li>Bemeneti AC-áram: a fedélzeti töltő felveszi a névleges áramot.</li>
+<li>Hőmérséklet-emelkedés: nem haladja meg a gyártói határt.</li>
+</ul>
+<p><strong>Tipikus hibák.</strong> Hibás CP-jel (a töltő nem ad
+engedélyt), a PP-ellenállás szakadása miatt a jármű nem ismeri fel a
+kábelt, a fedélzeti töltő belső reléje nem húz be, a hűtőventilátor nem
+megy, a hűtőfolyadék szintje alacsony.</p>
+<p><strong>Dokumentálás:</strong> munkalapon rögzítjük a mért
+feszültségeket, áramokat, hőmérsékleteket, a hibakódokat és az elvégzett
+javítást.</p>
+<h3 data-number="33.4.10" id="tipikus-hibák"><span
+class="header-section-number">33.4.10</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>Lineárisan számol DC-töltési időt.</strong> A tanuló a
+150 kW-os csúcsteljesítménnyel osztja az energiát, és elfelejti, hogy a
+töltési görbe csökken. Helyes: az átlagos teljesítménnyel és a tényleges
+SoC-ablakkal számolni.</p></li>
+<li><p><strong>Nem veszi figyelembe a veszteséget.</strong> A fedélzeti
+töltő, a jármű belső vezetéke és az akkumulátor is disszipál. A
+hálózatból felvett energia 5–15%-kal több lehet a betárolt energiánál. A
+számításban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mtext mathvariant="normal">töltés</mtext></msub><annotation encoding="application/x-tex">\eta_{\text{töltés}}</annotation></semantics></math>-t
+használni kell.</p></li>
+<li><p><strong>Hosszabbítóval, túlterhelt aljzatról tölt.</strong> A
+hosszabbító ellenállása feszültségesést és melegedést okoz. A Mode 2
+töltőkábel csak jó állapotú, megfelelő terhelhetőségű, földelt aljzatból
+üzemeltethető; hosszabbító használata tilos.</p></li>
+<li><p><strong>A CP/PP jelet figyelmen kívül hagyja a
+diagnosztikában.</strong> Ha a töltés nem indul, a hibakeresést a CP és
+PP jelek mérésével kell kezdeni, mert ezek jelzik, hol szakad meg a
+kommunikáció.</p></li>
+<li><p><strong>A „nagyobb töltő = gyorsabb töltés” tévhit.</strong>
+AC-töltésnél a fedélzeti töltő teljesítménye a korlát; egy 11 kW-os
+fedélzeti töltővel szerelt autó egy 22 kW-os wallboxról sem tölt 11
+kW-nál gyorsabban.</p></li>
+</ol>
+<h3 data-number="33.4.11" id="önellenőrzés"><span
+class="header-section-number">33.4.11</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A DC-gyorstöltés a jármű fedélzeti töltőjét
+használja.</li>
+<li>Számítsd ki: 40 kWh hasznos kapacitás, 7,4 kW-os fedélzeti töltő,
+90% hatásfok, 30%-ról 80%-ra töltés. Mennyi idő?</li>
+<li>Milyen csatlakozót ír elő az EU nyilvános AC-töltéshez?</li>
+<li>Mi a CP jel szerepe?</li>
+<li>Mi a hiba: „A 150 kW-os töltő 40 kWh-t 16 perc alatt betölt, mert
+40/150=0,267 h.”</li>
+</ol>
+<h4 data-number="33.4.11.1" id="megoldások-az-önellenőrzéshez"><span
+class="header-section-number">33.4.11.1</span> Megoldások az
+önellenőrzéshez</h4>
+<ol type="1">
+<li>Hamis. A DC-töltés megkerüli a fedélzeti töltőt, a töltőoszlop saját
+DC-t ad.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>40</mn><mo>=</mo><mn>20</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">E=(0{,}8-0{,}3)\cdot 40 = 20\ \text{kWh}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>20</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>7</mn><mo>,</mo><mn>4</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">h</mtext></mrow><annotation encoding="application/x-tex">t = 20/(7{,}4\cdot 0{,}9) = 3{,}0\ \text{h}</annotation></semantics></math>.</li>
+<li>Type 2.</li>
+<li>A CP jel a töltő és a jármű közötti kommunikáció része, a kitöltési
+tényezővel az engedélyezett töltőáramot jelzi.</li>
+<li>A 150 kW csúcsteljesítmény nem állandó; a töltési görbe és a
+hatásfok miatt az idő hosszabb, jellemzően 25–35 perc.</li>
+</ol>
+<h3 data-number="33.4.12" id="feladatok"><span
+class="header-section-number">33.4.12</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Sorold fel a négy töltési módot, és
+mondd meg, melyiknél van fedélzeti töltő, és melyiknél nincs.</p>
+<p><strong>2. feladat (A)</strong> Egy 62 kWh-s elektromos autó
+fedélzeti töltője 11 kW, hatásfoka 0,91. Mennyi idő alatt tölt 15%-ról
+90%-ra?</p>
+<p><strong>3. feladat (B)</strong> Egy háromfázisú wallbox 400 V-on,
+fázisonként 16 A-t ad le. Számítsd ki a leadott teljesítményt
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\cos\varphi = 1</annotation></semantics></math>),
+és a töltési időt, ha 50 kWh hasznos energiát kell betárolni és a
+fedélzeti töltő hatásfoka 0,92.</p>
+<p><strong>4. feladat (B)</strong> Az alábbi CP kitöltési tényező–áram
+párokat kaptad: 10% → 6 A, 20% → 12 A, 40% → 24 A. Rajzold fel a
+jelleggörbét kvalitatívan, és magyarázd el, mi történik, ha a kitöltési
+tényező 0%.</p>
+<p><strong>5. feladat (C)</strong> Egy jármű DC-töltése során 10%
+SoC-ról 80% SoC-ra 28 kWh energiát töltött. A töltőoszlop kijelzője
+szerint a felvett hálózati energia 31 kWh volt. Számítsd ki a töltési
+hatásfokot. Miért kisebb, mint 100%?</p>
+<p><strong>6. feladat (D)</strong> Ügyfél panasza: a töltés nem indul, a
+wallbox kijelzője „Waiting for vehicle” üzenetet mutat. Sorold fel,
+milyen járműoldali jeleket mérnél a hibakereséshez, és milyen eredmény
+utalna a fedélzeti töltő hibájára.</p>
+<h3 data-number="33.4.13" id="megoldások"><span
+class="header-section-number">33.4.13</span> Megoldások</h3>
+<p><strong>1. feladat (A)</strong> Mode 1: háztartási aljzat, fedélzeti
+töltő használatban. Mode 2: hordozható kábel IC-CPD-vel, fedélzeti
+töltő. Mode 3: wallbox, fedélzeti töltő. Mode 4: DC-gyorstöltő, a
+fedélzeti töltőt megkerüli.</p>
+<p><strong>2. feladat (A)</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>90</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>15</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>62</mn><mo>=</mo><mn>46</mn><mo>,</mo><mn>5</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">E=(0{,}90-0{,}15)\cdot 62 = 46{,}5\ \text{kWh}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>46</mn><mo>,</mo><mn>5</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>11</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>91</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>46</mn><mo>,</mo><mn>5</mn><mi>/</mi><mn>10</mn><mo>,</mo><mn>01</mn><mo>=</mo><mn>4</mn><mo>,</mo><mn>65</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>4</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">óra</mtext><mspace width="0.222em"></mspace><mn>39</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">perc</mtext></mrow><annotation encoding="application/x-tex">t = 46{,}5/(11\cdot 0{,}91) = 46{,}5/10{,}01 = 4{,}65\ \text{h} \approx 4\ \text{óra}\ 39\ \text{perc}</annotation></semantics></math>.</p>
+<p><strong>3. feladat (B)</strong> A háromfázisú hatásos teljesítmény:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><msqrt><mn>3</mn></msqrt><mo>⋅</mo><msub><mi>U</mi><mtext mathvariant="normal">vonali</mtext></msub><mo>⋅</mo><mi>I</mi><mo>⋅</mo><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>732</mn><mo>⋅</mo><mn>400</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>16</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>⋅</mo><mn>1</mn><mo>=</mo><mn>11</mn><mo>,</mo><mn>1</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">kW</mtext></mrow><annotation encoding="application/x-tex">P=\sqrt{3}\cdot U_{\text{vonali}}\cdot I\cdot \cos\varphi = 1{,}732\cdot 400\,\text{V}\cdot 16\,\text{A}\cdot 1 = 11{,}1\ \text{kW}</annotation></semantics></math>.
+Töltési idő:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>50</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>11</mn><mo>,</mo><mn>1</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>92</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>4</mn><mo>,</mo><mn>9</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">h</mtext></mrow><annotation encoding="application/x-tex">t = 50/(11{,}1\cdot 0{,}92) = 4{,}9\ \text{h}</annotation></semantics></math>.</p>
+<p><strong>4. feladat (B)</strong> A jelleggörbe lineáris, 0,6 A/%
+meredekségű: az áram a kitöltési tényezővel arányos (10–85 % között).
+0%-nál a CP jel nem él, a töltő nem ad engedélyt, a jármű nem tölt.</p>
+<p><strong>5. feladat (C)</strong> A töltési hatásfok:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><msub><mi>E</mi><mtext mathvariant="normal">hasznos</mtext></msub><mi>/</mi><msub><mi>E</mi><mtext mathvariant="normal">hálózat</mtext></msub><mo>=</mo><mn>28</mn><mi>/</mi><mn>31</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>90</mn><mo>=</mo><mn>90</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\eta = E_{\text{hasznos}}/E_{\text{hálózat}} = 28/31 = 0{,}90 = 90\%</annotation></semantics></math>.
+A veszteség a töltőoszlop AC/DC-átalakítója, a kábel, az akkumulátor
+belső ellenállása és az akkumulátorhűtés miatt keletkezik (DC-töltésnél
+a fedélzeti töltő kimarad).</p>
+<p><strong>6. feladat (D)</strong> Mérni kell a CP jelet (van-e 1 kHz,
+mekkora a kitöltési tényező), a PP jelet (a kábel csatlakoztatva van-e),
+a fedélzeti töltő bemeneti AC-áramát, a BMS töltésengedélyét. Ha a
+CP-csúcs +12 V marad, a töltő nem érzékeli a járművet (CP-vezeték, dióda
+vagy a jármű töltésvezérlője hibás). Ha a CP és PP jel rendben van, de a
+fedélzeti töltő nem vesz fel áramot, és a BMS engedélyt ad, akkor a
+fedélzeti töltő elektronikája vagy bemeneti reléje hibás.</p>
+<h3 data-number="33.4.14" id="rövid-összefoglaló"><span
+class="header-section-number">33.4.14</span> Rövid összefoglaló</h3>
+<p>A töltés AC- és DC-úton történhet. AC-töltésnél a hálózati váltakozó
+feszültséget a jármű fedélzeti töltője alakítja egyenárammá; a
+teljesítményt a fedélzeti töltő és a BMS korlátozza. A töltési módokat
+az IEC 61851 szerint Mode 1–4-nek nevezzük: a Mode 2 hordozható kábelt,
+a Mode 3 dedikált wallboxot, a Mode 4 DC-gyorstöltőt jelent. Európában
+az AC-töltés Type 2, a DC-töltés CCS Combo 2 csatlakozót használ
+(ellenőrizendő). A töltő és a jármű kommunikációja CP- és PP-jelekkel,
+illetve DC-töltésnél digitális protokollon keresztül történik. A töltési
+idő az energiaigény és a hasznos töltési teljesítmény hányadosa,
+figyelembe véve a hatásfokot. A DC-töltési görbe nem lineáris: a
+teljesítmény a SoC növekedésével csökken. A töltés biztonsága a sérült
+kábel, a hosszabbító és a túlterhelt aljzat elkerülésén, valamint a
+földelés és a védőberendezések meglétén alapul.</p>
+<p><strong>Továbbvitt eredmény.</strong> A töltési idő és a töltési
+módok számítását, a csatlakozók és a CP/PP jelek felismerését a
+vizsgafelkészülés komplex hibakeresési feladataiban és a gyakorlati
+vizsgán használjuk; a hatósági és ügyfélkommunikációban is ezzel
+érvelünk a töltési idő és a „miért lassú a töltés” kérdés esetén.</p>
+<h3 data-number="33.4.15" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">33.4.15</span> Források és ellenőrzési
+hiányok</h3>
+<ul>
+<li>IEC 61851 szabványsorozat (töltési módok, CP/PP jelek) –
+ellenőrizendő: aktuális kiadás és jelalak.</li>
+<li>(EU) 2023/1804 rendelet (AFIR) az alternatív üzemanyagok
+infrastruktúrájáról, amely a korábbi 2014/94/EU irányelv helyébe lépett
+– ellenőrizendő: hatályos szöveg, módosítások.</li>
+<li>ECE R100 a jármű elektromos biztonságáról – ellenőrizendő: aktuális
+változat.</li>
+<li>Hazai villamos szabványok (MSZ HD 60364) és áramszolgáltatói
+előírások – ellenőrizendő.</li>
+<li>A példaértékek (töltőteljesítmény, kapacitás, hatásfok, CP kitöltési
+tényező) tanulási példák, gyártói adatként ellenőrizendők.</li>
+</ul>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au119.html">← 33.3 Villamos hajtás: villanymotor, inverter, DC/DC átalakító, regeneratív fékezés és hőmenedzsment</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au121.html">34.1 HV-veszélyek, jogosultság és munkaszervezés →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

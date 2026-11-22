@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hidrodinamikus kenés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="n">fordulatszám</label><input id="n" type="range" min="0" max="6000" step="100" value="800" aria-label="fordulatszám"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="olaj">olaj</label><select id="olaj" aria-label="olaj"><option value="hideg">hideg (sűrű) olaj</option><option value="meleg" selected>üzemmeleg (híg) olaj</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 320" role="img" aria-label="Siklócsapágy metszete: a forgó csap az olajat a szűkülő résbe húzza, a nyomás felemeli; álló helyzetben a csap a csészén fekszik."></svg>
+<p class="small">Minőségi szemléltetés kitalált számértékek nélkül: a rés eltúlzott, az excentricitás a fordulatszámmal és a viszkozitással csak irányában helyesen változik. A valós csapágyhézag és olajnyomás gyártói adat.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n":"1/min"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+svg = FIG.svg;
+const R=110, C=34, cx0=190, cy0=150;
+const mu = v.olaj==="hideg" ? 3.0 : 1.0;          // relatív viszkozitás (minőségi)
+const S = mu * v.n / 1500;                        // relatív Sommerfeld-szám (minőségi)
+const eps = v.n<=0 ? 1 : Math.max(0.15, 1/(1+S));  // excentricitás
+const phi = v.n<=0 ? 0 : Math.atan(Math.PI*Math.sqrt(1-eps*eps)/(2*eps));
+const the = Math.PI/2 - phi;                       // SVG-ben y lefelé nő: lefelé = +90°
+const jx=cx0+eps*C*Math.cos(the), jy=cy0+eps*C*Math.sin(the);
+const ln=css("--line");
+// nyomásgörbe (félSommerfeld), csak forgáskor
+if (v.n>0){ let d=""; let pmax=0; const P=[];
+  for(let i=0;i<=360;i++){ const t=i*Math.PI/180; let psi=((the-t)-Math.PI)%(2*Math.PI); if(psi<0)psi+=2*Math.PI;
+    const p=(psi>0&&psi<Math.PI)? eps*Math.sin(psi)*(2+eps*Math.cos(psi))/((2+eps*eps)*Math.pow(1+eps*Math.cos(psi),2)) : 0;
+    P.push([t,p]); pmax=Math.max(pmax,p);}
+  P.forEach(([t,p],i)=>{const r=R+14+45*p/Math.max(pmax,1e-9)*1; d+=(i?"L":"M")+(cx0+r*Math.cos(t))+" "+(cy0+r*Math.sin(t));});
+  el("path",{d:d+"Z",fill:css("--grid"),stroke:ln,"stroke-width":1});
+}
+el("circle",{cx:cx0,cy:cy0,r:R+14,fill:css("--bg"),stroke:ln,"stroke-width":2});
+if (v.n>0) el("text",{x:cx0-20,y:cy0-60,"font-size":22},"↺");
+if (v.n>0) el("text",{x:cx0+8,y:cy0-62,"font-size":12},"forgás");
+el("circle",{cx:cx0,cy:cy0,r:R,fill:"none",stroke:ln,"stroke-width":1.5});
+el("circle",{cx:jx,cy:jy,r:R-C,fill:"none",stroke:css("--hl"),"stroke-width":3});
+el("line",{x1:jx,y1:jy-40,x2:jx,y2:jy+40,stroke:ln,"stroke-width":3});
+el("path",{d:`M${jx-6} ${jy+30} L${jx} ${jy+42} L${jx+6} ${jy+30}`,fill:ln});
+el("text",{x:jx+8,y:jy+40,"font-size":13},"F");
+const hx=cx0+R*Math.cos(the), hy=cy0+R*Math.sin(the);
+el("circle",{cx:hx,cy:hy,r:4,fill:css("--hl2")});
+el("text",{x:380,y:60,"font-size":13},"legkisebb rés h_min (relatív):");
+el("rect",{x:380,y:70,width:220,height:18,fill:"none",stroke:ln});
+el("rect",{x:380,y:70,width:220*(1-eps),height:18,fill:css("--hl")});
+el("text",{x:380,y:120,"font-size":13},"a csap kitérése a forgás irányában: "+fmt(phi*180/Math.PI,0)+"°");
+let msg;
+if(v.n<=0) msg='<span class="bad">Álló helyzet: a csap a csészén fekszik – fém a fémen.</span>';
+else if(eps>0.8) msg='<span class="bad">Alacsony fordulat: vegyes kenés – a felületek érintkezhetnek (indítási kopás).</span>';
+else msg='<span class="ok">Hidrodinamikus kenés: az olajék nyomása felemeli a csapot, a fémfelületek elválnak.</span>';
+status(msg+(v.olaj==="meleg"?" Meleg (híg) olajnál ugyanazon fordulaton vékonyabb a film.":" Hideg (sűrű) olajnál vastagabb a film, de induláskor lassabban jut el a csapágyhoz."));
+el("text",{x:380,y:170,"font-size":12,fill:css("--muted")},"pont: a legkisebb rés helye");
+el("text",{x:380,y:188,"font-size":12,fill:css("--muted")},"szürke terület: olajnyomás (minőségi)");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

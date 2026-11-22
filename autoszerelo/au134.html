@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>37.3 Rendszerteszter-használat: élő adatok, beavatkozó teszt,
+adaptációk, kódolás – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz9">IX. RÉSZ – Járműkarbantartás, hatósági vizsgálat és diagnosztika</a> › <a href="index.html#auch36">37 Motordiagnosztika</a></p>
+<div class="links"><a class="prev" rel="prev" href="au133.html">← 37.2 Fedélzeti diagnosztika: OBD és EOBD</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au135.html">37.4 Gázelemzés és füstölésmérés →</a></div>
+</nav>
+<h2 data-number="37.3" id="au134"><span
+class="header-section-number">37.3</span> Rendszerteszter-használat: élő
+adatok, beavatkozó teszt, adaptációk, kódolás</h2>
+<h3 data-number="37.3.1" id="motiváció"><span
+class="header-section-number">37.3.1</span> Motiváció</h3>
+<p>Egy benzinüzemű autó a műhelybe érkezik: a vezető szerint „rángat, és
+többet fogyaszt, mint régen”. A fedélzeti diagnosztika hibakódot nem
+mutat, a műszerfali hibajelző lámpa nem világít. Ilyenkor a régi,
+próbálgatásra épülő szerelés helyett a rendszerteszter élő adatait kell
+nézni: a rövid és hosszú távú üzemanyag-korrekció, a légtömeg és a
+lambda-értékek gyakran megmutatják, hogy a motor miért kever hibásan.
+Ebben az alfejezetben a rendszerteszter gyakorlati használatát tanuljuk
+meg: hogyan kell az élő adatokat értelmezni, beavatkozó tesztet
+futtatni, adaptációt tanítani, kódolni, illetve mikor kell a fedélzeti
+diagnosztika mellett párhuzamos vagy periféria-diagnosztikát
+alkalmazni.</p>
+<h3 data-number="37.3.2" id="szemléletes-kép"><span
+class="header-section-number">37.3.2</span> Szemléletes kép</h3>
+<p>Képzeljünk el egy 16 pólusú diagnosztikai csatlakozót a vezetőoldali
+lábtérben, amelybe a rendszerteszter szabványos csatlakozóját dugtuk. A
+teszter képernyőjén egymás alatt jelennek meg az úgynevezett PID-ek
+(Parameter Identifier adatazonosítók): például a motorfordulatszám, a
+hűtőfolyadék-hőmérséklet, a szívott levegő hőmérséklete, a légtömeg, a
+fojtószelepállás, a lambda-érték és az üzemanyag-korrekciók. A technikus
+egy gombnyomással rögzíti az adatokat, majd alacsony alapjáraton,
+részterhelésen és teljes terhelésen újra figyeli őket. A számokból
+nemcsak azt látja, hogy a motor „szegény” vagy „dús” keverékkel jár,
+hanem azt is, hogy a hiba a levegőoldalon, az üzemanyagoldalon vagy
+valamelyik érzékelőnél keresendő.</p>
+<h3 data-number="37.3.3" id="definíciók-és-alapfogalmak"><span
+class="header-section-number">37.3.3</span> Definíciók és
+alapfogalmak</h3>
+<p><strong>Definíció.</strong> A <strong>soros diagnosztika</strong>
+olyan járműdiagnosztikai eljárás, amelyben a diagnosztikai teszter a
+fedélzeti vezérlőegységekbe – elsősorban a motorvezérlőbe – szabványos
+soros kommunikációs protokollon keresztül kapcsolódik, és onnan
+hibakódokat, élő adatokat, fagyasztott keretadatokat (freeze frame) vagy
+tesztüzemi információkat kérdez le, illetve beavatkozó parancsokat
+küld.</p>
+<p><strong>Definíció.</strong> A <strong>rendszerteszter</strong> (scan
+tool) olyan diagnosztikai műszer, amely alkalmas a fedélzeti
+diagnosztikai protokollok kezelésére: hibakódok kiolvasására és
+törlésére, élő adatok megjelenítésére, beavatkozó tesztek indítására,
+adaptációk és alapbeállítások futtatására, valamint egyes járműveken
+kódolásra és vezérlőegység-programozásra.</p>
+<p><strong>Definíció.</strong> Az <strong>élő adat</strong> (live data)
+a vezérlőegység aktuálisan mért vagy számított paramétereinek valós
+idejű megjelenítése a teszteren. Ilyen paraméter például a
+motorfordulatszám, a hűtőfolyadék-hőmérséklet, a szívott levegő
+tömegárama, a fojtószelepállás, a lambda-érték, vagy éppen az
+üzemanyag-korrekció.</p>
+<p><strong>Definíció.</strong> A <strong>beavatkozó teszt</strong>
+(actuator test) olyan diagnosztikai üzemmód, amelyben a vezérlőegység
+egy beavatkozót – például injektort, gyújtótekercset, EGR-szelepet,
+fojtószelep-állítót vagy relét – célzottan működtet, hogy a szerelő
+ellenőrizze annak villamos és mechanikai működését.</p>
+<p><strong>Definíció.</strong> Az <strong>adaptáció</strong>
+(tanulófunkció) olyan eljárás, amelynek során a vezérlőegység a megadott
+peremfeltételek mellett újra meghatározza vagy finomítja a belső
+jelleggörbéit, küszöbértékeit – például a fojtószelep alaphelyzetét, a
+lambda-szabályozás szélső korrekciós értékeit, az automata váltó
+kapcsolási nyomásait.</p>
+<p><strong>Definíció.</strong> A <strong>kódolás</strong> a
+vezérlőegység járműspecifikus beállításainak módosítása: például
+akkumulátor típusának regisztrálása, a felszereltségnek megfelelő
+funkciók engedélyezése, a gumiabroncs-méretből adódó
+kerekesszenzor-karakterisztika kiválasztása. A járműazonosító adatokat
+és a megfelelő gyártói előírást mindig ellenőrizni kell.</p>
+<p><strong>Definíció.</strong> A <strong>programozás</strong>
+(szoftverfrissítés, flashing) a vezérlőegység belső programmemóriájának
+újraírása, amelyet a gyártó által kiadott, az adott járműhöz és
+hardververzióhoz illeszkedő szoftverrel szabad elvégezni.</p>
+<p><strong>Definíció.</strong> A <strong>párhuzamos
+diagnosztika</strong> a vezérlőegység és a kábelköteg közötti,
+rendszerint kitörőboxszal (breakout box) végrehajtott mérés: a szerelő a
+csatlakozó minden érintkezőjét közvetlenül, a vezérlőegység
+megkerülésével mérheti, miközben a rendszer továbbra is üzemel.</p>
+<p><strong>Definíció.</strong> A <strong>periféria-diagnosztika</strong>
+az érzékelők és beavatkozók közvetlen, a vezérlőegységtől független
+vizsgálata multiméterrel, oszcilloszkóppal vagy célzott műszerekkel –
+például egy induktív főtengely-jeladó jelalakjának mérése a jeladó
+csatlakozóján.</p>
+<h3 data-number="37.3.4" id="felépítés-és-működés"><span
+class="header-section-number">37.3.4</span> Felépítés és működés</h3>
+<p>A modern soros diagnosztika a fedélzeti diagnosztikai (EOBD/OBD)
+rendszerre épül. A 16 pólusú diagnosztikai csatlakozó nemzetközileg
+szabványos elrendezésű; jellemző kiosztása például a 4-es test, az 5-ös
+jeltest, a 6-os CAN-H, a 14-es CAN-L, a 7-es K-vonal, a 15-ös L-vonal, a
+16-os pedig a járműfedélzeti tápfeszültség (ellenőrizendő: gyártói
+kapcsolási rajz szerint). A csatlakozó fizikai kialakítását az SAE
+J1962, a diagnosztikai üzenetformátumokat és szolgáltatásokat pedig az
+ISO 15031 sorozat, illetve a gyártóspecifikus protokollok írják le
+(ellenőrizendő: hatályos szabványváltozatok).</p>
+<p>A diagnosztikai teszterek két fő csoportba sorolhatók:</p>
+<ul>
+<li><strong>Univerzális teszterek:</strong> az EOBD/OBD üzemmódokat és a
+leggyakoribb gyártói kiegészítéseket ismerik. Alkalmasak hibakódok
+kiolvasására, élő adatok megjelenítésére és alapbeállítások futtatására,
+de a gyártóspecifikus funkciók – például légzsák-adaptáció vagy
+elektromos rögzítőfék szervizüzemmód – hiányozhatnak belőlük.</li>
+<li><strong>Gyári vagy gyártóspecifikus teszterek:</strong> az adott
+márka valamennyi vezérlőegységéhez és szervizfunkciójához hozzáférnek;
+ilyeneket használnak a márkaszervizekben, és a gyártói javítási utasítás
+is ezekre hivatkozik.</li>
+</ul>
+<p>A teszter első csatlakoztatásakor fel kell vennie a járművel a
+kommunikációt. Ennek lépései: a gyújtás bekapcsolása, a jármű
+azonosítása, a diagnosztikai protokoll automatikus kiválasztása vagy
+kézi megadása, majd a vezérlőegységek kiolvasása. A motorvezérlő mellett
+jellemzően az ABS/ESP, a légzsák, a műszeregység, a komfortelektronika
+és a klíma is elérhető. A teszter általában megmutatja a jármű azonosító
+adatait: VIN-számot, motorszámot, szoftververziót és a gyártói
+kalibrációs azonosítókat.</p>
+<p>A fedélzeti diagnosztika szabványos üzemmódjai közül a gyakorlatban a
+legfontosabbak:</p>
+<ul>
+<li><strong>Mode 01:</strong> aktuális élő adatok kiolvasása,</li>
+<li><strong>Mode 02:</strong> fagyasztott keretadatok (freeze frame)
+kiolvasása,</li>
+<li><strong>Mode 03:</strong> tárolt hibakódok kiolvasása,</li>
+<li><strong>Mode 04:</strong> hibakódok és fagyasztott adatok
+törlése,</li>
+<li><strong>Mode 05:</strong> oxigénszenzor-vizsgálati eredmények,</li>
+<li><strong>Mode 06:</strong> a nem folyamatos fedélzeti monitorok
+eredményei,</li>
+<li><strong>Mode 07:</strong> függőben lévő (pending) hibakódok,</li>
+<li><strong>Mode 08:</strong> a fedélzeti rendszer vezérlésének kérése
+(korlátozott, pl. EVAP-teszt; ellenőrizendő: SAE J1979); az általános
+beavatkozó tesztek gyártóspecifikus diagnosztikai szolgáltatások, nem az
+EOBD részei,</li>
+<li><strong>Mode 09:</strong> járműinformációk kiolvasása,</li>
+<li><strong>Mode 0A:</strong> állandó hibakódok.</li>
+</ul>
+<p>A <strong>vezetőtájékoztatás</strong> elsődleges eszköze a műszerfali
+hibajelző lámpa (MIL). A lámpa kigyulladását a vezérlőegység a tárolt
+hibakóddal együtt dokumentálja; a részletes okot azonban csak a
+teszterrel lehet megállapítani. A teszter képes a MIL vezérlését is
+ellenőrizni, például a lámpa ki- és bekapcsolását célzottan
+vezérelve.</p>
+<h3 data-number="37.3.5" id="élő-adatok-értelmezése"><span
+class="header-section-number">37.3.5</span> Élő adatok értelmezése</h3>
+<p>Az élő adatok a hibakeresés leghatékonyabb forrásai, de csak akkor,
+ha a szerelő tudja, mi a jó érték, és miért változik az aktuális érték
+az üzemállapottal.</p>
+<h4 data-number="37.3.5.1"
+id="rövid-és-hosszú-távú-üzemanyag-korrekció"><span
+class="header-section-number">37.3.5.1</span> Rövid és hosszú távú
+üzemanyag-korrekció</h4>
+<p>A motorvezérlő a befecskendezési időt folyamatosan korrigálja a
+lambdaszonda jele alapján. A <strong>rövid távú
+üzemanyag-korrekció</strong> (short term fuel trim, STFT) azonnali, a
+pillanatnyi lambda-eltérést kiegyenlítő módosítás. A <strong>hosszú távú
+üzemanyag-korrekció</strong> (long term fuel trim, LTFT) a tartós
+eltérést tanulja meg, és az adaptív értéket tárolja. Mindkettőt
+százalékban adják meg, ahol a pozitív érték dúsítást, a negatív érték
+szegényítést jelent az alap befecskendezési időhöz képest.</p>
+<p><strong>Összefüggés.</strong> Ha az alap befecskendezési idő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">alap</mtext></msub><annotation encoding="application/x-tex">t_{\text{alap}}</annotation></semantics></math>,
+a rövid távú korrekció
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtext mathvariant="normal">STFT</mtext><annotation encoding="application/x-tex">\text{STFT}</annotation></semantics></math>,
+a hosszú távú korrekció pedig
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtext mathvariant="normal">LTFT</mtext><annotation encoding="application/x-tex">\text{LTFT}</annotation></semantics></math>
+százalékban, akkor a tényleges befecskendezési idő közelítőleg:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">bef</mtext></msub><mo>=</mo><msub><mi>t</mi><mtext mathvariant="normal">alap</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mfrac><mtext mathvariant="normal">STFT</mtext><mrow><mn>100</mn><mi>%</mi></mrow></mfrac><mo>+</mo><mfrac><mtext mathvariant="normal">LTFT</mtext><mrow><mn>100</mn><mi>%</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">t_{\text{bef}} = t_{\text{alap}} \left(1 + \frac{\text{STFT}}{100\%} + \frac{\text{LTFT}}{100\%}\right).</annotation></semantics></math></p>
+<p><strong>Szabály.</strong> Széles körű gyakorlati hüvelykujjszabály
+szerint a hosszú távú korrekció normál értéke körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>5</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\pm 5\%</annotation></semantics></math>
+körül mozog,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>10</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\pm 10\%</annotation></semantics></math>
+fölött már hibát gyanítunk,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>20</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\pm 20\%</annotation></semantics></math>
+fölött pedig a vezérlőegység általában hibakódot tárol (ellenőrizendő:
+gyártói diagnosztikai adat, mert a határértékek típusonként eltérnek). A
+rövid távú korrekció alapjáraton és részterhelésen is jellemzően néhány
+százalékos tartományban ingadozik.</p>
+<figure id="fig-au134-1">
+<div class="fig-interactive"><iframe src="figures/html/au134-1.html" title="Vízszintes skála −45 és +45 százalék között normál, határeseti, hibagyanús és hibakódos sávokkal; a szívócső-szivárgás alapjáraton +40 százaléknál, 3000-es fordulaton a normál sávban; a légtömegmérő-hiba terhelésen nő; a beragadt injektor alapjáraton −33 százaléknál." loading="lazy" style="width:100%;border:0;height:520px"></iframe><noscript><img src="figures/img/au134-1.png" style="width:85.0%"
+alt="Vízszintes skála −45 és +45 százalék között normál, határeseti, hibagyanús és hibakódos sávokkal; a szívócső-szivárgás alapjáraton +40 százaléknál, 3000-es fordulaton a normál sávban; a légtömegmérő-hiba terhelésen nő; a beragadt injektor alapjáraton −33 százaléknál." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au134-1.png" style="width:85.0%"
+alt="Vízszintes skála −45 és +45 százalék között normál, határeseti, hibagyanús és hibakódos sávokkal; a szívócső-szivárgás alapjáraton +40 százaléknál, 3000-es fordulaton a normál sávban; a légtömegmérő-hiba terhelésen nő; a beragadt injektor alapjáraton −33 százaléknál." /></details></div>
+<figcaption>Üzemanyag-korrekció értelmezése (a sávhatárok tanulási
+példák, ellenőrizendő)</figcaption>
+</figure>
+<p>Az ábra az összkorrekciót (STFT + LTFT) mutatja: a pozitív érték azt
+jelenti, hogy a vezérlő szegény keveréket lát, és dúsít. A
+szívócső-szivárgás (alapjáraton +22 % + 18 % = +40 %) terhelésen szinte
+eltűnik, a légtömegmérő-hiba terhelésen nő, a beragadt injektor (−18 % −
+15 % = −33 %) szegényítést okoz; a 3000 1/min-es pontok szemléltetők. A
+HTML-változatban a csúszkákkal és a hibaszcenáriókkal a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">bef</mtext></msub><annotation encoding="application/x-tex">t_{\text{bef}}</annotation></semantics></math>
+is kiszámítható.</p>
+<h4 data-number="37.3.5.2" id="légtömeg-lambda-és-hőmérsékletek"><span
+class="header-section-number">37.3.5.2</span> Légtömeg, lambda és
+hőmérsékletek</h4>
+<p>A fűtött szálas vagy fóliás légtömegmérő a ténylegesen beszívott
+levegő tömegét méri. Alapjáraton egy 2,0 literes szívó benzinmotor
+jellemző értéke körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">2{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">4{,}0\ \text{g/s}</annotation></semantics></math>,
+3000 1/min fordulatszámon pedig nagyságrendileg
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">15\ \text{g/s}</annotation></semantics></math>
+lehet (ellenőrizendő: gyártói adat). A keskeny sávú lambdaszonda
+feszültsége alapjáraton folyamatosan váltakozik körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0{,}1</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>9</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}9\ \text{V}</annotation></semantics></math>
+között; a szélessávú szonda jeleit a vezérlő általában már közvetlen
+lambda-értékké alakítja, ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>00</mn></mrow><annotation encoding="application/x-tex">\lambda = 1{,}00</annotation></semantics></math>
+a sztöchiometrikus keverék. A hűtőfolyadék-hőmérséklet teljesen
+bemelegedett motornál körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>85</mn><annotation encoding="application/x-tex">85</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>95</mn><mspace width="0.222em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">95\ {}^{\circ}\text{C}</annotation></semantics></math>
+(ellenőrizendő: gyártói adat), a szívott levegő hőmérséklete közelít a
+környezeti hőmérséklethez, az olajhőmérséklet pedig általában lassabban
+követi a hűtőfolyadék hőmérsékletét.</p>
+<p>Az alábbi táblázat a leggyakrabban használt élő adatokat és azok
+tipikus felhasználását foglalja össze:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Élő adat</th>
+<th>Tipikus értelmezési tartomány</th>
+<th>Mire utalhat az eltérés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>STFT / LTFT</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>5</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\pm 5\%</annotation></semantics></math>
+körül normál;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>10</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\pm 10\%</annotation></semantics></math>
+fölött gyanús</td>
+<td>szivárgás, tömegáram-hiba, üzemanyagnyomás</td>
+</tr>
+<tr>
+<td>Légtömeg alapjáraton</td>
+<td>2,0 literes szívómotor:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">2{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">4{,}0\ \text{g/s}</annotation></semantics></math></td>
+<td>szívócső-szivárgás, eldugult szűrő, szennyezett mérő</td>
+</tr>
+<tr>
+<td>Keskeny sávú lambda</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0{,}1</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>9</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}9\ \text{V}</annotation></semantics></math>
+váltakozik</td>
+<td>ragadt szonda, katalizátorhiba, keverékszegénység</td>
+</tr>
+<tr>
+<td>Hűtőfolyadék-hőmérséklet</td>
+<td>bemelegedve
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>85</mn><annotation encoding="application/x-tex">85</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>95</mn><mspace width="0.222em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">95\ {}^{\circ}\text{C}</annotation></semantics></math></td>
+<td>termosztát-hiba, szenzorhiba</td>
+</tr>
+<tr>
+<td>Fojtószelepállás</td>
+<td>zárt állás:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">5\%</annotation></semantics></math>,
+teljes terhelés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>80</mn><annotation encoding="application/x-tex">80</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">100\%</annotation></semantics></math></td>
+<td>fojtószelep-karbon, jeladóhiba</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: gyártói diagnosztikai
+adat).</p>
+<h3 data-number="37.3.6"
+id="beavatkozó-teszt-alapbeállítás-adaptáció-kódolás-és-programozás"><span
+class="header-section-number">37.3.6</span> Beavatkozó teszt,
+alapbeállítás, adaptáció, kódolás és programozás</h3>
+<p>A beavatkozó tesztet mindig akkor végezzük, amikor azt szeretnénk
+bebizonyítani, hogy egy adott alkatrész nemcsak villamosan, hanem
+működésében is megfelelő. A teszter például egymás után kiiktathatja az
+egyes injektorokat, miközben a fordulatszám-esést figyeljük;
+működtetheti az üzemanyag-szivattyú relét, az EGR-szelepet, a
+fojtószelep-állítót vagy a szénszűrő szelepet.</p>
+<p><strong>Gyakorlat.</strong> A beavatkozó teszt helyes sorrendje:</p>
+<ol type="1">
+<li>Győződj meg arról, hogy a jármű a gyártói előírás szerinti
+biztonságos állapotban van; a váltó P vagy üres állásban, a rögzítőfék
+behúzva.</li>
+<li>Csatlakoztasd a rendszertesztert, és azonosítsd a járművet.</li>
+<li>Válaszd ki a megfelelő vezérlőegységet, majd a beavatkozó teszt
+funkciót.</li>
+<li>Olvasd el a teszter figyelmeztetéseit; a motortérben forgó, forró
+vagy elektromos részek közelében légy különösen óvatos.</li>
+<li>Indítsd el a tesztet, és figyeld a működést: hallható, látható vagy
+mérhető választ kell kapnod.</li>
+<li>Ha a beavatkozó nem működik, ellenőrizd a tápfeszültséget, a
+testelést, a vezérlőjelet és a mechanikus részt.</li>
+<li>A tesztet zárd le, majd töröld az esetlegesen indukált
+hibakódokat.</li>
+</ol>
+<p>Az <strong>alapbeállítás</strong> (basic setting) a vezérlőegység
+referenciaértékeinek újratanítása. Például fojtószeleptisztítás után a
+fojtószelep alaphelyzetét újra kell tanítani, mert a vezérlő a régi,
+bedugult állapothoz igazított értékeket tárolta. Az
+<strong>adaptáció</strong> hasonló, de szélesebb körű: a
+lambda-szabályozás, a kopogásérzékelő-küszöbök, az alapjárati
+levegőmennyiség, sőt egyes automata váltók kapcsolási nyomatékai is
+adaptív értékeket használnak. Az adaptációt mindig a gyártói feltételek
+mellett kell elvégezni: jellemzően bemelegedett motor, zárt fojtószelep,
+üres állás, meghatározott fordulatszám és fogyasztó-lekapcsolt állapot
+szükséges.</p>
+<p>A <strong>kódolás</strong> során a teszterrel megváltoztatunk egy
+beállítást, például az új akkumulátor típusát és kapacitását, a
+felszerelt gumiabroncs-méretet, a nappali menetfény funkciót vagy a
+komfortrendszer viselkedését. A kódolás előtt mindig dokumentálni kell a
+régi beállítást, hogy szükség esetén visszaállítható legyen. A
+<strong>programozás</strong> – a vezérlőegység flash-memóriájának
+újraírása – rendszerint úgynevezett pass-thru eszközzel vagy gyári
+teszterrel történik. A programozás közben a tápfeszültségnek stabilnak
+kell lennie; a hirtelen feszültség-kiesés a vezérlőegységet véglegesen
+károsíthatja.</p>
+<p><strong>Figyelem.</strong> Programozás és kódolás előtt mindig
+csatlakoztassunk megfelelő, a gyártó által előírt
+tápfeszültség-fenntartó töltőt az akkumulátorhoz. A programozás idejére
+tilos a gyújtást kikapcsolni, a diagnosztikai csatlakozót bontani, és
+nagy fogyasztókat (ventilátor, fűtés, világítás) be- vagy kikapcsolni,
+mert a kommunikációs hiba a vezérlőegység károsodásához vezethet.</p>
+<h3 data-number="37.3.7"
+id="a-fedélzeti-diagnosztika-áramkörvizsgálata-párhuzamos-és-periféria-diagnosztika"><span
+class="header-section-number">37.3.7</span> A fedélzeti diagnosztika
+áramkörvizsgálata, párhuzamos és periféria-diagnosztika</h3>
+<p>A soros diagnosztika korlátja, hogy mindent a vezérlőegység „szemén”
+keresztül látunk. Ha egy érzékelő jele hibás, a teszteren megjelenő
+érték is hibás lehet, de nem tudjuk megmondani, hogy a hiba a jeladóban,
+a vezetékben vagy a vezérlőben van. Ilyenkor a fedélzeti diagnosztika
+áramkörvizsgálata, a párhuzamos vagy a periféria-diagnosztika segít.</p>
+<p>A <strong>párhuzamos diagnosztika</strong> leggyakoribb eszköze a
+kitörőbox, amelyet a vezérlőegység és a kábelköteg közé csatlakoztatunk.
+A doboz minden érintkezőt kivezet egy mérőpontra, így a csatlakozó
+megbontása nélkül mérhetünk feszültséget, ellenállást vagy jelalakot,
+sőt egyes méréseknél a jelet a vezérlő felől is elválaszthatjuk. A
+kitörőbox segítségével például egy hűtőfolyadék-hőmérséklet-érzékelő
+esetén azt is eldönthetjük, hogy a vezérlő által mutatott érték azért
+rossz, mert az érzékelő ellenállása hibás, vagy mert a testvezeték
+szakadt.</p>
+<p>A <strong>periféria-diagnosztika</strong> során a vizsgált alkatrészt
+közvetlenül, a jármű gyári csatlakozójánál mérjük. Például egy induktív
+főtengely-jeladó szinuszos jelét oszcilloszkóppal a jeladó csatlakozóján
+ellenőrizzük; egy injektor esetén a vezérlőimpulzus hosszát és alakját
+multiméterrel vagy oszcilloszkóppal követjük; egy hűtőventilátor motort
+közvetlen táplálással működtetünk a vezérlőegység megkerülésével.</p>
+<p><strong>Továbbvitt eredmény.</strong> A rendszerteszter élő adatainak
+értelmezése – különösen az üzemanyag-korrekció, a légtömeg, a lambda- és
+hőmérséklet-értékek – közvetlenül szükséges a <a
+href="au136.html">Dízeldiagnosztika: adagolás, common rail, PDE és
+EDC</a>, a <a href="au137.html">Levegőellátás, kipufogórendszer,
+turbófeltöltő és fogyasztásmérés diagnosztikája</a>, valamint a <a
+href="au144.html">Jeladók és beavatkozók vizsgálata multiméterrel és
+oszcilloszkóppal</a> alfejezetekben, ahol ugyanezeket a paramétereket
+már célzottan, az adott rendszerre alkalmazva elemezzük.</p>
+<h3 data-number="37.3.8" id="kidolgozott-példák"><span
+class="header-section-number">37.3.8</span> Kidolgozott példák</h3>
+<h4 data-number="37.3.8.1"
+id="példa-1-korrigált-befecskendezési-idő"><span
+class="header-section-number">37.3.8.1</span> Példa 1: korrigált
+befecskendezési idő</h4>
+<p><strong>Számítás.</strong> Adott: egy motor alap befecskendezési
+ideje egy üres üzemi pontban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">alap</mtext></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>50</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">t_{\text{alap}} = 2{,}50\ \text{ms}</annotation></semantics></math>.
+Az élő adatban a rövid távú korrekció
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">STFT</mtext><mo>=</mo><mi>+</mi><mn>8</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\text{STFT} = +8\%</annotation></semantics></math>,
+a hosszú távú korrekció
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">LTFT</mtext><mo>=</mo><mi>+</mi><mn>12</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\text{LTFT} = +12\%</annotation></semantics></math>.
+Keresett: a tényleges befecskendezési idő.</p>
+<p>Képlet:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">bef</mtext></msub><mo>=</mo><msub><mi>t</mi><mtext mathvariant="normal">alap</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mfrac><mtext mathvariant="normal">STFT</mtext><mrow><mn>100</mn><mi>%</mi></mrow></mfrac><mo>+</mo><mfrac><mtext mathvariant="normal">LTFT</mtext><mrow><mn>100</mn><mi>%</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">t_{\text{bef}} = t_{\text{alap}} \left(1 + \frac{\text{STFT}}{100\%} + \frac{\text{LTFT}}{100\%}\right).</annotation></semantics></math></p>
+<p>Behelyettesítés:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">bef</mtext></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>50</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mn>0</mn><mo>,</mo><mn>08</mn><mo>+</mo><mn>0</mn><mo>,</mo><mn>12</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>2</mn><mo>,</mo><mn>50</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>20</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>00</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t_{\text{bef}} = 2{,}50\ \text{ms} \left(1 + 0{,}08 + 0{,}12\right) = 2{,}50\ \text{ms} \cdot 1{,}20 = 3{,}00\ \text{ms}.</annotation></semantics></math></p>
+<p>Ellenőrzés: a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>20</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+20\%</annotation></semantics></math>-os
+összes korrekció miatt a befecskendezési időnek valóban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">20\%</annotation></semantics></math>-kal
+nagyobbnak kell lennie:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">2{,}5 \cdot 1{,}2 = 3{,}0\ \text{ms}</annotation></semantics></math>,
+tehát az eredmény helyes. ∎</p>
+<h4 data-number="37.3.8.2" id="példa-2-hengerenkénti-légtömeg"><span
+class="header-section-number">37.3.8.2</span> Példa 2: hengerenkénti
+légtömeg</h4>
+<p><strong>Számítás.</strong> Adott: a légtömegmérő értéke alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mtext mathvariant="normal">levegő</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">\dot m_{\text{levegő}} = 3{,}0\ \text{g/s}</annotation></semantics></math>,
+a fordulatszám
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>800</mn><mspace width="0.222em"></mspace><mn>1</mn><mi>/</mi><mtext mathvariant="normal">min</mtext></mrow><annotation encoding="application/x-tex">n = 800\ 1/\text{min}</annotation></semantics></math>,
+a hengerszám
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">i = 4</annotation></semantics></math>.
+Keresett: egy henger szívóütemére jutó átlagos légtömeg.</p>
+<p>Képlet:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mtext mathvariant="normal">henger</mtext></msub><mo>=</mo><mfrac><mrow><mn>2</mn><mo>⋅</mo><mn>60</mn><mspace width="0.167em"></mspace><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mtext mathvariant="normal">levegő</mtext></msub></mrow><mrow><mi>i</mi><mspace width="0.167em"></mspace><mi>n</mi></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">m_{\text{henger}} = \frac{2 \cdot 60 \, \dot m_{\text{levegő}}}{i \, n},</annotation></semantics></math></p>
+<p>mert négyütemű motornál két fordulat alatt mind a négy henger szív,
+és a nevezőben a hengerszám és a percben megadott fordulatszám
+szerepel.</p>
+<p>Behelyettesítés:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mtext mathvariant="normal">henger</mtext></msub><mo>=</mo><mfrac><mrow><mn>2</mn><mo>⋅</mo><mn>60</mn><mo>⋅</mo><mn>3</mn><mo>,</mo><mn>0</mn></mrow><mrow><mn>4</mn><mo>⋅</mo><mn>800</mn></mrow></mfrac><mo>=</mo><mfrac><mn>360</mn><mn>3200</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>1125</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">m_{\text{henger}} = \frac{2 \cdot 60 \cdot 3{,}0}{4 \cdot 800} = \frac{360}{3200} = 0{,}1125\ \text{g}.</annotation></semantics></math></p>
+<p>Ellenőrzés: a motor 800 1/min fordulatszám mellett másodpercenként
+13,33 fordulatot tesz meg; ez hengerenként 6,67 szívóütem/s, a négy
+hengerre összesen 26,7 szívóütem/s. A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">3{,}0\ \text{g/s}</annotation></semantics></math>
+légtömeg elosztva 26,7 szívóütemmel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>112</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext></mrow><annotation encoding="application/x-tex">0{,}112\ \text{g}</annotation></semantics></math>
+hengerenként, tehát az eredmény nagyságrendileg helyes. ∎</p>
+<h3 data-number="37.3.9" id="minőségellenőrzés"><span
+class="header-section-number">37.3.9</span> Minőségellenőrzés</h3>
+<p>A rendszerteszteres mérést mindig hasonlítsuk a gyártói diagnosztikai
+adatokhoz, és lehetőleg egy ismert jó jármű azonos üzemállapotban mért
+értékeihez. Az alábbi ellenőrzőlista segít:</p>
+<ol type="1">
+<li>A teszter kommunikál-e minden érintett vezérlőegységgel?</li>
+<li>Vannak-e tárolt, függőben lévő vagy állandó hibakódok?</li>
+<li>A fagyasztott keretadat milyen üzemállapotban keletkezett?</li>
+<li>A hűtőfolyadék-hőmérséklet elérte-e az üzemi tartományt?</li>
+<li>A STFT és LTFT együttes értéke a megengedett sávban van-e?</li>
+<li>A légtömeg, a fojtószelepállás és a lambda-érték követi-e az
+üzemállapot-változást?</li>
+<li>A beavatkozó teszt eredménye megfelel-e az elvárt reakciónak?</li>
+<li>Az adaptáció vagy alapbeállítás után a tanult értékek visszatértek-e
+a normál tartományba?</li>
+</ol>
+<h3 data-number="37.3.10" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">37.3.10</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Hibakeresési eset.</strong> Egy 1,8 literes szívó
+benzinmotoros autó ügyfélpanasza: alapjáraton enyhe remegés, a
+fogyasztás megnőtt, hibakód nincs. A rendszerteszter élő adatai a
+következőket mutatják: STFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>22</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+22\%</annotation></semantics></math>,
+LTFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>18</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+18\%</annotation></semantics></math>,
+légtömeg alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>1</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">2{,}1\ \text{g/s}</annotation></semantics></math>,
+keskeny sávú lambda feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>15</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}15\ \text{V}</annotation></semantics></math>,
+hűtőfolyadék-hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>88</mn><mspace width="0.222em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">88\ {}^{\circ}\text{C}</annotation></semantics></math>,
+fojtószelepállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">3\%</annotation></semantics></math>.
+A teszter nem tárol hibakódot.</p>
+<p><strong>Hipotézis.</strong> A pozitív üzemanyag-korrekció azt
+jelenti, hogy a motor szegény keveréket lát, és a vezérlő dúsítással
+próbálja kompenzálni. Az alacsony légtömeg és a szinte folyamatosan
+szegény lambda arra utal, hogy a levegő egy része a légtömegmérő
+megkerülésével jut a szívócsőbe – tehát szívócső-szivárgás (állevegő)
+valószínű.</p>
+<p><strong>Mérés és ok.</strong> A szivárgást elsősorban füstgenerátoros
+szivárgásvizsgálóval keressük, leállított motoron: a szívórendszert
+enyhe túlnyomással füsttel töltjük, és a füst a résen távozik. Ha a
+gyártó spray-s vizsgálatot enged, csak erre a célra gyártott, nem
+gyúlékony vagy a gyártó által jóváhagyott szert szabad használni, kis
+adagban, forró kipufogóelemektől és szikraforrástól távol, kéznél lévő
+tűzoltó készülékkel (ellenőrizendő: gyártói előírás); az éghető permet a
+forró kipufogócsonkon, gyújtótekercsnél vagy a generátornál
+meggyulladhat. A célzott vizsgálat során a fordulatszám és a
+lambda-érték megváltozik a szívócsőtömítés közelében. A megbontott
+tömítésen repedés látható. A szivárgáson beáramló állevegő miatt az ECU
+kevesebb befecskendezett üzemanyagot számított, de a lambdaszonda a
+szegény keveréket érzékelte, ezért folyamatosan pozitív korrekcióval
+dolgozott.</p>
+<p><strong>Javítás és ellenőrzés.</strong> A sérült tömítést gyártói
+előírás szerint kicseréljük, a szívócsövet ellenőrzött nyomatékkal
+rögzítjük. A javítás után a teszter élő adatai: STFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>3</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+3\%</annotation></semantics></math>,
+LTFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>4</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+4\%</annotation></semantics></math>,
+légtömeg alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>2</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">3{,}2\ \text{g/s}</annotation></semantics></math>,
+a keskeny sávú lambda feszültség váltakozik
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">0{,}3</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\ \text{V}</annotation></semantics></math>
+között. A hibakód-állapotok törlése után a readiness monitorok sikeresen
+lezárnak. ∎</p>
+<h3 data-number="37.3.11" id="gyakorlati-útmutató"><span
+class="header-section-number">37.3.11</span> Gyakorlati útmutató</h3>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Cél:</strong> rendszerteszter csatlakoztatása, élő adatok
+értelmezése és alapbeállítás futtatása egy benzines motoron.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> rögzítsd a VIN-számot, a
+motorszámot, a jármű típusát és évjáratát, a futott kilométert, valamint
+a vezérlőegység szoftverazonosítóját.</p>
+<p><strong>Szükséges szerszámok és mérőeszközök:</strong>
+rendszerteszter, járműspecifikus diagnosztikai csatlakozó,
+akkumulátor-töltő vagy tápegység (a gyártói előírás szerint), biztonsági
+védőfelszerelés.</p>
+<p><strong>Munkavédelmi és környezetvédelmi lépések:</strong> a jármű
+rögzítése rögzítőfékkel, a váltó P vagy üres állásban; a motortérben
+forgó és forró részek elkerülése; a kipufogógáz elvezetése zárt térben;
+a keletkező adatokat digitálisan, nem papíron dokumentáljuk.</p>
+<p><strong>Számozott munkalépések:</strong></p>
+<ol type="1">
+<li>Kapcsold le a gyújtást, majd csatlakoztasd a tesztert a
+diagnosztikai csatlakozóhoz.</li>
+<li>Kapcsold be a gyújtást, de a motort ne indítsd el.</li>
+<li>A teszteren válaszd ki a járművet, és olvasd ki a hibakódokat minden
+vezérlőegységből.</li>
+<li>Dokumentáld a hibakódokat és a fagyasztott keretadatokat.</li>
+<li>Indítsd be a motort, és várd meg az üzemi hőmérsékletet.</li>
+<li>Válaszd ki az élő adatokat: STFT, LTFT, légtömeg, lambda,
+hűtőfolyadék-hőmérséklet, fojtószelepállás.</li>
+<li>Rögzítsd az értékeket alapjáraton, majd finoman emeld a
+fordulatszámot 2500–3000 1/min értékre, és újra rögzíts.</li>
+<li>Hasonlítsd össze az értékeket a gyártói diagnosztikai adatokkal;
+eltérés esetén állíts fel hipotézist.</li>
+<li>Végezd el a szükséges beavatkozó tesztet; a működést mindig
+ellenőrizd közvetlenül is.</li>
+<li>Ha szükséges, futtasd az alapbeállítást vagy az adaptációt a gyártói
+feltételek szerint.</li>
+<li>A javítás után töröld a hibakódokat, és végezz próbautat.</li>
+<li>Ellenőrizd a readiness monitorok állapotát, és a munkalapon
+dokumentáld az eredményeket.</li>
+</ol>
+<h3 data-number="37.3.12" id="tipikus-hibák"><span
+class="header-section-number">37.3.12</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>Hibakód törlése az ok feltárása nélkül.</strong> A
+szerelő gyorsan törli a hibakódot, hogy a MIL ne világítson, de a
+fagyasztott keretadatokat nem olvassa ki, így elveszíti a hiba
+keletkezési körülményeit. Helyes gyakorlat: előbb a fagyasztott keret,
+aztán az élő adat, és csak a javítás után törlés.</p></li>
+<li><p><strong>Az élő adatok nézése a normál tartomány ismerete
+nélkül.</strong> A teszter számokat mutat, de a szerelő nem tudja, hogy
+a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">3{,}0\ \text{g/s}</annotation></semantics></math>
+légtömeg alapjáraton jó-e egy 2 literes motornak vagy sem. Minden mért
+értéket a gyártói diagnosztikai adathoz kell hasonlítani, nem önmagában
+nézni.</p></li>
+<li><p><strong>A beavatkozó teszt téves értelmezése.</strong> A teszter
+például azt írja, hogy az injektor tesztje „OK”, de a szerelő nem
+hallotta a kattanást, és a fordulatszám sem esett. A teszter csak a
+vezérlő parancsát jelzi, a valós működést a járművön is ellenőrizni
+kell.</p></li>
+<li><p><strong>Adaptáció futtatása hideg motoron.</strong> A gyártói
+feltételek közé tartozhat az üzemi hőmérséklet, a fogyasztók
+lekapcsolása és a meghatározott fordulatszám. Hideg motoron az adaptáció
+hibás alapértéket taníthat meg.</p></li>
+<li><p><strong>Programozás közben az akkumulátortöltő
+elhagyása.</strong> A feszültségesés megszakíthatja a flash-írást, és a
+vezérlőegység visszafordíthatatlanul károsodhat. Mindig a gyártó által
+előírt tápegységet használjuk.</p></li>
+</ol>
+<h3 data-number="37.3.13" id="önellenőrzés"><span
+class="header-section-number">37.3.13</span> Önellenőrzés</h3>
+<ol type="1">
+<li><strong>Igaz vagy hamis?</strong> A pozitív üzemanyag-korrekció azt
+jelenti, hogy a motor dús keverékkel jár, ezért a vezérlő szegényít.
+Indokold röviden.</li>
+<li><strong>Mi a különbség a rövid és a hosszú távú üzemanyag-korrekció
+között?</strong></li>
+<li><strong>Miért nem elég a fedélzeti hibakód alapján azonnal cserélni
+egy érzékelőt?</strong></li>
+<li><strong>Mit jelent a párhuzamos diagnosztika?</strong></li>
+<li><strong>Miért tilos egy légzsákrendszer pirotechnikai elemének
+gyújtóellenállását hagyományos ellenállásmérővel mérni?</strong></li>
+<li><strong>Egy 1,6 literes szívó benzinmotor alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>8</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">1{,}8\ \text{g/s}</annotation></semantics></math>
+légtömeget mutat, a STFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>18</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+18\%</annotation></semantics></math>,
+az LTFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>25</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+25\%</annotation></semantics></math>.
+Mi a legvalószínűbb hiba?</strong> (A válaszokat az alfejezet végén
+találod.)</li>
+</ol>
+<h3 data-number="37.3.14" id="feladatok"><span
+class="header-section-number">37.3.14</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Definiáld röviden a soros
+diagnosztikát, és sorolj fel három tipikus üzemmódot a fedélzeti
+diagnosztikából.</p>
+<p><strong>2. feladat (A).</strong> Számítsd ki a tényleges
+befecskendezési időt, ha az alapérték
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>00</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">3{,}00\ \text{ms}</annotation></semantics></math>,
+a rövid távú korrekció
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>5</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">-5\%</annotation></semantics></math>,
+a hosszú távú korrekció
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>8</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+8\%</annotation></semantics></math>.</p>
+<p><strong>3. feladat (B).</strong> Egy 2,0 literes, négyhengeres szívó
+benzinmotor alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>5</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">4{,}5\ \text{g/s}</annotation></semantics></math>
+légtömeget mutat 800 1/min fordulatszámon. A gyártói adat szerint
+alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">2{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">4{,}0\ \text{g/s}</annotation></semantics></math>
+az elvárt érték. Számítsd ki a hengerenkénti légtömeget, és értelmezd az
+eltérést.</p>
+<p><strong>4. feladat (B).</strong> A teszter élő adatai alapjáraton:
+STFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>18</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">-18\%</annotation></semantics></math>,
+LTFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>15</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">-15\%</annotation></semantics></math>,
+a fojtószelepállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">2\%</annotation></semantics></math>,
+a hűtőfolyadék-hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>90</mn><mspace width="0.222em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">90\ {}^{\circ}\text{C}</annotation></semantics></math>.
+A vezető panasza: erős üzemanyagszag, fekete füst a kipufogón. Milyen
+hiba irányába keresel, és miért?</p>
+<p><strong>5. feladat (C).</strong> Egy jármű akkumulátorcseréje után a
+start-stop rendszer nem működik. Milyen diagnosztikai lépéseket végzel a
+rendszerteszterrel? Indokold, miért lehet szükség kódolásra vagy
+regisztrálásra.</p>
+<p><strong>6. feladat (D).</strong> Adott hibakeresési helyzet: a
+motorellenőrző lámpa világít, a teszter P0171 (szegény keverék, 1. bank)
+hibakódot tárol. Az élő adatok: STFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>25</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+25\%</annotation></semantics></math>,
+LTFT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>22</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+22\%</annotation></semantics></math>,
+légtömeg alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>9</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">1{,}9\ \text{g/s}</annotation></semantics></math>,
+lambda szélessávú
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>25</mn></mrow><annotation encoding="application/x-tex">1{,}25</annotation></semantics></math>.
+A beavatkozó teszt során az EGR-szelep működik, a fojtószelep tisztának
+látszik. Fogalmazz meg hipotézist, és írd le a megerősítéshez szükséges
+mérést.</p>
+<h3 data-number="37.3.15" id="megoldások"><span
+class="header-section-number">37.3.15</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li><strong>Hamis.</strong> A pozitív üzemanyag-korrekció dúsítást
+jelent, mert a vezérlő a szegény keveréket kompenzálja.</li>
+<li>A rövid távú korrekció azonnali, pillanatnyi beavatkozás, a hosszú
+távú korrekció a tartós eltérést tanulja és tárolja.</li>
+<li>A hibakód csak a tünetet és a rendszer által észlelt eltérést jelzi,
+nem az alapvető okot; például szegény keverék hibakód mögött szivárgás,
+üzemanyagnyomás- vagy szenzorhiba is állhat.</li>
+<li>A párhuzamos diagnosztika a vezérlőegység és a kábelköteg közötti,
+jellemzően kitörőboxszal végzett közvetlen mérés, amellyel a jelek a
+vezérlő megkerülésével is ellenőrizhetők.</li>
+<li>Mert a pirotechnikai gyújtótagot az ellenállásmérő mérőárama
+véletlenül működésbe hozhatja; a mérést csak a gyártó által előírt,
+pirotechnikai eszközökhöz engedélyezett műszerrel szabad végezni.</li>
+<li>Szívócső-szivárgás (állevegő) a legvalószínűbb: a légtömegmérő
+alacsony, a korrekció pozitív, a szegény keverék miatt a vezérlő
+dúsít.</li>
+</ol>
+<p><strong>1. feladat megoldása.</strong> A soros diagnosztika a
+vezérlőegységgel szabványos soros protokollon keresztül folytatott
+párbeszéd, amely hibakódok, élő adatok, fagyasztott keretadatok és
+tesztüzemi üzenetek lekérdezésére szolgál. Tipikus üzemmódok: Mode 01
+(élő adat), Mode 03 (hibakódok), Mode 04 (hibakód-törlés), Mode 02
+(freeze frame).</p>
+<p><strong>2. feladat megoldása.</strong> Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">alap</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>00</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">t_{\text{alap}} = 3{,}00\ \text{ms}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">STFT</mtext><mo>=</mo><mi>−</mi><mn>5</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\text{STFT} = -5\%</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">LTFT</mtext><mo>=</mo><mi>+</mi><mn>8</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\text{LTFT} = +8\%</annotation></semantics></math>.
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">bef</mtext></msub><annotation encoding="application/x-tex">t_{\text{bef}}</annotation></semantics></math>.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">bef</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>00</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>05</mn><mo>+</mo><mn>0</mn><mo>,</mo><mn>08</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>3</mn><mo>,</mo><mn>00</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>03</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>09</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t_{\text{bef}} = 3{,}00\ \text{ms} \left(1 - 0{,}05 + 0{,}08\right) = 3{,}00\ \text{ms} \cdot 1{,}03 = 3{,}09\ \text{ms}.</annotation></semantics></math></p>
+<p>Ellenőrzés: az összes korrekció
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>3</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">+3\%</annotation></semantics></math>,
+tehát a befecskendezési idő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">3\%</annotation></semantics></math>-kal
+nő:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>00</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>03</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>09</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">3{,}00 \cdot 1{,}03 = 3{,}09\ \text{ms}</annotation></semantics></math>.
+∎</p>
+<p><strong>3. feladat megoldása.</strong> Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mtext mathvariant="normal">levegő</mtext></msub><mo>=</mo><mn>4</mn><mo>,</mo><mn>5</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">\dot m_{\text{levegő}} = 4{,}5\ \text{g/s}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>800</mn><mspace width="0.222em"></mspace><mn>1</mn><mi>/</mi><mtext mathvariant="normal">min</mtext></mrow><annotation encoding="application/x-tex">n = 800\ 1/\text{min}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">i = 4</annotation></semantics></math>.
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mtext mathvariant="normal">henger</mtext></msub><annotation encoding="application/x-tex">m_{\text{henger}}</annotation></semantics></math>
+és értelmezés.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mtext mathvariant="normal">henger</mtext></msub><mo>=</mo><mfrac><mrow><mn>2</mn><mo>⋅</mo><mn>60</mn><mo>⋅</mo><mn>4</mn><mo>,</mo><mn>5</mn></mrow><mrow><mn>4</mn><mo>⋅</mo><mn>800</mn></mrow></mfrac><mo>=</mo><mfrac><mn>540</mn><mn>3200</mn></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>169</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">m_{\text{henger}} = \frac{2 \cdot 60 \cdot 4{,}5}{4 \cdot 800} = \frac{540}{3200} = 0{,}169\ \text{g}.</annotation></semantics></math></p>
+<p>Az eltérés: a mért légtömeg
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>5</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">4{,}5\ \text{g/s}</annotation></semantics></math>
+meghaladja a gyártói
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">2{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">4{,}0\ \text{g/s}</annotation></semantics></math>
+tartományt, ami alapjáraton például szennyezett fojtószelepre, hibás
+légtömegmérőre vagy az alapjárati levegőszabályzó elakadására utalhat
+(ellenőrizendő: gyártói diagnosztikai adat). ∎</p>
+<p><strong>4. feladat megoldása.</strong> A negatív korrekciók azt
+jelentik, hogy a vezérlő szegényít, mert a keverék túl dús. A fekete
+füst és az üzemanyagszag is dús keverékre utal. A lehetséges hibák:
+beragadt nyitott injektor, hibás hűtőfolyadék- vagy légtömeg-jeladó (a
+vezérlő túl sok üzemanyagot számol), hibás üzemanyagnyomás-szabályozó. A
+fojtószelepállás nem jelzi, hogy az alapjárat normális; a következő
+lépés a befecskendezők tesztelése, a nyomás mérése és a lambda-jel
+ellenőrzése.</p>
+<p><strong>5. feladat megoldása.</strong> Akkumulátorcsere után az
+akkumulátor-felügyeleti vezérlőben az új akkumulátor típusát,
+kapacitását, technológiáját (pl. AGM vagy EFB) regisztrálni kell, mert a
+start-stop rendszer a töltöttségi szint és az öregedési állapot alapján
+tiltja a stop funkciót. A rendszerteszterrel be kell lépni az
+akkumulátor-felügyeleti vezérlőegységbe, és a gyártói előírás szerint el
+kell végezni a regisztrációt vagy a kódolást, majd az új akkumulátor
+adaptációját.</p>
+<p><strong>6. feladat megoldása.</strong> A P0171 hibakód, a pozitív
+STFT/LTFT és a magas szélessávú lambda
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>25</mn></mrow><annotation encoding="application/x-tex">1{,}25</annotation></semantics></math>)
+egyértelműen szegény keveréket jelez. Az alacsony légtömeg
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>9</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">1{,}9\ \text{g/s}</annotation></semantics></math>)
+és az érzékeny üres járat miatt a legvalószínűbb a szívócső-szivárgás. A
+megerősítéshez elsősorban füstgenerátoros szivárgásvizsgálóval,
+leállított motoron keressük a szivárgást. Ha a gyártó spray-s
+vizsgálatot enged, csak jóváhagyott, nem gyúlékony szert használjunk
+tűzvédelmi óvintézkedésekkel (forró kipufogóelemektől és szikraforrástól
+távol, tűzoltó készülékkel), miközben a rövid távú korrekciót és a
+lambdát figyeljük; ha a STFT hirtelen csökken, a szivárgás helye
+megtalálható (ellenőrizendő: gyártói előírás).</p>
+<h3 data-number="37.3.16" id="rövid-összefoglaló"><span
+class="header-section-number">37.3.16</span> Rövid összefoglaló</h3>
+<p>A rendszerteszter a korszerű motordiagnosztika alapvető eszköze. A
+soros diagnosztika a fedélzeti vezérlőegységekkel szabványos
+protokollokon keresztül kommunikál: hibakódokat, fagyasztott kereteket
+és élő adatokat kérdez le, beavatkozó teszteket futtat, alapbeállítást,
+adaptációt, kódolást és programozást végez. Az élő adatok közül a rövid
+és hosszú távú üzemanyag-korrekció, a légtömeg, a lambda-érték és a
+hőmérsékletek a legfontosabbak. A pozitív korrekció dúsítást, a negatív
+szegényítést jelent; a helyes értékeket mindig a gyártói diagnosztikai
+adathoz hasonlítjuk. A fedélzeti diagnosztika áramkörvizsgálata, a
+kitörőboxos párhuzamos diagnosztika és az oszcilloszkópos
+periféria-diagnosztika akkor szükséges, ha a hiba a vezérlőegység
+jelfeldolgozása és a valós fizikai jel közötti ellentmondás miatt soros
+úton nem dönthető el. A rendszerteszter adataiból felállított hipotézis
+a későbbi dízeldiagnosztikai, levegőellátási és jeladó-vizsgálati
+alfejezetekben közvetlenül továbbvihető.</p>
+<h3 data-number="37.3.17" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">37.3.17</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: az EU típusjóváhagyási keretrendszer és az EOBD-re
+vonatkozó végrehajtási jogi aktusok (ellenőrizendő: (EU) 2018/858 és a
+kapcsolódó rendeletek); az ISO 15031 szabványcsalád és az SAE J1962
+diagnosztikai csatlakozó-szabvány (ellenőrizendő: hatályos változat);
+gyártói javítási utasítások és diagnosztikai kézikönyvek; a műszer- és
+mérésbiztonsági előírások. Ellenőrizendő továbbá: a légtömeg és
+hőmérséklet-tartományok, az üzemanyag-korrekciós határértékek, valamint
+a járműspecifikus kódolási és adaptációs eljárások.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au133.html">← 37.2 Fedélzeti diagnosztika: OBD és EOBD</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au135.html">37.4 Gázelemzés és füstölésmérés →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

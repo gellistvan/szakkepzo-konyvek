@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szigetelési hiba behatárolása a HV-rendszerben</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Szigetelési hiba behatárolásának folyamata a HV-rendszerben: hibakód-kiolvasás, feszültségmentesítés, a teljes HV-busz mérése, döntés a gyártói határértékkel (igen: részáramkörök leválasztása és újramérés; nem: időszakos hiba vizsgálata), a hibás ág javítása."></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">Szemléltető folyamat, értékek nélkül. Minden mérés gyártói eljárás szerint, feszültségmentesített rendszeren, képzett személy által; a határérték gyártófüggő.</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "1. A rendszerteszterrel kiolvassák a hibakódokat és a BMS élő adatait (pl. „Isolation Fault”). A kódok gyártófüggők, a jelentést a gyártói adatbázis adja.", "k": 0}, {"msg": "2. Biztonsági előfeltétel: a HV-rendszert a gyártói eljárás szerint feszültségmentesítik, a mérés előtt a feszültségmentességet ellenőrzik, a munkát erre képzett személy végzi. Feszültség alatti munka nem része az eljárásnak.", "k": 1}, {"msg": "3. Az akkumulátor lekapcsolt állapotában megmérik a teljes HV-busz szigetelési ellenállását a HV+ és a test, majd a HV− és a test között, a gyártó által előírt mérőfeszültséggel.", "k": 2}, {"msg": "4. Döntés: összevetés a gyártói határértékkel (a könyvben nincs általános érték). <b>Igen</b> – ha a mért érték a gyártói határ alatt van, behatárolás következik (5. lépés). <b>Nem</b> – ha felette van, a szigetelés a mérés pillanatában rendben van: a hiba időszakos vagy nedvességfüggő lehet; a BMS szigetelésadatait elemezzük, a mérést a hibakörülmények között (pl. mosás vagy eső után) megismételjük, és ellenőrizzük a szigetelésfigyelőt.", "k": 3}, {"msg": "5. A részáramköröket (HV-akkumulátor, inverter és motor, klímakompresszor, töltő, DC/DC átalakító) egyenként leválasztják a gyártói leírás szerint, és minden leválasztás után megismétlik a mérést. A részáramkörök szigetelési ellenállásai párhuzamosan kapcsolódnak (R_teljes = R₁ ∥ R₂ ∥ …), ezért az eredőt a legkisebb érték húzza le.", "k": 4}, {"msg": "6. Ha a szigetelési ellenállás egy adott leválasztás után a határ fölé ugrik, a hiba az éppen leválasztott részben van. A BMS adatai (becsült ellenállás, szivárgó áram, modulhőmérséklet) támogatják a döntést.", "k": 5}, {"msg": "7. Az alacsony értékű ág vizsgálata (beázás, kábelsérülés, csatlakozó), javítás a gyártói utasítás szerint, újramérés és a mért értékek dokumentálása; a hibakódok törlése csak a javítás után.", "k": 6}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+
+const L = ["Hibakód és BMS-adatok kiolvasása", "Feszültségmentesítés és ellenőrzése (gyártó szerint)", "Teljes HV-busz szigetelési ellenállása", "Gyártói határérték alatt?", "Részáramkörök sorban leválasztása, újramérés", "Érték a határ fölé ugrik → hiba a leválasztott részben", "Ág vizsgálata, javítás, újramérés, dokumentálás"], NO = "Szigetelés most rendben:\nidőszakos, nedvességfüggő hiba?\n→ BMS-szigetelésadatok elemzése,\nmérés ismétlése a hibakörülmények\nközött (pl. mosás, eső után),\nszigetelésfigyelő ellenőrzése", INS = "R_teljes = R₁ ∥ R₂ ∥ …\na hibás ág leválasztásakor\naz eredő megugrik";
+function render(s){
+  svg.setAttribute("viewBox", "0 0 760 430"); svg.innerHTML = "";
+  L.forEach((t, i) => {
+    const y = 14 + i * 58, cur = i === s.k, done = i < s.k;
+    const st = {fill: cur ? css("--cellhl") : "none", stroke: css("--line"), "stroke-width": cur ? 3.5 : 1.2,
+                "stroke-dasharray": (!cur && !done) ? "4 3" : ""};
+    if (i === 3) {
+      el("polygon", Object.assign({points: "60," + (y + 20) + " 260," + (y - 4) + " 460," + (y + 20) + " 260," + (y + 44)}, st));
+      el("text", {x: 290, y: y + 52, "font-size": 12, "font-weight": "bold"}, "igen");
+      el("path", {d: "M460 " + (y + 20) + " L500 " + (y + 20) + " M494 " + (y + 15) + " L500 " + (y + 20) + " L494 " + (y + 25), stroke: css("--line"), fill: "none", "stroke-width": 1.5});
+      el("text", {x: 468, y: y + 14, "font-size": 12, "font-weight": "bold"}, "nem");
+      const on = s.k === 3;
+      el("rect", {x: 502, y: y - 44, width: 250, height: 122, rx: 6, fill: on ? css("--cellhl") : "none", stroke: css("--line"), "stroke-dasharray": "5 3", "stroke-width": on ? 2.5 : 1.2});
+      NO.split("\n").forEach((r, j) => el("text", {x: 510, y: y - 26 + j * 19, "font-size": 12}, r));
+    } else {
+      el("rect", Object.assign({x: 60, y: y, width: 400, height: 40, rx: 6}, st));
+    }
+    el("text", {x: 260, y: y + 25, "font-size": 13, "text-anchor": "middle", "font-weight": cur ? "bold" : "normal"}, (done ? "✓ " : "") + (i + 1) + ". " + t);
+    if (i === 4) { INS.split("\n").forEach((r, j) => el("text", {x: 510, y: y + 50 + j * 17, "font-size": 12, fill: css("--muted")}, r)); }
+    if (i < L.length - 1) el("path", {d: "M260 " + (y + (i === 3 ? 45 : 41)) + " L260 " + (y + 56) + " M255 " + (y + 50) + " L260 " + (y + 56) + " L265 " + (y + 50), stroke: css("--line"), fill: "none", "stroke-width": 1.5});
+  });
+}
+
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.innerHTML = s.msg || "";   // a lépésszöveg saját, megbízható HTML-t (<b>, <i>) tartalmazhat
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 3200);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

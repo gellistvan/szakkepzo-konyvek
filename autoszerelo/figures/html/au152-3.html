@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Féktárcsa vastagság- és ütésmérés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="hm">Mért legkisebb vastagság</label><input id="hm" type="range" min="22" max="28" step="0.1" value="24.8" aria-label="Mért legkisebb vastagság"><output id="hm_o" for="hm"></output></div>
+<div class="row"><label for="hmin">MIN TH (gyártói)</label><input id="hmin" type="range" min="22" max="28" step="0.1" value="25.0" aria-label="MIN TH (gyártói)"><output id="hmin_o" for="hmin"></output></div>
+<div class="row"><label for="ut">Mért ütés (max − min)</label><input id="ut" type="range" min="0" max="0.12" step="0.01" value="0.06" aria-label="Mért ütés (max − min)"><output id="ut_o" for="ut"></output></div>
+<div class="row"><label for="umax">Megengedett ütés</label><input id="umax" type="range" min="0.02" max="0.1" step="0.01" value="0.05" aria-label="Megengedett ütés"><output id="umax_o" for="umax"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 290" role="img" aria-label="Féktárcsa vastagságának mérése nyolc ponton tárcsamikrométerrel a kopási peremen belül; az oldalütés mérése mágneses talpú mérőórával egy teljes fordulat alatt."></svg>
+<p class="small">Az alapértékek az 1. kidolgozott példáé (24,8 mm < 25,0 mm; 0,06 mm > 0,05 mm). A határértékek tanulási példák, ellenőrizendő: gyártói adat. A mérőóra-mutató a beállított ütésből számolt szinuszos elmozdulást mutatja (szemléltető).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"hm":"mm", "hmin":"mm", "ut":"mm", "umax":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const line=css("--line"), hl=css("--hl"), bad=css("--bad");
+const t=(performance.now()/1000*45)%360, a=t*Math.PI/180, amp=v.ut/2;
+const dev=amp*Math.sin(a);        // a tapintó elmozdulása (mm)
+// forgó tárcsa
+const cx=130, cy=150;
+el("circle",{cx:cx,cy:cy,r:105,fill:"none",stroke:line,"stroke-width":3});
+el("circle",{cx:cx,cy:cy,r:45,fill:"none",stroke:line,"stroke-width":2});
+el("circle",{cx:cx,cy:cy,r:80,fill:"none",stroke:line,"stroke-dasharray":"5 4"});
+for(let k=0;k<5;k++){const b=a+k*2*Math.PI/5; el("circle",{cx:cx+28*Math.cos(b),cy:cy-28*Math.sin(b),r:5,fill:line});}
+el("line",{x1:cx,y1:cy,x2:cx+100*Math.cos(a),y2:cy-100*Math.sin(a),stroke:hl,"stroke-width":2});
+el("text",{x:cx,y:280,"text-anchor":"middle","font-size":12},"a tárcsa forog (1 fordulat)");
+// mérőóra
+const ox=360, oy=110, R=60;
+el("circle",{cx:ox,cy:oy,r:R,fill:"none",stroke:line,"stroke-width":3});
+for(let k=0;k<50;k++){const b=-Math.PI/2+k*2*Math.PI/50, r1=k%5?R-6:R-12; el("line",{x1:ox+r1*Math.cos(b),y1:oy+r1*Math.sin(b),x2:ox+R*Math.cos(b),y2:oy+R*Math.sin(b),stroke:line});}
+const pa=-Math.PI/2+dev/0.01*2*Math.PI/100;   // 1 osztás = 0,01 mm, 100 osztás/fordulat
+el("line",{x1:ox,y1:oy,x2:ox+(R-8)*Math.cos(pa),y2:oy+(R-8)*Math.sin(pa),stroke:bad,"stroke-width":3});
+el("text",{x:ox,y:oy+R+20,"text-anchor":"middle","font-size":12},"0,01 mm / osztás");
+el("text",{x:ox,y:oy+R+40,"text-anchor":"middle","font-size":13},"tapintó: "+(dev>=0?"+":"−")+fmt(Math.abs(dev),3)+" mm");
+const thOK=v.hm>=v.hmin, rOK=v.ut<=v.umax;
+status("Vastagság: "+fmt(v.hm,1)+" mm "+(thOK?"≥":"<")+" MIN "+fmt(v.hmin,1)+" mm → "+(thOK?'<span class="ok">megfelel</span>':'<span class="bad">csere</span>')+
+ "<br>Oldalütés (max − min egy fordulat alatt): "+fmt(v.ut,2)+" mm "+(rOK?"≤":">")+" "+fmt(v.umax,2)+" mm → "+(rOK?'<span class="ok">megfelel</span>':'<span class="bad">csere vagy ok keresése (felfekvőfelület!)</span>'));
+if(!window._anim){window._anim=setInterval(draw,70);}
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

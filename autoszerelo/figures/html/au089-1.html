@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kerékállás és Ackermann-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="gam">Kerékdőlés γ</label><input id="gam" type="range" min="-3" max="3" step="0.1" value="-1" aria-label="Kerékdőlés γ"><output id="gam_o" for="gam"></output></div>
+<div class="row"><label for="sig">Csapterpesztés σ</label><input id="sig" type="range" min="0" max="18" step="0.5" value="12" aria-label="Csapterpesztés σ"><output id="sig_o" for="sig"></output></div>
+<div class="row"><label for="xl">Alsó csukló befelé a kerékközéptől</label><input id="xl" type="range" min="0" max="120" step="5" value="60" aria-label="Alsó csukló befelé a kerékközéptől"><output id="xl_o" for="xl"></output></div>
+<div class="row"><label for="tau">Utánfutás τ</label><input id="tau" type="range" min="-2" max="10" step="0.5" value="4" aria-label="Utánfutás τ"><output id="tau_o" for="tau"></output></div>
+<div class="row"><label for="toe">Összetartás (egy kerék)</label><input id="toe" type="range" min="-20" max="30" step="1" value="10" aria-label="Összetartás (egy kerék)"><output id="toe_o" for="toe"></output></div>
+<div class="row"><label for="D">Mérőperem-átmérő D</label><input id="D" type="range" min="380" max="700" step="10" value="580" aria-label="Mérőperem-átmérő D"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="L">Tengelytáv L</label><input id="L" type="range" min="2000" max="3200" step="50" value="2600" aria-label="Tengelytáv L"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="b">Kormánytengelyek távolsága b</label><input id="b" type="range" min="1100" max="1700" step="10" value="1400" aria-label="Kormánytengelyek távolsága b"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="db">Belső kerék szöge δb</label><input id="db" type="range" min="5" max="40" step="1" value="30" aria-label="Belső kerék szöge δb"><output id="db_o" for="db"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 280" role="img" aria-label="Elölnézeti kerékállás kerékdőléssel, csapterpesztéssel és legördülési sugárral, valamint Ackermann-vázlat"></svg>
+<p class="small">Ellenőrző eset: 0°10′, D = 580 mm → 1,69 mm kerekenként (a fejezet példája). Az elölnézet elvi modell: a kerék a felfekvési pont körül dől, a kormányzási tengely az alsó csuklón át σ szögben befelé dől; előjelszabály: r_leg > 0, ha a döféspont befelé esik (ellenőrizendő: a használt szabvány). Az értékek tanulási példák, a beállítási adat gyártói adat.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"gam":"°", "sig":"°", "xl":"mm", "tau":"°", "toe":"′", "D":"mm", "L":"mm", "b":"mm", "db":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const rad=x=>x*Math.PI/180, R=310, yl=150;
+// elölnézet: a kerék a felfekvési pont körül dől; x>0 befelé (jármű közepe felé)
+const sc=0.32, X0=120, Y0=262, P=(x,y)=>[X0+x*sc, Y0-y*sc];
+const g=rad(v.gam), tw=105;
+function rp(x,y){return P(x*Math.cos(g)-y*Math.sin(g), x*Math.sin(g)+y*Math.cos(g));}
+let d="";[[-tw,0],[tw,0],[tw,2*R],[-tw,2*R]].forEach((q,i)=>{const p=rp(q[0],q[1]);d+=(i?"L":"M")+p[0]+" "+p[1];});
+el("path",{d:d+"Z",fill:"#d9d9d9",stroke:css("--line"),"stroke-width":1.5});
+const xg=v.xl-yl*Math.tan(rad(v.sig)), xt=v.xl+(560-yl)*Math.tan(rad(v.sig));
+let a=P(xg,0),b=P(xt,560);el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:css("--hl2"),"stroke-width":2.5,"stroke-dasharray":"8 4"});
+a=P(-260,0);b=P(320,0);el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:css("--line")});
+let c0=P(0,0),cg=P(xg,0);el("circle",{cx:c0[0],cy:c0[1],r:4,fill:css("--fg")});el("rect",{x:cg[0]-4,y:cg[1]-4,width:8,height:8,fill:css("--bg"),stroke:css("--hl2"),"stroke-width":2});
+el("text",{x:X0,y:16,"font-size":12,"text-anchor":"middle"},"elölnézet (jármű közepe →)");
+// Ackermann (felülnézet), kanyar jobbra
+const db=rad(v.db), dk=Math.atan(1/(1/Math.tan(db)+v.b/v.L)), s2=0.045, AX=300, AY=250, Q=(x,y)=>[AX+x*s2, AY-y*s2];
+const cx=v.b/2+v.L/Math.tan(db);
+let p1=Q(-v.b/2,0),p2=Q(cx,0);el("line",{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],stroke:css("--grid")});
+[[-v.b/2,dk],[v.b/2,db]].forEach(([x,dd])=>{const w=Q(x,v.L),o=Q(cx,0);
+  el("line",{x1:w[0],y1:w[1],x2:o[0],y2:o[1],stroke:css("--muted"),"stroke-dasharray":"4 3"});
+  const dx=16*Math.sin(dd),dy=-16*Math.cos(dd);el("line",{x1:w[0]-dx,y1:w[1]-dy,x2:w[0]+dx,y2:w[1]+dy,stroke:css("--line"),"stroke-width":7});});
+[[[-v.b/2,0],[v.b/2,0]],[[0,0],[0,v.L]],[[-v.b/2,v.L],[v.b/2,v.L]]].forEach(([u,w])=>{const A=Q(...u),B=Q(...w);el("line",{x1:A[0],y1:A[1],x2:B[0],y2:B[1],stroke:css("--line"),"stroke-width":2});});
+{const o=Q(cx,0);el("circle",{cx:o[0],cy:o[1],r:4,fill:css("--fg")});}
+el("text",{x:AX+60,y:16,"font-size":12,"text-anchor":"middle"},"Ackermann (felülnézet, kanyar jobbra)");
+const rleg=xg, sToe=v.D*Math.tan(rad(v.toe/60)), trail=R*Math.tan(rad(v.tau));
+status("Legördülési sugár: <b>r<sub>leg</sub> = "+fmt(rleg,0)+" mm</b> ("+(rleg>0?"pozitív: a döféspont befelé":(rleg<0?"negatív: a döféspont kifelé":"nulla"))+
+ "). Utánfutási út (R = 310 mm, a tengely a kerékközépen át): <b>"+fmt(trail,0)+" mm</b> "+(v.tau>=0?"a felfekvés előtt":"a felfekvés mögött")+
+ ".<br>Összetartás: s = D·tan δ = <b>"+fmt(sToe,2)+" mm</b> kerekenként ("+(v.toe>=0?"összetartás":"széttartás")+"), két kerékre "+fmt(2*sToe,2)+" mm. "+
+ "Ackermann: δ<sub>b</sub> = "+fmt(v.db,0)+"° → ideális <b>δ<sub>k</sub> = "+fmt(dk*180/Math.PI,1)+"°</b>.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

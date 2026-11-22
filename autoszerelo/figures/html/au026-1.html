@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forgácsoló ék és fordulatszám</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ga">Homlokszög γ</label><input id="ga" type="range" min="-10" max="25" step="1" value="12" aria-label="Homlokszög γ"><output id="ga_o" for="ga"></output></div>
+<div class="row"><label for="al">Hátszög α</label><input id="al" type="range" min="3" max="15" step="1" value="8" aria-label="Hátszög α"><output id="al_o" for="al"></output></div>
+<div class="row"><label for="op">Művelet / anyag</label><select id="op" aria-label="Művelet / anyag"><option value="acel_esz" selected>Acél esztergálása – keményfém</option><option value="ont_esz">Öntöttvas esztergálása – keményfém</option><option value="al_esz">Alumínium esztergálása – keményfém/gyémánt</option><option value="acel_fur">Acél fúrása – HSS fúró</option><option value="al_fur">Alumínium fúrása – HSS fúró</option><option value="kosz">Köszörülés (kerületi sebesség m/s-ban)</option></select></div>
+<div class="row"><label for="vc">Forgácsolósebesség v_c</label><input id="vc" type="range" min="5" max="600" step="5" value="150" aria-label="Forgácsolósebesség v_c"><output id="vc_o" for="vc"></output></div>
+<div class="row"><label for="vs">Köszörű kerületi seb.</label><input id="vs" type="range" min="10" max="50" step="1" value="30" aria-label="Köszörű kerületi seb."><output id="vs_o" for="vs"></output></div>
+<div class="row"><label for="d">Átmérő d</label><input id="d" type="range" min="1" max="300" step="1" value="50" aria-label="Átmérő d"><output id="d_o" for="d"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 270" role="img" aria-label="Forgácsoló ék a hátszöggel, ékszöggel és homlokszöggel; fordulatszám-kalkulátor."></svg>
+<p class="small">Kidolgozott példák: acél esztergálása d = 50 mm, v<sub>c</sub> = 150 m/min → 955 1/min; acél fúrása d = 8 mm, 25 m/min → 995 1/min; köszörű d = 200 mm, 30 m/s → 2865 1/min. A v<sub>c</sub>-tartományok tanulási példák (ellenőrizendő: szerszám- és anyaggyártói adat); a köszörű-mód a „Köszörű kerületi seb.” csúszkát használja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"ga":"°", "al":"°", "vc":"m/min", "vs":"m/s", "d":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const OPS=[["acel_esz", "Acél esztergálása – keményfém", 120, 250], ["ont_esz", "Öntöttvas esztergálása – keményfém", 80, 140], ["al_esz", "Alumínium esztergálása – keményfém/gyémánt", 200, 600], ["acel_fur", "Acél fúrása – HSS fúró", 25, 35], ["al_fur", "Alumínium fúrása – HSS fúró", 80, 150], ["kosz", "Köszörülés (kerületi sebesség m/s-ban)", 0, 0]], op=OPS.find(o=>o[0]===v.op), g=v.ga*Math.PI/180, a=v.al*Math.PI/180, b=90-v.ga-v.al;
+const cx=200, cy=150, k=40, fg=css("--fg");
+const R=[Math.sin(g),Math.cos(g)], F=[Math.cos(a),Math.sin(a)];
+const P=(x,y)=>(cx+k*x)+","+(cy-k*y);
+el("polygon",{points:[P(-4.5,-2.5),P(5,-2.5),P(5,0),P(0,0),P(-2,1),P(-4.5,1)].join(" "),fill:css("--grid"),stroke:fg});
+el("polygon",{points:[P(0,0),P(3.4*R[0],3.4*R[1]),P(4.5,3.4),P(4.5*F[0],4.5*F[1])].join(" "),fill:"#999",stroke:fg,"stroke-width":2});
+el("line",{x1:cx,y1:cy,x2:cx,y2:cy-k*3.2,stroke:fg,"stroke-dasharray":"3 3"});
+el("line",{x1:cx,y1:cy,x2:cx+k*3,y2:cy,stroke:fg,"stroke-dasharray":"3 3"});
+el("text",{x:cx+k*2.4,y:cy-6,"font-size":14,"font-weight":"bold"},"α="+v.al+"°");
+el("text",{x:cx+k*0.6,y:cy-k*0.9,"font-size":14,"font-weight":"bold"},"β="+b+"°");
+el("text",{x:cx+(v.ga<0?-k*1.6:k*0.1),y:cy-k*3.3,"font-size":14,"font-weight":"bold"},"γ="+v.ga+"°");
+el("text",{x:420,y:40,"font-size":13},"α + β + γ = 90°");
+el("text",{x:420,y:62,"font-size":12,fill:css("--muted")},(v.ga>15?"nagy γ: kisebb erő, gyengébb él":(v.ga<0?"negatív γ: erős él, nagyobb erő":"közepes γ")));
+let n,txt,ok="";
+if(op[0]==="kosz"){n=v.vs*60000/(Math.PI*v.d);txt="Köszörűkorong: n = v·60000/(π·d) = "+fmt(v.vs,0)+"·60000/(π·"+fmt(v.d,0)+") ≈ <b>"+fmt(n,0)+" 1/min</b>. <span class='bad'>A korongon jelölt legnagyobb fordulatszámot / kerületi sebességet tilos túllépni!</span>";}
+else{n=v.vc*1000/(Math.PI*v.d);txt="n = v<sub>c</sub>·1000/(π·d) = "+fmt(v.vc,0)+"·1000/(π·"+fmt(v.d,0)+") ≈ <b>"+fmt(n,0)+" 1/min</b>";
+  ok=(v.vc>=op[2]&&v.vc<=op[3])?" <span class='ok'>A v<sub>c</sub> a táblázat tartományában van ("+op[2]+"–"+op[3]+" m/min).</span>":" <span class='bad'>A v<sub>c</sub> kívül esik a táblázat "+op[2]+"–"+op[3]+" m/min tartományán.</span>";}
+status(txt+ok+"<br>Ék: β = 90° − α − γ = <b>"+b+"°</b>.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

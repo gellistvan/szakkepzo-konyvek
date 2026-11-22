@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Illesztéskalkulátor (alaplyuk-rendszer, H7)</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pre">Példa betöltése</label><select id="pre" aria-label="Példa betöltése"><option value="0">szabad beállítás</option><option value="1" selected>2. példa: Ø20 H7/s6</option><option value="2">1. példa: Ø30 H7/g6</option><option value="3">6. feladat: Ø72, mért pár</option></select></div>
+<div class="row"><label for="nom">Névleges méret</label><input id="nom" type="range" min="11" max="100" step="1" value="20" aria-label="Névleges méret"><output id="nom_o" for="nom"></output></div>
+<div class="row"><label for="fld">Csapmező</label><select id="fld" aria-label="Csapmező"><option value="g">g6</option><option value="h">h6</option><option value="k">k6</option><option value="n">n6</option><option value="p">p6</option><option value="s" selected>s6</option></select></div>
+<div class="row"><label for="meas">Mérési mód</label><input id="meas" type="checkbox" aria-label="Mérési mód"></div>
+<div class="row"><label for="mh">Mért furat eltérése</label><input id="mh" type="range" min="-20" max="80" step="1" value="30" aria-label="Mért furat eltérése"><output id="mh_o" for="mh"></output></div>
+<div class="row"><label for="ms">Mért csap eltérése</label><input id="ms" type="range" min="-40" max="100" step="1" value="40" aria-label="Mért csap eltérése"><output id="ms_o" for="ms"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 360" role="img" aria-label="A H7 furatmező és a választott csapmező helyzete a nullvonalhoz képest, a játék vagy fedés határaival."></svg>
+<p class="small">ISO 286-2 kivonat (IT6, IT7; g, h, k, n, p, s alapeltérések 10–100 mm-ig) – tanulási segédlet, ellenőrizendő a hatályos táblázattal. A 6. feladat mért párja (furat 72,020, gyűrű 72,024 mm) tényleges fedése 4 µm; gördülőcsapágy gyűrűjének tűrése gyártói adat.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"nom":"mm", "mh":"µm", "ms":"µm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const T = [[10, 18, 11, 18, {"g": -6, "h": 0, "k": 1, "n": 12, "p": 18, "s": 28}], [18, 30, 13, 21, {"g": -7, "h": 0, "k": 2, "n": 15, "p": 22, "s": 35}], [30, 50, 16, 25, {"g": -9, "h": 0, "k": 2, "n": 17, "p": 26, "s": 43}], [50, 65, 19, 30, {"g": -10, "h": 0, "k": 2, "n": 20, "p": 32, "s": 53}], [65, 80, 19, 30, {"g": -10, "h": 0, "k": 2, "n": 20, "p": 32, "s": 59}], [80, 100, 22, 35, {"g": -12, "h": 0, "k": 3, "n": 23, "p": 37, "s": 71}]];
+if (window._lp === undefined) window._lp = -1;
+if (v.pre !== window._lp) {             // példa betöltése
+  window._lp = v.pre;
+  const P = {1: [20, "s", 0, 30, 40], 2: [30, "g", 0, 10, -12], 3: [72, "k", 1, 20, 24]}[v.pre];
+  if (P) { document.getElementById("nom").value = P[0]; document.getElementById("fld").value = P[1];
+           document.getElementById("meas").checked = !!P[2]; document.getElementById("mh").value = P[3];
+           document.getElementById("ms").value = P[4]; Object.assign(v, values()); }
+}
+const n = v.nom, f = v.fld;
+const R = T.find(r => r[0] < n && n <= r[1]);
+const ES = R[3], EI = 0;
+let es, ei; if (f === "g" || f === "h") { es = R[4][f]; ei = es - R[2]; } else { ei = R[4][f]; es = ei + R[2]; }
+const smax = ES - ei, smin = EI - es;
+const kind = smin >= 0 ? "laza" : (smax <= 0 ? "szilárd" : "átmeneti");
+const W = 640, H = 360, y0 = 190, k = 1.7;          // 1 µm = k px
+const Y = u => y0 - u * k;
+el("line", {x1: 40, y1: y0, x2: 600, y2: y0, stroke: css("--line"), "stroke-width": 2});
+el("text", {x: 44, y: y0 - 6, "font-size": 12}, "nullvonal: Ø" + n + " mm");
+for (let u = -60; u <= 100; u += 20) { if (Y(u) < 10 || Y(u) > 350) continue;
+  el("line", {x1: 36, y1: Y(u), x2: 40, y2: Y(u), stroke: css("--line")});
+  el("text", {x: 32, y: Y(u) + 4, "font-size": 11, "text-anchor": "end"}, String(u).replace("-", "−")); }
+el("text", {x: 6, y: 16, "font-size": 11}, "µm");
+const box = (x, a, b, fill, dash, lab) => {
+  el("rect", {x: x, y: Y(a), width: 90, height: Math.max(1, (a - b) * k), fill: fill, stroke: css("--line"), "stroke-width": 1.6, "stroke-dasharray": dash});
+  el("text", {x: x + 45, y: Y(a) - 6, "font-size": 13, "text-anchor": "middle", "font-weight": "bold"}, lab);
+  el("text", {x: x + 96, y: Y(a) + 4, "font-size": 11}, (a > 0 ? "+" : "") + a);
+  el("text", {x: x + 96, y: Y(b) + 4, "font-size": 11}, (b > 0 ? "+" : "") + b);
+};
+box(170, ES, EI, "none", "", "H7");
+box(330, es, ei, css("--grid"), "5 3", f + "6");
+if (v.meas) {
+  const mk = (x, u, lab, ok) => { el("line", {x1: x - 8, y1: Y(u), x2: x + 98, y2: Y(u), stroke: ok ? css("--ok") : css("--bad"), "stroke-width": 3});
+    el("text", {x: x + 45, y: Y(u) + 16, "font-size": 11, "text-anchor": "middle"}, lab); };
+  const okH = v.mh >= EI && v.mh <= ES, okS = v.ms >= ei && v.ms <= es;
+  mk(170, v.mh, "mért furat", okH); mk(330, v.ms, "mért csap", okS);
+  const act = v.mh - v.ms;
+  status(`Mért furat: ${fmt(n + v.mh / 1000, 3)} mm (<span class="${okH ? "ok" : "bad"}">${okH ? "tűrésen belül" : "tűrésen kívül"}</span>), mért csap: ${fmt(n + v.ms / 1000, 3)} mm (<span class="${okS ? "ok" : "bad"}">${okS ? "tűrésen belül" : "tűrésen kívül"}</span>).<br>` +
+         `Tényleges ${act >= 0 ? "játék" : "fedés"}: <b>${Math.abs(act)} µm</b> = furat − csap = ${v.mh} − (${v.ms}) µm. A megfelelőséget a két mért méret tűrésmezőbe esése dönti el.`);
+} else {
+  const txt = kind === "laza" ? `S<sub>max</sub> = ${smax} µm, S<sub>min</sub> = ${smin} µm → mindig játék`
+            : kind === "szilárd" ? `N<sub>max</sub> = ${-smin} µm, N<sub>min</sub> = ${-smax} µm → mindig fedés`
+            : `S<sub>max</sub> = ${smax} µm, N<sub>max</sub> = ${-smin} µm → játék vagy fedés`;
+  status(`Ø${n} H7/${f}6: furat ${fmt(n, 3)}…${fmt(n + ES / 1000, 3)} mm, csap ${fmt(n + ei / 1000, 3)}…${fmt(n + es / 1000, 3)} mm.<br><b>${kind} illesztés</b>: ${txt}.`);
+}
+el("text", {x: 600, y: 340, "font-size": 11, "text-anchor": "end"}, "IT6 = " + R[2] + " µm, IT7 = " + R[3] + " µm (" + R[0] + "–" + R[1] + " mm)");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

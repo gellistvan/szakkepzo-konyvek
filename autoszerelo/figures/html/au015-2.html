@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kéttámaszú tartó: reakciók, V és M ábra</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="tip">Terhelés</label><select id="tip" aria-label="Terhelés"><option value="F" selected>koncentrált erő</option><option value="q">teljes hosszon megoszló</option><option value="qr">részben megoszló</option></select></div>
+<div class="row"><label for="F">F (kN) vagy q (kN/m)</label><input id="F" type="range" min="0" max="10" step="0.1" value="3" aria-label="F (kN) vagy q (kN/m)"><output id="F_o" for="F"></output></div>
+<div class="row"><label for="l">Tartóhossz l</label><input id="l" type="range" min="1" max="6" step="0.1" value="4" aria-label="Tartóhossz l"><output id="l_o" for="l"></output></div>
+<div class="row"><label for="a">Erő helye / teher kezdete a</label><input id="a" type="range" min="0" max="6" step="0.1" value="1" aria-label="Erő helye / teher kezdete a"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="c">Megoszló szakasz hossza c</label><input id="c" type="range" min="0.1" max="6" step="0.1" value="2" aria-label="Megoszló szakasz hossza c"><output id="c_o" for="c"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 460" role="img" aria-label="Kéttámaszú tartó egy koncentrált erővel; a nyomatéki ábra az erő alatt csúcsos, maximuma R_A·a."></svg>
+<p class="small">Alapérték: a fejezet koncentrált erős példája (F = 3 kN, a = 1 m, l = 4 m → R_A = 2,25 kN, R_B = 0,75 kN, M_max = 2,25 kNm). Teljes hosszon megoszló teher q = 2 kN/m, l = 3 m esetén R_A = R_B = 3 kN, M_max = 2,25 kNm. A nyomatéki ábra lefelé (húzott oldal) rajzolva.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"F":"", "l":"m", "a":"m", "c":"m"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const l = v.l, a = Math.min(v.a, l), c = Math.min(v.c, l - a), kind = v.tip;
+let Q, xq; if (kind === "F") { Q = v.F; xq = a; } else if (kind === "q") { Q = v.F * l; xq = l / 2; } else { Q = v.F * c; xq = a + c / 2; }
+const RB = Q * xq / l, RA = Q - RB, N = 300, xs = [], Vs = [], Ms = [];
+for (let i = 0; i <= N; i++) { const x = l * i / N; let V, M;
+  if (kind === "F") { V = RA - (x > a ? v.F : 0); M = RA * x - v.F * Math.max(0, x - a); }
+  else { const lo = kind === "q" ? 0 : a, hi = kind === "q" ? l : a + c, s = Math.min(Math.max(x - lo, 0), hi - lo);
+         V = RA - v.F * s; M = RA * x - v.F * s * (x - lo - s / 2); }
+  xs.push(x); Vs.push(V); Ms.push(M); }
+const Mmax = Math.max(...Ms), iM = Ms.indexOf(Mmax);
+const X = x => 60 + 500 * x / l;
+// tartó, támaszok, terhelés
+el("rect", {x: X(0), y: 92, width: 500, height: 10, fill: "none", stroke: css("--line"), "stroke-width": 2});
+el("path", {d: `M${X(0)} 102 l-10 18 h20 z M${X(l)} 102 l-10 16 h20 z`, fill: "none", stroke: css("--line"), "stroke-width": 1.6});
+el("text", {x: X(0) - 4, y: 86, "font-size": 13, "text-anchor": "end", "font-weight": "bold"}, "A");
+el("text", {x: X(l) + 4, y: 86, "font-size": 13, "font-weight": "bold"}, "B");
+const up = (x, val, lab, end) => { el("path", {d: `M${x} 170 L${x} 126 M${x - 6} 136 L${x} 126 L${x + 6} 136`, stroke: css("--hl"), "stroke-width": 3, fill: "none"});
+  el("text", {x: end ? x - 8 : x + 8, y: 166, "font-size": 12, "text-anchor": end ? "end" : "start"}, lab + " = " + fmt(val, 2) + " kN"); };
+up(X(0), RA, "R_A", false); up(X(l), RB, "R_B", true);
+if (kind === "F") { el("path", {d: `M${X(a)} 20 L${X(a)} 88 M${X(a) - 7} 76 L${X(a)} 88 L${X(a) + 7} 76`, stroke: css("--hl2"), "stroke-width": 3.5, fill: "none"});
+  el("text", {x: X(a) + 9, y: 34, "font-size": 13}, "F = " + fmt(v.F, 1) + " kN"); }
+else { const lo = kind === "q" ? 0 : a, hi = kind === "q" ? l : a + c;
+  el("rect", {x: X(lo), y: 58, width: X(hi) - X(lo), height: 32, fill: css("--grid"), stroke: css("--hl2"), "stroke-width": 2});
+  for (let x = lo; x <= hi + 1e-9; x += Math.max((hi - lo) / 8, 0.05)) el("path", {d: `M${X(x)} 58 L${X(x)} 88`, stroke: css("--hl2"), "stroke-width": 1});
+  el("text", {x: (X(lo) + X(hi)) / 2, y: 50, "font-size": 13, "text-anchor": "middle"}, "q = " + fmt(v.F, 1) + " kN/m"); }
+// V és M ábra
+const plot = (vals, y0, sc, lab, unit, down) => { let d = `M${X(0)} ${y0}`;
+  vals.forEach((u, i) => d += ` L${X(xs[i])} ${y0 + (down ? 1 : -1) * u * sc}`); d += ` L${X(l)} ${y0} Z`;
+  el("path", {d: d, fill: css("--grid"), stroke: css("--line"), "stroke-width": 1.6});
+  el("line", {x1: X(0) - 10, y1: y0, x2: X(l) + 10, y2: y0, stroke: css("--line")});
+  el("text", {x: 8, y: y0 + 4, "font-size": 13}, lab); el("text", {x: 8, y: y0 + 18, "font-size": 10}, unit); };
+const vmax = Math.max(...Vs.map(Math.abs), 1e-6), mm = Math.max(Mmax, 1e-6);
+plot(Vs, 245, 50 / vmax, "V", "kN", false);
+plot(Ms, 320, 95 / mm, "M", "kNm", true);
+el("text", {x: X(xs[iM]) + 6, y: 320 + 95 + 16, "font-size": 12}, "M_max = " + fmt(Mmax, 2) + " kNm");
+const ok = Math.abs(RA + RB - Q) < 1e-9;
+status(`R<sub>A</sub> = <b>${fmt(RA, 2)} kN</b>, R<sub>B</sub> = <b>${fmt(RB, 2)} kN</b>, M<sub>max</sub> = <b>${fmt(Mmax, 2)} kNm</b> (x = ${fmt(xs[iM], 2)} m).<br>` +
+       `Ellenőrzés: R<sub>A</sub> + R<sub>B</sub> = ${fmt(RA + RB, 2)} kN = ${kind === "F" ? "F" : "Q"} = ${fmt(Q, 2)} kN <span class="${ok ? "ok" : "bad"}">${ok ? "✓" : "✗"}</span>`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>31.2 Érzékelők és jeladók – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Gépjármű-villamosság és -elektronika</a> › <a href="index.html#auch30">31 Elektronikus motorirányítás</a></p>
+<div class="links"><a class="prev" rel="prev" href="au111.html">← 31.1 A motorirányítás alapjai: vezérlőegység, szabályozási kör, üzemállapotok és rendszerek</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au113.html">31.3 Beavatkozók: injektorok, gyújtótekercsek, fojtószelep, alapjárat-szabályozó, EGR-szelep →</a></div>
+</nav>
+<h2 data-number="31.2" id="au112"><span
+class="header-section-number">31.2</span> Érzékelők és jeladók</h2>
+<h3 data-number="31.2.1" id="motiváció"><span
+class="header-section-number">31.2.1</span> Motiváció</h3>
+<p>Egy hideg reggelen a benzinmotor nehezen indul, alapjáraton remeg, és
+a rendszerteszter hibakódot tárol: a motorfordulatszám-jeladó jele
+hiányzik. Egy másik autón a műszerfalon világít a motorszimbólum, és a
+diagnosztikai műszer élőadat-listájában a hűtőfolyadék-hőmérséklet
+érzékelő értéke
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>40</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">-40\,{}^{\circ}\text{C}</annotation></semantics></math>-ot
+mutat, miközben a motor meleg. A szerelő ezekben az esetekben nem a
+szoftverben keresi a hibát, hanem az érzékelők bekötését,
+tápfeszültségét, testét és jelalakját vizsgálja. Az elektronikus
+motorirányítás „szemét és fülét” érzékelők és jeladók alkotják: ha az
+ECU téves vagy hiányzó jelet kap, a befecskendezés, a gyújtás és a
+keverékképzés rossz lesz, esetleg a motor leáll. Ebben az alfejezetben a
+motorirányítás leggyakoribb érzékelőit vesszük végig úgy, hogy a
+jelalakot multiméterrel és oszcilloszkóppal is ellenőrizni tudd.</p>
+<h3 data-number="31.2.2" id="szemléletes-kép"><span
+class="header-section-number">31.2.2</span> Szemléletes kép</h3>
+<p>Képzelj el egy motortér-rajzot, amelyen az érzékelők a
+motorirányítási rendszer „érzékszerveiként” vannak megjelölve: a
+főtengely jeladó a lendkerék fogaskoszorújánál, a vezérműtengely-jeladó
+a vezérműfedélnél, a fojtószelep- és gázpedál-érzékelő a szívócső és a
+pedálbox felőli oldalon, az NTC hőmérséklet-érzékelők a hűtőrendszer
+csöveiben, a MAP vagy HFM a szívócsőben vagy a légszűrő után, a
+kopogásérzékelő a hengertömb oldalán, a lambdaszonda pedig a
+kipufogócsőben. Mindegyiknek az a feladata, hogy a fizikai mennyiséget –
+fordulatszám, hőmérséklet, nyomás, légtömeg, rezgés, oxigénkoncentráció
+– a motorvezérlő számára elektromos jellé alakítsa. A jelet az ECU
+feldolgozza, és a beavatkozókat (injektor, gyújtótekercs, fojtószelep,
+EGR-szelep) szabályozza.</p>
+<figure id="fig-au112-2">
+<div class="fig-interactive"><iframe src="figures/html/au112-2.html" title="Benzinmotor érzékelőtérképe: főtengely- és vezérműtengely-jeladó, hőmérséklet-érzékelők, légtömegmérő, szívócsőnyomás-érzékelő, kopogásérzékelő és két lambdaszonda a helyükön." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au112-2.png" style="width:90.0%"
+alt="Benzinmotor érzékelőtérképe: főtengely- és vezérműtengely-jeladó, hőmérséklet-érzékelők, légtömegmérő, szívócsőnyomás-érzékelő, kopogásérzékelő és két lambdaszonda a helyükön." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au112-2.png" style="width:90.0%"
+alt="Benzinmotor érzékelőtérképe: főtengely- és vezérműtengely-jeladó, hőmérséklet-érzékelők, légtömegmérő, szívócsőnyomás-érzékelő, kopogásérzékelő és két lambdaszonda a helyükön." /></details></div>
+<figcaption>Érzékelőtérkép: a motorirányítás érzékelőinek helye egy
+négyhengeres benzinmotoron (sematikus oldalnézet)</figcaption>
+</figure>
+<p>Az ábra a fenti leírást rajzban mutatja: a szívóágon a
+beszívottlevegő-hőmérséklet-érzékelő, a légtömegmérő, a
+fojtószelep-egység és a szívócsőnyomás-érzékelő, a motoron a főtengely-
+és a vezérműtengely-jeladó, a hűtőfolyadék-NTC, a kopogásérzékelő, az
+olajnyomás-kapcsoló és a rail nyomásérzékelő, a kipufogóágon a
+katalizátor előtti és utáni lambdaszonda ül; a gázpedál-érzékelő az
+utastérben van. A HTML-változatban az érzékelőre mutatva megjelenik a
+neve és a jeltípusa.</p>
+<hr />
+<h3 data-number="31.2.3" id="definíciók-és-összefüggések"><span
+class="header-section-number">31.2.3</span> Definíciók és
+összefüggések</h3>
+<p><strong>Definíció.</strong> Az <strong>érzékelő</strong> (sensor)
+olyan eszköz, amely egy fizikai vagy kémiai mennyiséget mérhető,
+általában villamos jellé alakít. A <strong>jeladó</strong> (pickup,
+transmitter) a motorirányításban sokszor ugyanazt jelenti, de gyakran a
+fordulatszám- és helyzetjeladókra használjuk; a jele nem folytonos
+mennyiséget hordoz, hanem foganként vagy pozíciójelként impulzusokat
+ad.</p>
+<p><strong>Definíció.</strong> A <strong>passzív érzékelő</strong> saját
+tápfeszültség nélkül működik, a jelet maga a fizikai hatás hozza létre
+(pl. induktív jeladó, piezoelektromos kopogásérzékelő). Az <strong>aktív
+érzékelő</strong> külső tápfeszültséget kap, és a jelét ebből állítja
+elő (pl. Hall-jeladó, MAP, HFM). Az <strong>NTC</strong> és a
+potenciométer ún. passzív, parametrikus érzékelő: nem kelt jelet és
+nincs saját elektronikája, hanem az ellenállása változik; az ECU
+referenciafeszültséggel (felhúzó ellenálláson át) teszi mérhetővé. A
+gyakorlatban aktív érzékelőnél mindig ellenőrizni kell a
+tápfeszültséget, a testet és a jelvezetéket; kétvezetékes NTC-n
+tápfeszültség helyett a jelvezeték üresjárási feszültségét (kb. 5 V) és
+a testet mérjük.</p>
+<p><strong>Összefüggés.</strong> Az ECU analóg bemenetein a mérési
+tartományt gyakran feszültségosztóval alakítják ki. Egy felhúzó
+ellenállással
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mtext mathvariant="normal">fel</mtext></msub><annotation encoding="application/x-tex">R_{\text{fel}}</annotation></semantics></math>)
+sorba kötött NTC érzékelőn a jel:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">jel</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">ref</mtext></msub><mo>⋅</mo><mfrac><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub><mrow><msub><mi>R</mi><mtext mathvariant="normal">fel</mtext></msub><mo>+</mo><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">U_{\text{jel}} = U_{\text{ref}} \cdot \frac{R_{\text{NTC}}}{R_{\text{fel}} + R_{\text{NTC}}}</annotation></semantics></math></p>
+<p>A képlet mutatja, hogy a hőmérséklet növekedésével az NTC ellenállása
+csökken, ezért a jel is csökken. Ezt használjuk a
+hőmérséklet-érzékelőknél.</p>
+<p><strong>Összefüggés.</strong> A fogaskerék-alapú fordulatszám-jeladó
+frekvenciája:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mfrac><mrow><mi>n</mi><mo>⋅</mo><mi>z</mi></mrow><mn>60</mn></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">f = \frac{n \cdot z}{60},</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+a fordulatszám (1/min),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>
+a számlált fogak/impulzusok száma egy fordulatra. Például egy 60−2
+fogazású fogaskeréknél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>58</mn></mrow><annotation encoding="application/x-tex">z = 58</annotation></semantics></math>
+fogas impulzus fordulatonként.</p>
+<hr />
+<h3 data-number="31.2.4" id="felépítés-és-működés"><span
+class="header-section-number">31.2.4</span> Felépítés és működés</h3>
+<h4 data-number="31.2.4.1" id="fordulatszám--és-helyzetjeladók"><span
+class="header-section-number">31.2.4.1</span> Fordulatszám- és
+helyzetjeladók</h4>
+<p>A motorirányítás leggyakrabban a főtengelyen elhelyezett
+fogaskerékről vagy impulzuskerékről kapja a fordulatszámjelet és a
+szinkronpozíciót. A fogazás gyakori típusa a <strong>60−2</strong> fog,
+azaz 60 fognyi helyből kettő fog hiányzik; a hiányzó fogak helyét az ECU
+szinkronreferenciaként használja. A jeladó lehet
+<strong>induktív</strong> (passzív, kétvezetékes) vagy
+<strong>Hall-elvű</strong> (aktív, tápfeszültséggel).</p>
+<p>Az <strong>induktív jeladó</strong> egy lágyvasmagos tekercs, amely a
+forgó fogaskerék előtt helyezkedik el. A fog elhaladásakor a mágneses
+fluxus megváltozik, ezért a tekercsben feszültség indukálódik. A jel
+körülbelül szinuszszerű, amplitúdója a fordulatszámmal nő, ezért
+alacsony fordulatszámnál (indítózásnál) kisebb, magas fordulatszámon
+nagyobb. A hiányzó fogaknál a jel egy periódust kihagy. A tipikus mérési
+érték oszcilloszkóppal: néhány száz millivolt indítózásnál, több volt
+járó motornál; a pontos érték gyártófüggő <strong>(ellenőrizendő:
+gyártói jelalak- és mérési adat)</strong>. Az induktív jeladó előnye az
+egyszerű felépítés; hátránya, hogy a jel amplitúdója fordulatszám-függő,
+a légrésre érzékeny, és a polaritása fontos.</p>
+<p>A <strong>Hall-jeladó</strong> egy Hall-elemet és jelformáló
+elektronikát tartalmazó aktív érzékelő. A fogaskerék fogainak
+elhaladásakor a mágneses tér megváltozik, az elektronika pedig tiszta,
+négyszögjelű kimenetet ad, amelynek amplitúdója közel a tápfeszültséghez
+(gyakran 5 V vagy 12 V logika), és alacsony fordulatszámon is
+megbízható. A Hall-jeladó jellemzően három vezetékes: tápfeszültség
+(például 5 V), test és jel. A <strong>magnetorezisztív</strong> jeladó a
+mágneses tértől függő ellenállásváltozást használja, és szintén aktív,
+digitális vagy analóg jelet adó érzékelő. A kerékfordulatszám-jeladók
+hasonló elven működnek, de jellemzően az ABS/ESP
+kerékfordulatszám-jeleit szolgáltatják; ezeket a fékrendszernél
+tárgyaljuk.</p>
+<p>A <strong>vezérműtengely-jeladó</strong> feladata a hengerazonosítás:
+a motorirányításnak tudnia kell, hogy a szívó ütem vagy a kompresszió
+ütem következik-e, különösen a hengerenkénti befecskendezésnél és a
+szelektív gyújtásnál. A vezérműtengely-jeladó sokszor félfordulatos vagy
+egyfordulatos fázisjelet ad; a motorvezérlő a főtengely és a
+vezérműtengely jeleit együtt értékeli. Ha a vezérműtengely-jel hiányzik,
+a motor sok esetben nem indul, vagy csak vészüzemmódban jár.</p>
+<figure id="fig-au112-1">
+<div class="fig-interactive"><iframe src="figures/html/au112-1.html" title="Induktív és Hall-jelalak szemléltető ábra: az induktív jel 0 V körül leng, a hiányzó fogaknál nagyobb, hosszabb lengéssel; a Hall-jel négyszög, a résnél kimarad." loading="lazy" style="width:100%;border:0;height:520px"></iframe><noscript><img src="figures/img/au112-1.png" style="width:85.0%"
+alt="Induktív és Hall-jelalak szemléltető ábra: az induktív jel 0 V körül leng, a hiányzó fogaknál nagyobb, hosszabb lengéssel; a Hall-jel négyszög, a résnél kimarad." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au112-1.png" style="width:85.0%"
+alt="Induktív és Hall-jelalak szemléltető ábra: az induktív jel 0 V körül leng, a hiányzó fogaknál nagyobb, hosszabb lengéssel; a Hall-jel négyszög, a résnél kimarad." /></details></div>
+<figcaption>Induktív és Hall-jeladó jelalakja 60−2 fogazású
+jeladókeréken,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>3000</mn></mrow><annotation encoding="application/x-tex">n = 3000</annotation></semantics></math>
+1/min (szemléltető, számított jel)</figcaption>
+</figure>
+<p>Az ábra felső részén az induktív jeladó jele 0 V körül szimmetrikusan
+leng (oszcilloszkópon negatív félhullám is látszik), a hiányzó fogaknál
+pedig nagyobb amplitúdójú, hosszabb lengést ad – a szerelő ezt a
+szinkronrést keresi. Az alsó rész a Hall-jeladó négyszögjele, amely a
+résnél kimarad. A fogosztás-frekvencia
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>60</mn><mo>⋅</mo><mi>n</mi><mi>/</mi><mn>60</mn></mrow><annotation encoding="application/x-tex">f = 60 \cdot n/60</annotation></semantics></math>
+(3000 1/min-nél 3000 Hz); az ECU által számolt átlagos
+impulzusfrekvencia a ténylegesen meglévő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>58</mn></mrow><annotation encoding="application/x-tex">z = 58</annotation></semantics></math>
+foggal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>58</mn><mo>⋅</mo><mi>n</mi><mi>/</mi><mn>60</mn></mrow><annotation encoding="application/x-tex">f = 58 \cdot n/60</annotation></semantics></math>
+(2900 Hz), ahogy a 2. példa is számol. Az interaktív változatban a
+fordulatszám és a jeladó típusa állítható, és élőben látszik mindkét
+frekvencia.</p>
+<h4 data-number="31.2.4.2" id="fojtószelep--és-gázpedál-érzékelők"><span
+class="header-section-number">31.2.4.2</span> Fojtószelep- és
+gázpedál-érzékelők</h4>
+<p>A <strong>fojtószelepállás-potenciométer</strong> (TPS, throttle
+position sensor) a fojtószelep tengelyére szerelt csúszókapcsolós
+potenciométer, amely a fojtószelep szögével arányos feszültséget ad. A
+tipikus jel üresjáratban 0,4–0,7 V, teljesen nyitott fojtószelepnél
+3,5–4,5 V körüli; ezek tanulási példák <strong>(ellenőrizendő: gyártói
+adat)</strong>. A potenciométer mellett régebbi rendszerekben
+<strong>kapcsolós</strong> változat is előfordult: itt a jelek
+üresjárati, részterheléses és teljes terheléses állást mutattak. A
+modern elektronikus fojtószelep-egység (E-gas) a fojtószelep tengelyén
+két potenciométert használ, hogy az ECU a jeleket összehasonlíthassa; a
+két jel gyakran ellentétes menetű vagy eltérő meredekségű. Az egyik jel
+például 0,5–4,5 V, a másik 4,5–0,5 V irányban változhat. A
+gázpedál-érzékelő (APP, accelerator pedal position) a vezető kívánságát
+adja meg: a pedálmodulban szintén legalább két potenciométer vagy
+Hall-érzékelő van, és a <strong>kettős jel</strong> a biztonság miatt
+szükséges. Ha az egyik jel kilóg a tartományból, vagy a két jel nem
+felel meg egymásnak, az ECU hibát tárol, és a motor korlátozott
+teljesítménnyel járhat.</p>
+<h4 data-number="31.2.4.3" id="hőmérséklet-érzékelők-ntc"><span
+class="header-section-number">31.2.4.3</span> Hőmérséklet-érzékelők
+(NTC)</h4>
+<p>A <strong>levegőhőmérséklet- és
+hűtőfolyadék-hőmérséklet-érzékelő</strong> általában
+<strong>NTC</strong> (negative temperature coefficient) termisztor:
+melegedés hatására az ellenállása csökken. Az ECU egy belső felhúzó
+ellenálláson keresztül 5 V referenciafeszültséget kapcsol, és méri az
+NTC osztott feszültségét. A tipikus hűtőfolyadék-NTC ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">20\,{}^{\circ}\text{C}</annotation></semantics></math>-on
+körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">2{,}5\,\text{k}\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>80</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">80\,{}^{\circ}\text{C}</annotation></semantics></math>-on
+körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">0{,}3\,\text{k}\Omega</annotation></semantics></math>
+– ezek példaértékek <strong>(ellenőrizendő: gyártói táblázat)</strong>.
+A hűtőfolyadék-érzékelő jele befolyásolja a hidegindítási dúsítást, az
+alapjáratot, a ventilátor-vezérlést és az emissziót. A
+levegőhőmérséklet-jel a beszívott levegő sűrűségének korrekcióját
+szolgálja.</p>
+<h4 data-number="31.2.4.4" id="légnyomás--és-légtömegmérők"><span
+class="header-section-number">31.2.4.4</span> Légnyomás- és
+légtömegmérők</h4>
+<p>A <strong>szívócsőnyomás-érzékelő</strong> (MAP, manifold absolute
+pressure) a szívócsőben uralkodó abszolút nyomást méri, és a
+motorvezérlő a nyomásból, hőmérsékletből és fordulatszámból becsüli a
+hengerekbe jutó levegő tömegét. A MAP-érzékelő aktív, általában 5 V
+tápfeszültséget kap; a jel feszültsége a nyomással közel lineárisan nő.
+Egy tipikus jel üresjáratban, erős vákuumnál
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">1{,}5\,\text{V}</annotation></semantics></math>,
+teljes terhelés, közel atmoszférikus nyomás közelségében
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">3{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">4{,}5\,\text{V}</annotation></semantics></math>
+lehet <strong>(ellenőrizendő: gyártói adat)</strong>. A MAP-érzékelő
+gyakori a turbós motoroknál is.</p>
+<p>A <strong>légtömegmérő</strong> (HFM, hot-film air mass meter) a
+ténylegesen beszívott levegő tömegáramát méri. A mérőcsőben egy fűtött
+hőfilm- vagy hőszál elem van; a levegő hűti, az elektronika pedig az
+áramlás fenntartásához szükséges fűtőteljesítményt vagy a
+hőmérsékletkülönbséget alakítja jellé. A jel általában
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">4{,}5\,\text{V}</annotation></semantics></math>
+közötti analóg feszültség, amely a légtömegárammal nő. A HFM méri a
+valódi levegőtömeg-áramot, ezért a motorterhelés-számítás pontosabb. A
+<strong>régi légmennyiségmérő</strong> (például lengőcsappantyús LMM)
+egy potenciométerrel összekötött csappantyút használt, amelyet a
+beszívott levegő elmozdított; a potenciométer jele a csappantyú szögét,
+azaz közelítőleg a levegő térfogatáramát képviselte. A modern
+rendszerekben a HFM a jellemző.</p>
+<h4 data-number="31.2.4.5" id="kopogásérzékelő"><span
+class="header-section-number">31.2.4.5</span> Kopogásérzékelő</h4>
+<p>A <strong>kopogásérzékelő</strong> a motor kopogását (detonációs
+égést) érzékeli. Szerkezete általában piezoelektromos kristályt
+tartalmazó érzékelő, amelyet a hengertömbhöz rögzítenek, előírt
+nyomatékkal. A kopogás a hengerblokk nagyfrekvenciás rezgéseit kelti; a
+piezoelem ezt feszültségjellé alakítja. Az ECU jellemzően az égés után,
+szűrt frekvenciasávban figyeli a jel amplitúdóját, és kopogás
+észlelésekor késlelteti a gyújtást. A kopogásérzékelő passzív,
+kétvezetékes érzékelő, a jel széles sávú, tüskeszerű feszültségcsomag.
+Oszcilloszkóppal kopogáskor a jel zajszintje megnő; a pontos szűrési és
+küszöbértékek gyártófüggők <strong>(ellenőrizendő: gyártói diagnosztikai
+útmutató)</strong>.</p>
+<h4 data-number="31.2.4.6" id="lambdaszonda"><span
+class="header-section-number">31.2.4.6</span> Lambdaszonda</h4>
+<p>A <strong>lambdaszonda</strong> a kipufogógáz oxigéntartalmát méri,
+és ezzel a keverék dús vagy szegény voltát jelzi. A hagyományos
+<strong>keskenysávú</strong> lambdaszonda (feszültségszonda) általában
+cirkónium-dioxid kerámiát használ, amely magas hőmérsékleten
+oxigénion-vezetővé válik. A kipufogógáz-oldali és a külső
+referencia-oxigénkoncentráció különbsége feszültséget hoz létre. Dús
+keveréknél a jel magas, körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">0{,}8</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}9\,\text{V}</annotation></semantics></math>,
+szegény keveréknél alacsony, körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0{,}1</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{V}</annotation></semantics></math>.
+A szabályzás a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>45</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}45\,\text{V}</annotation></semantics></math>
+körüli átmenet körül ingadozik; a jel jellegzetes „lambda-szabályzási”
+négyszögszerű mintázatot ad. A fűtött lambdaszonda gyorsabban éri el
+üzemi hőmérsékletét. A <strong>szélessávú lambdaszonda</strong>
+(áram-szonda) nagyobb mérési tartományban, az oxigénkoncentráció
+feszültség helyett szivattyúárammal arányos jelét adja; a motorirányítás
+nagy pontosságú szabályzásra használja. A lambdaszonda jeleit a
+kipufogógáz-utókezelés fejezetben is használjuk.</p>
+<h4 data-number="31.2.4.7" id="nyomásérzékelők"><span
+class="header-section-number">31.2.4.7</span> Nyomásérzékelők</h4>
+<p>A MAP mellett a motorirányításban több
+<strong>nyomásérzékelő</strong> is található: a közös nyomásterű (common
+rail) dízelrendszer <strong>railnyomás-érzékelője</strong>, az
+olajnyomás-érzékelő, a klímarendszer nyomásérzékelője és a
+turbónyomás-érzékelő. Ezek gyakran piezorezisztív vagy kapacitív elvű
+aktív érzékelők, 5 V tápfeszültséggel és közel lineáris
+feszültségjellel. A railnyomás-érzékelő például kb. 0,5 V-ot ad
+nyomásmentes állapotban és kb. 4,5 V-ot a mérési tartomány felső
+határán; a 0,5 V alatti és 4,5 V feletti jelet az ECU áramkörhibaként
+(testzárlat, szakadás, tápzárlat) értékeli <strong>(ellenőrizendő:
+gyártói adat)</strong>. A jelekből az ECU a befecskendezési nyomást
+szabályozza.</p>
+<figure id="fig-au112-3">
+<div class="fig-interactive"><iframe src="figures/html/au112-3.html" title="Hat érzékelő metszete: induktív és Hall-jeladó a jeladókerékkel, NTC, légtömegmérő, kopogásérzékelő és lambdaszonda." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au112-3.png" style="width:95.0%"
+alt="Hat érzékelő metszete: induktív és Hall-jeladó a jeladókerékkel, NTC, légtömegmérő, kopogásérzékelő és lambdaszonda." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au112-3.png" style="width:95.0%"
+alt="Hat érzékelő metszete: induktív és Hall-jeladó a jeladókerékkel, NTC, légtömegmérő, kopogásérzékelő és lambdaszonda." /></details></div>
+<figcaption>Hat érzékelő sematikus metszete: induktív és Hall-jeladó,
+NTC, légtömegmérő, kopogásérzékelő, ugrásszerű lambdaszonda</figcaption>
+</figure>
+<p>A metszetek a fenti működési elveket mutatják: az induktív jeladóban
+állandó mágnes, tekercs és lágyvas pólus áll a fogaskoszorú előtt, a
+Hall-jeladóban Hall-IC és mágnes, háromvezetékes csatlakozóval; az
+NTC-pasztilla az érzékelőház hegyében ül; a légtömegmérőben a fűtött
+film előtt és után egy-egy hőmérséklet-érzékelő van; a kopogásérzékelő
+piezokerámiáját a szeizmikus tömeg terheli, a rögzítőcsavar nyomatéka
+számít; a lambdaszonda ZrO₂-kerámiájának két oldalán egy-egy
+platinaelektróda van, kívül a kipufogógáz, belül a referencia-levegő. A
+HTML-változatban érzékelőnként külön nézet és rövid magyarázat
+választható.</p>
+<hr />
+<h3 data-number="31.2.5" id="érzékelő-bekötési-rajz"><span
+class="header-section-number">31.2.5</span> Érzékelő bekötési rajz</h3>
+<p>Az érzékelők vizsgálatának közös kérdése: van-e tápfeszültség, jó-e a
+test, és megérkezik-e a jel? Az alábbi áramútrajz egy NTC
+hűtőfolyadék-hőmérséklet-érzékelő tipikus bekötését mutatja.</p>
+<figure>
+<img src="assets/au112-diagram-1.png"
+alt="NTC hűtőfolyadék-hőmérséklet-érzékelő bekötése - Szemléltető áramútrajz: zárt kör a referenciaforrás + pólusától (VREF, 5 V) az R1 felhúzó ellenálláson, a THW kapcson, az NTC-n és az E2 érzékelőtesten át a forrás − pólusáig. A szaggatott keret az ECU határa; az NTC és a vezetékek a kábelkötegben vannak. A kapocsjelölések és a felhúzó ellenállás értéke gyártónként eltér (ellenőrizendő: gyártói kapcsolási rajz)." />
+<figcaption aria-hidden="true">NTC hűtőfolyadék-hőmérséklet-érzékelő
+bekötése - Szemléltető áramútrajz: zárt kör a referenciaforrás +
+pólusától (VREF, 5 V) az R1 felhúzó ellenálláson, a THW kapcson, az
+NTC-n és az E2 érzékelőtesten át a forrás − pólusáig. A szaggatott keret
+az ECU határa; az NTC és a vezetékek a kábelkötegben vannak. A
+kapocsjelölések és a felhúzó ellenállás értéke gyártónként eltér
+(ellenőrizendő: gyártói kapcsolási rajz).</figcaption>
+</figure>
+<p>Az ECU a VREF ponton 5 V referenciafeszültséget ad (a
+referenciaforrás + pólusa). A felhúzó ellenállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(R_1)</annotation></semantics></math>
+és az NTC osztója a THW ponton mérhető jelfeszültséget adja, ezt az ECU
+A/D átalakítója méri. Az E2 pont az érzékelő testje, amely az ECU-n
+belül záródik a forrás − pólusához. A szaggatott keret az ECU határa: az
+R1 és a referencia belül van, az NTC és a vezetékek kívül, a
+kábelkötegben – ezért a THW és az E2 kapcson mérve dönthető el, hogy a
+hiba a vezérlőben vagy a vezetéken, illetve az érzékelőben van. Ha a
+vezeték megszakad, az ECU általában 5 V-hoz közeli jelet lát, mert a THW
+ponton a felhúzó ellenállás a test irányában nem terhel. Ha a vezeték
+testzárlatos, a jel 0 V közeli. Ugyanígy kell gondolkodni minden
+érzékelőnél: a jelből lehet következtetni a bekötés hibájára.</p>
+<hr />
+<h3 data-number="31.2.6" id="kidolgozott-példák"><span
+class="header-section-number">31.2.6</span> Kidolgozott példák</h3>
+<p><strong>1. példa (NTC feszültségosztó számítása).</strong> Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ref</mtext></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{ref}} = 5\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">fel</mtext></msub><mo>=</mo><mn>1000</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{fel}} = 1000\,\Omega</annotation></semantics></math>,
+a hűtőfolyadék-hőmérséklet-érzékelő ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">20\,{}^{\circ}\text{C}</annotation></semantics></math>-on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub><mo>=</mo><mn>2500</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{NTC}} = 2500\,\Omega</annotation></semantics></math>.
+Keresett: a THW pont feszültsége. Képlet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">jel</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">ref</mtext></msub><mo>⋅</mo><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mtext mathvariant="normal">fel</mtext></msub><mo>+</mo><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U_{\text{jel}} = U_{\text{ref}} \cdot R_{\text{NTC}}/(R_{\text{fel}} + R_{\text{NTC}})</annotation></semantics></math>.
+Behelyettesítés:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">jel</mtext></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>2500</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>1000</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>2500</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>2500</mn><mn>3500</mn></mfrac><mo>=</mo><mn>3</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{jel}} = 5\,\text{V} \cdot \frac{2500\,\Omega}{1000\,\Omega + 2500\,\Omega} = 5\,\text{V} \cdot \frac{2500}{3500} = 3{,}6\,\text{V}.</annotation></semantics></math></p>
+<p>Ellenőrzés: hideg motornál az NTC nagy ellenállású, a jel magas, ami
+az ECU-nak hidegindítási dúsítást jelez.</p>
+<p><strong>2. példa (Fordulatszám-jeladó frekvenciája).</strong> Adott:
+60−2 fogazású főtengely jeladó kerék,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>58</mn></mrow><annotation encoding="application/x-tex">z = 58</annotation></semantics></math>
+fogas impulzus; a motor fordulatszáma
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>3000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n = 3000\,\text{1/min}</annotation></semantics></math>.
+Keresett: a jel frekvenciája. Képlet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mi>n</mi><mo>⋅</mo><mi>z</mi><mi>/</mi><mn>60</mn></mrow><annotation encoding="application/x-tex">f = n \cdot z / 60</annotation></semantics></math>.
+Behelyettesítés:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mfrac><mrow><mn>3000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext><mo>⋅</mo><mn>58</mn></mrow><mrow><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s/min</mtext></mrow></mfrac><mo>=</mo><mn>2900</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">f = \frac{3000\,\text{1/min} \cdot 58}{60\,\text{s/min}} = 2900\,\text{Hz}.</annotation></semantics></math></p>
+<p>A periódusidő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>1</mn><mi>/</mi><mi>f</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>2900</mn><mo>≈</mo><mn>0</mn><mo>,</mo><mn>345</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = 1/f = 1/2900 \approx 0{,}345\,\text{ms}</annotation></semantics></math>.
+Ellenőrzés: alapjáraton,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>800</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">800\,\text{1/min}</annotation></semantics></math>-nél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>800</mn><mo>⋅</mo><mn>58</mn><mi>/</mi><mn>60</mn><mo>≈</mo><mn>773</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f = 800 \cdot 58 / 60 \approx 773\,\text{Hz}</annotation></semantics></math>;
+az oszcilloszkóp időalapját ekkor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">1\,\text{ms}</annotation></semantics></math>-os
+tartományra kell állítani.</p>
+<hr />
+<h3 data-number="31.2.7" id="előírások-minőségellenőrzés"><span
+class="header-section-number">31.2.7</span> Előírások,
+minőségellenőrzés</h3>
+<p><strong>Előírás.</strong> Az érzékelők mérésére a gyártó javítási
+útmutatójában megadott mérési pontok, tápfeszültség-, ellenállás- és
+jelalak-értékek a mérvadók. A rajzon használt VREF, THW, E2 jelölések
+gyártói ECU-lábnevek (példaként), nem szabványos kapocsjelek; a
+szabványos járművillamossági kapocsszámok (DIN 72552: 15, 30, 31 …) az
+érzékelők jelvezetékére nem vonatkoznak. A tényleges lábkiosztást mindig
+a jármű áramútrajza határozza meg <strong>(ellenőrizendő: gyártói
+rajz)</strong>.</p>
+<p><strong>Minőségellenőrzés.</strong> Az érzékelő vizsgálatakor a
+következő sorrendet ajánlott tartani:</p>
+<ol type="1">
+<li>Azonosítsd a járművet és az érzékelő pontos típusát a gyártói
+adatlap vagy adatbázis alapján.</li>
+<li>Ellenőrizd a csatlakozó állapotát: korrózió, törés, visszahúzódott
+tüskék.</li>
+<li>Ellenőrizd a tápfeszültséget multiméterrel a csatlakozón, gyújtás
+bekapcsolása mellett; aktív érzékelőnél jellemzően 5 V vagy 12 V.</li>
+<li>Ellenőrizd a testpontot; az ECU test- vagy a járműtest felé mért
+feszültség közel 0 V.</li>
+<li>Mérd a jelet: multiméterrel DC vagy AC tartományban, illetve
+oszcilloszkóppal a jelalakot.</li>
+<li>Hasonlítsd össze a gyártói értékkel vagy referenciajellel.</li>
+<li>Szükség esetén végezd el az ECU felé irányuló vezeték-folytonossági
+és zárlatvizsgálatot.</li>
+</ol>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Figyelem.</strong> Mérés előtt a gyújtást csak az adott mérés
+idejére kapcsold be, a jármű váltóját tedd üresbe vagy P állásba, és a
+járó motornál végzett mérésnél használd a kipufogógáz-elszívást. A mozgó
+alkatrészektől, ventilátortól és forró kipufogótól tarts távolságot.</p>
+<hr />
+<h3 data-number="31.2.8" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">31.2.8</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Ügyfélpanasz:</strong> egy négyhengeres szívó benzinmotor
+nehezen indul, a motor visszadob néha, és a diagnosztikai műszer a
+főtengely-jeladó jele körüli hibát tárol. A műhelyben a szerelő először
+a jeladó csatlakozóját vizsgálja, majd oszcilloszkóppal az induktív
+jeladó jelét nézi indítózás közben. A jel amplitúdója nagyon alacsony,
+és a hiányzó fogak helye nem ismerhető fel. A szerelő ellenőrzi a
+légrést a jeladó és a fogaskerék között; a jeladó rögzítése meglazult,
+ezért a légrés megnőtt. A jeladót a gyártói nyomatékkal rögzíti, a
+légrést hézagmérővel beállítja. Indítózás után a jel amplitúdója a várt
+tartományba kerül, a hiányzó fogak helye jól látható, és a motor
+egyenletesen indul. Tanulság: az időszakos jelhibák egy része mechanikai
+rögzítési probléma, nem maga az érzékelő elektronikája.</p>
+<p><strong>Hibakeresési eset.</strong> Tünet: a
+hűtőfolyadék-hőmérséklet-érzékelő értéke a rendszerteszterben
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>40</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">-40\,{}^{\circ}\text{C}</annotation></semantics></math>,
+a motor hidegindításkor dús keverékkel jár és füstöl, a ventilátor
+folyamatosan forog. Hipotézis: az NTC-kör szakadt. Mérés: az érzékelő
+csatlakozóján a THW pont feszültsége közel 5 V, miközben a
+csatlakoztatott NTC-ellenállásnak adott hőmérsékleten kisebb értéket
+kellene adnia. A csatlakozó lehúzása után az érzékelő ellenállása
+szakadást mutat; az érzékelő belső termisztorja tönkrement. Javítás: új
+érzékelő beépítése, a csatlakozó tömítésének és a hűtőfolyadék-szintnek
+az ellenőrzése. Próbaúton a hőmérsékletjel visszatér, a ventilátor
+megfelelően vezérel. Megelőzés: fagyálló hűtőfolyadék használata, mert a
+korrozív közeg roncsolhatja a hűtőkör érzékelőit.</p>
+<hr />
+<h3 data-number="31.2.9" id="tipikus-hibák"><span
+class="header-section-number">31.2.9</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>A jeladó polaritásának felcserélése.</strong> Induktív
+jeladónál a két vezeték felcserélésével a jel polaritása megfordul, ami
+a motorindítást és a pontos szöghelyzet-felismerést zavarhatja. A
+javításnál mindig a gyártói bekötési rajzot kell követni, és a vezetékek
+színeit, valamint a jelalak irányát ellenőrizni kell.</p></li>
+<li><p><strong>A Hall-jeladó jelét multiméterrel DC feszültségként
+átlagolva félreértelmezni.</strong> A Hall-jeladó négyszögjele;
+multiméterrel mért DC feszültsége a kitöltési tényezőtől függ, és nem ad
+valódi jelalakot. A helyes gyakorlat az oszcilloszkópos jelmegfigyelés:
+a jel amplitúdójának, élviszonyainak és a hiányzó fogak
+szinkronhelyzetének ellenőrzése.</p></li>
+<li><p><strong>Az NTC ellenállását nem a mérés pillanatnyi
+hőmérsékletéhez tartozó táblázati értékkel összevetni.</strong> A
+hőmérséklet-függő ellenállást mindig a gyártói hőmérsékleti táblázattal
+kell összevetni, a valós hőmérséklettel mért állapotban. Ha a szerelő
+hideg motornál az NTC-t szobahőmérsékleten méri, de a specifikációt
+meleg motorra értelmezi, tévesen cserélhet ki jó érzékelőt.</p></li>
+</ol>
+<hr />
+<h3 data-number="31.2.10" id="önellenőrzés"><span
+class="header-section-number">31.2.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? Az induktív jeladó aktív érzékelő, tehát
+tápfeszültséget igényel.<br />
+</li>
+<li>Mi történik az NTC hűtőfolyadék-érzékelő jelfeszültségével, ha a
+motor melegszik?<br />
+</li>
+<li>Miért van a gázpedál-érzékelőben két jel?<br />
+</li>
+<li>Milyen jelalakot mutat a Hall-elvű jeladó egy fog
+elhaladásakor?<br />
+</li>
+<li>Miért használ a főtengely jeladó 60−2 fogazást?<br />
+</li>
+<li>Mi a teendő, ha az NTC-jel szakadás miatt 5 V közeli?</li>
+</ol>
+<hr />
+<h3 data-number="31.2.11" id="az-önellenőrzés-megoldásai"><span
+class="header-section-number">31.2.11</span> Az önellenőrzés
+megoldásai</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Hamis. Az induktív jeladó passzív, saját tápfeszültség nélkül, a
+fogaskerék fluxusváltozásából állítja elő a jelet.<br />
+</li>
+<li>Melegedve az NTC ellenállása csökken, ezért a feszültségosztó
+jelfeszültsége csökken.<br />
+</li>
+<li>A biztonság és a hitelesség miatt: az ECU összehasonlítja a két
+jelet, és eltérés esetén korlátozott üzemmódot, hibát állít be.<br />
+</li>
+<li>Tiszta négyszögjelet, amelynek amplitúdója közel a
+tápfeszültséghez.<br />
+</li>
+<li>A 60 fogból hiányzó kettő fog a főtengely szinkronhelyzetét jelöli;
+a hiányzó két fog a főtengely referencia-szöghelyzetét jelöli (például
+az 1. henger felső holtpontja előtti adott szögnél); azt, hogy az 1.
+henger kompresszió- vagy kipufogóütemben van, az ECU csak a
+vezérműtengely-jeladó jelével együtt tudja eldönteni.<br />
+</li>
+<li>A szakadt NTC-jel az ECU felhúzó ellenállása miatt közel 5 V-ot
+mutat; ilyenkor ellenőrizni kell az érzékelő ellenállását, a vezetéket
+és a csatlakozót.</li>
+</ol>
+<hr />
+<h3 data-number="31.2.12" id="feladatok"><span
+class="header-section-number">31.2.12</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Sorold fel, mi a különbség az
+induktív és a Hall-elvű fordulatszám-jeladó között a tápfeszültség, a
+jelalak és az amplitúdó-fordulatszám függés tekintetében!</p>
+<p><strong>2. feladat (A).</strong> Nevezd meg, miért van szükség
+vezérműtengely-jeladóra egy hengerenkénti befecskendezéses motornál!</p>
+<p><strong>3. feladat (B).</strong> Egy 60−2 fogazású jeladó kereke
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>58</mn></mrow><annotation encoding="application/x-tex">z=58</annotation></semantics></math>
+fogas. A fordulatszám
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">1200\,\text{1/min}</annotation></semantics></math>.
+Számítsd ki a jel frekvenciáját és periódusidejét!</p>
+<p><strong>4. feladat (B).</strong> Az áramköri rajz alapján magyarázd
+el, mi történik a THW pont feszültségével, ha a NTC érzékelő
+testvezetéke megszakad! Mit mutat ekkor a diagnosztika?</p>
+<p><strong>5. feladat (C).</strong> Egy MAP-érzékelő jelét vizsgálod. A
+gyártó szerint a mérési tartomány
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>20</mn><annotation encoding="application/x-tex">20</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kPa</mtext></mrow><annotation encoding="application/x-tex">100\,\text{kPa}</annotation></semantics></math>
+abszolút nyomás között
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">4{,}5\,\text{V}</annotation></semantics></math>
+lineáris. A mért jelfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>.
+Becsüld meg a szívócsőnyomást! Mutasd meg a számítást!</p>
+<p><strong>6. feladat (D).</strong> Egy motor alapjáraton remeg, és a
+diagnosztikai műszer a fojtószelep-érzékelő hibáját tárolja. A TPS jel
+üres járatban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}8\,\text{V}</annotation></semantics></math>,
+teljesen nyitva
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">1{,}3\,\text{V}</annotation></semantics></math>.
+Mi a hiba valószínű oka, és mit kell ellenőrizned?</p>
+<hr />
+<h3 data-number="31.2.13" id="a-feladatok-megoldásai"><span
+class="header-section-number">31.2.13</span> A feladatok megoldásai</h3>
+<p><strong>1.</strong> Az induktív jeladó passzív, kétvezetékes, a jele
+közel szinuszszerű, amplitúdója a fordulatszámmal nő. A Hall-elvű aktív,
+tápfeszültséget igényel, a jele négyszög, amplitúdója közel állandó,
+alacsony fordulatszámon is jó.</p>
+<p><strong>2.</strong> A vezérműtengely-jeladó a hengerazonosítást teszi
+lehetővé: az ECU a főtengely szöghelyzete mellett tudja, hogy az egyes
+hengerek a szívó vagy a kompresszió ütemben vannak-e, így a
+hengerenkénti befecskendezést és a szelektív gyújtást megfelelően
+vezérli.</p>
+<p><strong>3.</strong> Képlet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mi>n</mi><mo>⋅</mo><mi>z</mi><mi>/</mi><mn>60</mn></mrow><annotation encoding="application/x-tex">f = n \cdot z / 60</annotation></semantics></math>.
+Behelyettesítve:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>1200</mn><mo>⋅</mo><mn>58</mn><mi>/</mi><mn>60</mn><mo>=</mo><mn>1160</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f = 1200 \cdot 58 / 60 = 1160\,\text{Hz}</annotation></semantics></math>.
+Periódusidő:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>1</mn><mi>/</mi><mi>f</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>1160</mn><mo>≈</mo><mn>0</mn><mo>,</mo><mn>86</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = 1/f = 1/1160 \approx 0{,}86\,\text{ms}</annotation></semantics></math>.
+Ellenőrzés: az érték alapján az oszcilloszkóp időalapját néhány ms-os
+tartományra állítjuk.</p>
+<p><strong>4.</strong> Ha az NTC testvezetéke megszakad, a THW ponton
+nem folyik áram; a felhúzó ellenálláson nincs feszültségesés, ezért a
+THW pont jelfeszültsége közel 5 V-ot mutat. A diagnosztikai műszer ezt
+magas ellenállásnak, azaz nagyon alacsony hőmérsékletnek értelmezi
+(például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>40</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">-40\,{}^{\circ}\text{C}</annotation></semantics></math>),
+mert a jel 5 V-hoz közeli.</p>
+<p><strong>5.</strong> A lineáris jelleggörbe képlete:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><msub><mi>p</mi><mtext mathvariant="normal">min</mtext></msub><mo>+</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><mtext mathvariant="normal">max</mtext></msub><mo>−</mo><msub><mi>p</mi><mtext mathvariant="normal">min</mtext></msub><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">min</mtext></msub><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mtext mathvariant="normal">max</mtext></msub><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">min</mtext></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p = p_{\text{min}} + (p_{\text{max}} - p_{\text{min}}) \cdot (U - U_{\text{min}})/(U_{\text{max}} - U_{\text{min}})</annotation></semantics></math>.
+Behelyettesítve:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kPa</mtext><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>100</mn><mo>−</mo><mn>20</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">kPa</mtext><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>5</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>4</mn><mo>,</mo><mn>5</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>20</mn><mo>+</mo><mn>80</mn><mo>⋅</mo><mn>2</mn><mo>,</mo><mn>0</mn><mi>/</mi><mn>4</mn><mo>,</mo><mn>0</mn><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kPa</mtext></mrow><annotation encoding="application/x-tex">p = 20\,\text{kPa} + (100-20)\,\text{kPa} \cdot (2{,}5 - 0{,}5)/(4{,}5 - 0{,}5) = 20 + 80 \cdot 2{,}0/4{,}0 = 60\,\text{kPa}</annotation></semantics></math>.
+Ellenőrzés: 2,5 V a feszültségtartomány közepén van, a nyomás is a
+tartomány közepén, 60 kPa.</p>
+<p><strong>6.</strong> A TPS jel üres járatban 0,8 V, teljesen nyitott
+fojtószelepnél 1,3 V, tehát a mérési tartomány nagyon beszűkült. Ez
+leggyakrabban a potenciométer csúszópályájának kopását, a tápfeszültség
+hibáját vagy a test gyenge érintkezését jelzi. Ellenőrizni kell a TPS
+tápfeszültségét (5 V referencia), a testet, valamint a fojtószelep
+mechanikus működését, és szükség esetén a gyártó szerint cserélni az
+érzékelőt, illetve az alapjáratot és a fojtószelep alaphelyzetet
+tanítani.</p>
+<hr />
+<h3 data-number="31.2.14" id="rövid-összefoglaló"><span
+class="header-section-number">31.2.14</span> Rövid összefoglaló</h3>
+<p>Az érzékelők és jeladók a motorirányítás érzékszervei. A passzív
+érzékelők (induktív jeladó, kopogásérzékelő) saját jelet keltenek, az
+aktívak (Hall-jeladó, MAP, HFM) tápfeszültséggel dolgoznak; az NTC
+passzív, parametrikus érzékelő, amelynek ellenállását az ECU
+referenciafeszültséggel méri. A főtengely-jeladó az induktív vagy
+Hall-elvű 60−2 fogazásról a fordulatszámot és a főtengely szöghelyzetét
+adja; a vezérműtengely-jeladó a hengerazonosítást biztosítja. A
+fojtószelep-potenciométer a terhelést, a gázpedál-érzékelő a vezetői
+szándékot két redundáns jellel jelzi. Az NTC hőmérséklet-érzékelő
+ellenállása melegedéssel csökken, a kapcsolt jelfeszültség ezért
+csökken. A MAP a szívócsőnyomást, a HFM a tényleges légtömegáramot méri.
+A kopogásérzékelő piezo-elvű rezgésjeladó, a lambdaszonda a kipufogógáz
+oxigéntartalmát jelzi. <strong>Továbbvitt eredmény.</strong> Az itt
+bemutatott bekötési logikát (táp, test, jel), jelalakokat és vizsgálati
+sorrendet használjuk a <a href="au113.html">Beavatkozók: injektorok,
+gyújtótekercsek, fojtószelep, alapjárat-szabályozó, EGR-szelep</a>
+alfejezetben a beavatkozók rendszerénél, valamint a <a
+href="au144.html">Jeladók és beavatkozók vizsgálata multiméterrel és
+oszcilloszkóppal</a> alfejezetben a teljes mérési gyakorlatban.</p>
+<h3 data-number="31.2.15" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">31.2.15</span> Források és ellenőrzési
+hiányok</h3>
+<p>Az alfejezet az általános járművillamos- és elektronikai mérési
+alapokra, az MSZ EN 60617 villamos rajzjelekre és a gyártói
+motorirányítási gyakorlatra épül. A pontos kapocsjelek,
+feszültségtartományok, ellenállás- és jelalakadatok, valamint a 60−2
+fogazás paraméterei gyártó- és típusfüggők, ezért azokat a szövegben
+jelölt helyeken ellenőrizni kell a jármű gyártói javítási útmutatójában
+és kapcsolási rajzában.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au111.html">← 31.1 A motorirányítás alapjai: vezérlőegység, szabályozási kör, üzemállapotok és rendszerek</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au113.html">31.3 Beavatkozók: injektorok, gyújtótekercsek, fojtószelep, alapjárat-szabályozó, EGR-szelep →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

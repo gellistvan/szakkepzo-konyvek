@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Levegő- és kipufogóút mérési pontokkal</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="patm">Légköri nyomás p_atm</label><input id="patm" type="range" min="0.9" max="1.05" step="0.01" value="0.98" aria-label="Légköri nyomás p_atm"><output id="patm_o" for="patm"></output></div>
+<div class="row"><label for="pabs">Műszer (abszolút) p_abs</label><input id="pabs" type="range" min="0.9" max="3.0" step="0.01" value="2.45" aria-label="Műszer (abszolút) p_abs"><output id="pabs_o" for="pabs"></output></div>
+<div class="row"><label for="eset">Hibaszcenárió (beállítja az értékeket)</label><select id="eset" aria-label="Hibaszcenárió (beállítja az értékeket)"><option value="-1" selected>saját érték</option><option value="0">ép rendszer (1. példa)</option><option value="1">nyomóoldali tömlőszakadás (valós eset)</option><option value="2">nyitva ragadt wastegate (6. feladat)</option><option value="3">eldugult DPF (4. feladat iránya)</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 300" role="img" aria-label="Feltöltött motor levegő- és kipufogóútja mérési pontokkal; töltőnyomás-kalkulátor és hibaszcenáriók"></svg>
+<p class="small">A képlet és a példák a fejezetből (1. példa, valós eset, 4. és 6. feladat). Az ellennyomás 0,30 és 0,80 bar-os értékei szemléltetők; a töltőnyomás- és ellennyomás-határok tanulási példák, ellenőrizendők a gyártói javítási adatban.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"patm":"bar", "pabs":"bar"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const C=[['ép rendszer (1. példa)',0.98,2.45,2.45,0.3,'','A töltőnyomás 1,47 bar, az előírt 1,3–1,6 bar-on belül (ellenőrizendő). Az ellennyomás szemléltető ép érték.'],['nyomóoldali tömlőszakadás (valós eset)',0.98,1.8,1.3,0.3,'press','Kívánt 1,8, tényleges 1,3 bar abszolút; a MAF a vártnál kevesebbet mér. Füstgéppel a töltőlevegő-hűtő bemeneti csövénél keresendő.'],['nyitva ragadt wastegate (6. feladat)',0.97,1.8,1.0,0.3,'turb','Tényleges 1,00 bar a 0,97 bar légköri mellett: a turbó gyakorlatilag nem tölt (a kívánt 1,80 bar a 4. feladatból, szemléltető).'],['eldugult DPF (4. feladat iránya)',0.98,1.8,1.2,0.8,'dpf','Kívánt 1,80, tényleges 1,20 bar, szivárgás nincs; az ellennyomás a 0,5 bar-os határ fölött (0,8 bar szemléltető).']], e=+v.eset;
+if(e>=0 && FIG.last!==e){FIG.last=e;document.getElementById("patm").value=C[e][1];document.getElementById("pabs").value=C[e][3];setTimeout(draw,0);return;}
+if(e<0)FIG.last=-1;
+const hl=e>=0?C[e][5]:"";
+const B=(x,y,t,k,dash)=>{const on=k&&k===hl;
+  el("rect",{x:x,y:y,width:80,height:40,rx:6,fill:on?"#f6d7a7":(k==="press"&&hl!=="press"?"#e6edf5":"#fff"),stroke:on?"#c55a11":"#000","stroke-width":on?3:1.2,"stroke-dasharray":dash?"3 3":""});
+  t.split("|").forEach((s,i,a)=>el("text",{x:x+40,y:y+22+(i-(a.length-1)/2)*13,"font-size":11,"text-anchor":"middle",fill:"#000"},s));};
+el("rect",{x:0,y:0,width:640,height:300,fill:"#fff"});
+const top=[["Légszűrő",""],["MAF","press0"],["Kompresszor","press"],["Töltőlevegő-|hűtő","press"],["Fojtószelep","press"],["Szívócső|(MAP)","press"]];
+top.forEach((b,i)=>{B(10+i*92,40,b[0],b[1]);if(i)el("line",{x1:i*92,x2:10+i*92,y1:60,y2:60,stroke:"#000"});if(i===1)el("line",{x1:96,x2:96,y1:60,y2:76,stroke:"#000"});});
+el("rect",{x:560,y:40,width:40,height:180,fill:"#ddd",stroke:"#000"});el("text",{x:580,y:135,"font-size":11,"text-anchor":"middle",fill:"#000",transform:"rotate(-90 580 132)"},"Hengerek");
+el("line",{x1:550,x2:560,y1:60,y2:60,stroke:"#000"});
+const bot=[["Dob",""],["Katalizátor|/ DPF","dpf"],["Turbina|WG/VGT","turb"],["Kipufogó-|csonk","exh"]];
+const bx=[10,102,194,470];bot.forEach((b,i)=>{B(bx[i],180,b[0],b[1],true);});
+[[90,102],[182,194],[274,470],[550,560]].forEach(s=>el("line",{x1:s[0],x2:s[1],y1:200,y2:200,stroke:"#000","stroke-dasharray":"3 3"}));
+el("line",{x1:234,x2:234,y1:80,y2:180,stroke:"#000","stroke-width":3});
+[[142,28,"1"],[510,28,"2"],[510,232,"3"],[96,85,"4"]].forEach(p=>{el("circle",{cx:p[0],cy:p[1],r:9,fill:"#fff",stroke:"#000"});el("text",{x:p[0],y:p[1]+4,"font-size":11,"text-anchor":"middle",fill:"#000","font-weight":"bold"},p[2]);});
+el("text",{x:10,y:250,"font-size":11,fill:"#000"},"1 MAF  2 töltőnyomás-érzékelő (abszolút)  3 ellennyomás-mérő csatlakozás  4 füstgép-betáplálás");
+el("text",{x:10,y:14,"font-size":11,fill:"#000"},"friss levegő → (kék: nyomóoldal)");el("text",{x:10,y:275,"font-size":11,fill:"#000"},"← kipufogógáz (szaggatott)");
+const pb=v.pabs-v.patm;
+let s="Töltőnyomás: p_boost = p_abs − p_atm = "+fmt(v.pabs,2)+" − "+fmt(v.patm,2)+" = <b>"+fmt(pb,2)+" bar</b>"+(pb<0?" (vákuum, a turbó nem tölt)":"")+".";
+if(e>=0){const c=C[e];s+="<br>Kívánt: "+fmt(c[2],2)+" bar abs. (túlnyomás "+fmt(c[2]-c[1],2)+" bar), tényleges: "+fmt(c[3],2)+" bar abs.; eltérés "+fmt(c[2]-c[3],2)+" bar. Ellennyomás: "+fmt(c[4],2)+" bar"+(c[4]>0.5?" – <b>a 0,5 bar-os határ fölött</b>":"")+".<br><i>"+c[6]+"</i>";}
+status(s);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

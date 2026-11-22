@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>22.4 Automata, kettős tengelykapcsolós és fokozatmentes váltók
+– Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz6">VI. RÉSZ – Erőátvitel, futómű, kormányzás és fékrendszerek</a> › <a href="index.html#auch21">22 Tengelykapcsolók és nyomatékváltók</a></p>
+<div class="links"><a class="prev" rel="prev" href="au080.html">← 22.3 Bolygóművek és a hidrodinamikus nyomatékváltó</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au082.html">23.1 Kardánhajtás, csuklók és féltengelyek →</a></div>
+</nav>
+<h2 data-number="22.4" id="au081"><span
+class="header-section-number">22.4</span> Automata, kettős
+tengelykapcsolós és fokozatmentes váltók</h2>
+<h3 data-number="22.4.1" id="motiváció"><span
+class="header-section-number">22.4.1</span> Motiváció</h3>
+<p>Ügyfélpanaszok, amelyekkel autószerelőként naponta találkozol: „a
+váltó hidegen rángat”, „pörög a motor, de alig gyorsul”, „beragadt P-ben
+a kar”, „hibakód nélkül vészüzembe ment a váltó”. A hagyományos
+automata, a kettős tengelykapcsolós és a fokozatmentes váltó teljesen
+más felépítésű, ezért más olajat, más ellenőrzési eljárást és más
+javítási logikát igényel. Ha csak annyit tudsz, hogy „automata váltó”, a
+hiba keresése zsákutca lesz. Ebben az alfejezetben a három legfontosabb
+típust hasonlítjuk össze, és bemutatjuk a javításhoz szükséges
+legalapvetőbb szerkezeti ismereteket.</p>
+<h3 data-number="22.4.2" id="szemléletes-kép"><span
+class="header-section-number">22.4.2</span> Szemléletes kép</h3>
+<p>Képzelj el egy hagyományos, hatfokozatú automata váltó
+keresztmetszetét. A ház bal oldalán a hidrodinamikus nyomatékváltó
+látható, mögötte az olajszivattyú. A váltóház közepén a
+<strong>Ravigneaux- vagy Simpson-típusú bolygómű-készlet</strong> kapott
+helyet, körülötte nedves, olajos többtárcsás tengelykapcsolók és fékek,
+valamint a dobok külső palástján egy szalagfék. A ház alján található a
+<strong>hidraulikus vezérlőegység</strong> (szelepblokk) és az
+elektrohidraulikus mágnesszelepek; felül a választókarhoz kapcsolódó
+mechanikus reteszelés és a kimenő fordulatszám-jeladó. Ugyanettől az
+elvtől eltér a kettős tengelykapcsolós váltó, amely fogaskerékpárokat és
+két tengelykapcsolót használ, illetve a CVT, amely kúptárcsákkal és
+húzóelemével tűnik fel.</p>
+<figure>
+<img src="assets/au081-diagram-1.png"
+alt="Nyomatékút hagyományos automata váltóban, D1 fokozatban (szemléltető) - Általános, leegyszerűsített vázlat; a konkrét bolygómű-kapcsolás és a működtetett elemek a gyártói rajz szerint ellenőrizendők." />
+<figcaption aria-hidden="true">Nyomatékút hagyományos automata váltóban,
+D1 fokozatban (szemléltető) - Általános, leegyszerűsített vázlat; a
+konkrét bolygómű-kapcsolás és a működtetett elemek a gyártói rajz
+szerint ellenőrizendők.</figcaption>
+</figure>
+<p>Az ábra a nyomatékút lépéseit mutatja D1-ben. A nyíl mentén
+haladhatunk: a motor a nyomatékváltó szivattyúkerekét hajtja, az olaj a
+turbinát forgatja, az olajnyomás zárja a C1 tengelykapcsolót, a bolygómű
+gyűrűkereke behajtott elem lesz, a napkerék a szabadonfutón támaszkodik,
+így a bolygóműtartó hajtja tovább a kimenő tengelyt. Az R helyzetet
+ugyanezzel a módszerrel, de más elemek működtetésével tanuljuk meg.</p>
+<h3 data-number="22.4.3" id="definíciók-és-alapfogalmak"><span
+class="header-section-number">22.4.3</span> Definíciók és
+alapfogalmak</h3>
+<p><strong>Definíció. (hagyományos automata váltó)</strong> Olyan
+többfokozatú sebességváltó, amely a fokozatokat bolygóművekkel, nedves
+lemezes tengelykapcsolókkal, lemezes fékekkel és/vagy szalagfékkel
+valósítja meg, indítóelemként pedig hidrodinamikus nyomatékváltót
+használ. A fokozatok kapcsolását hidraulikus vagy elektrohidraulikus
+vezérlés végzi.</p>
+<p><strong>Definíció. (kettős tengelykapcsolós váltó,
+DSG-típus)</strong> Olyan automatizált sebességváltó, amely két
+részhajtóművet és két tengelykapcsolót tartalmaz: az egyik
+tengelykapcsoló a páratlan fokozatokat (1., 3., 5.), a másik a páros
+fokozatokat (2., 4., 6.) hajtja. A következő fokozat előválasztott
+állapotban vár, így a váltás nagyon gyors és megszakításmentesnek
+érződik. A „DSG” egy típusnév; általánosan kettős tengelykapcsolós,
+automatizált kézi váltónak nevezzük.</p>
+<p><strong>Definíció. (fokozatmentes váltó, CVT)</strong> Olyan
+sebességváltó, amelynek áttétele egy tartományon belül folyamatosan,
+fokozatok nélkül változtatható. A leggyakoribb személygépkocsi-változat
+két, egymással szemben álló kúpos tárcsapárból és egy húzóelemből
+(szalagból vagy láncból) áll.</p>
+<p><strong>Definíció. (ATF-váltóolaj)</strong> Az automata
+sebességváltókhoz való hidraulika- és kenőolajok gyűjtőneve (automatic
+transmission fluid). Nem helyettesíthető egyszerű motorolajjal, és a
+CVT-hez, illetve a kettős tengelykapcsolós váltóhoz külön engedélyezett
+olajtípus kell.</p>
+<h3 data-number="22.4.4" id="felépítés-és-működés"><span
+class="header-section-number">22.4.4</span> Felépítés és működés</h3>
+<h4 data-number="22.4.4.1"
+id="a-hagyományos-automata-váltó-részegységei"><span
+class="header-section-number">22.4.4.1</span> A hagyományos automata
+váltó részegységei</h4>
+<p>A hagyományos automata váltó legfontosabb egységei:</p>
+<ol type="1">
+<li><strong>Hidrodinamikus nyomatékváltó</strong> – áthidaló
+tengelykapcsolóval; indításkor és kis sebességnél nyomatéknövelést és
+csillapítást ad, egyenletes haladáskor a belső áthidaló tengelykapcsoló
+merev kapcsolatot hoz létre, hogy csökkenjen a szlip és a
+fogyasztás.</li>
+<li><strong>Olajszivattyú</strong> – a váltóolajat nyomás alá helyezi;
+rendszerint közvetlenül a nyomatékváltó házából kapja a meghajtást.</li>
+<li><strong>Bolygómű-készlet</strong> – a fokozatok mechanikus áttételét
+adja. A leggyakrabban egy <strong>Simpson-</strong> vagy
+<strong>Ravigneaux-felépítésű</strong> rendszert, esetleg több, egymás
+után kapcsolt bolygóművet használnak. Az egyes elemek (napkerék,
+gyűrűkerék, bolygóműtartó) attól függően hajtanak, állnak vagy
+támaszkodnak, hogy melyik tengelykapcsoló vagy fék zár.</li>
+<li><strong>Nedves lemezes tengelykapcsolók és fékek</strong> – olajban
+futó acél- és súrlódó lemezkötegek; hidraulikus dugattyú szorítja őket
+össze. A tengelykapcsolók két forgó elemet kötnek össze, a fékek egy
+forgó elemet a házhoz rögzítenek.</li>
+<li><strong>Szalagfék</strong> – a házon vagy egy rögzített támaszon
+elhelyezkedő, dobot körbefogó acélszalag; hidraulikus munkahenger
+feszíti meg, ezáltal a dobot és a vele kapcsolt bolygóműelemet lefékezi,
+illetve rögzíti.</li>
+<li><strong>Hidraulikus vezérlőegység (szelepblokk)</strong> –
+olajcsatornákat, váltószelepeket, elektrohidraulikus mágnesszelepeket és
+nyomásszabályzókat tartalmaz; a vezérlőelektronika jelére olajnyomást
+irányít a tengelykapcsolókba, fékekbe, illetve a kúptárcsákhoz.</li>
+<li><strong>Váltóvezérlő elektronika (TCM)</strong> – a motorvezérlőhöz
+hasonlóan szenzorokból (bemenő fordulatszám, váltó kimenő fordulatszáma,
+olajhőmérséklet, gázpedálállás, választókar-helyzet) dönt a váltási
+pontokról és a váltóolajnyomásról.</li>
+</ol>
+<figure id="fig-au081-2">
+<div class="fig-interactive"><iframe src="figures/html/au081-2.html" title="Hagyományos automata váltó részegységei; lemezes tengelykapcsoló és szalagfék működése." loading="lazy" style="width:100%;border:0;height:600px"></iframe><noscript><img src="figures/img/au081-2.png" style="width:95.0%"
+alt="Hagyományos automata váltó részegységei; lemezes tengelykapcsoló és szalagfék működése." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au081-2.png" style="width:95.0%"
+alt="Hagyományos automata váltó részegységei; lemezes tengelykapcsoló és szalagfék működése." /></details></div>
+<figcaption>A hagyományos automata váltó részegységei, a lemezköteg
+nyitva és zárva, valamint a szalagfék</figcaption>
+</figure>
+<p>Az ábra számozása a fenti felsorolást követi. Az alsó részletek a két
+kapcsolóelem működését mutatják: a lemezkötegben az olajnyomás a
+dugattyút a váltakozó acél- és súrlódó lemezekre nyomja (zárva a két
+elem együtt forog, nyitva a visszahúzó rugó oldja), a szalagféknél a
+munkahenger a dobot körülfogó szalagot feszíti meg, és a dob a házhoz
+fékeződik. A HTML-változatban rámutatásra a részegység neve és szerepe
+jelenik meg.</p>
+<h4 data-number="22.4.4.2" id="választókar-helyzetek"><span
+class="header-section-number">22.4.4.2</span> Választókar-helyzetek</h4>
+<p>A szokásos helyzetek és feladataik:</p>
+<ul>
+<li><strong>P (parking)</strong> – a váltó kimenő tengelyét mechanikus
+retesz rögzíti; a jármű nem gurulhat. A P-helyzetet a fékpedál lenyomása
+nélkül nem szabad ki- vagy bekapcsolni; a P-retesz terhelését el kell
+kerülni.</li>
+<li><strong>R (reverse)</strong> – a kimenő forgásirány megfordul.</li>
+<li><strong>N (neutral)</strong> – a hajtáslanc megszakad, a kimenő
+tengely szabadon foroghat; a kerékhez való hajtás nincs.</li>
+<li><strong>D (drive)</strong> – automatikus előremenet, minden
+előremeneti fokozat használható.</li>
+<li><strong>S (sport), M (manual) vagy +/-</strong> – késleltetett
+felváltás, illetve kézi fokozatválasztás alapon; a valós váltást mégis a
+váltóvezérlő szabályozza, védve a motort és a hajtóművet.</li>
+</ul>
+<h4 data-number="22.4.4.3" id="nyomatékút-d1-és-r-helyzetben"><span
+class="header-section-number">22.4.4.3</span> Nyomatékút D1 és R
+helyzetben</h4>
+<p>A <strong>D1</strong> előremeneti fokozatban a motor a nyomatékváltón
+keresztül hajtja a bemenő tengelyt. A hidraulikus vezérlés zárja a
+<strong>C1 lemezes tengelykapcsolót</strong>, amely a bemenő tengelyt a
+bolygómű <strong>gyűrűkerekével</strong> köti össze. A
+<strong>napkereket</strong> a szabadonfutó (F1) vagy egy lemezes fék a
+házhoz támasztja. A bolygóműtartó így a gyűrűnél lassabban, de nagyobb
+nyomatékkal forog, és a kimenő tengelyt hajtja. A szabadonfutó miatt
+D1-ben motorfékhatás alig van: ha a jármű gyorsabban forog, mint a
+hajtás, a szabadonfutó kiold, és a hajtás nem fékez.</p>
+<p>Az <strong>R</strong> helyzetben a vezérlés általában egy másik
+lemezes tengelykapcsolót (C2 vagy C3) és egy lemezes féket vagy
+szalagféket (B2/B3) működtet. A pontos kapcsolás típusfüggő, de a logika
+mindig az: a bolygómű egyik eleme behajtott, a másik rögzített, a
+harmadik kimenet, és a kapcsolat iránya úgy alakul, hogy a kimenő
+tengely az előremenetthez képest <strong>ellenkező irányba</strong>
+forog. A hátramenetet a váltóvezérlő csak kis sebességnél engedi, a
+védelmi logika ezt figyeli.</p>
+<h4 data-number="22.4.4.4"
+id="elektronikus-váltóvezérlés-és-vészüzem"><span
+class="header-section-number">22.4.4.4</span> Elektronikus váltóvezérlés
+és vészüzem</h4>
+<p>A modern automata váltóban a hidraulikus szelepblokk már nem
+mechanikusan, hanem <strong>elektrohidraulikus
+mágnesszelepekkel</strong> épül fel. A TCM szenzorjelekből kiszámítja a
+kívánt fokozatot, a nyomásmódosítást és a váltási időt. A váltó
+<strong>adaptációt</strong> is tanul: a lemezes tengelykapcsolók
+kopását, a váltási időket és a nyomásigényt korrigálja. Ha a rendszer
+alapvető hibát észlel, <strong>vészüzembe</strong> kapcsol: egy vagy
+néhány rögzített fokozatot tart fenn (típusfüggő), és a hibát
+műszerfalon jelzi, illetve tárolja. Ilyenkor a probléma kiolvasásához
+rendszerteszter kell, mert a vészüzem nem a váltó „megjavulásáig” tart,
+hanem addig, amíg a hibát föl nem derítik.</p>
+<h4 data-number="22.4.4.5"
+id="kettős-tengelykapcsolós-váltó-dsg-típus-és-automatizált-kézi-váltó"><span
+class="header-section-number">22.4.4.5</span> Kettős tengelykapcsolós
+váltó (DSG-típus) és automatizált kézi váltó</h4>
+<p>A kettős tengelykapcsolós váltóban nincs nyomatékváltó és nincs
+bolygómű. Két, egymás melletti fogaskerékpár-csoport található benne,
+mint egy kézi váltóban. Az 1., 3., 5. fokozat és a hátramenet az egyik
+tengelykapcsolóhoz, a 2., 4., 6. fokozat a másikhoz tartozik. Amikor a
+jármű egyes fokozatban halad, a kettes fokozat már be van kapcsolva, de
+a hozzá tartozó tengelykapcsoló még nyitva. Váltáskor a vezérlő az egyik
+tengelykapcsolót zárja, a másikat egyszerre nyitja. Ezért a váltás
+gyors, a vonóerő-megszakítás rövid.</p>
+<p>A tengelykapcsolók lehetnek <strong>nedves</strong> (olajban futó)
+vagy <strong>száraz</strong> kivitelűek; a pontos kivitel gyártótól
+függ. A váltást egy <strong>mechatronikai egység</strong> vezérli, amely
+a hidraulikus munkahengereket, mágnesszelepeket és az elektronikát
+egyesíti. A DSG-típusú váltó is rendelkezik adaptációval; a kuplungok
+kopását és az érintkezési pontot újra kell tanultatni bizonyos javítások
+után. Az <strong>automatizált kézi váltó (AMT)</strong> a régebbi,
+egyszerűbb megoldás: hagyományos kézi váltót villamos vagy hidraulikus
+állítómű működtet, de váltáskor érezhetőbb a vonóerő-megszakadás, és a
+komfortja szerényebb.</p>
+<h4 data-number="22.4.4.6" id="fokozatmentes-váltó-cvt"><span
+class="header-section-number">22.4.4.6</span> Fokozatmentes váltó
+(CVT)</h4>
+<p>A CVT központi eleme két <strong>kúptárcsapár</strong> és egy
+<strong>tolóelem</strong> (szalag vagy lánc). Mindegyik tárcsapár egyik
+fele tengelyirányban elmozdulhat, így a húzóelem futósugara
+kisebb-nagyobb lesz. Ha a motoroldali tárcsa futósugara kicsi, a
+kerékoldalié nagy, az áttétel lassító; ha a motoroldali futósugár nagy,
+a kerékoldali kicsi, az áttétel gyorsító. A tárcsák szorítóerejét a
+váltóvezérlő hidraulikusan szabályozza, hogy a húzóelem ne csússzon meg.
+A CVT előnye, hogy a motor fordulatszámát közel állandó, optimális üzemi
+tartományban tarthatja, miközben a jármű gyorsul. A látszólagos
+„megcsúszás” elkerülését a tárcsanyomás vezérlés és a kopásellenőrzés
+szolgálja.</p>
+<figure id="fig-au081-1">
+<div class="fig-interactive"><iframe src="figures/html/au081-1.html" title="CVT kúptárcsapárok két szélső áttételi helyzetben; kettős tengelykapcsolós váltó két részváltóval és a tengelykapcsolók átfedő váltásával." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au081-1.png" style="width:100.0%"
+alt="CVT kúptárcsapárok két szélső áttételi helyzetben; kettős tengelykapcsolós váltó két részváltóval és a tengelykapcsolók átfedő váltásával." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au081-1.png" style="width:100.0%"
+alt="CVT kúptárcsapárok két szélső áttételi helyzetben; kettős tengelykapcsolós váltó két részváltóval és a tengelykapcsolók átfedő váltásával." /></details></div>
+<figcaption>CVT kúptárcsapárok két szélső áttételnél és a kettős
+tengelykapcsolós váltó átfedő váltása</figcaption>
+</figure>
+<p>Az ábra bal oldalán a CVT áttétele
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><msub><mi>r</mi><mn>2</mn></msub><mi>/</mi><msub><mi>r</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">i = r_2/r_1</annotation></semantics></math>:
+indításkor a motoroldali futósugár kicsi
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>2</mn><mo>,</mo><mn>35</mn></mrow><annotation encoding="application/x-tex">i = 2{,}35</annotation></semantics></math>),
+nagy sebességnél nagy
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>42</mn></mrow><annotation encoding="application/x-tex">i = 0{,}42</annotation></semantics></math>);
+a 2. példa adataival 1800 1/min mellett a kimenő fordulatszám 766,
+illetve kb. 4290 1/min. A tolószalag tolóelem, a lánc húzóelem. A jobb
+oldalon a kettős tengelykapcsolós váltó két részváltója látható: 1.
+fokozatban K1 zár, a 2. fokozat már előválasztva vár; váltáskor K1 nyit,
+K2 zár, a két tengelykapcsoló nyomatéka rövid ideig átfed, így a vonóerő
+nem szakad meg. A HTML-változatban a CVT-áttétel csúszkával állítható, a
+DSG fázisai menüből választhatók.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Szempont</th>
+<th>Hagyományos automata</th>
+<th>Kettős tengelykapcsolós (DSG-típus)</th>
+<th>CVT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Indítóelem</td>
+<td>nyomatékváltó</td>
+<td>száraz vagy nedves tengelykapcsoló</td>
+<td>nyomatékváltó vagy tengelykapcsoló</td>
+</tr>
+<tr>
+<td>Áttételképzés</td>
+<td>bolygóművek</td>
+<td>fogaskerékpárok két részváltóban</td>
+<td>kúptárcsák és tolószalag vagy lánc</td>
+</tr>
+<tr>
+<td>Váltás</td>
+<td>tengelykapcsoló–fék átfedéssel</td>
+<td>két tengelykapcsoló átfedéssel</td>
+<td>fokozatmentes</td>
+</tr>
+<tr>
+<td>Komfort</td>
+<td>nagyon egyenletes</td>
+<td>gyors, szinte megszakításmentes</td>
+<td>fokozatmentes, egyenletes</td>
+</tr>
+<tr>
+<td>Hatásfok (tájékoztató, ellenőrizendő)</td>
+<td>a nyomatékváltó vesztesége rontja</td>
+<td>jobb</td>
+<td>jó, de a tárcsanyomás veszteséget okoz</td>
+</tr>
+<tr>
+<td>Olaj</td>
+<td>ATF</td>
+<td>DSG-specifikáció; száraz kivitelnél külön hajtóműolaj és
+hidraulikaolaj</td>
+<td>CVT-olaj</td>
+</tr>
+<tr>
+<td>Jellemző hibák</td>
+<td>váltási csúszás, vészüzem</td>
+<td>mechatronika, tengelykapcsoló-adaptáció</td>
+<td>szalag/lánc kopása, csúszás</td>
+</tr>
+<tr>
+<td>Szervizteendő</td>
+<td>olajcsere, adaptáció</td>
+<td>adaptáció, szoftver</td>
+<td>csak gyártói CVT-olaj, kopásellenőrzés</td>
+</tr>
+</tbody>
+</table>
+<p>Az összehasonlító táblázat értékei tanulási példák (ellenőrizendő:
+gyártói adat).</p>
+<p><strong>Továbbvitt eredmény.</strong> A hagyományos automata váltó
+nyomatékváltós, bolygóműves és hidraulikus felépítése, a DSG
+fogaskerékpáros, kettős tengelykapcsolós rendszere és a CVT folytonos
+áttétele a hibrid és elektromos hajtásoknál (<a href="au117.html">Hibrid
+és elektromos hajtások áttekintése</a>) sokszor visszaköszön; az e-CVT
+és a hibrid hajtásmodul működése ezekből az alapokból érthető meg.
+Ugyanezt a hármas felosztást használjuk az automata váltók szervizelése,
+olajcseréje és javítása során (<a href="au149.html">Tengelykapcsoló,
+nyomatékváltó és automata váltó szerelése, olajcsere</a>), mert minden
+típusnak eltérő az olajtöltete, a légtelenítése, az adaptációja és a
+biztonsági ellenőrzése.</p>
+<h3 data-number="22.4.5" id="kidolgozott-példák"><span
+class="header-section-number">22.4.5</span> Kidolgozott példák</h3>
+<p><strong>1. példa – Bolygómű-áttétel D1 fokozatban.</strong> Egy
+egyszerű tanulási bolygóműben a napkerék fogszáma
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>s</mi></msub><mo>=</mo><mn>30</mn></mrow><annotation encoding="application/x-tex">z_s=30</annotation></semantics></math>,
+a gyűrűkerék fogszáma
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>g</mi></msub><mo>=</mo><mn>72</mn></mrow><annotation encoding="application/x-tex">z_g=72</annotation></semantics></math>,
+így
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>i</mi><mn>0</mn></msub><mo>=</mo><msub><mi>z</mi><mi>g</mi></msub><mi>/</mi><msub><mi>z</mi><mi>s</mi></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">i_0=z_g/z_s=2{,}4</annotation></semantics></math>.
+D1-ben a gyűrűkerék behajtott, a napkerék a szabadonfutóval rögzített, a
+bolygóműtartó a kimenet. Mekkora a bolygómű fokozati áttétele?</p>
+<p>Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>s</mi></msub><mo>=</mo><mn>30</mn></mrow><annotation encoding="application/x-tex">z_s=30</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>g</mi></msub><mo>=</mo><mn>72</mn></mrow><annotation encoding="application/x-tex">z_g=72</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>i</mi><mn>0</mn></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">i_0=2{,}4</annotation></semantics></math>.
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>i</mi><mtext mathvariant="normal">D1</mtext></msub><annotation encoding="application/x-tex">i_{\text{D1}}</annotation></semantics></math>.</p>
+<p>Képlet (a <a href="au080.html">Bolygóművek és a hidrodinamikus
+nyomatékváltó</a> alfejezet táblázatának 3. sora: napkerék rögzített,
+gyűrűkerék hajt, tartó hajtott):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mstyle displaystyle="true"><mfrac><msub><mi>n</mi><mtext mathvariant="normal">gyűrű</mtext></msub><msub><mi>n</mi><mtext mathvariant="normal">tartó</mtext></msub></mfrac></mstyle><mo>=</mo><mn>1</mn><mo>+</mo><mstyle displaystyle="true"><mfrac><mn>1</mn><msub><mi>i</mi><mn>0</mn></msub></mfrac></mstyle></mrow><annotation encoding="application/x-tex">i=\dfrac{n_{\text{gyűrű}}}{n_{\text{tartó}}}=1+\dfrac{1}{i_0}</annotation></semantics></math>.</p>
+<p>Behelyettesítés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mo>,</mo><mn>4</mn></mrow></mfrac><mo>=</mo><mn>1</mn><mo>+</mo><mn>0</mn><mo>,</mo><mn>4167</mn><mo>=</mo><mn>1</mn><mo>,</mo><mn>417</mn><mo>≈</mo><mn>1</mn><mo>,</mo><mn>42</mn></mrow><annotation encoding="application/x-tex">i=1+\frac{1}{2{,}4}=1+0{,}4167=1{,}417\approx1{,}42</annotation></semantics></math>.</p>
+<p>Ellenőrzés: a tartó lassabban forog, mint a gyűrű, ezért az áttétel
+nagyobb 1-nél. A teljes váltó teljes első fokozati áttétele a további
+bolygóművek és a végáttétel miatt ennél nagyobb is lehet (jellemzően
+2,5–4 között; gyártói adat – ellenőrizendő). ∎</p>
+<p><strong>2. példa – CVT kimenő fordulatszám-számítás.</strong> Egy CVT
+áttételtartománya
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>i</mi><mi>max</mi></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>35</mn></mrow><annotation encoding="application/x-tex">i_{\max}=2{,}35</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>i</mi><mi>min</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>42</mn></mrow><annotation encoding="application/x-tex">i_{\min}=0{,}42</annotation></semantics></math>.
+A motor fordulatszáma mindkét helyzetben
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1800</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">1800\ \text{1/min}</annotation></semantics></math>.
+Mekkora a váltó kimenő fordulatszáma a két szélső helyzetben?</p>
+<p>Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">motor</mtext></msub><mo>=</mo><mn>1800</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n_{\text{motor}}=1800\ \text{1/min}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>i</mi><mi>max</mi></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>35</mn></mrow><annotation encoding="application/x-tex">i_{\max}=2{,}35</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>i</mi><mi>min</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>42</mn></mrow><annotation encoding="application/x-tex">i_{\min}=0{,}42</annotation></semantics></math>.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">ki,max</mtext></msub><mo>=</mo><mstyle displaystyle="true"><mfrac><msub><mi>n</mi><mtext mathvariant="normal">motor</mtext></msub><msub><mi>i</mi><mi>max</mi></msub></mfrac></mstyle><mo>=</mo><mstyle displaystyle="true"><mfrac><mn>1800</mn><mrow><mn>2</mn><mo>,</mo><mn>35</mn></mrow></mfrac></mstyle><mo>=</mo><mn>765</mn><mo>,</mo><mn>96</mn><mo>≈</mo><mn>766</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n_{\text{ki,max}}= \dfrac{n_{\text{motor}}}{i_{\max}} = \dfrac{1800}{2{,}35}=765{,}96\approx766\ \text{1/min}</annotation></semantics></math>.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">ki,min</mtext></msub><mo>=</mo><mstyle displaystyle="true"><mfrac><msub><mi>n</mi><mtext mathvariant="normal">motor</mtext></msub><msub><mi>i</mi><mi>min</mi></msub></mfrac></mstyle><mo>=</mo><mstyle displaystyle="true"><mfrac><mn>1800</mn><mrow><mn>0</mn><mo>,</mo><mn>42</mn></mrow></mfrac></mstyle><mo>=</mo><mn>4285</mn><mo>,</mo><mn>7</mn><mo>≈</mo><mn>4290</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n_{\text{ki,min}}= \dfrac{n_{\text{motor}}}{i_{\min}} = \dfrac{1800}{0{,}42}=4285{,}7\approx4290\ \text{1/min}</annotation></semantics></math>.</p>
+<p>Ellenőrzés: nagy áttételnél a kimenő fordulatszám kicsi (indulás,
+lassú haladás), kis áttételnél nagy (nagyobb sebesség). A két érték
+nagyságrendje reális. ∎</p>
+<p><strong>Hibás példa.</strong> Ha a CVT-be hagyományos ATF-et
+töltenek, a szíj vagy lánc a tárcsákon megcsúszhat, mert a CVT-olajnak
+speciális fém-súrlódást szabályozó adaléka van. A hibát sokan csak
+később veszik észre, amikor a váltó már állandóan csúszik.
+<strong>Helyes gyakorlat:</strong> csak a gyártói engedély szerinti
+CVT-olajat használni.</p>
+<h3 data-number="22.4.6" id="minőségellenőrzés"><span
+class="header-section-number">22.4.6</span> Minőségellenőrzés</h3>
+<p>Ellenőrzőlista váltóvizsgálathoz:</p>
+<ul>
+<li><strong>Olajszint:</strong> a gyártói eljárás szerint – jellemzően
+járó motornál, vízszintes járművön, a választókart minden helyzeten
+végigléptetve, majd P-ben, a rendszerteszterrel figyelt, gyártó által
+előírt olajhőmérsékleti ablakban (típusonként eltér, pl. 35–45 °C vagy
+magasabb – ellenőrizendő). Túlfolyó csavaros váltónál a csavart járó
+motornál, emelőn álló járművön nyitjuk. <strong>Figyelem:</strong> zárt
+térben kipufogógáz-elszívás kell; forgó féltengely/kardán és forró
+kipufogó közelében laza ruha, kéz nem lehet; a jármű az emelőn rögzítve
+legyen.</li>
+<li><strong>Olaj állapota:</strong> szín (fáradt, égett), szag, esetleg
+fémrészecskék a leeresztőmágnesen. A sötét, égett szag rendszerint hő-
+vagy szerkezeti károsodást jelez.</li>
+<li><strong>Választókar-retesz:</strong> P-ből csak fékpedállal,
+terheletlen kerekekkel kivehető; a retesz rendben tart.</li>
+<li><strong>Hibakód és adaptációk:</strong> rendszerteszterrel a
+váltóvezérlő hibakódjait, élő adatait és adaptációs értékeit
+kiolvassuk.</li>
+<li><strong>Vezetékek és csatlakozók:</strong> a váltó külső
+kábelkötege, a választókar-érzékelő és a hőmérséklet-jeladó épsége.</li>
+<li><strong>Emelés:</strong> a jármű alatti munkánál a gyártói emelési
+pontok vagy bakok használata kötelező; kocsiemelővel tartott jármű alá
+bemenni <strong>tilos</strong>.</li>
+</ul>
+<p><strong>Figyelem.</strong> A kileeresztett váltóolaj forró lehet, és
+a váltóház alsó lemeze éles peremű. Viselj védőszemüveget, hosszú szárú
+védőkesztyűt, és az olajat megfelelő gyűjtőedénybe engedd le.</p>
+<p><strong>Környezetvédelem.</strong> A használt váltóolaj veszélyes
+hulladék; zárható, felcímkézett edényben kell gyűjteni, és engedéllyel
+rendelkező hulladékkezelőnek kell átadni. A műhelyben a kiöntött olajat
+tilos a csatornába engedni.</p>
+<h3 data-number="22.4.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">22.4.7</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Eset: DSG-típusú váltó hidegen rángat.</strong> Az ügyfél azt
+panaszolja, hogy az autó hidegen, induláskor rángat, melegen viszont jól
+viselkedik. A kiolvasás során a váltó vezérlőjében nincs hibakód. Az élő
+adatok között az akkumulátorfeszültség, a választókar-helyzet és a
+váltóolaj-hőmérséklet reális értéket mutat. A szerelő megvizsgálja a
+váltótartó rögzítését, külső csatlakozóit, majd elvégzi a kettős
+tengelykapcsoló mechatronikai adaptációját és szükség szerint a gyártói
+szoftverfrissítést. A javítás után hidegen próbaúton ellenőrzi, hogy a
+váltás ismét lágy, a tengelykapcsoló nem rángat. A hibát az okozta, hogy
+a kopás és a hőfokfüggő súrlódási jellemzők miatt a kuplung adaptációja
+eltért az ideálistól; a szoftveres korrekció és az újratanítás
+megszüntette a panaszt.</p>
+<h3 data-number="22.4.8" id="tipikus-hibák"><span
+class="header-section-number">22.4.8</span> Tipikus hibák</h3>
+<ul>
+<li><strong>ATF, DSG-olaj és CVT-olaj összekeverése.</strong> A
+„mindegy, hogy automata váltóba való” hozzáállás súlyos csúszást és
+mechatronikai károkat okoz. Mindig a gyártói specifikációjú olajat kell
+használni.</li>
+<li><strong>P-helyzetből erővel, fékpedál nélkül kihúzva a
+kart.</strong> A mechanikus retesz és a választókar-érzékelő sérülhet;
+emelkedőn a váltó mechanikusan megfeszül.</li>
+<li><strong>CVT megcsúszását gázadagolással próbálják
+megszüntetni.</strong> A pörgő motor és alig gyorsuló jármű tovább
+növeli a húzóelem és a tárcsák kopását; azonnal le kell állni a
+hibakeresésig.</li>
+<li><strong>Vészüzemet figyelmen kívül hagyva tovább használják az
+autót.</strong> A vészüzem csak egy vagy néhány fokozatot őriz; a jármű
+tovább használata a váltót és a motorirányítást is károsíthatja.</li>
+<li><strong>A DSG-t bolygóműves automataként szervizelik.</strong> A
+kettős tengelykapcsolós váltóban nincs nyomatékváltó; olajcsere és
+légtelenítés szempontjából teljesen más eljárás kell.</li>
+</ul>
+<h3 data-number="22.4.9" id="önellenőrzés"><span
+class="header-section-number">22.4.9</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A kettős tengelykapcsolós váltó hidrodinamikus
+nyomatékváltót használ.</li>
+<li>Mi a különbség a lemezes tengelykapcsoló és a lemezes fék között az
+automata váltóban?</li>
+<li>Miért kicsi a motorfékhatás D1 fokozatban, ha szabadonfutó rögzíti a
+napkereket?</li>
+<li>Mi a szalagfék feladata az automata váltóban?</li>
+<li>Miért nem szabad hagyományos ATF-et tölteni CVT-váltóba?</li>
+</ol>
+<h3 data-number="22.4.10" id="feladatok"><span
+class="header-section-number">22.4.10</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Határozd meg röviden: hagyományos
+automata váltó, DSG-típusú váltó, CVT-váltó.</p>
+<p><strong>2. feladat (A)</strong> Sorold fel a hagyományos automata
+váltó főbb szerkezeti egységeit.</p>
+<p><strong>3. feladat (B)</strong> Egy CVT áttétele folyamatosan
+változik. Adott: a motor fordulatszáma
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2500</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">2500\ \text{1/min}</annotation></semantics></math>,
+az aktuális áttétel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">1{,}8</annotation></semantics></math>.
+Mekkora a váltó kimenő fordulatszáma?</p>
+<p><strong>4. feladat (B)</strong> Ábrázold szavakkal az R helyzetű
+nyomatékutat a hagyományos automata váltóban. Mely elemek vehetnek részt
+a hátramenetben?</p>
+<p><strong>5. feladat (C)</strong> Hasonlítsd össze a hagyományos
+automata váltót, a DSG-típusú váltót és a CVT-t a komfort, a hatásfok, a
+váltás megszakításmentessége és a jellemző hiba szempontjából.</p>
+<p><strong>6. feladat (D)</strong> Egy DSG-szervizben a jármű néha nem
+tud elindulni, a motor pörög, de a váltó nem viszi át a nyomatékot. A
+kiolvasott adatok: hibakód nincs, az olajszint rendben, az akkumulátor
+feszültsége 12,4 V, a tengelykapcsoló-adaptáció már több éve nem volt
+frissítve. Mi a legvalószínűbb hipotézis, és milyen első teendőt
+javasolsz?</p>
+<h3 data-number="22.4.11" id="megoldások"><span
+class="header-section-number">22.4.11</span> Megoldások</h3>
+<h4 data-number="22.4.11.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">22.4.11.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li><strong>Hamis.</strong> A DSG-típusú váltó két tengelykapcsolót és
+fogaskerékpárokat használ, nem nyomatékváltót.</li>
+<li>A lemezes tengelykapcsoló két forgó elemet köt össze, a lemezes fék
+egy forgó elemet a házhoz rögzít.</li>
+<li>D1-ben a szabadonfutó a napkereket a házhoz támasztja, de motorfék
+esetén a hajtás iránya feloldódik; a kimenet a hajtást nem fékezi
+vissza.</li>
+<li>A szalagfék egy külső dobot szorít le, és rögzíti a vele kapcsolt
+bolygóműelemet; hátramenetben vagy egyes fokozatokban lehet
+reakcióelem.</li>
+<li>A CVT-olaj speciális fém-súrlódást szabályozó adalékokat tartalmaz;
+a hagyományos ATF nem biztosítja a húzóelem szükséges tapadását, a
+szalag/lánc megcsúszhat.</li>
+</ol>
+<h4 data-number="22.4.11.2" id="feladatok-megoldása"><span
+class="header-section-number">22.4.11.2</span> Feladatok megoldása</h4>
+<ol type="1">
+<li><strong>1. feladat.</strong> Hagyományos automata: hidrodinamikus
+nyomatékváltó + bolygómű + hidraulikus/elektrohidraulikus vezérlés. DSG:
+két tengelykapcsoló + két fogaskerék-csoport + mechatronika. CVT:
+kúptárcsák + húzóelem, folyamatos áttétel.</li>
+<li><strong>2. feladat.</strong> Nyomatékváltó, olajszivattyú,
+bolygómű-készlet, nedves lemezes tengelykapcsolók/fékek, szalagfék,
+hidraulikus szelepblokk, váltóvezérlő elektronika,
+választókar-retesz.</li>
+<li><strong>3. feladat.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mstyle displaystyle="true"><mfrac><msub><mi>n</mi><mtext mathvariant="normal">motor</mtext></msub><mi>i</mi></mfrac></mstyle><mo>=</mo><mstyle displaystyle="true"><mfrac><mn>2500</mn><mrow><mn>1</mn><mo>,</mo><mn>8</mn></mrow></mfrac></mstyle><mo>=</mo><mn>1388</mn><mo>,</mo><mn>9</mn><mo>≈</mo><mn>1389</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n_{\text{ki}} = \dfrac{n_{\text{motor}}}{i} = \dfrac{2500}{1{,}8}=1388{,}9\approx1389\ \text{1/min}</annotation></semantics></math>.
+Az áttétel 1-nél nagyobb, tehát a kimenet lassabban forog, a nyomaték
+nagyobb.</li>
+<li><strong>4. feladat.</strong> Az R helyzetben a váltóvezérlő a
+hidraulikus blokkon keresztül zár egy lemezes tengelykapcsolót, amely a
+bemenő hajtást a bolygómű egyik elemére viszi (pl. napkerékre vagy a
+második bolygóműre), majd egy lemezes fék vagy szalagfék rögzíti a
+reakcióelemet (pl. a bolygóműtartót). A kimenet ekkor ellenkező irányba
+forog, mint előremenetben.</li>
+<li><strong>5. feladat.</strong> A táblázat szerint: a hagyományos
+automata nagyon egyenletes, de a nyomatékváltó vesztesége rontja a
+hatásfokot; típushibája a váltási csúszás és a vészüzem. A DSG gyors,
+szinte megszakításmentes, hatásfoka jobb, de a mechatronika és a
+tengelykapcsoló-adaptáció érzékeny. A CVT fokozatmentes, egyenletes
+menetérzetet ad, de a húzóelem megcsúszása komoly kockázat.</li>
+<li><strong>6. feladat.</strong> A tünet, hogy a motor pörög, de a
+nyomaték nem jut el a kerekekhez, a tengelykapcsoló nyomatékátvitel
+hiányára utal. Nincs hibakód, az olajszint rendben, az akkumulátor
+feszültsége nem kirívó, a legvalószínűbb a <strong>kettős
+tengelykapcsoló kopása vagy adaptációjának elavultsága</strong>, esetleg
+a mechatronikai egység nyomásproblémája. Első teendő: rendszerteszterrel
+kiolvasni a váltó adaptációs értékeit, gyártói eljárás szerint
+tengelykapcsoló-adaptációt futtatni, majd próbaút; ha ez nem oldja meg,
+a kuplungok és a mechatronika mechanikai ellenőrzése következik.</li>
+</ol>
+<h3 data-number="22.4.12" id="rövid-összefoglaló"><span
+class="header-section-number">22.4.12</span> Rövid összefoglaló</h3>
+<p>A hagyományos automata váltó hidrodinamikus nyomatékváltót,
+bolygóműveket és nedves lemezes tengelykapcsolókat, fékeket, valamint
+szalagféket használ. A fokozatok hidraulikus vagy elektrohidraulikus
+vezérléssel jönnek létre; D1-ben jellemzően a gyűrűkerék hajt, a
+napkerék a szabadonfutón támaszkodik, a tartó a kimenet. R-ben egy vagy
+több fék/tengelykapcsoló ellenkező irányú forgást állít elő. A
+választókarhelyzetek közül a P mechanikus reteszt is tartalmaz, az
+elektronika vészüzemmel védi a váltót. A kettős tengelykapcsolós váltó
+fogaskerékpárokat és két tengelykapcsolót alkalmaz; a CVT kúptárcsás,
+folyamatos áttételű. Mindegyikhez külön gyártói olajspecifikáció és
+adaptációs eljárás tartozik; ATF, DSG-olaj és CVT-olaj nem keverhető. A
+hibrid hajtások és a váltószerviz során ezt a három típust kell
+megkülönböztetni.</p>
+<h3 data-number="22.4.13" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">22.4.13</span> Források és ellenőrzési
+hiányok</h3>
+<p>A fejezet a klasszikus mechanikai és hajtástechnikai ismeretekre,
+valamint a gyártói javítási útmutatók és váltószerviz-eljárások
+általános szerkezeti mintáira épül. Nincs hivatkozott webes forrás.
+Ellenőrizendő: a konkrét fogaskerékfogszámok, bolygómű-kapcsolások,
+tengelykapcsoló- és szalagfék-elnevezések, D1/R kapcsolási logikák,
+váltóolaj-specifikációk, hőmérsékletértékek, adaptációs lépések és
+vészüzemi tulajdonságok a gyártói adat alapján. A táblázatban szereplő
+értékek tanulási példák.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au080.html">← 22.3 Bolygóművek és a hidrodinamikus nyomatékváltó</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au082.html">23.1 Kardánhajtás, csuklók és féltengelyek →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

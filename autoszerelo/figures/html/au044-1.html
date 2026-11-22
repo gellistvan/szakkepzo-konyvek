@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relé mágneses köre légréssel</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="d">Légrés δ</label><input id="d" type="range" min="0.1" max="3" step="0.05" value="2" aria-label="Légrés δ"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="I">Áram I</label><input id="I" type="range" min="0.1" max="4" step="0.05" value="2" aria-label="Áram I"><output id="I_o" for="I"></output></div>
+<div class="row"><label for="N">Menetszám N</label><input id="N" type="range" min="50" max="1000" step="10" value="300" aria-label="Menetszám N"><output id="N_o" for="N"></output></div>
+<div class="row"><label for="mur">Relatív permeabilitás μr</label><input id="mur" type="range" min="200" max="5000" step="50" value="1500" aria-label="Relatív permeabilitás μr"><output id="mur_o" for="mur"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Relé vasmagja tekerccsel, mozgó horgonnyal és légréssel, mellette az ekvivalens mágneses kör soros mágneses ellenállásokkal"></svg>
+<p class="small">Lineáris (telítés nélküli) modell, egyetlen légréssel, A = 4 cm², l_vas = 0,3 m (a fejezet példája). Kis légrésnél a kör hamar telítésbe megy; a valós erő a pólusalaktól és a szórásfluxustól is függ.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"d":"mm", "I":"A", "N":"menet", "mur":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const MU0=4e-7*Math.PI,A=4e-4,LV=0.3,d=v.d*1e-3;
+const rv=LV/(MU0*v.mur*A),rg=d/(MU0*A),th=v.N*v.I,phi=th/(rv+rg),B=phi/A,F=B*B*A/(2*MU0),share=rg/(rv+rg);
+// ekvivalens kör: két sávban a mágneses ellenállások aránya
+const X0=40,W=480;
+el("text",{x:X0,y:28,"font-size":13},"Θ = N·I = "+fmt(th,0)+" A   →   Φ = Θ/(R_m,vas + R_m,légrés)");
+el("rect",{x:X0,y:44,width:W*(1-share),height:34,fill:css("--grid"),stroke:css("--line")});
+el("rect",{x:X0+W*(1-share),y:44,width:W*share,height:34,fill:"none",stroke:css("--hl2"),"stroke-width":2});
+el("text",{x:X0+4,y:98,"font-size":12},"vas: "+fmt(rv/1e5,2)+"·10⁵ A/Wb ("+fmt((1-share)*100,0)+" %)");
+el("text",{x:X0+W,y:98,"font-size":12,"text-anchor":"end",fill:css("--hl2")},"légrés: "+fmt(rg/1e6,2)+"·10⁶ A/Wb ("+fmt(share*100,0)+" %)");
+// húzóerő–légrés görbe (azonos N, I, μr mellett)
+const GX0=60,GX1=520,GY0=125,GY1=270,dmax=3;
+const Fd=x=>{const p=th/(rv+x*1e-3/(MU0*A));const b=p/A;return b*b*A/(2*MU0);};
+const Fmax=Math.max(F*1.15,Fd(0.5));
+el("rect",{x:GX0,y:GY0,width:GX1-GX0,height:GY1-GY0,fill:"none",stroke:css("--line")});
+let p="";for(let i=0;i<=200;i++){const x=0.1+(dmax-0.1)*i/200;p+=(i?"L":"M")+(GX0+(GX1-GX0)*x/dmax).toFixed(1)+" "+(GY1-(GY1-GY0)*Math.min(Fd(x),Fmax)/Fmax).toFixed(1);}
+el("path",{d:p,fill:"none",stroke:css("--hl"),"stroke-width":2});
+el("circle",{cx:GX0+(GX1-GX0)*v.d/dmax,cy:GY1-(GY1-GY0)*F/Fmax,r:5,fill:"none",stroke:css("--bad"),"stroke-width":2});
+[0,1,2,3].forEach(x=>el("text",{x:GX0+(GX1-GX0)*x/dmax,y:GY1+15,"font-size":11,"text-anchor":"middle"},x+" mm"));
+el("text",{x:GX0-6,y:GY0+10,"font-size":11,"text-anchor":"end"},fmt(Fmax,0));el("text",{x:GX0-6,y:GY1,"font-size":11,"text-anchor":"end"},"0");
+el("text",{x:GX1-8,y:GY0+18,"font-size":12,"text-anchor":"end"},"húzóerő F (N) a légrés függvényében (a többi adat rögzített)");
+el("text",{x:(GX0+GX1)/2,y:GY1+28,"font-size":11,"text-anchor":"middle"},"légrés δ");
+status("Φ = <b>"+fmt(phi*1e3,3)+" mWb</b>, B = <b>"+fmt(B,3)+" T</b>, F = B²A/(2μ₀) ≈ <b>"+fmt(F,1)+" N</b>; a légrés a mágneses ellenállás "+fmt(share*100,0)+" %-a."+
+  (B>1.6?" <span class='bad'>B > 1,6 T: telítés – a lineáris modell itt nem érvényes.</span>":""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

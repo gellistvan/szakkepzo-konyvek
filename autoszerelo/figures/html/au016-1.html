@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kettős nyírású csapszeg</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="F">Erő F</label><input id="F" type="range" min="1" max="50" step="0.5" value="20" aria-label="Erő F"><output id="F_o" for="F"></output></div>
+<div class="row"><label for="d">Csapszeg-átmérő d</label><input id="d" type="range" min="6" max="24" step="0.5" value="12" aria-label="Csapszeg-átmérő d"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="tm">τ_meg</label><input id="tm" type="range" min="40" max="160" step="5" value="80" aria-label="τ_meg"><output id="tm_o" for="tm"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 300" role="img" aria-label="Villás vonószem csapszeggel; a csapszeg két síkban nyíródik, ezért két keresztmetszet viseli az erőt."></svg>
+<p class="small">Alapérték: a fejezet 2. példája (F = 20 kN, d = 12 mm, τ_meg = 80 MPa → τ ≈ 88,4 MPa; a fejezet a kerekített A = 226 mm²-rel 88,5 MPa-t ad). A τ_meg tanulási példaérték.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"F":"kN", "d":"mm", "tm":"MPa"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const F = v.F * 1000, d = v.d, A1 = d * d * Math.PI / 4, tau = F / (2 * A1), tm = v.tm, ok = tau <= tm;
+const dreq = Math.sqrt(4 * (F / tm / 2) / Math.PI);
+// csapszeg metszete a két nyírt síkkal
+const cx = 150, cy = 140, r = d * 3;
+el("rect", {x: cx - 120, y: cy - r, width: 240, height: 2 * r, fill: "none", stroke: css("--line"), "stroke-width": 2});
+[-25, 25].forEach(x => { el("line", {x1: cx + x, y1: cy - r - 14, x2: cx + x, y2: cy + r + 14, stroke: css("--hl2"), "stroke-width": 2.5, "stroke-dasharray": "6 4"}); });
+el("text", {x: cx, y: cy + r + 75, "font-size": 12, "text-anchor": "middle"}, "két nyírt sík (szaggatott)");
+[-75, 75].forEach(x => { el("path", {d: `M${cx + x} ${cy - r - 50} L${cx + x} ${cy - r - 4} M${cx + x - 6} ${cy - r - 14} L${cx + x} ${cy - r - 4} L${cx + x + 6} ${cy - r - 14}`, stroke: css("--line"), "stroke-width": 2.5, fill: "none"});
+  el("text", {x: cx + x + 8, y: cy - r - 30, "font-size": 12}, "F/2"); });
+el("path", {d: `M${cx} ${cy + r + 45} L${cx} ${cy + r + 4} M${cx - 6} ${cy + r + 14} L${cx} ${cy + r + 4} L${cx + 6} ${cy + r + 14}`, stroke: css("--line"), "stroke-width": 2.5, fill: "none"});
+el("text", {x: cx + 8, y: cy + r + 52, "font-size": 12}, "F");
+// feszültség-sáv
+const X0 = 330, Wd = 260, sc = Wd / 200;
+el("rect", {x: X0, y: 120, width: Wd, height: 26, fill: "none", stroke: css("--line")});
+el("rect", {x: X0, y: 120, width: Math.min(tau, 200) * sc, height: 26, fill: ok ? css("--ok") : css("--bad")});
+el("line", {x1: X0 + tm * sc, y1: 108, x2: X0 + tm * sc, y2: 158, stroke: css("--line"), "stroke-width": 3});
+el("text", {x: X0 + tm * sc, y: 102, "font-size": 12, "text-anchor": "middle"}, "τ_meg = " + fmt(tm, 0) + " MPa");
+el("text", {x: X0, y: 176, "font-size": 12}, "0"); el("text", {x: X0 + Wd, y: 176, "font-size": 12, "text-anchor": "end"}, "200 MPa");
+status(`A<sub>1</sub> = d²π/4 = <b>${fmt(A1, 1)} mm²</b>, a két nyírt sík együtt 2·A<sub>1</sub> = ${fmt(2 * A1, 1)} mm².<br>` +
+       `τ = F/(2·A<sub>1</sub>) = <b>${fmt(tau, 1)} MPa</b> → <span class="${ok ? "ok" : "bad"}">${ok ? "megfelel" : "nem felel meg"}</span> (τ<sub>meg</sub> = ${fmt(tm, 0)} MPa). ` +
+       `Szükséges átmérő: d ≥ ${fmt(dreq, 1)} mm. Egy nyírt síkkal számolva (tipikus hiba) τ = ${fmt(F / A1, 1)} MPa lenne.`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>33.1 Hibrid és elektromos hajtások áttekintése –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz8">VIII. RÉSZ – Hibrid és elektromos járművek</a> › <a href="index.html#auch32">33 Hibrid és elektromos hajtás</a></p>
+<div class="links"><a class="prev" rel="prev" href="au116.html">← 32.3 Vezetőtámogató rendszerek és kalibrálásuk</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au118.html">33.2 A nagyfeszültségű akkumulátor és az akkumulátor-felügyelet (BMS) →</a></div>
+</nav>
+<h2 data-number="33.1" id="au117"><span
+class="header-section-number">33.1</span> Hibrid és elektromos hajtások
+áttekintése</h2>
+<h3 data-number="33.1.1" id="motiváció"><span
+class="header-section-number">33.1.1</span> Motiváció</h3>
+<p>A szervizbe érkezik egy jármű, amelynek a csomagtartójában
+narancssárga kábelkötegek futnak, a motorháztető alatt pedig a
+benzinmotor mellett egy villamos gép is van. A munkafelvételi lapon csak
+annyi áll: „hibrid, nem indult reggel”. A szerelőnek néhány perc alatt
+el kell döntenie, milyen hajtással dolgozik, mert egészen más a helyes
+diagnosztikai út egy 48 V-os enyhe hibrid, egy külső tölthető plug-in
+hibrid vagy egy tisztán akkumulátoros elektromos jármű esetén. Ha minden
+„hibrid” feliratú autót ugyanúgy kezel, hibásan értelmezheti a tünetet,
+a hibakódot és a biztonsági előírásokat is.</p>
+<p>A fejezet célja, hogy a tanuló biztonsággal besorolja a járművet a
+hibridizálási fokozat és a hajtáslánc-architektúra szerint, és
+megnevezze a nagyfeszültségű (HV) rendszer fő egységeit. Ez az alap a
+későbbi akkumulátoros, motoros és feszültségmentesítési
+fejezetekhez.</p>
+<h3 data-number="33.1.2" id="szemléletes-kép"><span
+class="header-section-number">33.1.2</span> Szemléletes kép</h3>
+<p>Képzeljünk el egy modern plug-in hibridet. A motorháztető alatt bal
+oldalon egy 1,6 literes benzinmotor helyezkedik el, tőle jobbra egy
+villamos hajtógép, kettejük között pedig egy bolygóműves
+teljesítményelágazó egység. A csomagtér padlója alatt nagy feszültségű
+lítiumion-akkumulátor található, amely narancssárga, árnyékolt kábeleken
+keresztül kapcsolódik a teljesítményelektronikához. Az utastér fűtését
+nem a motor hulladékhője, hanem elektromos fűtőelem végzi, a
+klímakompresszort pedig villanymotor hajtja, mert akkor is hűtenie kell,
+amikor a benzinmotor áll. Ez a leírás nem egyetlen jármű pontos
+tervrajza, hanem a tipikus HV-elrendezés vázlata; a konkrét elrendezés
+gyártónként és típusonként eltér.</p>
+<p>A HV-rendszer egységeinek és energiafolyamának áttekintését mutatja
+az alábbi ábra.</p>
+<figure id="fig-au117-1">
+<img src="figures/img/au117-1.png" style="width:90.0%"
+alt="A HV-rendszer egységei gyűjtősín-elrendezésben, az energiaáramlás irányaival." />
+<figcaption>A HV-rendszer fő egységei és energiafolyama: a
+HV-gyűjtősínre (a kontaktorok után) kapcsolódik az akkumulátor
+(kétirányú: kisütés és töltés), az inverter és a villamos gép
+(kétirányú: hajtás és rekuperáció), a DC/DC átalakító (a 12 V-os hálózat
+felé), a fedélzeti töltő (az AC-hálózat felől) és a HV-fogyasztók
+(klímakompresszor, HV-fűtő)</figcaption>
+</figure>
+<p>Az ábra az energia útját mutatja: a HV-akkumulátor a kontaktorokon át
+a HV-gyűjtősínre kapcsolódik, és onnan adja vagy oda fogadja vissza az
+energiát. Az inverter a sín egyenfeszültségéből a villamos gép
+háromfázisú áramát állítja elő (hajtás), rekuperációkor pedig fordítva,
+a gép generátoros áramát egyenirányítja a sín felé. A HV-fogyasztók
+(villamos klímakompresszor, HV-fűtő) közvetlenül a sínről kapnak
+energiát, nem a villamos gépen keresztül; a DC/DC átalakító a sínről
+táplálja a 12 V-os hálózatot, a fedélzeti töltő pedig AC-töltéskor a
+hálózat felől tölti a sínen át az akkumulátort. A BMS
+(akkumulátor-felügyelet) a cellákat, a kontaktorok pedig az akkumulátor
+leválasztását védik.</p>
+<h3 data-number="33.1.3"
+id="definíciók-és-a-hibridizálási-fokozatok"><span
+class="header-section-number">33.1.3</span> Definíciók és a
+hibridizálási fokozatok</h3>
+<p><strong>Definíció.</strong> A hibrid hajtáslánc olyan járműhajtás,
+amelyben legalább két eltérő energiaátalakító működik együtt.
+Személygépkocsikban ez általában belső égésű motor és villamos gép
+kombinációja; a cél a fogyasztás, a károsanyag-kibocsátás csökkentése és
+a komfort növelése.</p>
+<p><strong>Definíció.</strong> A hibridizálási fokozat azt fejezi ki,
+hogy a villamos gép és az akkumulátor mekkora teljesítményt és funkciót
+vállal a hajtásban. A fokozatok: micro (mikro), mild (enyhe), full
+(teljes) és plug-in (külső tölthető) hibrid.</p>
+<p>A négy fokozatot az alábbi táblázat foglalja össze.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fokozat</th>
+<th>Jellemző feszültség</th>
+<th>Villamos teljesítmény</th>
+<th>Fő funkció</th>
+<th>Tipikus megoldás</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Micro</td>
+<td>12 V</td>
+<td>2–5 kW</td>
+<td>start-stop, indítás</td>
+<td>erősített indítómotor-generátor</td>
+</tr>
+<tr>
+<td>Mild</td>
+<td>48 V (ritkábban 36 V)</td>
+<td>5–20 kW</td>
+<td>rekuperáció, gyorsítási rásegítés, vitorlázás</td>
+<td>szíjhajtású vagy főtengelyre szerelt gép</td>
+</tr>
+<tr>
+<td>Full</td>
+<td>200–400 V</td>
+<td>20–60 kW</td>
+<td>rövid elektromos haladás, rekuperáció</td>
+<td>párhuzamos vagy teljesítményelágazásos</td>
+</tr>
+<tr>
+<td>Plug-in</td>
+<td>300–800 V</td>
+<td>50–150 kW</td>
+<td>hosszabb elektromos hatótáv, külső töltés</td>
+<td>párhuzamos, teljesítményelágazásos vagy soros</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák, típusonként eltérnek (ellenőrizendő:
+gyártói adat).</p>
+<p>A <strong>micro hibrid</strong> nem tisztán elektromosan haladó
+jármű; csupán a start-stop rendszer és a fékezési energia kis mértékű
+visszatáplálása jellemzi. A <strong>mild hibrid</strong> már képes a
+jármű lassításából energiát visszanyerni, gyorsításkor nyomatékot adni,
+de a gyakorlatban rendszerint nem tud hosszan tisztán elektromosan
+közlekedni. A <strong>full hibrid</strong> rövid, alacsony sebességű
+elektromos szakaszokra képes, belső égésű motorja kikapcsolhat, és a
+fékezési energia visszatöltődik. A <strong>plug-in hibrid</strong>
+nagyobb akkumulátora külső hálózatról tölthető, így a mindennapokban
+hosszabb elektromos hatótávot biztosít.</p>
+<p><strong>Előírás.</strong> A hibrid és elektromos járművek
+típusjóváhagyására az uniós keretrendelet és az ENSZ-EGB előírások
+vonatkoznak (ellenőrizendő: az (EU) 2018/858 keretrendelet, az ECE R100
+elektromos hajtásbiztonsági, az ECE R85 hajtásteljesítmény-mérési
+előírás és a fékezési előírások).</p>
+<h3 data-number="33.1.4" id="hajtáslánc-architektúrák"><span
+class="header-section-number">33.1.4</span>
+Hajtáslánc-architektúrák</h3>
+<p>A hibrid hajtáslánc nemcsak a villamos részvétel mértékében, hanem a
+belső égésű motor és a villamos gép mechanikai kapcsolatában is
+eltérhet.</p>
+<p><strong>Definíció.</strong> <strong>Soros hibrid</strong> esetén a
+belső égésű motor kizárólag egy generátort hajt, amely villamos energiát
+termel; a kerekeket mindig a villamos hajtómotor hajtja. A belső égésű
+motor és a kerekek között nincs mechanikus kapcsolat. Így a belső égésű
+motor olyan fordulatszám- és terheléstartományban üzemeltethető, ahol a
+hatásfoka kedvező.</p>
+<p><strong>Definíció.</strong> <strong>Párhuzamos hibrid</strong> esetén
+a belső égésű motor és a villamos gép is mechanikusan hozzá tud
+kapcsolódni a hajtáslánchoz. A két nyomaték összegezhető: egyik, másik
+vagy mindkettő hajthat. A villanymotor jellemzően ugyanazt a tengelyt
+hajtja, mint a belső égésű motor, esetleg tengelykapcsolóval
+leválasztható.</p>
+<p><strong>Definíció.</strong> <strong>Teljesítményelágazásos
+(power-split) hibrid</strong> esetén a belső égésű motor nyomatékát
+bolygómű osztja meg a hajtás és a generátor között. A bolygómű egy része
+a kerekeket hajtja, másik része generátort forgat, a harmadik pedig a
+belső égésű motorral kapcsolódik. A rendszer a soros és a párhuzamos
+üzem előnyeit ötvözi; hagyományos fokozatos váltóra gyakran nincs
+szükség.</p>
+<p>A három architektúra besorolásához a gyártói javítási útmutató
+kapcsolási rajza és a hajtáslánc-ábra az elsődleges forrás. A mai
+plug-in hibridek többsége párhuzamos vagy teljesítményelágazásos, a
+kisebb hatótávnövelők soros elrendezésűek.</p>
+<figure id="fig-au117-2">
+<div class="fig-interactive"><iframe src="figures/html/au117-2.html" title="Soros, párhuzamos és teljesítményelágazásos hibrid hajtáslánc energiaútjai." loading="lazy" style="width:100%;border:0;height:620px"></iframe><noscript><img src="figures/img/au117-2.png" style="width:90.0%"
+alt="Soros, párhuzamos és teljesítményelágazásos hibrid hajtáslánc energiaútjai." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au117-2.png" style="width:90.0%"
+alt="Soros, párhuzamos és teljesítményelágazásos hibrid hajtáslánc energiaútjai." /></details></div>
+<figcaption>Soros, párhuzamos és teljesítményelágazásos hibrid
+hajtáslánc energiaútjai azonos jelkulccsal (vastag folytonos vonal:
+mechanikai, szaggatott vonal: villamos kapcsolat); a BÉM és a kerekek
+között sorosnál nincs, párhuzamosnál van, teljesítményelágazásosnál a
+bolygóművön át részben van mechanikai kapcsolat</figcaption>
+</figure>
+<p>A besorolás kulcsa az, hogy hol fut mechanikai (vastag) vonal a belső
+égésű motortól a kerekekig: sorosnál sehol, párhuzamosnál a
+tengelykapcsolón és a váltón át, teljesítményelágazásosnál a bolygóművön
+át, ahol a bolygókerék-tartót a BÉM, a napkereket az MG1 generátor, a
+koszorúkereket az MG2 és a kimenet köti. Az interaktív változatban
+üzemmód (elektromos haladás, gyorsítás, töltés menet közben,
+rekuperáció) választható, és az aktív energiautak kiemelődnek.</p>
+<h3 data-number="33.1.5"
+id="akkumulátoros-hatótávnövelő-és-üzemanyagcellás-járművek"><span
+class="header-section-number">33.1.5</span> Akkumulátoros, hatótávnövelő
+és üzemanyagcellás járművek</h3>
+<p><strong>Definíció.</strong> <strong>Akkumulátoros elektromos jármű
+(BEV, battery electric vehicle):</strong> kizárólag akkumulátorról
+táplált villamos hajtómotorral rendelkezik; nincs belső égésű motorja.
+Az energiát a HV-akkumulátor tárolja, a hajtást egy vagy több villamos
+gép végzi.</p>
+<p><strong>Definíció.</strong> <strong>Hatótávnövelő jármű (REEV,
+range-extended electric vehicle):</strong> soros hibrid, amelyben a
+kerekeket mindig villanymotor hajtja, de egy kis belső égésű motor
+generátort hajtva növeli az akkumulátor hatótávját. A belső égésű motor
+nem kapcsolódik mechanikusan a kerekekhez.</p>
+<p><strong>Definíció.</strong> <strong>Üzemanyagcellás jármű (FCEV, fuel
+cell electric vehicle):</strong> az elektromos energiát hidrogénből
+üzemanyagcella állítja elő; az akkumulátor puffertárolóként segíti a
+gyors terhelésváltozásokat. A kerekeket villanymotor hajtja. A jármű
+hidrogént tankol, nem hálózati áramról töltődik.</p>
+<p><strong>Összefüggés.</strong> A fenti fogalmak egymástól jól
+megkülönböztethetők: a BEV-ben nincs belső égésű motor, a REEV-ben van,
+de nincs mechanikus hajtáskapcsolata a kerékhez, a FCEV-ben az
+energiaforrás legfontosabb átalakítója az üzemanyagcella, a hibridben
+pedig a belső égésű motor és a villamos gép együtt dolgozik.</p>
+<h3 data-number="33.1.6" id="v-os-rendszerek"><span
+class="header-section-number">33.1.6</span> 48 V-os rendszerek</h3>
+<p>A <strong>48 V-os rendszer</strong> a mild hibrid tipikus
+megvalósítása. A jármű 12 V-os fedélzeti hálózatát egy DC/DC átalakító
+kapcsolja a 48 V-os hálózathoz. A 48 V-os oldalon nagyobb teljesítmény
+érhető el, miközben a feszültség még alacsonyabb, mint a full vagy
+plug-in hibridek HV-szintje.</p>
+<p><strong>Számítás.</strong> Ha egy 48 V-os indítómotor-generátor rövid
+ideig 10 kW teljesítményt ad le, az egyenáramú oldalon folyó áram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mi>U</mi><mo>⋅</mo><mi>I</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">P = U \cdot I,</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>P</mi><mi>U</mi></mfrac><mo>=</mo><mfrac><mrow><mn>10</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><mrow><mn>48</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow></mfrac><mo>≈</mo><mn>208</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I = \frac{P}{U} = \frac{10\,000\,\text{W}}{48\,\text{V}} \approx 208\,\text{A}.</annotation></semantics></math></p>
+<p>A 12 V-os rendszer ugyanekkora teljesítményéhez 833 A kellene; ezért
+a 48 V lényegesen kisebb keresztmetszetű kábeleket és kisebb
+feszültségesést tesz lehetővé. A 48 V-os rendszerben a nagy áramok miatt
+az érintkezők ívterhelése és a rövidzárlat energiája már komoly, ezért a
+javításnál a gyártói előírást és a speciális csatlakozókezelést be kell
+tartani.</p>
+<p><strong>Továbbvitt eredmény.</strong> A 12 V-os és a HV-hálózat
+közötti DC/DC átalakító szerepét a(z) <a href="au118.html">A
+nagyfeszültségű akkumulátor és az akkumulátor-felügyelet (BMS)</a>
+alfejezetben is használjuk, amikor az akkumulátor-leválasztás utáni 12
+V-os ellátást vizsgáljuk.</p>
+<h3 data-number="33.1.7" id="a-hv-rendszer-fő-egységei"><span
+class="header-section-number">33.1.7</span> A HV-rendszer fő
+egységei</h3>
+<p>A HV-rendszer fő egységei a járműben több helyen oszlanak meg:</p>
+<ul>
+<li><strong>HV-akkumulátor:</strong> jellemzően a padlólemez alatt, a
+csomagtartóban vagy a hátsó ülés alatt; a cellákat, a BMS-t és a
+kontaktorokat tartalmazó, biztonságosan zárt egység.</li>
+<li><strong>Inverter:</strong> a HV-akkumulátor egyenfeszültségét
+változó frekvenciájú háromfázisú feszültséggé alakítja a hajtómotor
+számára, illetve rekuperációkor a váltakozó áramot egyenirányítja
+vissza.</li>
+<li><strong>Villamos hajtógép (motor/generátor, MG):</strong> hajtáskor
+nyomatékot ad, fékezéskor generátorként visszatölti az energiát. Típusa
+tipikusan állandó mágneses szinkronmotor vagy aszinkron motor (lásd a <a
+href="au048.html">Villamos gépek: egyenáramú gépek, generátorok,
+aszinkron és szinkron motorok</a> alfejezetet).</li>
+<li><strong>DC/DC átalakító:</strong> a HV-hálózatból tölti a 12 V-os
+fedélzeti hálózatot és az indítóakkumulátort.</li>
+<li><strong>Fedélzeti töltő:</strong> a külső váltakozó áramú hálózatot
+egyenirányítja és a HV-akkumulátort tölti; a gyors egyenáramú töltésnél
+gyakran a töltőállomás kommunikál a járművel, és közvetlenül a kábel
+felőli egyenfeszültség töltheti az akkumulátort.</li>
+<li><strong>Elektromos klímakompresszor:</strong> a HV-hálózatról
+üzemel, hogy a belső égésű motor álló helyzetében is hűthessen.</li>
+<li><strong>HV-fűtés:</strong> az utastér és az akkumulátor melegen
+tartását villamos fűtőelem vagy hőszivattyú végzi.</li>
+</ul>
+<p>A pontos elrendezés és az egységek jelölése a gyártói javítási
+útmutatóban, valamint a jármű HV-kapcsolási rajzán szerepel.</p>
+<figure id="fig-au117-3">
+<div class="fig-interactive"><iframe src="figures/html/au117-3.html" title="Elektromos és hibrid jármű átlátszó rajza: a HV-akkumulátor, az inverter, a hajtómotor, a DC/DC átalakító, a töltő és a szervizcsatlakozó helye, a narancssárga HV-vezetékek kiemelve." loading="lazy" style="width:100%;border:0;height:640px"></iframe><noscript><img src="figures/img/au117-3.png" style="width:90.0%"
+alt="Elektromos és hibrid jármű átlátszó rajza: a HV-akkumulátor, az inverter, a hajtómotor, a DC/DC átalakító, a töltő és a szervizcsatlakozó helye, a narancssárga HV-vezetékek kiemelve." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au117-3.png" style="width:90.0%"
+alt="Elektromos és hibrid jármű átlátszó rajza: a HV-akkumulátor, az inverter, a hajtómotor, a DC/DC átalakító, a töltő és a szervizcsatlakozó helye, a narancssárga HV-vezetékek kiemelve." /></details></div>
+<figcaption>A HV-elemek elhelyezkedése (a) akkumulátoros elektromos és
+(b) teljes hibrid járműben, sematikus „átlátszó” oldalnézetben: 1
+HV-akkumulátor, 2 szervizcsatlakozó, 3 inverter, 4 hajtómotor / villamos
+gép, 5 DC/DC átalakító, 6 fedélzeti töltő, 7 töltőcsatlakozó, 8 villamos
+klímakompresszor, 9 PTC-fűtés, 10 12 V-os akkumulátor, 11 belső égésű
+motor; a csíkozott vastag vonal a narancssárga HV-vezeték; alul a
+HV-figyelmeztető címke és az adattábla</figcaption>
+</figure>
+<p>Az ábrán látszik, hogy a BEV-ben a HV-akkumulátor a padlóban, a
+HEV-ben kisebb pakkként hátul van, a szervizcsatlakozó pedig mindkét
+esetben az akkumulátoron vagy annak közelében található. Ezekhez az
+egységekhez és a narancssárga vezetékekhez csak jogosult személy
+nyúlhat, a feszültségmentesítés után. Az interaktív változatban BEV és
+HEV között lehet váltani, a HV- és a 12 V-os hálózat rétegként ki-be
+kapcsolható, rámutatásra az egység neve jelenik meg.</p>
+<p><strong>Definíció.</strong> A HV-vezetékek narancssárga színűek, hogy
+a szerelő és a mentőszemélyzet egy pillantással megkülönböztesse őket a
+12 V-os hálózattól. A szín alkalmazása nemzetközi gyakorlat, a pontos
+árnyalat és a jelölés a gyártói és ENSZ-EGB előírások szerint történik
+(ellenőrizendő: a hatályos ECE R100 jelölési követelményei).</p>
+<h3 data-number="33.1.8" id="hv-biztonság"><span
+class="header-section-number">33.1.8</span> HV-biztonság</h3>
+<p><strong>HV-biztonság.</strong> A full, plug-in, BEV és FCEV járművek
+nagyfeszültségű rendszere jellemzően 200–800 V egyenfeszültséggel
+dolgozik; ez érintésvédelem, ívveszély és áramütés szempontjából
+életveszélyes lehet. A HV-rendszeren csak arra kiképzett, jogosult
+személy dolgozhat, a gyártói javítási utasítás szerint. A narancssárga
+vezetéket és a HV-figyelmeztető címkéket mindig úgy kell kezelni, mint
+ami feszültség alatt állhat akkor is, ha a jármű gyújtása ki van
+kapcsolva; a rendszerben lévő kondenzátorok és a HV-akkumulátor tárolt
+energiája továbbra is veszélyes lehet. A feszültségmentesítés lépéseit –
+jogosultság ellenőrzése, gyújtás ki, 12 V-os akkumulátor lekötése,
+HV-szervizcsatlakozó eltávolítása, várakozási idő, feszültségmentesség
+ellenőrzése és dokumentálás – a <a
+href="au122.html">Feszültségmentesítés és a feszültségmentesség
+ellenőrzése</a> alfejezet tanítja. <strong>Biztonsági korlát.</strong> A
+feladat tanműhelyi környezetre, oktató felügyeletére és a gyártói
+javítási utasítás betartására vonatkozik; a megadott értékek tanulási
+példák.</p>
+<h3 data-number="33.1.9" id="kidolgozott-példák"><span
+class="header-section-number">33.1.9</span> Kidolgozott példák</h3>
+<p><strong>Példa 1 – Besorolás plug-in hibridként.</strong> Egy jármű
+1,8 literes benzinmotorral, 60 kW-os villamos hajtógéppel, 8,8 kWh
+hasznos energiatartalmú HV-akkumulátorral és külső töltőcsatlakozóval
+rendelkezik. A gyártó által megadott elektromos hatótáv 55 km
+(ellenőrizendő: a hatályos mérési ciklus szerinti gyári érték).
+Besorolás: plug-in hibrid, mert a jármű külső hálózatról tölthető, és az
+elektromos hatótáv jelentősen nagyobb, mint egy full hibridé.
+Architektúra: a benzinmotor és a villamos gép ugyanarra a hajtásláncra
+dolgozik, ezért párhuzamos plug-in hibrid kategóriába sorolható; a
+pontos felépítés a gyártói dokumentációból ellenőrizendő.</p>
+<p><strong>Példa 2 – BEV hatótáv-becslés.</strong> Egy BEV hasznos
+akkumulátor-energiája 20 kWh, az átlagos energiafogyasztása 15 kWh/100
+km. A becsült hatótáv:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mfrac><mrow><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><mrow><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mi>/</mi><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km</mtext></mrow></mfrac><mo>=</mo><mn>133</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">D = \frac{20\,\text{kWh}}{15\,\text{kWh}/100\,\text{km}} = 133\,\text{km}.</annotation></semantics></math></p>
+<p>Ez az érték csak közelítő, mert a fogyasztást a sebesség, a terep, a
+külső hőmérséklet, a fűtés és a klíma erősen befolyásolja.</p>
+<p><strong>Példa 3 – 48 V-os áram.</strong> A fenti számításban láttuk,
+hogy 10 kW teljesítmény 48 V-on 208 A áramot igényel. Ezért a 48 V-os
+rendszer kábelezése és csatlakozói nagy terhelhetőségűek, a kötések
+meghúzási nyomatékát és a csatlakozók tisztaságát a gyártói adatok
+szerint kell ellenőrizni.</p>
+<h3 data-number="33.1.10" id="minőségellenőrzés"><span
+class="header-section-number">33.1.10</span> Minőségellenőrzés</h3>
+<p>A hibrid vagy elektromos jármű azonosításakor az alábbiakat
+ellenőrzöm:</p>
+<ol type="1">
+<li><strong>Járműazonosítás:</strong> a típustábla, a járműazonosító
+szám (VIN) és a gyártói szervizutasítás alapján meghatározom a
+hajtástípust.</li>
+<li><strong>Töltőcsatlakozó:</strong> ha van külső töltőcsatlakozó,
+akkor plug-in vagy BEV; ha nincs, akkor micro/mild/full hibrid vagy
+hagyományos jármű.</li>
+<li><strong>HV-címkék:</strong> a narancssárga vezetékek és a
+HV-figyelmeztető címkék meglétét, olvashatóságát, valamint a HV-egységek
+elhelyezkedését dokumentálom.</li>
+<li><strong>Rendszerfeszültség:</strong> a 48 V-os mild hibrid és a
+HV-rendszer ELV/HV szintje jól elkülöníthető a javítási útmutató és a
+kapcsolási rajz alapján.</li>
+<li><strong>A munkalap hajtásmezője:</strong> csak a pontos típus
+(például „M1 plug-in hibrid, teljesítményelágazásos”) kerüljön a
+dokumentációba, ne az általános „hibrid” megnevezés.</li>
+</ol>
+<h3 data-number="33.1.11" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">33.1.11</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy ügyfél azt mondja, hogy a „hibrid” autó reggel nem indult. A
+szerelő azonosítja a járművet: nincs külső töltőcsatlakozó, a
+motorháztető alatt 48 V-os indítómotor-generátor és 12 V-os hálózat
+található, a start-stop rendszer működik. A diagnosztikai műszerrel a 48
+V-os akkumulátor töltöttsége megfelelő, de a hajtószíj kopott, és a 48
+V-os gép hidegindításkor megcsúszik. A szerelő kicseréli a hajtószíjat,
+ellenőrzi a feszítőt, és elvégzi a gyártói adaptációs lépéseket.
+Tanulság: a „hibrid” elnevezés nem elég; a mild hibrid és a plug-in
+hibrid teljesen más javítási és biztonsági eljárást igényel.</p>
+<h3 data-number="33.1.12" id="tipikus-hibák"><span
+class="header-section-number">33.1.12</span> Tipikus hibák</h3>
+<ul>
+<li><strong>Minden hibridet full hibridként kezelni:</strong> a micro és
+mild hibrid nem feltétlenül tud tisztán elektromosan haladni, ezért
+ilyen tünetet várni hibás.</li>
+<li><strong>A 48 V-ot 12 V-os rendszerként kezelni:</strong> a 48 V-os
+oldalon nagyobb áram és ívterhelés érhető el, a csatlakozók és a kábelek
+ellenőrzése más.</li>
+<li><strong>A narancssárga kábelt gyújtás nélkül biztonságosnak
+tekinteni:</strong> a HV-rendszerben a kondenzátorok és az akkumulátor a
+gyújtás kikapcsolása után is életveszélyes feszültséget tarthat.</li>
+<li><strong>A plug-in hibridet nem töltik külső hálózatról:</strong> így
+a jármű nem hozza a gyári elektromos hatótávot, a vásárlói
+elégedetlenség téves hibamegállapításhoz vezethet.</li>
+<li><strong>A soros és a párhuzamos hibrid összekeverése:</strong> a
+soros hibridben a belső égésű motor nem hajtja mechanikusan a kerekeket,
+ezért a hibakeresés során más vezérlési logikát kell ellenőrizni.</li>
+</ul>
+<h3 data-number="33.1.13" id="önellenőrzés"><span
+class="header-section-number">33.1.13</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e: a micro hibrid tisztán elektromosan is képes városi
+haladásra? Indokolja.</li>
+<li>Melyik hibridizálási fokozatba tartozik egy 48 V-os, külső
+hálózatról nem tölthető, rekuperációra és gyorsítási rásegítésre képes
+jármű?</li>
+<li>Számítsa ki egy 15 kW-os, 48 V-os indítómotor-generátor
+áramfelvételét.</li>
+<li>Mit jelölnek a járműben a narancssárga kábelek?</li>
+<li>Miben különbözik a REEV a FCEV-től?</li>
+</ol>
+<h3 data-number="33.1.14" id="feladatok"><span
+class="header-section-number">33.1.14</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong><br />
+Sorolja fel a hibridizálási fokozatokat, és adjon meg mindegyikhez
+egy-egy jellemző feszültségszintet.</p>
+<p><strong>2. feladat (A)</strong><br />
+Definiálja a BEV és a FCEV fogalmát, és adja meg, miből nyeri az
+energiát a hajtáshoz.</p>
+<p><strong>3. feladat (B)</strong><br />
+Egy jármű 100 kW villamos hajtógéppel, 15 kWh hasznos energiatartalmú
+HV-akkumulátorral rendelkezik, külső tölthető, és a gyártó szerint
+tisztán elektromosan 60 km-t tud megtenni. A benzinmotor és a
+villanymotor is mechanikusan hajtja a kerekeket. Milyen hibridizálási
+fokozatba és milyen architektúrába sorolja? Indokolja.</p>
+<p><strong>4. feladat (B)</strong><br />
+Egy 48 V-os indítómotor-generátor 20 kW teljesítményt ad le rövid időre.
+Számítsa ki az áramerősséget. Becsülje meg egy 25 kWh hasznos energiájú
+BEV hatótávját 18 kWh/100 km átlagos fogyasztással.</p>
+<p><strong>5. feladat (C)</strong><br />
+Magyarázza el, miért nem érdemes minden járműből plug-in hibridet
+készíteni a tömeg, a költség, a csomagtér és a hőmenedzsment
+szempontjából.</p>
+<p><strong>6. feladat (D)</strong><br />
+Egy műhelyben a szerelő sérült szigetelésű, narancssárga HV-kábelt talál
+a jármű alatt. Mit kell tennie, és milyen sorrendben? Ne végezzen
+javítást, csak írja le a biztonságos lépéseket.</p>
+<h3 data-number="33.1.15" id="megoldások"><span
+class="header-section-number">33.1.15</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Hamis. A micro hibrid csak start-stop indítást és kis mértékű
+rekuperációt végez; tisztán elektromos haladásra nem alkalmas.</li>
+<li>Mild hibrid.</li>
+<li><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>P</mi><mi>U</mi></mfrac><mo>=</mo><mfrac><mrow><mn>15</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><mrow><mn>48</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow></mfrac><mo>≈</mo><mn>313</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I = \frac{P}{U} = \frac{15\,000\,\text{W}}{48\,\text{V}} \approx 313\,\text{A}.</annotation></semantics></math></li>
+<li>A narancssárga kábelek a nagyfeszültségű (HV) hálózatot jelölik,
+amely életveszélyes feszültséget is vihet akkor is, ha a gyújtás ki van
+kapcsolva.</li>
+<li>A REEV hatótávnövelővel rendelkezik: a kerekeket villanymotor
+hajtja, a belső égésű motor csak generátort hajt. A FCEV
+üzemanyagcellából nyeri az elektromos energiát hidrogénből, nincs belső
+égésű motor.</li>
+</ol>
+<p><strong>1. feladat megoldása</strong><br />
+Micro: 12 V; mild: 48 V (ritkán 36 V); full: 200–400 V; plug-in: 300–800
+V. Az értékek tanulási példák (ellenőrizendő: gyártói adat).</p>
+<p><strong>2. feladat megoldása</strong><br />
+BEV: tisztán akkumulátoros elektromos jármű; az energia kizárólag a
+HV-akkumulátorban tárolódik, a kerekeket villanymotor hajtja. FCEV:
+üzemanyagcellás jármű; a hidrogénből üzemanyagcella állít elő elektromos
+energiát, az akkumulátor pufferként működik, a kerekeket villanymotor
+hajtja.</p>
+<p><strong>3. feladat megoldása</strong><br />
+Plug-in hibrid, mert külső hálózatról tölthető és az elektromos hatótáv
+nagy. Párhuzamos architektúra, mert a benzinmotor és a villanymotor is
+mechanikusan hajtja a kerekeket. A pontos besorolást a gyártói javítási
+adat alapján kell megerősíteni.</p>
+<p><strong>4. feladat megoldása</strong><br />
+Áramerősség 48 V-on:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>P</mi><mi>U</mi></mfrac><mo>=</mo><mfrac><mrow><mn>20</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><mrow><mn>48</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow></mfrac><mo>≈</mo><mn>417</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I = \frac{P}{U} = \frac{20\,000\,\text{W}}{48\,\text{V}} \approx 417\,\text{A}.</annotation></semantics></math></p>
+<p>Hatótáv:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mfrac><mrow><mn>25</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><mrow><mn>18</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mi>/</mi><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km</mtext></mrow></mfrac><mo>≈</mo><mn>139</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">D = \frac{25\,\text{kWh}}{18\,\text{kWh}/100\,\text{km}} \approx 139\,\text{km}.</annotation></semantics></math></p>
+<p><strong>5. feladat megoldása</strong><br />
+A plug-in hibrid nagyobb HV-akkumulátort, erősebb villamos gépet, töltőt
+és hőmenedzsmentet igényel. Ez növeli a jármű tömegét, csökkenti a
+hasznos teherbírást és a csomagtér méretét, emeli a gyártási és
+fenntartási költséget. Ha az ügyfél nem tudja rendszeresen tölteni, a
+jármű nem hozza a gyári elektromos hatótávot.</p>
+<p><strong>6. feladat megoldása</strong><br />
+A nem HV-jogosult szerelő a sérült kábelhez és a HV-egységekhez nem
+nyúl, a járművet nem indítja és nem tölti. Teendői: (1) a munka
+leállítása, a terület lezárása és HV-figyelmeztető jelölése, (2) a
+gyújtás kikapcsolása és a kulcs biztonságos helyre tétele (ha ez a
+sérüléstől távol, a jármű érintése nélkül megoldható), (3) a HV-felelős,
+jogosult személy értesítése és a dokumentálás. A feszültségmentesítést –
+a jogosultság és az EVE ellenőrzése (szigetelő kesztyű légnyomásos
+ellenőrzése, arcvédő), a 12 V-os akkumulátor lekötése, a
+HV-szervizcsatlakozó eltávolítása és visszakapcsolás elleni biztosítása,
+a gyártó által előírt várakozási idő, feszültségmentesség-ellenőrzés
+ellenőrzött műszerrel (előtte és utána a műszer ellenőrzése),
+dokumentálás – a jogosult személy végzi a gyártói eljárás szerint (lásd:
+Feszültségmentesítés és a feszültségmentesség ellenőrzése). Sérült
+szigetelésnél a gyártói sérült-jármű eljárás is kötelező, mert a
+karosszéria is feszültség alá kerülhet. A tényleges javítást csak
+HV-jogosult személy végezheti.</p>
+<h3 data-number="33.1.16" id="rövid-összefoglaló"><span
+class="header-section-number">33.1.16</span> Rövid összefoglaló</h3>
+<p>A hibrid és elektromos hajtás nem egyetlen rendszer, hanem fokozatok
+és architektúrák sokasága. A hibridizálási fokozat a villamos gép
+teljesítménye és az akkumulátor mérete szerint micro, mild, full vagy
+plug-in; az architektúra lehet soros, párhuzamos vagy
+teljesítményelágazásos. A BEV kizárólag akkumulátoros, a REEV
+hatótávnövelőt használ, a FCEV üzemanyagcellából állítja elő a villamos
+energiát. A 48 V-os mild hibrid a 12 V-os és a HV-rendszer között foglal
+helyet; teljesítménye a 12 V-nál nagyobb, de feszültségszintje
+alacsonyabb a full/plug-in hibrideknél. A HV-rendszer fő egységei:
+HV-akkumulátor, inverter, villamos hajtógép, DC/DC átalakító, fedélzeti
+töltő, elektromos klímakompresszor és HV-fűtés. A narancssárga
+HV-vezetékek és a figyelmeztető címkék alapján a rendszer feszültség
+alatti állapota sosem tételezhető fel biztonságosnak;
+feszültségmentesítés csak a gyártói eljárás szerint, jogosult személy
+által végezhető. <strong>Továbbvitt eredmény.</strong> Ez az áttekintés
+a(z) <a href="au118.html">A nagyfeszültségű akkumulátor és az
+akkumulátor-felügyelet (BMS)</a> alfejezetben az akkumulátor, a <a
+href="au119.html">Villamos hajtás: villanymotor, inverter, DC/DC
+átalakító, regeneratív fékezés és hőmenedzsment</a> alfejezetben az
+inverter és a motor, a <a href="au122.html">Feszültségmentesítés és a
+feszültségmentesség ellenőrzése</a> alfejezetben pedig a HV-biztonsági
+lépések alapja.</p>
+<h3 data-number="33.1.17" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">33.1.17</span> Források és ellenőrzési
+hiányok</h3>
+<ul>
+<li>Az elektromos gépek, a hajtáslánc és a 48 V-os rendszerek működési
+elve: stabil járműtechnikai és elektrotechnikai ismeret.</li>
+<li>Az ENSZ-EGB előírások: ECE R100 (elektromos hajtás biztonsága), ECE
+R85 (hajtásteljesítmény mérése) (ellenőrizendő: aktuális kiadások és
+hatály).</li>
+<li>Az uniós típusjóváhagyási keretrendelet: (EU) 2018/858
+(ellenőrizendő: aktuális módosítások).</li>
+<li>A táblázatban szereplő feszültség- és teljesítménytartományok
+tanulási példák, nem hatósági határértékek (ellenőrizendő: gyártói
+adat).</li>
+<li>A 48 V-os rendszer feszültségszintjének HV/ELV besorolásához a
+vonatkozó járműbiztonsági előírás pontos határértéke (ellenőrizendő: ECE
+R100 szerinti osztályok).</li>
+</ul>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au116.html">← 32.3 Vezetőtámogató rendszerek és kalibrálásuk</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au118.html">33.2 A nagyfeszültségű akkumulátor és az akkumulátor-felügyelet (BMS) →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

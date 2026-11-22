@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>39.1 Az áramellátó és indítórendszer diagnosztikája –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz9">IX. RÉSZ – Járműkarbantartás, hatósági vizsgálat és diagnosztika</a> › <a href="index.html#auch38">39 Villamos diagnosztika</a></p>
+<div class="links"><a class="prev" rel="prev" href="au141.html">← 38.4 Hidraulikus rendszerek és a szervokormány diagnosztikája</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au143.html">39.2 Gyújtásvizsgálat és oszcilloszkópos gyújtásdiagnosztika →</a></div>
+</nav>
+<h2 data-number="39.1" id="au142"><span
+class="header-section-number">39.1</span> Az áramellátó és
+indítórendszer diagnosztikája</h2>
+<h3 data-number="39.1.1" id="motiváció"><span
+class="header-section-number">39.1.1</span> Motiváció</h3>
+<p>Egy hideg reggelen az ügyfél panasza: „alig forgatta meg a motort,
+mintha lemerült volna az akkumulátor”. A tanuló feladata nem az, hogy
+azonnal új akkumulátort adjon el, hanem hogy <strong>indítás előtt,
+terhelés alatt és töltés közben mérve</strong> megtalálja, hol veszik el
+a feszültség és az áram. Ugyanez a szemlélet kell a másik gyakori
+hibához is: az autó éjszaka lemerül, vagy a töltőfeszültség nem
+megfelelő. Ebben az alfejezetben az akkumulátor, az indítókör, a
+generátor és a nyugalmi áram vizsgálatát tanuljuk meg úgy, ahogyan egy
+valódi hibakeresés során egymásra épülnek.</p>
+<h3 data-number="39.1.2"
+id="szemléletes-kép-az-indító--és-töltőrendszer-kapcsolási-vázlata"><span
+class="header-section-number">39.1.2</span> Szemléletes kép: az indító-
+és töltőrendszer kapcsolási vázlata</h3>
+<p>Az alábbi kapcsolási rajz a jármű fedélzeti hálózatának csak azon
+részeit mutatja, amelyeket az áramellátó és indítórendszer
+diagnosztikája során mérünk. A rajzon a 30-as akkumulátor-plusz ág vezet
+a generátor B+ kimenetére, a biztosítéktáblára és az indítómotor
+mágneskapcsolójának főérintkezőjére. Az 50-es kapocs a
+gyújtáskapcsolóból a mágneskapcsoló vezérlőtekercsét táplálja. A test
+oldalon minden egység a 31-es testelési ponthoz csatlakozik. A
+feszültségmérőt párhuzamosan, az árammérő lakatfogót vagy söntöt sorosan
+kötjük be, ahogy azt a <a href="au053.html">Méréstechnikai alapok:
+műszerek, mérési hibák, multiméter és lakatfogó</a> alfejezetben
+tanultuk.</p>
+<figure>
+<img src="assets/au142-diagram-1.png"
+alt="Indító- és töltőrendszer mérési pontjai (elvi kapcsolási rajz) - Szemléltető vázlat, alaphelyzet (gyújtás ki); a gyártói áramútrajz a mérvadó. B1: akkumulátor, G1: generátor (B+ kimenet, a 30-as ágra), F1: a generátor B+ ágának főbiztosítója (az érték példa, ellenőrizendő), K1: az indítómotor mágneskapcsolója (tekercs 50–31, főérintkező 30–M), M1: indítómotor, S1: gyújtáskapcsoló indító (50) állása. Mérőpontok: V1 a plusz oldali feszültségesés (akkumulátor + pólus → mágneskapcsoló 30), V2 a test oldali feszültségesés (M1 háza → akkumulátor − pólus), A1 lakatfogó a főkábelen (indítóáram)." />
+<figcaption aria-hidden="true">Indító- és töltőrendszer mérési pontjai
+(elvi kapcsolási rajz) - Szemléltető vázlat, alaphelyzet (gyújtás ki); a
+gyártói áramútrajz a mérvadó. B1: akkumulátor, G1: generátor (B+
+kimenet, a 30-as ágra), F1: a generátor B+ ágának főbiztosítója (az
+érték példa, ellenőrizendő), K1: az indítómotor mágneskapcsolója
+(tekercs 50–31, főérintkező 30–M), M1: indítómotor, S1: gyújtáskapcsoló
+indító (50) állása. Mérőpontok: V1 a plusz oldali feszültségesés
+(akkumulátor + pólus → mágneskapcsoló 30), V2 a test oldali
+feszültségesés (M1 háza → akkumulátor − pólus), A1 lakatfogó a főkábelen
+(indítóáram).</figcaption>
+</figure>
+<p>A rajzon jól látszik, hogy a főáramkör a <code>30</code>-as plusz
+ágon át az indítómotorba, majd a testelésen át záródik. A mágneskapcsoló
+tekercse a gyújtáskapcsolón át kap feszültséget az <code>50</code>-es
+kapocsra. A diagnosztika során ezt az utat járjuk végig
+feszültségesés-méréssel.</p>
+<h3 data-number="39.1.3"
+id="definíciók-összefüggések-és-mérési-elvek"><span
+class="header-section-number">39.1.3</span> Definíciók, összefüggések és
+mérési elvek</h3>
+<p><strong>Definíció. (Nyugalmi feszültség)</strong><br />
+Az akkumulátor sarkain mért feszültség <strong>terhelés nélkül</strong>
+(jármű kikapcsolt állapotában, a felületi töltés eltávolítása után).
+Nyitott kapcsokkal ez közelítőleg a cellák elektromotoros erejének
+összege.</p>
+<p><strong>Összefüggés.</strong> A nyugalmi feszültség és a töltöttség
+(SoC, %) között megközelítő, lineáris kapcsolat van:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ny</mtext></msub><mo>≈</mo><mn>12</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> (100%),</mtext></mrow><mspace width="1.0em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">ny</mtext></msub><mo>≈</mo><mn>12</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> (75%),</mtext></mrow><mspace width="1.0em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">ny</mtext></msub><mo>≈</mo><mn>12</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> (25%)</mtext></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{ny}} \approx 12{,}6\,\text{V} \text{ (100\%),}\quad U_{\text{ny}} \approx 12{,}4\,\text{V} \text{ (75\%),}\quad U_{\text{ny}} \approx 12{,}0\,\text{V} \text{ (25\%)}.</annotation></semantics></math></p>
+<p>Az értékek hőmérsékletfüggők, ezért <strong>ellenőrizendő:
+akkumulátorgyártói táblázat</strong>.</p>
+<p><strong>Definíció. (Terheléses
+indítóképesség-vizsgálat)</strong><br />
+Az akkumulátort rövid időre, szabályozott árammal (jellemzően a
+hidegindító áram felével) terheljük, és mérjük a kapocsfeszültséget. Az
+akkumulátor akkor megfelelő, ha a feszültség a gyártói zárófeszültség
+felett marad (pl. −18 °C-on 9,6 V fölött; ellenőrizendő: szabvány és
+gyártói adat).</p>
+<p><strong>Definíció. (Vezetőképességi teszt)</strong><br />
+A modern akkumulátor-vizsgáló műszer kis jelű váltakozó (vagy
+impulzusos) méréssel meghatározza az akkumulátor <strong>belső
+ellenállását vagy vezetőképességét</strong>, és ebből becsli a
+hidegindító képességet. Ez a vizsgálat gyors, de a mért érték függ
+hőmérséklettől, töltöttségtől és a műszer algoritmusától.</p>
+<p><strong>Összefüggés.</strong> A belső ellenállás
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>b</mi></msub><annotation encoding="application/x-tex">r_b</annotation></semantics></math>)
+és a nyugalmi feszültség
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mn>0</mn></msub><annotation encoding="application/x-tex">U_0</annotation></semantics></math>)
+meghatározza a terhelés alatti kapocsfeszültséget:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">k</mtext></msub><mo>=</mo><msub><mi>U</mi><mn>0</mn></msub><mo>−</mo><mi>I</mi><mspace width="0.167em"></mspace><msub><mi>r</mi><mi>b</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{k}} = U_0 - I \, r_b.</annotation></semantics></math></p>
+<p>Ezért ha az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>b</mi></msub><annotation encoding="application/x-tex">r_b</annotation></semantics></math>
+nagy, indításkor nagy áramnál jelentősen esik a feszültség, és nem jut
+elegendő energia az indítómotorba.</p>
+<p><strong>Definíció. (Feszültségesés-mérés)</strong><br />
+Egy vezetékszakaszon vagy kötésen – terhelés alatt – párhuzamosan mért
+feszültségkülönbséget nevezzük feszültségesésnek. Ideális esetben a
+vezeték feszültségesése közel nulla (gyakorlatban jellemzően &lt;0,1 V);
+nagyobb érték nagy átmeneti ellenállásra (oxidált saru, laza kötés,
+korrodált kábel) utal.</p>
+<p><strong>Összefüggés.</strong> Ohm-törvény alapján a feszültségesés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">es</mtext></msub><mo>=</mo><mi>I</mi><mo>⋅</mo><msub><mi>R</mi><mtext mathvariant="normal">át</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{es}} = I \cdot R_{\text{át}}</annotation></semantics></math>,
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mtext mathvariant="normal">át</mtext></msub><annotation encoding="application/x-tex">R_{\text{át}}</annotation></semantics></math>
+a vezeték és kötések eredő ellenállása.</p>
+<p><strong>Definíció. (Hullámosság, ripple)</strong><br />
+A generátor egyenirányított kimenetén a feszültség nem tökéletes
+egyenfeszültség, hanem kis váltakozó összetevőt tartalmaz. Ha egy dióda
+kiesik, a hullámosság megnő, és a feszültség átlagértéke lecsökken.</p>
+<p><strong>Összefüggés.</strong> A hullámosságot multiméter <strong>AC
+feszültség</strong> állásban mérjük a generátor B+ kimenetén, terhelés
+alatt. A megengedett érték általában 0,5 V alatt van (példaérték;
+ellenőrizendő: gyártói adat). Nagyobb AC érték diódahibára, generátor
+fázishibára vagy rossz testelésre utal.</p>
+<p><strong>Definíció. (Nyugalmi áram)</strong><br />
+A jármű kikapcsolt, lezárt, alvó állapotában a fedélzeti hálózatból
+folyó áram. Tartalmazza a vezérlők nyugalmi tápellátását, az óra, a
+távirányító-vevő, a rádió memóriaáramát stb. A korszerű járműveken
+néhány tíz mA, de a gyártótól függően 20–70 mA különböző alvó szintek
+után (ellenőrizendő: gyártói adat).</p>
+<h3 data-number="39.1.4"
+id="felépítés-és-működés-a-diagnosztika-logikai-lánca"><span
+class="header-section-number">39.1.4</span> Felépítés és működés: a
+diagnosztika logikai lánca</h3>
+<p>Az áramellátó és indítórendszer vizsgálatát nem elszigetelten, hanem
+a <strong>tünet–hipotézis–mérés–ok–javítás</strong> láncban végezzük. A
+négy fő mérési terület:</p>
+<ol type="1">
+<li><strong>Akkumulátorvizsgálat</strong> – nyugalmi feszültség,
+terheléses teszt, vezetőképességi teszt, szükség esetén savsűrűség.</li>
+<li><strong>Indítókör-vizsgálat</strong> – indítóáram, a
+<code>30</code>-as plusz és a <code>31</code>-es test ág
+feszültségesése, a mágneskapcsoló vezérlőköre, az indítómotor
+fordulatszáma.</li>
+<li><strong>Generátorvizsgálat</strong> – töltőfeszültség és
+hullámosság, töltőáram, a szabályozó viselkedése terhelés és
+fordulatszám függvényében.</li>
+<li><strong>Nyugalmi áram vizsgálat</strong> – áramfelvétel alvó
+állapotban, fogyasztó-behatárolás biztosítékoknál vagy
+lakatfogóval.</li>
+</ol>
+<p>A mérések során mindig az <strong>akkumulátor állapotától</strong>
+indulunk, mert egy lemerült vagy hibás akkumulátor önmagában is okozhat
+indítási hibát, és torzítja az indítóáram mérését. Ezután meg kell
+győződni arról, hogy az indítókör energiaellátása megfelelő
+(feszültségesés-mérés), majd a generátor töltőáramát kell ellenőrizni,
+végül a nyugalmi áramot.</p>
+<h3 data-number="39.1.5" id="kidolgozott-példák"><span
+class="header-section-number">39.1.5</span> Kidolgozott példák</h3>
+<p><strong>1. példa (alap)</strong> – <em>Nyugalmi feszültségből
+töltöttség becslése</em><br />
+Adott: reggel beüzemelt járművön, indítás előtt a multiméterrel mért
+akkumulátor-feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ny</mtext></msub><mo>=</mo><mn>12</mn><mo>,</mo><mn>36</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{ny}} = 12{,}36\,\text{V}</annotation></semantics></math>
+(20 °C környezetben). Keresett: a töltöttség becsült értéke.</p>
+<p>Megoldás: A 12,6 V–12,0 V intervallumot 100 %–25 %-hoz kötjük. A
+lineáris közelítés:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">SoC</mtext><mo>≈</mo><mn>25</mn><mi>%</mi><mo>+</mo><mfrac><mrow><mi>U</mi><mo>−</mo><mn>12</mn><mo>,</mo><mn>0</mn></mrow><mrow><mn>12</mn><mo>,</mo><mn>6</mn><mo>−</mo><mn>12</mn><mo>,</mo><mn>0</mn></mrow></mfrac><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>100</mn><mi>%</mi><mo>−</mo><mn>25</mn><mi>%</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>25</mn><mi>%</mi><mo>+</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>36</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>6</mn></mrow></mfrac><mo>⋅</mo><mn>75</mn><mi>%</mi><mo>=</mo><mn>25</mn><mi>%</mi><mo>+</mo><mn>45</mn><mi>%</mi><mo>=</mo><mn>70</mn><mi>%</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">\text{SoC} \approx 25\% + \frac{U - 12{,}0}{12{,}6 - 12{,}0} \cdot (100\% - 25\%) = 25\% + \frac{0{,}36}{0{,}6} \cdot 75\% = 25\% + 45\% = 70\%.</annotation></semantics></math></p>
+<p>Tehát a töltöttség kb. 70 %. ∎<br />
+(A példa tájékoztató jellegű, ellenőrizendő: akkumulátorgyártói
+táblázat.)</p>
+<p><strong>2. példa (közepes)</strong> – <em>Indítóköri feszültségesés
+behatárolása</em><br />
+Adott: hidegindítás során a műszerrel mért adatok: indítóáram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>180</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 180\,\text{A}</annotation></semantics></math>;
+feszültség az akkumulátor pozitív saruja és az indítómotor
+mágneskapcsolójának 30-as kapcsa között (terhelés alatt)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">es</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{es}} = 0{,}9\,\text{V}</annotation></semantics></math>.
+Keresett: az átmeneti ellenállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mtext mathvariant="normal">át</mtext></msub><annotation encoding="application/x-tex">R_{\text{át}}</annotation></semantics></math>
+és a veszteségi teljesítmény
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">v</mtext></msub><annotation encoding="application/x-tex">P_{\text{v}}</annotation></semantics></math>.</p>
+<p>Megoldás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">át</mtext></msub><mo>=</mo><mfrac><msub><mi>U</mi><mtext mathvariant="normal">es</mtext></msub><mi>I</mi></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>180</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>005</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mi mathvariant="normal">Ω</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">R_{\text{át}} = \frac{U_{\text{es}}}{I} = \frac{0{,}9\,\text{V}}{180\,\text{A}} = 0{,}005\,\Omega = 5\,\text{m}\Omega.</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">v</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">es</mtext></msub><mo>⋅</mo><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>180</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>162</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{v}} = U_{\text{es}} \cdot I = 0{,}9\,\text{V} \cdot 180\,\text{A} = 162\,\text{W}.</annotation></semantics></math></p>
+<p>Ez jelentős hőfejlődés és feszültségcsökkenés az indítómotor felé. A
+hiba a pozitív plusz kábelben vagy annak saruinál keresendő. ∎</p>
+<p><strong>3. példa (haladó)</strong> – <em>Belső ellenállás becslése
+terheléses teszttel</em><br />
+Adott: nyugalmi feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>0</mn></msub><mo>=</mo><mn>12</mn><mo>,</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_0 = 12{,}60\,\text{V}</annotation></semantics></math>.
+Terhelésre 200 A áramot véve a kapocsfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">k</mtext></msub><mo>=</mo><mn>10</mn><mo>,</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{k}} = 10{,}20\,\text{V}</annotation></semantics></math>.
+Keresett: a belső ellenállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>b</mi></msub><annotation encoding="application/x-tex">r_b</annotation></semantics></math>.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>b</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>U</mi><mn>0</mn></msub><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">k</mtext></msub></mrow><mi>I</mi></mfrac><mo>=</mo><mfrac><mrow><mn>12</mn><mo>,</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>10</mn><mo>,</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><mo>,</mo><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>012</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mi mathvariant="normal">Ω</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">r_b = \frac{U_0 - U_{\text{k}}}{I} = \frac{12{,}60\,\text{V} - 10{,}20\,\text{V}}{200\,\text{A}} = \frac{2{,}40\,\text{V}}{200\,\text{A}} = 0{,}012\,\Omega = 12\,\text{m}\Omega.</annotation></semantics></math></p>
+<p>Ép akkumulátornál a belső ellenállás jellemzően néhány mΩ
+(ellenőrizendő: gyártói adat); a 12 mΩ már gyengülő akkumulátorra utal.
+A pontos határértéket a gyártó adja meg (ellenőrizendő). ∎</p>
+<h3 data-number="39.1.6" id="minőségellenőrzés"><span
+class="header-section-number">39.1.6</span> Minőségellenőrzés</h3>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 27%" />
+<col style="width: 39%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Vizsgálat</th>
+<th>Mérendő mennyiség</th>
+<th>Jellemző jó érték (példa)</th>
+<th>Megjegyzés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nyugalmi feszültség</td>
+<td>DC feszültség</td>
+<td>12,5–12,8 V (töltött)</td>
+<td>12,0 V alatt tölteni vagy vizsgálni kell</td>
+</tr>
+<tr>
+<td>Terheléses teszt</td>
+<td>DC feszültség</td>
+<td>&gt;9,6 V (−18 °C, gyártói áram)</td>
+<td>Hőmérsékletfüggő</td>
+</tr>
+<tr>
+<td>Vezetőképességi teszt</td>
+<td>CCA / belső ellenállás</td>
+<td>a gyártói adattal összevetve</td>
+<td>A műszer tájékoztató értéket ad</td>
+</tr>
+<tr>
+<td>Indítóköri feszültségesés a 30-as ágon</td>
+<td>DC feszültség</td>
+<td>&lt;0,2–0,5 V</td>
+<td>Példaérték; gyártói adat</td>
+</tr>
+<tr>
+<td>Indítóköri feszültségesés a 31-es ágon</td>
+<td>DC feszültség</td>
+<td>&lt;0,2–0,5 V</td>
+<td>Példaérték; gyártói adat</td>
+</tr>
+<tr>
+<td>Indítóáram</td>
+<td>DC áram</td>
+<td>100–250 A (személyautó)</td>
+<td>Típus- és hőmérsékletfüggő</td>
+</tr>
+<tr>
+<td>Töltőfeszültség</td>
+<td>DC feszültség</td>
+<td>13,8–14,8 V (belső égésű)</td>
+<td>Hőmérséklet- és energiamenedzsment-függő</td>
+</tr>
+<tr>
+<td>Hullámosság (AC)</td>
+<td>AC feszültség</td>
+<td>&lt;0,5 V</td>
+<td>Túl magas érték diódahibára utal</td>
+</tr>
+<tr>
+<td>Nyugalmi áram</td>
+<td>DC áram</td>
+<td>20–70 mA (típusfüggő)</td>
+<td>Ellenőrizendő: gyári specifikáció</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: gyártói adat / hatályos
+előírás).</p>
+<h3 data-number="39.1.7"
+id="valós-életbeli-alkalmazás-hibakeresési-eset"><span
+class="header-section-number">39.1.7</span> Valós életbeli alkalmazás:
+hibakeresési eset</h3>
+<p><strong>Tünet.</strong> Az ügyfél szerint az autó reggelente csak
+lassan forgatja a motort, bár este a lámpák erősek. A hibakódolvasás nem
+mutat tárolt DTC-t az energiamenedzsment rendszerben.</p>
+<p><strong>Hipotézis.</strong> A leggyakoribb okok: (1) előregedett
+akkumulátor, (2) rossz testelés vagy korrózió az indítókörben, (3) laza
+saru vagy kábelégett szigetelés, (4) kopott indítómotor. A lámpákon nem
+látszik, mert azok kis áramot vesznek fel, az indítás pedig nagy áramot
+igényel.</p>
+<p><strong>Mérés/vizsgálat.</strong> 1. Nyugalmi feszültség:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ny</mtext></msub><mo>=</mo><mn>12</mn><mo>,</mo><mn>55</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{ny}} = 12{,}55\,\text{V}</annotation></semantics></math>
+– megfelelő. 2. Vezetőképességi teszt: a műszer szerint az akkumulátor
+CCA értéke a névleges 85 %-a, állapota „MEGFELELŐ, TÖLTÉSRE SZORUL” –
+mivel a feszültség jó, ez elfogadható. 3. Indítás közben mért feszültség
+az akkumulátor pozitív sarujánál:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>10</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U = 10{,}8\,\text{V}</annotation></semantics></math>.
+4. Feszültségesés a pozitív 30-as ágon (akkumulátor + sarutól az
+indítómotor B+ bemenetéig):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">es</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{es}} = 0{,}7\,\text{V}</annotation></semantics></math>
+(határérték: 0,5 V). 5. Feszültségesés a test ágon (indítómotor testétől
+az akkumulátor negatív sarkáig):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">es</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{es}} = 0{,}3\,\text{V}</annotation></semantics></math>
+(elfogadható). 6. A mágneskapcsoló 50-es bemenetén a feszültség indítás
+alatt:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>11</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U = 11{,}2\,\text{V}</annotation></semantics></math>
+– rendben. 7. Indítóáram (lakatfogó):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>180</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 180\,\text{A}</annotation></semantics></math>.</p>
+<p><strong>Ok.</strong> A pozitív fővezetéken vagy annak valamelyik
+kötésén (pl. a gyári összekötő csavar a motorblokk közelében)
+megnövekedett átmeneti ellenállás, ami 180 A áramnál 0,7 V-os
+feszültségesést okoz.</p>
+<p><strong>Javítás.</strong> A 30-as fővezeték, a sarvéghüvelyek és a
+kötési pontok ellenőrzése, megtisztítása, új szigetelőzsugor
+alkalmazása, szükség esetén kábelcsere. A kötéseket a gyártói
+nyomatékkal kell meghúzni (ellenőrizendő: gyártói adat).</p>
+<p><strong>Ellenőrzés.</strong> Újraindítás: a feszültség az indítómotor
+bemenetén
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">10{,}5\,\text{V}</annotation></semantics></math>
+fölött marad (a gyártói zárófeszültség felett), az indítás lendületes. A
+feszültségesés a 30-as ágon 0,2 V alá csökkent.</p>
+<p><strong>Megelőzés.</strong> Időszakos szervizkor ellenőrizni kell az
+akkumulátorsarukat, a testpontokat és a főkábel állapotát; a hiba korai
+jele a lassú indítás és a kábel melegedése.</p>
+<h3 data-number="39.1.8"
+id="gyakorlati-útmutató-komplex-áramellátó--és-indítórendszer-vizsgálat"><span
+class="header-section-number">39.1.8</span> Gyakorlati útmutató: komplex
+áramellátó- és indítórendszer-vizsgálat</h3>
+<p><strong>Cél:</strong> Az akkumulátor, az indítókör, a generátor
+töltőfeszültsége és a nyugalmi áram állapotának felmérése, egy esetleges
+hiba behatárolása.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> VIN, gyártó, típus,
+motorváltozat, akkumulátor típusa (EFB/AGM), a gyártói javítási utasítás
+elérhetősége.</p>
+<p><strong>Szükséges eszközök, mérőeszközök, anyagok:</strong><br />
+- digitális multiméter (CAT III, ellenőrizendő), DC lakatfogó (pl. 0–600
+A DC), akkumulátor-vizsgáló (vezetőképességi teszt), terhelővillás
+akkumulátortesztelő (ha van), diagnosztikai műszer az energiamenedzsment
+élő adataihoz, sarukulcsok, sarutisztító kaparó, szemmel láthatóan
+sérült kábel esetén új kábel, védőkesztyű, védőszemüveg.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Munkavédelmi és környezetvédelmi lépések:</strong><br />
+- A jármű sík felületen, rögzítve, elszívó alatt álljon.<br />
+- A mérés idejére a gyújtás legyen kikapcsolva, a kulcs távol.<br />
+- Akkumulátor savval és durranógázzal szembeni védelem (védőszemüveg,
+kesztyű), szikrakizárás.<br />
+- Hulladék (pl. tisztított korróziós anyag) gyűjtése.</p>
+<p><strong>Számozott munkalépések:</strong></p>
+<ol type="1">
+<li><strong>Előkészítés.</strong> Rögzítse a járművet, ellenőrizze az
+akkumulátor típusát és a sarukat. Dokumentálja a VIN-t.</li>
+<li><strong>Nyugalmi feszültség mérése.</strong> Multiméter DC V
+állásban, az akkumulátor sarkain. Ha a felületi töltés zavarhat,
+kapcsoljon be 5 percre a világítást (csak akkor, ha a jármű nyugalmi
+áram szempontjából engedi). Jegyezze fel az értéket.</li>
+<li><strong>Vezetőképességi teszt.</strong> A műszer utasítása szerint
+csatlakoztassa (gyakran a sarkokhoz), adja meg az akkumulátor típusát,
+CCA értékét. Értékelje: „GOOD”, „RECHARGE”, „REPLACE”.</li>
+<li><strong>Terheléses teszt (ha van terhelővilla).</strong> Kövesse a
+gyártói utasítást. Ne terhelje tovább, mint az előírt idő.</li>
+<li><strong>Indítási mérések.</strong> Kapcsolja be a lakatfogót a 30-as
+főkábelre vagy az akkumulátor negatív kábelére. Indítsa a motort (max.
+10 s, szünet, ha szükséges). Mérje: a legkisebb kapocsfeszültséget, az
+indítóáramot, a feszültségesést a 30-as plusz ágon és a 31-es test ágon.
+Hasonlítsa a gyártói határértékekhez.</li>
+<li><strong>Mágneskapcsoló-vezérlés.</strong> Mérje a feszültséget az
+50-es kapcson indítás alatt. Ha nem jelenik meg feszültség, ellenőrizze
+a gyújtáskapcsolót, a biztosítékokat, a relét, a vezetéket.</li>
+<li><strong>Töltőfeszültség mérése.</strong> Motor jár, alapjáraton.
+Multiméter az akkumulátor sarkain. Jegyezze fel a feszültséget,
+kapcsoljon be nagy fogyasztókat (fényszóró, hátsó ablakfűtés,
+ventilátor). A feszültségnek a szabályozási tartományban kell maradnia.
+Emelje a fordulatszámot (ha biztonságos), ellenőrizze, hogy a feszültség
+nem emelkedik túl.</li>
+<li><strong>Hullámosság mérése.</strong> Multiméter AC V állásban, a
+generátor B+ (vagy az akkumulátor +) pontján, terhelés alatt. Jegyezze
+fel.</li>
+<li><strong>Nyugalmi áram mérése.</strong> A nyugalmi áramot lehetőleg
+kis áramú (mA-es) DC lakatfogóval mérje a negatív kábelen. Ha soros
+műszert használ, azt a gyártói eljárás szerint, áthidalóval együtt kösse
+be még az elalvás előtt, csak utána bontsa az áthidalót, majd várja ki
+az alvási időt (pl. 20–30 perc; ellenőrizendő: gyártói eljárás). Soros
+műszerrel indítani vagy fogyasztót bekapcsolni tilos, mert a 10 A-es
+mérőbiztosító kiolvadhat. Jegyezze fel az áramot.</li>
+<li><strong>Fogyasztó-behatárolás (ha a nyugalmi áram magas).</strong> A
+fogyasztót elsősorban a biztosítékokon mért mV-os feszültségeséssel
+határolja be (kihúzás nélkül); a biztosíték kihúzása felébresztheti a
+hálózatot. A hibás áramkört a biztosíték azonosítja.</li>
+<li><strong>Dokumentálás.</strong> Töltse ki a munkalapot: mért értékek,
+határértékek, elvégzett műveletek, javítási javaslat.</li>
+<li><strong>Próba.</strong> Indítás, töltésellenőrzés, hibakód-törlés
+(ha szükséges), readiness ellenőrzés.</li>
+</ol>
+<h3 data-number="39.1.9" id="tipikus-hibák"><span
+class="header-section-number">39.1.9</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>Akkumulátor cseréje a feszültségesés ellenőrzése
+nélkül.</strong> Lassú indításnál sokan azonnal új akkumulátort tesznek
+be, pedig a feszültségesés a kábelben vagy a testponton okozza a hibát.
+Mindig mérje meg előbb a feszültségesést.</li>
+<li><strong>Nyugalmi áram mérése túl korán.</strong> A jármű alvó
+állapotát nem szabad összetéveszteni a gyújtás kikapcsolásával; a
+vezérlők még percekig aktívak a kiiktatás vagy a lezárás után. Követni
+kell a gyártói alvási időt.</li>
+<li><strong>Hullámosság kihagyása.</strong> Csak az
+egyenfeszültség-mérés nem mutatja ki a generátor diódahibáját, mert az
+átlag még jó lehet. A hullámosság mérése nélkül a hiba rejtve
+marad.</li>
+<li><strong>Téves értelmezés: „12 V indítás alatt jó”.</strong> Az
+indításkor mért feszültséget nem önmagában, hanem az árammal együtt kell
+értékelni. 12 V feszültség 0 A áramnál nem jelent indítóképességet.</li>
+<li><strong>Töltőfeszültség hibás értelmezése
+start-stop/energiamenedzsment rendszeren.</strong> A modern járműveknél
+a feszültség változik (rekuperáció, fogyasztólekapcsolás), ezért a mérés
+előtt ellenőrizni kell a rendszer aktuális üzemállapotát a diagnosztikai
+műszerrel.</li>
+</ol>
+<h3 data-number="39.1.10" id="önellenőrzés"><span
+class="header-section-number">39.1.10</span> Önellenőrzés</h3>
+<p><strong>1.</strong> Igaz-e, hogy az akkumulátor 12,0 V nyugalmi
+feszültsége közel teljes töltöttséget jelent?<br />
+<strong>2.</strong> Egy indítókör 30-as ágán 200 A áram mellett 0,1 V
+feszültségesést mérünk. Számítsa ki az átmeneti ellenállást. Jó-e ez az
+érték?<br />
+<strong>3.</strong> Miért mérünk hullámosságot AC V állásban a generátor
+kimenetén?<br />
+<strong>4.</strong> Mi a helyes sorrend a saruk le- és
+felcsatlakoztatásánál? Indokolja.<br />
+<strong>5.</strong> Nyugalmi áram mérésénél miért kell megvárni a jármű
+alvó állapotát?<br />
+<strong>6.</strong> Egy vezetőképességi teszt azt írja, az akkumulátor
+CCA értéke a névleges 60 %-a. Mit javasol?</p>
+<h3 data-number="39.1.11" id="feladatok"><span
+class="header-section-number">39.1.11</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong><br />
+Írja le a nyugalmi feszültség mérésének lépéseit, és adja meg, milyen
+értékeket tekint jónak egy 12 V-os ólomakkumulátornál.</p>
+<p><strong>2. feladat (A)</strong><br />
+Egy akkumulátor nyugalmi feszültsége 12,45 V. Becsülje meg a
+töltöttséget a lineáris közelítéssel, ha 12,0 V 25 %-nak, 12,6 V 100
+%-nak felel meg.</p>
+<p><strong>3. feladat (B)</strong><br />
+Indítás közben az akkumulátor kapocsfeszültsége 10,4 V-ra esik 150 A
+áramnál. A nyugalmi feszültség 12,7 V. Határozza meg az akkumulátor
+belső ellenállását, és értékelje a kapott értéket.</p>
+<p><strong>4. feladat (B)</strong><br />
+A generátor B+ kimenetén 14,2 V feszültséget mérünk, de a hullámosság AC
+mérése 1,4 V-ot mutat. Mit jelent ez? Hogyan ellenőrzi a gyanút?</p>
+<p><strong>5. feladat (C)</strong><br />
+Egy autó nyugalmi áramát 220 mA-nek mérjük. A gyári specifikáció 30 mA-t
+enged meg alvó állapotban. Részletezze a hibakeresés lépéseit, és
+magyarázza el, hogyan használható a biztosítéktábla a hiba
+behatárolására.</p>
+<p><strong>6. feladat (D)</strong><br />
+Egy lassú indítású járműnél az alábbi értékeket mérik: nyugalmi
+feszültség 12,61 V, vezetőképességi teszt 90 % CCA, indítóáram 170 A,
+feszültségesés a 30-as ágon 0,15 V, a 31-es ágon 0,75 V. Hol keresi a
+hibát? Indokolja.</p>
+<h3 data-number="39.1.12" id="megoldások"><span
+class="header-section-number">39.1.12</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<p><strong>1.</strong> Hamis. A 12,0 V lemerült állapotot jelez (kb. 25
+% SoC), nem teljesen feltöltöttet.</p>
+<p><strong>2.</strong><br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">át</mtext></msub><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0005</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mi mathvariant="normal">Ω</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">R_{\text{át}} = \frac{0{,}1\,\text{V}}{200\,\text{A}} = 0{,}0005\,\Omega = 0{,}5\,\text{m}\Omega.</annotation></semantics></math></p>
+<p>Ez kiváló érték, jó vezetéknek felel meg.</p>
+<p><strong>3.</strong> Azért, mert a generátor egyenirányított kimenetén
+váltakozó összetevő is van. Ha egy dióda hibás, a hullámosság megnő; ezt
+az AC mérés közvetlenül kimutatja.</p>
+<p><strong>4.</strong> Lekötéskor először a negatív, utána a pozitív;
+felkötéskor fordítva. Így a szerszám és a saru véletlen testérintése nem
+okoz rövidzárat.</p>
+<p><strong>5.</strong> Mert a jármű elektronikája (vezérlők,
+komfortmodulok) a gyújtás kikapcsolása után még aktív, és áramot vesz
+fel. Csak a gyártói alvási idő elteltével mérhető a tényleges nyugalmi
+áram.</p>
+<p><strong>6.</strong> Cserét javasol, mert a hidegindító képesség
+jelentősen csökkent; hideg időben várható indítási probléma.</p>
+<p><strong>1. feladat (A)</strong><br />
+Multiméter DC V állásban, az akkumulátor sarkain, lehetőleg a felületi
+töltés eltávolítása után. Jó érték: 12,6 V fölött teljes, 12,4 V kb. 75
+%, 12,2 V kb. 50 %, 12,0 V alatt lemerült.</p>
+<p><strong>2. feladat (A)</strong><br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">SoC</mtext><mo>=</mo><mn>25</mn><mi>%</mi><mo>+</mo><mfrac><mrow><mn>12</mn><mo>,</mo><mn>45</mn><mo>−</mo><mn>12</mn><mo>,</mo><mn>0</mn></mrow><mrow><mn>12</mn><mo>,</mo><mn>6</mn><mo>−</mo><mn>12</mn><mo>,</mo><mn>0</mn></mrow></mfrac><mo>⋅</mo><mn>75</mn><mi>%</mi><mo>=</mo><mn>25</mn><mi>%</mi><mo>+</mo><mn>56</mn><mo>,</mo><mn>25</mn><mi>%</mi><mo>=</mo><mn>81</mn><mo>,</mo><mn>25</mn><mi>%</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">\text{SoC} = 25\% + \frac{12{,}45 - 12{,}0}{12{,}6 - 12{,}0} \cdot 75\% = 25\% + 56{,}25\% = 81{,}25\%.</annotation></semantics></math></p>
+<p><strong>3. feladat (B)</strong><br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>b</mi></msub><mo>=</mo><mfrac><mrow><mn>12</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>10</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0153</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>15</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mi mathvariant="normal">Ω</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">r_b = \frac{12{,}7\,\text{V} - 10{,}4\,\text{V}}{150\,\text{A}} = 0{,}0153\,\Omega = 15{,}3\,\text{m}\Omega.</annotation></semantics></math></p>
+<p>Ez viszonylag magas, de még elfogadható lehet nagyon hideg időben; a
+pontos határ a gyártótól függ. Ha a feszültség 9,6 V alá esik
+(példaérték, ellenőrizendő), az akkumulátor valószínűleg cserés.</p>
+<p><strong>4. feladat (B)</strong><br />
+Az AC összetevő 1,4 V jelentősen meghaladja a jellemző 0,5 V-ot, ez
+diódahibára, fáziskimaradásra vagy rossz csatlakozásra utal. A gyanút a
+generátor kimenetén oszcilloszkóppal, vagy a diódák ellenállásmérésével,
+illetve a generátor műhelyben történő terheléses vizsgálatával lehet
+megerősíteni.</p>
+<p><strong>5. feladat (C)</strong><br />
+Első lépés: a mérés megismétlése a gyártói alvási idő után. Ha még
+mindig 220 mA, akkor a jármű fogyasztóinak szisztematikus ellenőrzése
+következik. Multiméter árammérő állásban (feszültségesés-mérési
+módszerrel vagy soros bekötéssel) a biztosítéktáblán egyesével kihúzva a
+biztosítékokat, figyelni kell, melyik áramcsökkenést okoz. A hibás
+áramkör azonosítható. Ezután az áramútban lévő modulok, vezetékelés
+vizsgálata, a fogyasztó cseréje vagy javítása.</p>
+<p><strong>6. feladat (D)</strong><br />
+A hiba a test ágon van. A 31-es ágon mért 0,75 V feszültségesés
+többszöröse a megengedettnek, míg a 30-as ág jó. A hibát az akkumulátor
+negatív saru–test között kell keresni: korrodált testpont, laza csavar,
+oxidált saru vagy elvékonyodott kábel. A javítás: testpont tisztítása,
+kenyeletlen vezetővég felújítása, kábelcsere, majd
+feszültségesés-újramérés.</p>
+<h3 data-number="39.1.13" id="rövid-összefoglaló"><span
+class="header-section-number">39.1.13</span> Rövid összefoglaló</h3>
+<p>Az áramellátó és indítórendszer diagnosztikája az akkumulátor
+állapotának meghatározásával kezdődik: a nyugalmi feszültség a
+töltöttségre utal, a vezetőképességi teszt a hidegindító képességet
+becsüli, a terheléses teszt a kapocsfeszültséget méri nagy áramnál. A
+lemerült és a hibás akkumulátor megkülönböztethető. Az indítókör
+vizsgálata során a legfontosabb a feszültségesés-mérés: a 30-as plusz és
+a 31-es test ágon terhelés alatt mért feszültségkülönbség egyenként
+általában 0,5 V alatt kell legyen (példaérték). A generátor vizsgálata a
+töltőfeszültség (13,8–14,8 V) mellett a hullámosság mérését is magában
+foglalja; az AC összetevő magas értéke diódahibára utal. A nyugalmi áram
+a jármű alvó állapotában mérhető, és tipikusan 20–70 mA (típusfüggő); a
+megnövekedett áram fogyasztóját biztosítékonkénti bontással lehet
+behatárolni. A mérések sorrendje: akkumulátor, indítókör, generátor,
+nyugalmi áram. <strong>Továbbvitt eredmény.</strong> A
+feszültségesés-mérés, a nyugalmi áram mérése és a rendszer logikus
+hibakeresési lánca közvetlenül felhasználható az <a
+href="au145.html">Áramút-alapú hibakeresés</a> alfejezetben. Minden
+mérést a gyártói javítási utasítás szerint, megfelelő műszerrel kell
+végezni.</p>
+<h3 data-number="39.1.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">39.1.14</span> Források és ellenőrzési
+hiányok</h3>
+<p><strong>Forrástípusok:</strong> járműgyártói javítási utasítások,
+energiamenedzsment- és áramútrajz-dokumentációk; akkumulátorgyártói
+adatlapok és tesztelési útmutatók; DIN 72552 kapocsjelölések; MSZ EN
+61010 / IEC 61010 műszerbiztonsági szabvány; MSZ EN 60034 sorozat
+villamos gépekre; a generátorokra vonatkozó gyártói specifikációk.</p>
+<p><strong>Ellenőrizendő állítások:</strong><br />
+- a nyugalmi feszültség–SoC táblázat pontos értékei;<br />
+- a terheléses teszt zárófeszültségének pontos hőmérsékletfüggése;<br />
+- a vezetőképességi teszt pontossági tartománya;<br />
+- az indítóáram jellemző nagysága személy- és teherautóknál;<br />
+- a feszültségesés-határértékek (0,2–0,5 V);<br />
+- a töltőfeszültség, a hullámosság és a nyugalmi áram gyári
+specifikációi;<br />
+- a jármű alvó állapotának eléréséhez szükséges idő.</p>
+<p>A fenti példaértékek tanulási célúak, nem konkrét járművet vagy
+hatósági előírást jellemeznek.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au141.html">← 38.4 Hidraulikus rendszerek és a szervokormány diagnosztikája</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au143.html">39.2 Gyújtásvizsgálat és oszcilloszkópos gyújtásdiagnosztika →</a></div>
+</nav>
+</body>
+</html>

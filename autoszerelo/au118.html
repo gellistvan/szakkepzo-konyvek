@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>33.2 A nagyfeszültségű akkumulátor és az akkumulátor-felügyelet
+(BMS) – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz8">VIII. RÉSZ – Hibrid és elektromos járművek</a> › <a href="index.html#auch32">33 Hibrid és elektromos hajtás</a></p>
+<div class="links"><a class="prev" rel="prev" href="au117.html">← 33.1 Hibrid és elektromos hajtások áttekintése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au119.html">33.3 Villamos hajtás: villanymotor, inverter, DC/DC átalakító, regeneratív fékezés és hőmenedzsment →</a></div>
+</nav>
+<h2 data-number="33.2" id="au118"><span
+class="header-section-number">33.2</span> A nagyfeszültségű akkumulátor
+és az akkumulátor-felügyelet (BMS)</h2>
+<h3 data-number="33.2.1"
+id="motiváció-miért-a-hv-akkumulátor-a-diagnosztika-szíve"><span
+class="header-section-number">33.2.1</span> Motiváció: miért a
+HV-akkumulátor a diagnosztika szíve?</h3>
+<p>Hibrid vagy elektromos jármű érkezik a műhelybe, és a vezető azt
+mondja: „a kocsi nem akar elindulni, csak beveszi a fokozatot, de nem
+hajt, és feljött valami akkumulátoros hibaüzenet.” A rendszerteszter a
+hajtáslánc-vezérlőből nemcsak motorkódot, hanem a nagyfeszültségű (HV)
+akkumulátorra, a BMS-re (battery management system), a kontaktorokra
+vagy a szigetelésfigyelésre utaló hibakódokat is olvashat. Ha a szerelő
+nem érti a cellák, modulok és a biztonsági kapcsolóáramkör felépítését,
+akkor nem tudja eldönteni, hogy egy cella, egy érzékelő, egy kontaktor,
+vagy éppen a hűtőrendszer hibás-e. Ez az alfejezet ezért a cellától a
+teljes akkumulátorrendszerig vezet: megismerjük a Li-ion cellákat, a
+soros–párhuzamos kapcsolást, a BMS feladatait, a HV-kontaktorokat, az
+előtöltést és a hőmenedzsmentet.</p>
+<h3 data-number="33.2.2"
+id="szemléletes-kép-egy-padlóba-épített-hv-akkumulátor"><span
+class="header-section-number">33.2.2</span> Szemléletes kép: egy padlóba
+épített HV-akkumulátor</h3>
+<p>Képzeljünk el egy elektromos személyautót, amelynél a HV-akkumulátor
+a padlólemez alatt, az első és hátsó tengely között helyezkedik el. Az
+alumínium házban több modul sorakozik, mindegyikben több, sorba kötött
+Li-ion cella. A cellák kék vagy ezüst fóliába, illetve prizmatikus
+dobozba zárt egységek, közöttük hűtőlemezek futnak, amelyeken folyadék
+kering. A pakk oldalán narancssárga HV-kábelek vezetnek a
+hajtásinverterhez, elöl pedig egy narancssárga szervizcsatlakozó
+(service disconnect) található, amely feszültségmentesítéskor kézzel
+eltávolítható. A pakk tetején, kis árnyékolt kábelezéssel a BMS
+mérővezetékei futnak a cellafeszültség- és hőmérséklet-érzékelőkhöz. A
+pakk elején külön dobozban vannak a fő kontaktorok, az előtöltő
+ellenállás, a HV-biztosító és a mérőérzékelők.</p>
+<h3 data-number="33.2.3" id="definíciók-és-alapösszefüggések"><span
+class="header-section-number">33.2.3</span> Definíciók és
+alapösszefüggések</h3>
+<p><strong>Definíció.</strong> <strong>HV-akkumulátor</strong>
+(high-voltage traction battery): a hibrid vagy elektromos jármű hajtási
+energiáját tároló, narancssárga jelöléssel ellátott, több száz voltos
+egyenfeszültségű akkumulátor. A „HV” itt a járműtechnikai
+nagyfeszültséget jelenti, nem a hálózati épületvillamossági
+feszültségszinteket.</p>
+<p><strong>Definíció.</strong> <strong>Cella, modul, pakk.</strong> A
+<strong>cella</strong> a legkisebb elektrokémiai egység. A
+<strong>modul</strong> több cella mechanikailag és elektromosan
+összekapcsolt csoportja, jellemzően kerettel, hűtőlemezzel és
+érzékelőkkel. A <strong>pakk</strong> a modulok, hűtőelemek, érzékelők,
+kontaktorok, biztosítók és BMS közös házba szerelt, járműbe építhető
+rendszere.</p>
+<p><strong>Definíció.</strong> <strong>BMS</strong> (battery management
+system): az akkumulátor villamos, hő- és biztonsági állapotát felügyelő
+elektronikus rendszer.</p>
+<p><strong>Összefüggés.</strong> A soros és párhuzamos
+cellaösszeköttetésből a pakk feszültsége, kapacitása és energiája:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">s</mtext></msub><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">cella</mtext></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">p</mtext></msub><mspace width="0.167em"></mspace><msub><mi>Q</mi><mtext mathvariant="normal">cella</mtext></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">U_{\text{pakk}} = n_{\text{s}} \, U_{\text{cella}}, \qquad Q_{\text{pakk}} = n_{\text{p}} \, Q_{\text{cella}},</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><mspace width="0.167em"></mspace><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">s</mtext></msub><mspace width="0.167em"></mspace><msub><mi>n</mi><mtext mathvariant="normal">p</mtext></msub><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">cella</mtext></msub><mspace width="0.167em"></mspace><msub><mi>Q</mi><mtext mathvariant="normal">cella</mtext></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">W_{\text{pakk}} = U_{\text{pakk}} \, Q_{\text{pakk}} = n_{\text{s}}\,n_{\text{p}}\,U_{\text{cella}}\,Q_{\text{cella}},</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mtext mathvariant="normal">s</mtext></msub><annotation encoding="application/x-tex">n_{\text{s}}</annotation></semantics></math>
+a soros cellák száma,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mtext mathvariant="normal">p</mtext></msub><annotation encoding="application/x-tex">n_{\text{p}}</annotation></semantics></math>
+a párhuzamos cellák száma,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">cella</mtext></msub><annotation encoding="application/x-tex">U_{\text{cella}}</annotation></semantics></math>
+a cella névleges feszültsége,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Q</mi><mtext mathvariant="normal">cella</mtext></msub><annotation encoding="application/x-tex">Q_{\text{cella}}</annotation></semantics></math>
+a cella kapacitása (Ah),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mtext mathvariant="normal">pakk</mtext></msub><annotation encoding="application/x-tex">W_{\text{pakk}}</annotation></semantics></math>
+a pakk energiája (Wh). A pakk kapacitását amperórában párhuzamos
+kapcsolás növeli, feszültségét soros kapcsolás.</p>
+<p><strong>Definíció.</strong> <strong>SoC</strong> (state of charge) a
+töltöttségi szint, <strong>SoH</strong> (state of health) az egészségi
+állapot. Képlettel:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>o</mi><mi>C</mi><mo>=</mo><mfrac><msub><mi>Q</mi><mtext mathvariant="normal">maradék</mtext></msub><msub><mi>Q</mi><mtext mathvariant="normal">névleges</mtext></msub></mfrac><mo>⋅</mo><mn>100</mn><mi>%</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>S</mi><mi>o</mi><mi>H</mi><mo>=</mo><mfrac><msub><mi>C</mi><mtext mathvariant="normal">aktuális</mtext></msub><msub><mi>C</mi><mtext mathvariant="normal">új</mtext></msub></mfrac><mo>⋅</mo><mn>100</mn><mi>%</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">SoC = \frac{Q_{\text{maradék}}}{Q_{\text{névleges}}} \cdot 100\%, \qquad SoH = \frac{C_{\text{aktuális}}}{C_{\text{új}}} \cdot 100\%,</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Q</mi><mtext mathvariant="normal">maradék</mtext></msub><annotation encoding="application/x-tex">Q_{\text{maradék}}</annotation></semantics></math>
+a még kivehető töltésmennyiség,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Q</mi><mtext mathvariant="normal">névleges</mtext></msub><annotation encoding="application/x-tex">Q_{\text{névleges}}</annotation></semantics></math>
+a névleges kapacitás,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mtext mathvariant="normal">aktuális</mtext></msub><annotation encoding="application/x-tex">C_{\text{aktuális}}</annotation></semantics></math>
+a jelenlegi,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mtext mathvariant="normal">új</mtext></msub><annotation encoding="application/x-tex">C_{\text{új}}</annotation></semantics></math>
+az új állapotban mért kapacitás. A gyakorlatban a SoH-t a
+kapacitáscsökkenés és a belső ellenállás növekedése együttesen
+jellemzi.</p>
+<p><strong>Definíció.</strong> <strong>HV-kontaktor</strong>
+(contactor): nagyfeszültségű egyenáramú relé, amely a HV-akkumulátor
+pozitív és negatív pólusát a jármű hajtásrendszeréhez kapcsolja.
+<strong>Előtöltő ellenállás</strong> (precharge resistor): a fő
+kontaktor zárása előtt a DC-köri kondenzátort korlátozott árammal
+feltöltő ellenállás. <strong>Szervizcsatlakozó</strong> (service
+disconnect): a mechanikai leválasztást lehetővé tevő, általában
+narancssárga reteszelt elem, amely kiveszése megszakítja a cellák
+közötti áramkört. <strong>Szigetelésfigyelés</strong>: a HV+ és HV−
+vezetékek test (karosszéria) felé mért szigetelési ellenállásának
+folyamatos vagy időszakos ellenőrzése.</p>
+<h3 data-number="33.2.4" id="felépítés-és-működés"><span
+class="header-section-number">33.2.4</span> Felépítés és működés</h3>
+<h4 data-number="33.2.4.1" id="cella-és-cellakémia"><span
+class="header-section-number">33.2.4.1</span> Cella és cellakémia</h4>
+<p>A hajtásakkumulátorokban ma elsősorban lítiumion (Li-ion) cellákat
+használunk. Két elterjedt katódkémia:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Jellemző</th>
+<th>NMC (nikkel-mangán-kobalt)</th>
+<th>LFP (lítium-vas-foszfát)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Névleges cellafeszültség</td>
+<td>kb. 3,6–3,7 V</td>
+<td>kb. 3,2–3,3 V</td>
+</tr>
+<tr>
+<td>Energiasűrűség</td>
+<td>nagyobb</td>
+<td>kisebb</td>
+</tr>
+<tr>
+<td>Biztonsági viselkedés</td>
+<td>érzékenyebb</td>
+<td>stabilabb</td>
+</tr>
+<tr>
+<td>Tipikus alkalmazás</td>
+<td>személyautó</td>
+<td>busz, teherszállító, energiatároló</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: gyártói adat).</p>
+<p>Cellák kialakítás szerint lehetnek <strong>hengeres</strong> (pl.
+18650, 21700 méretjelölés), <strong>prizmatikus</strong> (sík oldalfalú
+fém doboz) vagy <strong>pouch</strong> (fóliatasakos, párnázott) cellák.
+A járműpakkokban a párhuzamosan kötött cellacsoportokat gyakran egy
+cellának tekintik (pl. 3 db 50 Ah-s pouch párhuzamosan = 150 Ah-s
+cellacsoport), mert elektromos szempontból ugyanúgy viselkednek.</p>
+<h4 data-number="33.2.4.2"
+id="sorospárhuzamos-elrendezés-modul-és-pakk"><span
+class="header-section-number">33.2.4.2</span> Soros–párhuzamos
+elrendezés, modul és pakk</h4>
+<p>A pakk jelölése általában <code>nsnp</code> alakú, például
+<code>96s2p</code>: 96 soros cellacsoport, csoportonként 2 párhuzamos
+cella. A soros kapcsolás növeli a feszültséget, a párhuzamos kapcsolás
+növeli az amperóra kapacitást és a terhelhetőséget. A soros füzért
+<strong>stringnek</strong> is nevezzük. Egy nagyobb személyautó-pakk
+jellemzően 96–108 soros cellacsoportból áll, így a névleges feszültség
+350–450 V körül van; egyes tehergépjármű-rendszerek 600–800 V-osak
+(ellenőrizendő: típus szerint).</p>
+<p>A modul feladata a soros string szakaszokba osztása, a mechanikai
+rögzítés, a hűtőlemezekkel való érintkezés és a BMS-mérések bekötése. A
+modulok egymáshoz csavarozott, rugalmas vagy sínezett összekötőkkel
+csatlakoznak; minden modulnál kivezetnek a cellafeszültség-mérő
+vezetékek és a belső hőmérséklet-érzékelők.</p>
+<figure id="fig-au118-1">
+<div class="fig-interactive"><iframe src="figures/html/au118-1.html" title="Hengeres, prizmás és tasakos cella; a cellákból modul, a modulokból hűtőlapos pakk épül, BMS-sel, kontaktoros kapcsolódobozzal és szervizcsatlakozóval." loading="lazy" style="width:100%;border:0;height:680px"></iframe><noscript><img src="figures/img/au118-1.png" style="width:95.0%"
+alt="Hengeres, prizmás és tasakos cella; a cellákból modul, a modulokból hűtőlapos pakk épül, BMS-sel, kontaktoros kapcsolódobozzal és szervizcsatlakozóval." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au118-1.png" style="width:95.0%"
+alt="Hengeres, prizmás és tasakos cella; a cellákból modul, a modulokból hűtőlapos pakk épül, BMS-sel, kontaktoros kapcsolódobozzal és szervizcsatlakozóval." /></details></div>
+<figcaption>A HV-akkumulátor felépítése robbantott vonalrajzon: (a)
+hengeres, prizmás és tasakos cella; (b) modul soros–párhuzamos
+cellacsoportokkal, összekötő sínekkel, mérővezetékekkel, NTC-vel és
+cellafelügyelő panellel; (c) pakk hűtőlapos tálcával, modulokkal,
+kapcsolódobozzal (kontaktorok, előtöltő ellenállás, biztosító,
+áramérzékelő, BMS), szervizcsatlakozóval és tömített fedéllel
+(sematikus, nem méretarányos)</figcaption>
+</figure>
+<p>A rajzon a cella–modul–pakk szintek egymásra épülése követhető: a
+cellacsoportokat sínek kötik sorba, a modulok a hűtőlapon ülnek, a
+kapcsolódobozban vannak a kontaktorok és az előtöltés elemei, a
+szervizcsatlakozó pedig a fedélen át hozzáférhető. Az interaktív
+változatban a lejátszás pakk → modul → cella sorrendben „szedi szét” az
+akkumulátort, rámutatásra az elem neve jelenik meg, a kalkulátor pedig a
+soros és párhuzamos cellaszámból és a cellaadatokból kiszámítja a
+pakkfeszültséget, a kapacitást és az energiát (alapérték: az 1. példa
+96s2p pakkja).</p>
+<h4 data-number="33.2.4.3" id="a-bms-feladatai"><span
+class="header-section-number">33.2.4.3</span> A BMS feladatai</h4>
+<p>A BMS a HV-akkumulátor „felügyeleti központja”. Feladatai:</p>
+<ol type="1">
+<li><strong>Cellafeszültség-figyelés.</strong> Minden cellacsoport
+feszültségét időről időre megméri, és a cellák közötti eltérést figyeli.
+Új, kiegyenlített pakkon az eltérés néhány millivolt; a gyártói határ
+gyakran 20–40 mV alatti (ellenőrizendő).</li>
+<li><strong>Hőmérséklet-figyelés.</strong> A modulokon elosztott NTC/PT
+hőmérséklet-érzékelőkkel méri a cellák hőmérsékletét, és a hűtő/fűtő
+rendszert ennek megfelelően szabályozza.</li>
+<li><strong>Cellakiegyenlítés (balancing).</strong> A soros cellák
+öregedése vagy hőmérséklete eltérő lehet, ezért a BMS <strong>passzív
+kiegyenlítést</strong> (a magasabb feszültségű cellák kis ellenálláson
+kisütik) vagy <strong>aktív kiegyenlítést</strong> (többletenergiát
+töltésmozgató kapcsolóval más cellába visznek) végez.</li>
+<li><strong>SoC- és SoH-becslés.</strong> A SoC-t áramintegrálással
+(coulomb-counting) és feszültség-nyitott áramköri görbe alapján becsli;
+a SoH-t a kapacitáscsökkenésből és a belső ellenállás
+emelkedéséből.</li>
+<li><strong>Védelem.</strong> Túlfeszültség, mélykisülés, túláram,
+túlmelegedés vagy belső szigetelési hiba esetén a BMS utasítja a
+vezérlőt a kontaktorok nyitására, illetve teljesítménykorlátozást
+kér.</li>
+<li><strong>Kommunikáció.</strong> A BMS adatokat küld a
+hajtáslánc-vezérlőnek (CAN buszon), és diagnosztikai adatokat szolgáltat
+a rendszerteszternek.</li>
+</ol>
+<h4 data-number="33.2.4.4" id="hv-kapcsolóáramkör-és-előtöltés"><span
+class="header-section-number">33.2.4.4</span> HV-kapcsolóáramkör és
+előtöltés</h4>
+<p>A cellák önmagukban is veszélyes feszültséget adnának, ezért a
+járműhöz csak zárt kontaktorokon keresztül kapcsolódnak. A pakk pozitív
+és negatív kivezetésén egy-egy fő kontaktor, valamint egy előtöltő ág
+található. Az alábbi elvi ábra ezt mutatja:</p>
+<figure>
+<img src="assets/au118-diagram-1.png"
+alt="HV-akkumulátor kapcsolóáramköre előtöltéssel (elvi rajz) - Elvi rajz tanulási célra. Alapállapot: a kontaktorok nyitottak (gyújtás ki), a szervizcsatlakozó (SD1) bedugva. Az SD1 és a HV-biztosító (F1) a cellasor közepén, sorosan bont; kihúzott SD1 mellett a két cellasor-fél egyenként még feszültség alatt van. Az értékek példák (ellenőrizendő: gyártói rajz)." />
+<figcaption aria-hidden="true">HV-akkumulátor kapcsolóáramköre
+előtöltéssel (elvi rajz) - Elvi rajz tanulási célra. Alapállapot: a
+kontaktorok nyitottak (gyújtás ki), a szervizcsatlakozó (SD1) bedugva.
+Az SD1 és a HV-biztosító (F1) a cellasor közepén, sorosan bont; kihúzott
+SD1 mellett a két cellasor-fél egyenként még feszültség alatt van. Az
+értékek példák (ellenőrizendő: gyártói rajz).</figcaption>
+</figure>
+<p>A rajzon a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="normal">HV</mtext><mtext mathvariant="normal">BAT1</mtext></msub><annotation encoding="application/x-tex">\text{HV}_{\text{BAT1}}</annotation></semantics></math>
+és a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="normal">HV</mtext><mtext mathvariant="normal">BAT2</mtext></msub><annotation encoding="application/x-tex">\text{HV}_{\text{BAT2}}</annotation></semantics></math>
+a cellasor két felét, <code>SD1</code> a szervizcsatlakozót (a cellasor
+közepén, sorosan, a HV-biztosítóval, <code>F1</code>), a szaggatott
+keret a pakk határát, <code>K_MN</code> a negatív fő kontaktor,
+<code>K_MP</code> a pozitív fő kontaktor, <code>K_PRE</code> és
+<code>R_pre</code> az előtöltő ág, <code>C_dc</code> pedig az inverter
+DC-köri kondenzátora. Az alapállapotban a kontaktorok nyitva vannak,
+ezért a csatlakozón kívül nincs feszültség a jármű HV-kábelezésén.</p>
+<p>Bekapcsoláskor a vezérlő először a negatív fő kontaktort
+(<code>K_MN</code>) zárja, majd az előtöltő kontaktort
+(<code>K_PRE</code>) zárja, hogy a <code>C_dc</code> kondenzátor az
+<code>R_pre</code> ellenálláson keresztül korlátozott árammal töltődjön.
+Amikor a DC-köri feszültség eléri a pakkfeszültség 90–95%-át, a vezérlő
+zárja a pozitív fő kontaktort (<code>K_MP</code>), majd az előtöltő
+kontaktort elengedi. Előtöltő ellenállás nélkül a kondenzátor üres
+állapotban gyakorlatilag rövidzárként viselkedne, és az áramlökés a
+kontaktorokat összehegeszthetné, a biztosítókat kinyithatná.</p>
+<p>A HV-rendszerben a szervizcsatlakozó mellett gyakran olvadóbiztosító
+(HV-biztosító) és gyakran pirotechnikai leválasztó (pyro fuse) is van.
+Ez utóbbit ütközéskor a légzsák-vezérlő (egyes típusoknál a BMS is)
+gyújtójellel oldja ki: egy kis töltet mechanikusan elvágja a vezetőt, és
+gyorsan megszakítja az akkumulátor áramkörét. Pirotechnikai elemként
+ellenállásmérővel mérni tilos, a kioldott és a ki nem oldott egységet a
+gyártói előírás szerint kell kezelni (ellenőrizendő: gyártói adat). A
+<strong>szigetelésfigyelés</strong> a HV+ és HV− test felé mért
+ellenállását méri; ha az érték a megengedett határ alá esik, a vezérlő
+hibát tárol és leválasztja a rendszert.</p>
+<p><strong>HV-biztonság.</strong> HV-rendszeren csak arra kiképzett,
+jogosult személy dolgozhat a gyártói eljárás szerint. A
+feszültségmentesítés lánca: jogosultság és EVE ellenőrzése (szigetelő
+kesztyű légnyomásos próbája, arcvédő), a munkaterület lezárása és
+jelölése, gyújtás ki, kulcs távol, 12 V lekötése, szervizcsatlakozó
+eltávolítása és visszakapcsolás elleni biztosítása, gyártói várakozási
+idő, a feszültségmentesség ellenőrzése megfelelő mérési kategóriájú (pl.
+CAT III, ellenőrizendő) műszerrel, amelyet előtte és utána ismert
+feszültségforráson ellenőrzünk, végül dokumentálás. A megadott értékek
+tanulási példák (ellenőrizendő: gyártói javítási utasítás).</p>
+<h4 data-number="33.2.4.5" id="hőmenedzsment-és-öregedés"><span
+class="header-section-number">33.2.4.5</span> Hőmenedzsment és
+öregedés</h4>
+<p>A Li-ion cellák a 20–40 °C közötti tartományban működnek a legjobban.
+Hidegen a töltés (lítiumkiválás veszélye) és a nagyáramú kisütés
+korlátozott, melegen gyorsul az öregedés és nő a hőmegfutás kockázata. A
+HV-akkumulátorokat ezért <strong>folyadékhűtés</strong> (hűtőlemezek,
+hűtőközeg-víz/glykol keverék) vagy ritkábban levegőhűtés, és
+<strong>fűtőbetét/hőszivattyú</strong> hűtőkör tartja az ideális
+hőmérsékleten. A BMS a hőmérsékletjelek alapján kéri a
+hűtőközeg-szivattyú és a hűtőventilátor teljesítményét, illetve a
+fűtést.</p>
+<p>Az <strong>öregedés</strong> két fő megjelenési formája: a
+kapacitáscsökkenés (ciklikus és naptári öregedés) és a belső ellenállás
+növekedése. A nagy töltőáram, a magas hőmérséklet, a 100%-os
+töltöttségen tartás, a mélykisütés és az egymástól eltérő cellaterhelés
+gyorsítja. A <strong>hőmegfutás (thermal runaway)</strong> ritka, de
+életveszélyes állapot: belső rövidzár, mechanikai sérülés vagy túltöltés
+következtében a cella hőmérséklete öngerjesztő módon emelkedik, gázok,
+füst, láng keletkezhet. A BMS ezért több független védelmi szintet
+alkalmaz: cellafigyelés, kontaktorleválasztás, pyro fuse, feszültség- és
+hőmérséklet-határok.</p>
+<p><strong>Környezetvédelem.</strong> A Li-ion HV-akkumulátor
+életciklusa végén értékes másodnyersanyag-forrás, de veszélyes
+hulladékként kezelendő. Sérült, feszült cellás akkumulátort nem szabad
+szétszerelni, tűzveszélyes állapotban a gyártói mentési adatlap szerint
+kell tárolni. A bontásnál és újrahasznosításnál a hulladékstátuszú
+akkumulátorokat a hatályos hazai és uniós hulladékszabályozás szerint,
+engedéllyel rendelkező kezelőnek kell átadni (ellenőrizendő: hatályos
+hulladékjogszabály).</p>
+<h3 data-number="33.2.5" id="kidolgozott-példák"><span
+class="header-section-number">33.2.5</span> Kidolgozott példák</h3>
+<h4 data-number="33.2.5.1"
+id="példa-pakkfeszültség-és--energia-számítása-nmc-cellákból"><span
+class="header-section-number">33.2.5.1</span> 1. példa: Pakkfeszültség
+és -energia számítása NMC cellákból</h4>
+<p><strong>Adott:</strong> NMC cella névleges feszültsége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">cella</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>65</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{cella}} = 3{,}65\,\text{V}</annotation></semantics></math>,
+kapacitása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mtext mathvariant="normal">cella</mtext></msub><mo>=</mo><mn>58</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">Q_{\text{cella}} = 58\,\text{Ah}</annotation></semantics></math>;
+elrendezés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>96</mn><mtext mathvariant="normal">s</mtext><mn>2</mn><mtext mathvariant="normal">p</mtext></mrow><annotation encoding="application/x-tex">96\text{s}2\text{p}</annotation></semantics></math>,
+azaz
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">s</mtext></msub><mo>=</mo><mn>96</mn></mrow><annotation encoding="application/x-tex">n_{\text{s}} = 96</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">p</mtext></msub><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">n_{\text{p}} = 2</annotation></semantics></math>.</p>
+<p><strong>Keresett:</strong> a pakk feszültsége, amperóra-kapacitása és
+energiája kWh-ban.</p>
+<p><strong>Képlet:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">s</mtext></msub><msub><mi>U</mi><mtext mathvariant="normal">cella</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{pakk}} = n_{\text{s}} U_{\text{cella}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">p</mtext></msub><msub><mi>Q</mi><mtext mathvariant="normal">cella</mtext></msub></mrow><annotation encoding="application/x-tex">Q_{\text{pakk}} = n_{\text{p}} Q_{\text{cella}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub></mrow><annotation encoding="application/x-tex">W_{\text{pakk}} = U_{\text{pakk}} Q_{\text{pakk}}</annotation></semantics></math>.</p>
+<p><strong>Behelyettesítés:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><mn>96</mn><mo>⋅</mo><mn>3</mn><mo>,</mo><mn>65</mn><mo>=</mo><mn>350</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{pakk}} = 96 \cdot 3{,}65 = 350{,}4\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>58</mn><mo>=</mo><mn>116</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">Q_{\text{pakk}} = 2 \cdot 58 = 116\,\text{Ah}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><mn>350</mn><mo>,</mo><mn>4</mn><mo>⋅</mo><mn>116</mn><mo>=</mo><mn>40</mn><mspace width="0.167em"></mspace><mn>646</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mo>≈</mo><mn>40</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">W_{\text{pakk}} = 350{,}4 \cdot 116 = 40\,646{,}4\,\text{Wh} \approx 40{,}6\,\text{kWh}</annotation></semantics></math>.</p>
+<p><strong>Ellenőrzés:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><annotation encoding="application/x-tex">U_{\text{pakk}}</annotation></semantics></math>
+a 3,65 V és a 4,0 V közötti cellafeszültségeknél 350–400 V, ami a
+személyautós HV-osztályba illik. A kapacitás 116 Ah, az energia 40 kWh
+nagyságrendű, ami egy kisebb elektromos autóra reális.</p>
+<h4 data-number="33.2.5.2" id="példa-előtöltő-számítás"><span
+class="header-section-number">33.2.5.2</span> 2. példa: Előtöltő
+számítás</h4>
+<p><strong>Adott:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><mn>390</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{pakk}} = 390\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">pre</mtext></msub><mo>=</mo><mn>80</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{pre}} = 80\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mtext mathvariant="normal">dc</mtext></msub><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mF</mtext><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">F</mtext></mrow><annotation encoding="application/x-tex">C_{\text{dc}} = 1{,}2\,\text{mF} = 1{,}2\cdot 10^{-3}\,\text{F}</annotation></semantics></math>.</p>
+<p><strong>Keresett:</strong> a bekapcsolás pillanatában a legnagyobb
+előtöltő áram, az előtöltő időállandó, a feltöltés kb. 5 időállandónyi
+ideje, és a kondenzátor végső energiája.</p>
+<p><strong>Képlet:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>=</mo><mfrac><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><msub><mi>R</mi><mtext mathvariant="normal">pre</mtext></msub></mfrac></mrow><annotation encoding="application/x-tex">I_{\text{csúcs}} = \frac{U_{\text{pakk}}}{R_{\text{pre}}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><msub><mi>R</mi><mtext mathvariant="normal">pre</mtext></msub><msub><mi>C</mi><mtext mathvariant="normal">dc</mtext></msub></mrow><annotation encoding="application/x-tex">\tau = R_{\text{pre}} C_{\text{dc}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>≈</mo><mn>5</mn><mi>τ</mi></mrow><annotation encoding="application/x-tex">t \approx 5\tau</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">kond</mtext></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msub><mi>C</mi><mtext mathvariant="normal">dc</mtext></msub><msubsup><mi>U</mi><mtext mathvariant="normal">pakk</mtext><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">W_{\text{kond}} = \frac{1}{2} C_{\text{dc}} U_{\text{pakk}}^2</annotation></semantics></math>.</p>
+<p><strong>Behelyettesítés:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>=</mo><mfrac><mn>390</mn><mn>80</mn></mfrac><mo>=</mo><mn>4</mn><mo>,</mo><mn>875</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>≈</mo><mn>4</mn><mo>,</mo><mn>88</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{csúcs}} = \frac{390}{80} = 4{,}875\,\text{A} \approx 4{,}88\,\text{A}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>80</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup><mo>=</mo><mn>0</mn><mo>,</mo><mn>096</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">\tau = 80 \cdot 1{,}2\cdot 10^{-3} = 0{,}096\,\text{s}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mi>τ</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>48</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">5\tau = 0{,}48\,\text{s}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">kond</mtext></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup><mo>⋅</mo><msup><mn>390</mn><mn>2</mn></msup><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup><mo>⋅</mo><mn>152</mn><mspace width="0.167em"></mspace><mn>100</mn><mo>=</mo><mn>91</mn><mo>,</mo><mn>26</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J</mtext></mrow><annotation encoding="application/x-tex">W_{\text{kond}} = \frac{1}{2}\cdot 1{,}2\cdot 10^{-3}\cdot 390^2 = 0{,}5 \cdot 1{,}2\cdot 10^{-3} \cdot 152\,100 = 91{,}26\,\text{J}</annotation></semantics></math>.</p>
+<p><strong>Ellenőrzés:</strong> 4,9 A csúcsáram sokkal kisebb, mint a fő
+kontaktor közvetlen zárásánál fellépő, több száz A-t is elérő áramlökés;
+az időállandó 0,1 s alatti, a teljes előtöltés fél másodperc alatt
+lejátszódik. A 91 J energia a kondenzátorban tárolt energia, amely kis
+kontaktoroknál is biztonságosan kezelhető, de a DC-kör feszültség alatt
+még veszélyes lehet.</p>
+<h3 data-number="33.2.6" id="minőségellenőrzés-a-hv-akkumulátoron"><span
+class="header-section-number">33.2.6</span> Minőségellenőrzés a
+HV-akkumulátoron</h3>
+<p>A diagnosztikai gyakorlatban a BMS élő adatai alapján
+ellenőrizhető:</p>
+<ul>
+<li><strong>Cellafeszültség-különbség:</strong> terhelésmentes
+állapotban az egymáshoz képest mért eltérésnek jellemzően néhány 10 mV
+alatt kell lennie; tartós, nagy eltérés hibás vagy erősen öregedett
+cellát jelez (ellenőrizendő: gyártói határérték).</li>
+<li><strong>Hőmérséklet-különbség:</strong> a modulok közötti
+hőmérsékletkülönbség több Celsius-foknál ne legyen (ellenőrizendő:
+gyártói határérték).</li>
+<li><strong>Szigetelési ellenállás:</strong> a HV+ és HV− test felé mért
+ellenállását kikapcsolt kontaktorokkal, szigetelési ellenállásmérővel
+(szigetelésvizsgálóval) vagy a jármű szigetelésfigyelőjével ellenőrzik;
+elterjedt tervezési alsó határ 100 Ω/V egyenfeszültségű rendszernél
+(ellenőrizendő: gyártói adat/ECE R100).</li>
+<li><strong>SoC/SoH:</strong> a rendszerteszterrel kiolvasható a becsült
+töltöttség és az egészségi állapot. A SoH általában új pakknál 100%, a
+jármű élettartama alatt fokozatosan csökken; a gyártói küszöb alatt a
+cellák, modulok cseréje válhat szükségessé.</li>
+<li><strong>Előtöltés időtartama:</strong> ha a rendszerteszter élő
+adataiban a DC-köri feszültség nem éri el a pakkfeszültség 90–95%-át a
+megadott időn belül, az előtöltő ágat vagy a kondenzátort kell
+vizsgálni.</li>
+</ul>
+<p>A szigetelés- és alkatrészméréseket (nem a BMS élő adatainak
+olvasását) csak a gyártói feszültségmentesítés után, megfelelő
+mérőműszerrel, jogosult személynek szabad végezni.</p>
+<p><strong>Előírás.</strong> A nagyfeszültségű járművek elektromos
+biztonságára az UNECE ECE R100 előírás vonatkozik; a HV-rendszeren
+dolgozó személyzet képesítési szintjeit a hatályos hazai jogszabályok
+szabályozzák. A HV-akkumulátor szigetelési ellenállására és leválasztó
+eszközeire a gyártói javítási adat és az ECE R100 szerinti ellenőrzés az
+irányadó (ellenőrizendő: hatályos előírás).</p>
+<h3 data-number="33.2.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">33.2.7</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Valós eset.</strong> Egy hibrid személyautó a hajtás
+bekapcsolásakor csak a „Készenléti üzem nem elérhető, HV-rendszer hiba”
+üzenetet jeleníti meg. A rendszerteszter a hibrid hajtáslánc-vezérlőben
+„előtöltési idő túllépés” hibát tárol. Élő adatban az
+akkumulátorfeszültség 385 V, de a DC-link feszültség a bekapcsolási
+kísérletnél csak 112 V-ig emelkedik, és ott megáll, majd a rendszer
+visszanyitja a kontaktorokat.</p>
+<p><strong>Hipotézis:</strong> az előtöltő ág ellenállása megnőtt, vagy
+a DC-link kondenzátor hibás. A jogosult szerelő a gyártói
+feszültségmentesítés után, a narancssárga HV-kábelt leválasztva, az
+előtöltő ellenállást méri: a névleges 80 Ω helyett kb. 280 Ω-ot mutat a
+multiméter; a DC/DC átalakító már a bekapcsolás alatt terhel (kb. 110 Ω
+egyenértékű terhelés), ezért a DC-link feszültsége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>≈</mo><mn>385</mn><mo>⋅</mo><mn>110</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>280</mn><mo>+</mo><mn>110</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>109</mn></mrow><annotation encoding="application/x-tex">U \approx 385\cdot 110/(280+110) \approx 109</annotation></semantics></math>
+V körül megáll, ami az észlelt 112 V-hoz közeli érték. A kondenzátor
+kapacitásmérése a csatlakozón 1,18 mF, tehát az jó. Az előtöltő
+ellenállás cseréje után a vezérlő próbája sikeres: a DC-link feszültség
+0,4 s alatt eléri a 385 V 95%-át, a fő kontaktor zár, a jármű
+készenlétbe kapcsol.</p>
+<p><strong>Tanulság:</strong> a BMS a hibát nem mindig a konkrét
+alkatrészre lokalizálja; a szerelőnek a mérési értékekből kell
+visszavezetnie a meghibásodást. A HV-rendszeren végzett munka előtt a
+feszültségmentesítés lépéseit mindig a gyártói eljárás szerint, méréssel
+igazolva kell elvégezni.</p>
+<p><strong>Biztonsági korlát.</strong> A fenti diagnosztika tanműhelyi
+környezetre, oktató felügyeletére és a gyártói javítási utasítás
+betartására vonatkozik; a megadott mérési értékek tanulási példák.</p>
+<h3 data-number="33.2.8" id="tipikus-hibák"><span
+class="header-section-number">33.2.8</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>Hiba:</strong> a tanuló a soros cellák amperóra-kapacitását
+is összeadja. <strong>Helyes gyakorlat:</strong> soros kapcsolásnál a
+feszültség adódik össze, a kapacitás Ah-ban nem nő; párhuzamos kapcsolás
+növeli a kapacitást.</li>
+<li><strong>Hiba:</strong> Li-ion cellát BMS nélkül tölteni, vagy a BMS
+védelmi küszöbértékeit megnövelni. <strong>Helyes gyakorlat:</strong> a
+Li-ion cellák csak BMS-védelemmel üzemelhetnek; a küszöbök a gyártói
+adat szerint rögzítettek, ezeket nem szabad átírni.</li>
+<li><strong>Hiba:</strong> az előtöltő ellenállást áthidalni vagy a fő
+kontaktort működése közben nyomogatni. <strong>Helyes
+gyakorlat:</strong> az előtöltő szerepe a kondenzátor áramlökésének
+korlátozása; kiiktatása kontaktorhegesztéshez, biztosító-kioldáshoz,
+tűzhöz vezethet.</li>
+<li><strong>Hiba:</strong> a szigetelésmérést feszültség alatt végezni.
+<strong>Helyes gyakorlat:</strong> először feszültségmentesítés, majd a
+HV+ és HV− test felé történő szigetelésmérés megfelelő műszerrel, a
+gyártói érték szerint.</li>
+<li><strong>Hiba:</strong> a cellakiegyenlítést úgy értelmezni, mintha
+az a rossz cellát automatikusan megjavítaná. <strong>Helyes
+gyakorlat:</strong> a kiegyenlítés kismértékű energiaeltérést szüntet
+meg; tartósan gyenge cellát diagnosztizálni, szükség esetén modult
+cserélni kell.</li>
+</ol>
+<h3 data-number="33.2.9" id="önellenőrzés"><span
+class="header-section-number">33.2.9</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e: ha 96 darab 3,65 V-os, 58 Ah-s cellát sorba kötünk, a pakk
+kapacitása 96 × 58 Ah lesz?</li>
+<li>Miért kell előtöltő ellenállás a pozitív fő kontaktor párhuzamos
+ágában?</li>
+<li>Mit jelent a SoH, és milyen két fizikai változás jellemzi?</li>
+<li>Igaz-e: az LFP cella névleges feszültsége nagyobb, mint az NMC
+celláé?</li>
+<li>Mi a szerepe a szervizcsatlakozónak a HV-akkumulátoron?</li>
+<li>Milyen jellegű veszélyt jelent a hőmegfutás, és hogyan védekezik
+ellene a BMS?</li>
+</ol>
+<h3 data-number="33.2.10" id="feladatok"><span
+class="header-section-number">33.2.10</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Egy LFP cella névleges feszültsége
+3,20 V, kapacitása 100 Ah. Sorba kötünk 108 cellát, párhuzamosan nem.
+Számítsd ki a pakk feszültségét, kapacitását és energiáját kWh-ban.</p>
+<p><strong>2. feladat (A).</strong> Röviden definiáld a SoC és a SoH
+különbségét! Melyik jellemző utal a jármű töltöttségi szintjére, és
+melyik az akkumulátor elöregedésére?</p>
+<p><strong>3. feladat (B).</strong> Egy NMC pakk 96s3p elrendezésű. A
+cella névleges feszültsége 3,65 V, kapacitása 52 Ah. Mekkora a pakk
+feszültsége, amperóra-kapacitása és energiája? Hasonlítsd össze a 96s2p,
+58 Ah-s pakkal: melyiknek nagyobb az energiája?</p>
+<p><strong>4. feladat (B).</strong> A HV-akkumulátor kapcsolási rajzán
+(fenti <code>diagram</code>) írd le a kontaktorok bekapcsolási
+sorrendjét, és indokold, miért nem a pozitív fő kontaktor zár
+először!</p>
+<p><strong>5. feladat (C).</strong> Egy használt HV-pakkban 96 soros
+cellacsoport van. A BMS adatai szerint a 17. cellacsoport kapacitása
+csak 80%-a a többinek, és a feszültsége terhelt állapotban gyorsan esik.
+Magyarázd el, miért csökkenti ez a leggyengébb cellacsoport a teljes
+pakk használható kapacitását, és milyen BMS funkció védi a
+rendszert!</p>
+<p><strong>6. feladat (D).</strong> Egy elektromos autó nem kapcsol
+készenlétbe. A rendszerteszter a BMS-ből a következő élő adatokat
+mutatja: a cellafeszültségek 3,58–3,61 V között egyenletesek; a
+modulhőmérsékletek 28–32 °C; a szigetelési ellenállás HV+–test 480 kΩ,
+HV−–test 490 kΩ; a bekapcsolási kísérletnél a DC-link feszültség 0,02 s
+alatt eléri a 385 V-ot. A BMS viszont túláram-eseményt rögzített. Melyik
+alkatrészre gyanakszol, és hogyan ellenőrzöd?</p>
+<h3 data-number="33.2.11" id="megoldások"><span
+class="header-section-number">33.2.11</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Hamis. Soros kapcsolásnál a feszültség adódik össze, a kapacitás
+Ah-ban ugyanannyi marad; a pakk kapacitása 58 Ah, a feszültsége 350,4
+V.</li>
+<li>Az előtöltő ellenállás korlátozza az üres DC-kondenzátor feltöltési
+áramlökését, így védi a kontaktorokat és a HV-rendszert.</li>
+<li>SoH az egészségi állapot, a kapacitáscsökkenés és a belső ellenállás
+növekedése jellemzi. A SoC a töltöttségi szint, a SoH az elöregedést
+mutatja.</li>
+<li>Hamis. Az LFP 3,2–3,3 V-os, az NMC 3,6–3,7 V-os, tehát az LFP
+feszültsége kisebb.</li>
+<li>A szervizcsatlakozó mechanikailag megszakítja a cellacsoportok
+közötti áramkört, így a jármű oldalán a HV-vezetékek már nem
+kapcsolódnak a cellasorhoz.</li>
+<li>A hőmegfutás öngerjesztő hő- és gáztermelés, amely tűzhöz vezethet.
+A BMS cellafeszültség-, hőmérséklet- és szigetelésfigyeléssel,
+kontaktorleválasztással, pyro biztosítóval és kiegyenlítéssel
+védekezik.</li>
+</ol>
+<p><strong>1. feladat (A).</strong> Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">cella</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{cella}} = 3{,}20\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mtext mathvariant="normal">cella</mtext></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">Q_{\text{cella}} = 100\,\text{Ah}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">s</mtext></msub><mo>=</mo><mn>108</mn></mrow><annotation encoding="application/x-tex">n_{\text{s}} = 108</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">p</mtext></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n_{\text{p}} = 1</annotation></semantics></math>.
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><annotation encoding="application/x-tex">U_{\text{pakk}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub><annotation encoding="application/x-tex">Q_{\text{pakk}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mtext mathvariant="normal">pakk</mtext></msub><annotation encoding="application/x-tex">W_{\text{pakk}}</annotation></semantics></math>.
+Képlet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">s</mtext></msub><msub><mi>U</mi><mtext mathvariant="normal">cella</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{pakk}} = n_{\text{s}} U_{\text{cella}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">p</mtext></msub><msub><mi>Q</mi><mtext mathvariant="normal">cella</mtext></msub></mrow><annotation encoding="application/x-tex">Q_{\text{pakk}} = n_{\text{p}} Q_{\text{cella}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mi>U</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">W = U Q</annotation></semantics></math>.
+Behelyettesítés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><mn>108</mn><mo>⋅</mo><mn>3</mn><mo>,</mo><mn>20</mn><mo>=</mo><mn>345</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{pakk}} = 108 \cdot 3{,}20 = 345{,}6\,\text{V}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><mn>1</mn><mo>⋅</mo><mn>100</mn><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">Q_{\text{pakk}} = 1\cdot 100 = 100\,\text{Ah}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><mn>345</mn><mo>,</mo><mn>6</mn><mo>⋅</mo><mn>100</mn><mo>=</mo><mn>34</mn><mspace width="0.167em"></mspace><mn>560</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mo>=</mo><mn>34</mn><mo>,</mo><mn>56</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">W_{\text{pakk}} = 345{,}6 \cdot 100 = 34\,560\,\text{Wh} = 34{,}56\,\text{kWh}</annotation></semantics></math>.</p>
+<p><strong>2. feladat (A).</strong> SoC a még elérhető töltés aránya a
+névleges kapacitáshoz; SoH az aktuálisan mérhető kapacitás aránya az új
+állapothoz. Elöregedésre a SoH utal, pillanatnyi töltöttségre a SoC.</p>
+<p><strong>3. feladat (B).</strong> 96s3p:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>96</mn><mo>⋅</mo><mn>3</mn><mo>,</mo><mn>65</mn><mo>=</mo><mn>350</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U = 96\cdot 3{,}65 = 350{,}4\,\text{V}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mn>3</mn><mo>⋅</mo><mn>52</mn><mo>=</mo><mn>156</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">Q = 3\cdot 52 = 156\,\text{Ah}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mn>350</mn><mo>,</mo><mn>4</mn><mo>⋅</mo><mn>156</mn><mo>=</mo><mn>54</mn><mspace width="0.167em"></mspace><mn>662</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mo>≈</mo><mn>54</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">W = 350{,}4\cdot 156 = 54\,662{,}4\,\text{Wh} \approx 54{,}7\,\text{kWh}</annotation></semantics></math>.
+Az 1. példa 96s2p 58 Ah-s pakkja
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>40</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">40{,}6\,\text{kWh}</annotation></semantics></math>
+volt, tehát a 96s3p 52 Ah-s pakk energiája nagyobb, mert a három
+párhuzamos cella 156 Ah-t ad.</p>
+<p><strong>4. feladat (B).</strong> Bekapcsoláskor először
+<code>K_MN</code> zár, majd <code>K_PRE</code> zár; az
+<code>R_pre</code> korlátozott árammal feltölti <code>C_dc</code>-t.
+Amikor <code>C_dc</code> feszültsége eléri a pakkfeszültség 90–95%-át,
+zár <code>K_MP</code>, majd <code>K_PRE</code> nyit. A pozitív fő
+kontaktor nem zárhat először, mert az üres kondenzátor rövidzárszerű
+áramlökést okozna, ami a kontaktorokat és a biztosítót károsítaná.</p>
+<p><strong>5. feladat (C).</strong> Soros kapcsolásban ugyanaz az áram
+folyik át minden cellacsoporton, ezért a leggyengébb, 80%-os kapacitású
+cellacsoport éri el először a teljes lemerülést vagy a teljes
+feltöltést. A pakk kapacitása így a leggyengébb elemhez igazodik. A BMS
+cellafeszültség-figyeléssel és kiegyenlítéssel, szükség esetén
+teljesítménykorlátozással védi a gyenge cellát a túlmerüléstől, de a
+kapacitáscsökkenést kiegyenlítés nem tudja visszanyerni.</p>
+<p><strong>6. feladat (D).</strong> A cellafeszültségek és a
+hőmérsékletek kiegyenlítettek, a szigetelési ellenállás jó. A DC-link
+feszültség 0,02 s alatt eléri a 385 V-ot, ami túl gyors, tehát az
+előtöltő ág nem korlátoz. Túláram-esemény és azonnali feszültségfelugrás
+a fő pozitív kontaktor hibájára vagy az előtöltő ellenállás rövidzárjára
+utalhat. Ellenőrzés: feszültségmentesítés után az előtöltő ellenállást
+mérni (pl. névleges 80 Ω helyett 0 Ω rövidzár vagy a fő kontaktor
+érintkező beragadva). A fő kontaktor ki-bekapcsolását is tesztelni kell.
+A hibás alkatrészt a gyártói előírás szerint kell cserélni.</p>
+<h3 data-number="33.2.12" id="rövid-összefoglaló"><span
+class="header-section-number">33.2.12</span> Rövid összefoglaló</h3>
+<p>A HV-akkumulátor a hibrid és elektromos járművek hajtási
+energiaforrása: cellákból, modulokból és pakkból épül fel. A Li-ion
+cellák leggyakrabban NMC (3,6–3,7 V, nagyobb energiasűrűség) vagy LFP
+(3,2–3,3 V, stabilabb) kémiájúak, hengeres, prizmatikus vagy pouch
+kivitelűek. Soros kapcsolás növeli a feszültséget, párhuzamos kapcsolás
+a kapacitást:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">s</mtext></msub><msub><mi>U</mi><mtext mathvariant="normal">cella</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{pakk}} = n_{\text{s}} U_{\text{cella}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mtext mathvariant="normal">pakk</mtext></msub><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">p</mtext></msub><msub><mi>Q</mi><mtext mathvariant="normal">cella</mtext></msub></mrow><annotation encoding="application/x-tex">Q_{\text{pakk}} = n_{\text{p}} Q_{\text{cella}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mi>U</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">W = U Q</annotation></semantics></math>.
+A BMS felügyeli a cellafeszültséget, hőmérsékletet, kiegyenlítést,
+SoC/SoH-t, és védelmet ad túlfeszültség, mélykisülés, túláram,
+hőmegfutás ellen. A HV-kapcsolóáramkör fő kontaktorokat, előtöltő
+ellenállást, szervizcsatlakozót, pyro biztosítót és szigetelésfigyelést
+tartalmaz. Az előtöltő ellenállás a DC-kondenzátort korlátozott árammal
+tölti fel, mielőtt a fő pozitív kontaktor zár. A hőmenedzsment 20–40 °C
+közötti cellahőmérsékletet tart, az öregedést kapacitáscsökkenés és
+belső ellenállás-növekedés jellemzi.</p>
+<p><strong>Továbbvitt eredmény.</strong> A cella, modul, pakk
+felépítése, a BMS feladatai, valamint a HV-kontaktorsor és az előtöltés
+működése közvetlenül szükséges a(z) <a href="au119.html">Villamos
+hajtás: villanymotor, inverter, DC/DC átalakító, regeneratív fékezés és
+hőmenedzsment</a> alfejezetben az inverter DC-köri kondenzátora és az
+energiamenedzsment, valamint a(z) <a href="au121.html">HV-veszélyek,
+jogosultság és munkaszervezés</a> alfejezetben a HV-rendszer
+leválasztásának megértéséhez.</p>
+<h3 data-number="33.2.13" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">33.2.13</span> Források és ellenőrzési
+hiányok</h3>
+<ul>
+<li>Az akkumulátor elektrokémiai alapjai: az <a
+href="au042.html">Elektrokémia: elektrolízis, galvánelemek,
+akkumulátorok és korrózió</a> alfejezetre épül.</li>
+<li>Az UNECE ECE R100 előírás a nagyfeszültségű járművek elektromos
+biztonságára; a szigetelési ellenállás határértékei, a BMS védelmi
+küszöbök és a képesítési követelmények ellenőrizendők.</li>
+<li>A Li-ion cellák névleges feszültségei, kapacitásai, a
+cellafeszültség-eltérés határértékei, az előtöltő ellenállás értéke és a
+szigetelési határérték tanulási példák (ellenőrizendő: gyártói
+adat).</li>
+<li>A HV-rendszeren végzett munka feszültségmentesítési lépéseihez a
+gyártói javítási utasítás és a hatályos hazai munkavédelmi jogszabályok
+az irányadók.</li>
+</ul>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au117.html">← 33.1 Hibrid és elektromos hajtások áttekintése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au119.html">33.3 Villamos hajtás: villanymotor, inverter, DC/DC átalakító, regeneratív fékezés és hőmenedzsment →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

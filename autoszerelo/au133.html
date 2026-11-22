@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>37.2 Fedélzeti diagnosztika: OBD és EOBD – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz9">IX. RÉSZ – Járműkarbantartás, hatósági vizsgálat és diagnosztika</a> › <a href="index.html#auch36">37 Motordiagnosztika</a></p>
+<div class="links"><a class="prev" rel="prev" href="au132.html">← 37.1 Diagnosztikai alapfogalmak és a motor mechanikai állapotvizsgálata</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au134.html">37.3 Rendszerteszter-használat: élő adatok, beavatkozó teszt, adaptációk, kódolás →</a></div>
+</nav>
+<h2 data-number="37.2" id="au133"><span
+class="header-section-number">37.2</span> Fedélzeti diagnosztika: OBD és
+EOBD</h2>
+<h3 data-number="37.2.1" id="motiváció"><span
+class="header-section-number">37.2.1</span> Motiváció</h3>
+<p>Egy Otto-motoros autó műszerfalán menet közben sárga,
+motorszimbólummal ellátott lámpa gyullad ki: a <strong>MIL</strong>
+(Malfunction Indicator Lamp), köznyelven „motordiagnosztikai lámpa”. Az
+ügyfél azt kérdezi: „Miért világít, és muszáj-e azonnal megállni?” A mai
+járművekben ilyenkor a motorvezérlő memóriájában általában már egy
+<strong>hibakód (DTC – Diagnostic Trouble Code)</strong> és egy
+befagyasztott mérési pillanatkép, az úgynevezett <strong>freeze
+frame</strong> található. Az autószerelő feladata nem az, hogy csak
+„lehúzza” a hibakódot és törölje, hanem az, hogy az EOBD/OBD-rendszer
+adataiból célzott diagnózist állítson fel, megjavítsa a tényleges okot,
+majd ellenőrizze, hogy a fedélzeti tesztek ismét lefutottak-e. Ebben az
+alfejezetben megtanulod, hogyan olvasod ki és értelmezed ezeket az
+adatokat, és miért nem elég a hibakód-törlés a vizsga előtt.</p>
+<h3 data-number="37.2.2" id="szemléletes-kép"><span
+class="header-section-number">37.2.2</span> Szemléletes kép</h3>
+<p>Képzeld el a következő műhelyi helyzetet. A szerelő az
+OBD-csatlakozót keresi a kormánykerék alatt, a bal oldali térdszintnél,
+egy 16 pólusú, trapéz formájú, fekete diagnosztikai aljzatban (SAE J1962
+szerinti elrendezés, hazánkban is így alkalmazzák; az elhelyezés
+járműtípusonként kissé eltérhet – ellenőrizendő a gyártói kézikönyvben).
+A csatlakozó 4. és 5. érintkezője általában test, a 16.
+akkumulátorfeszültség, a 6. és 14. a CAN-busz, a 7. és 15. a K-vonal,
+illetve L-vonal a régebbi protokolloknál. A rendszertesztert
+csatlakoztatva a készülék először a beépített akkumulátorról kap
+tápfeszültséget, majd felismeri a járműben használt kommunikációs
+protokollt, és az ECU-val felvett kapcsolat után kiolvassa a
+hibakódokat. A diagnosztikai rendszer így egy ablakot nyit a
+motorvezérlő belső méréseire, amelyeket a szerelő műszer nélkül nem
+látna.</p>
+<figure>
+<img src="assets/au133-diagram-1.png"
+alt="EOBD-diagnosztika alapfolyamata - A lépések a hibakód-kiolvasástól a javítás utáni ellenőrzésig vezetnek (tanulási vázlat)." />
+<figcaption aria-hidden="true">EOBD-diagnosztika alapfolyamata - A
+lépések a hibakód-kiolvasástól a javítás utáni ellenőrzésig vezetnek
+(tanulási vázlat).</figcaption>
+</figure>
+<h3 data-number="37.2.3" id="definíciók-és-összefüggések"><span
+class="header-section-number">37.2.3</span> Definíciók és
+összefüggések</h3>
+<p><strong>Definíció.</strong> Az <strong>OBD (On-Board
+Diagnostics)</strong> a jármű fedélzeti diagnosztikai rendszere, amely a
+motor és a kipufogógáz-utókezelő rendszerek működését figyeli, hibákat
+tárol, és a műszerfali MIL-lámpán keresztül jelzi az emissziót
+befolyásoló rendellenességeket. Az <strong>EOBD (European On-Board
+Diagnostics)</strong> ennek Európában érvényes, a hatályos uniós és
+ENSZ-EGB előírásokkal harmonizált változata (ellenőrizendő: az adott
+járműkategóriára érvényes EOBD-előírás száma és a bevezetés
+időpontjai).</p>
+<p><strong>Definíció.</strong> A <strong>DTC (hibakód)</strong> egy
+betűkből és számjegyekből álló, szabványos felépítésű kód, amely a hibás
+rendszerre, a hiba jellegére és a konkrét alkatrészre utal. Például
+<code>P0420</code> jelenti a katalizátorrendszer hatásfokának
+csökkenését az 1. hengersoron; a kód <strong>nem</strong> mondja meg,
+hogy a katalizátor vagy a mögötte lévő lambdaszonda hibás-e, csak a
+tünetcsoportot azonosítja.</p>
+<p><strong>Definíció.</strong> A <strong>freeze frame</strong>
+(befagyasztott keret) olyan, a hibakód eltárolásának pillanatában
+rögzített mérési adatcsomag, amely tartalmazza a fordulatszámot,
+hűtőfolyadék-hőmérsékletet, járműsebességet, légtömegáramot,
+motorterhelést és más releváns paramétereket. Ez a pillanatkép segít
+reprodukálni a hiba létrejöttének körülményeit.</p>
+<p><strong>Definíció.</strong> A <strong>readiness</strong> (készenléti
+állapotjelző) azt mutatja, hogy a jármű fedélzeti diagnosztikai tesztjei
+az adott gyújtási ciklus vagy az utolsó törlés óta teljes ciklusban
+lefutottak-e. Ha egy teszt „nem kész”, a jármű még nem alkalmas hatósági
+emissziómérésre, mert a rendszer esetleg elrejthet hibát.</p>
+<p><strong>Összefüggés.</strong> Az EOBD célja, hogy a kipufogógáz
+határértékek betartását folyamatosan ellenőrizze. A fedélzeti felügyelet
+két fő csoportra oszlik: <strong>állandó (folyamatos)</strong> és
+<strong>időszakos (nem folyamatos)</strong> ellenőrzésekre. Az állandó
+felügyeletű rendszerek – égéskimaradás, tüzelőanyag-ellátás,
+lambdaszabályozás egyes részei – minden motorfordulatnál dolgoznak; ha
+hibát észlelnek, a MIL-lámpa azonnal kigyulladhat. Az időszakos
+felügyeletű rendszerek – katalizátorhatásfok, EGR, szekunderlevegő,
+párolgási emisszió (EVAP) – csak meghatározott üzemállapotokban (pl.
+meleg motoron, részterhelésen) futtatják le a tesztjeiket, ezért a
+readiness csak a megfelelő feltételek teljesülése után válik „kész”
+értékűvé.</p>
+<h3 data-number="37.2.4" id="felépítés-és-működés"><span
+class="header-section-number">37.2.4</span> Felépítés és működés</h3>
+<h4 data-number="37.2.4.1" id="fedélzeti-állapotfelügyelet"><span
+class="header-section-number">37.2.4.1</span> Fedélzeti
+állapotfelügyelet</h4>
+<p>A motorvezérlő minden égésütemnél kiértékeli a főtengely-jeladó
+fordulatszámjelét. A hengerenkénti fordulatszám-ingadozásból már korai
+stádiumban felismeri az <strong>égéskimaradást</strong> (misfire). Ha a
+kimaradás olyan gyakoriságú, hogy a katalizátor túlmelegedne vagy a
+HC-kibocsátás megnőne, az ECU MIL-lámpát kapcsol, és P0300–P0304 jellegű
+hibakódot tárol. A <strong>katalizátor-felügyelet</strong> a katalizátor
+utáni lambdaszonda jelének amplitúdóját hasonlítja az első szonda
+jeléhez. A jó katalizátor oxigéntároló képessége miatt a második szonda
+jele lassú, kis amplitúdójú hullámzást mutat; ha a katalizátor
+kiöregedett, a második szonda is gyors, nagy amplitúdójú váltakozást
+produkál, ami P0420/P0430 hibakódhoz vezet. A
+<strong>lambdaszonda-felügyelet</strong> a szonda fűtését, belső
+ellenállását, feszültségtartományát és váltási frekvenciáját ellenőrzi
+(P0130–P0167 tartomány). Az <strong>EGR-felügyelet</strong> a
+visszavezetett kipufogógáz mennyiségének hatását értékeli, például a
+szívócső-nyomás vagy a légtömeg jel megváltozásából. A
+<strong>szekunderlevegő-rendszer</strong> felügyelete a hidegindítás
+utáni lambda-jel gyors szegényedését vizsgálja, amikor a levegőpumpa
+friss levegőt juttat a kipufogóoldalra. Az
+<strong>EVAP-felügyelet</strong> a tartályszellőztető rendszer
+tömítettségét és a szelepek működését ellenőrzi nyomásváltozás vagy
+vákuumfenntartás alapján.</p>
+<p><strong>Megjegyzés.</strong> A dízelmotoroknál a fedélzeti felügyelet
+a befecskendezési mennyiségeket, a légtömegmérőt, a
+töltőnyomás-szabályozást és a részecskeszűrő ellennyomását is figyeli; a
+dízelspecifikus felügyelet kódjai is a szabványos P0/P2 tartományban
+vannak (pl. P0087, P0401, P2002 – ellenőrizendő), emellett
+gyártóspecifikus (P1…) kódok is előfordulnak.</p>
+<h4 data-number="37.2.4.2" id="az-obd-csatlakozó-és-kommunikáció"><span
+class="header-section-number">37.2.4.2</span> Az OBD-csatlakozó és
+kommunikáció</h4>
+<p>A csatlakozó <strong>16 pólusú, trapéz kialakítású</strong> (SAE
+J1962 / ISO 15031 szerint, hazánkban is ez a szabványos szerelői
+csatlakozó). Elhelyezkedése a jármű utasterében, a vezetőoldalon,
+általában a kormányoszlop és a bal ajtó közötti műszerfalrész alatt van,
+de típusonként eltérhet (ellenőrizendő a gyártói dokumentációban). A
+rendszerteszter a csatlakozó 4. és 5. érintkezőjéről kap testet, a 16.
+érintkezőről akkumulátorfeszültséget; a kommunikáció gyakran a 6.
+(CAN-H) és 14. (CAN-L) érintkezőn zajlik. Régebbi járműveken a 7.
+érintkező a K-vonal (ISO 9141/14230), a 15. az L-vonal, esetleg a 2. és
+10. a SAE J1850 PWM/VPW. A mai járművek többsége <strong>ISO 15765-4
+CAN</strong> protokollt használ, 11 bites azonosítóval, 500 kbit/s
+sebességgel.</p>
+<figure id="fig-au133-1">
+<div class="fig-interactive"><iframe src="figures/html/au133-1.html" title="A 16 pólusú OBD-csatlakozó érintkezőkiosztása: 4 és 5 test, 6 és 14 CAN-H és CAN-L, 7 K-vonal, 16 akkumulátor-plusz; a csatlakozó a vezetőtér alsó részén található." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au133-1.png" style="width:85.0%"
+alt="A 16 pólusú OBD-csatlakozó érintkezőkiosztása: 4 és 5 test, 6 és 14 CAN-H és CAN-L, 7 K-vonal, 16 akkumulátor-plusz; a csatlakozó a vezetőtér alsó részén található." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au133-1.png" style="width:85.0%"
+alt="A 16 pólusú OBD-csatlakozó érintkezőkiosztása: 4 és 5 test, 6 és 14 CAN-H és CAN-L, 7 K-vonal, 16 akkumulátor-plusz; a csatlakozó a vezetőtér alsó részén található." /></details></div>
+<figcaption>A 16 pólusú OBD-csatlakozó érintkezőkiosztása és tipikus
+helyei</figcaption>
+</figure>
+<p>Az ábrán az aljzat elölnézete látható: a felső sorban az 1–8., az
+alsóban a 9–16. érintkező; sötéttel a szabványos funkciójú érintkezők (4
+járműtest, 5 jeltest, 6 CAN-H, 14 CAN-L, 7 K-vonal, 15 L-vonal, 16
+akkumulátor-plusz, 2 és 10 SAE J1850), fehérrel a gyártófüggők. A
+gyakorlati útmutató mérései ezekre épülnek: a 16. és a 4. érintkező
+között akkumulátorfeszültség, gyújtás kikapcsolt állapotában a 6. és a
+14. között kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>
+mérhető (ellenőrizendő).</p>
+<p><strong>Előírás.</strong> Az EOBD diagnosztikai csatlakozójának
+kialakítását és hibatárolási elveit uniós rendeletek és a kapcsolódó
+ENSZ-EGB előírások tartalmazzák (ellenőrizendő: az adott járműre
+érvényes kibocsátási és EOBD-előírásszámok, például a könnyű
+személygépkocsikra vonatkozó hatályos Euro-előírás). A kódok felépítése
+az ISO 15031-6 szabvány szerinti, a kommunikáció az ISO 15765-4 szerinti
+(ellenőrizendő a legfrissebb kiadás száma).</p>
+<p>A rendszerteszter <strong>OBD-szolgáltatásokat</strong> hív le. A
+legismertebb szolgáltatási módok (Mode) a következők:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Szolgáltatás (Mode)</th>
+<th>Megnevezés</th>
+<th>Mit kapunk?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mode 01</td>
+<td>Aktuális adatlekérés</td>
+<td>élő adatok: fordulatszám, λ, hűtővíz-hőmérséklet, járműsebesség,
+terhelés</td>
+</tr>
+<tr>
+<td>Mode 02</td>
+<td>Freeze frame lekérés</td>
+<td>a hibatárolás pillanatában rögzített paraméterek</td>
+</tr>
+<tr>
+<td>Mode 03</td>
+<td>Hibakódok kiolvasása</td>
+<td>tárolt DTC-k listája</td>
+</tr>
+<tr>
+<td>Mode 04</td>
+<td>Hibakódok törlése</td>
+<td>DTC-k, freeze frame és readiness visszaállítása</td>
+</tr>
+<tr>
+<td>Mode 05</td>
+<td>Oxigénszenzor teszt</td>
+<td>szonda-teszteredmények (egyes járműveken)</td>
+</tr>
+<tr>
+<td>Mode 06</td>
+<td>Nem folyamatos tesztek</td>
+<td>az egyes felügyelt rendszerek belső tesztértékei és
+küszöbértékei</td>
+</tr>
+<tr>
+<td>Mode 07</td>
+<td>Függőben lévő hibakódok</td>
+<td>olyan hibák, amelyek még nem erősítették meg a MIL bekapcsolást</td>
+</tr>
+<tr>
+<td>Mode 09</td>
+<td>Járműinformációk</td>
+<td>VIN, szoftver-azonosítók, kalibrációs adatok</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: járműspecifikus protokoll
+és módok).</p>
+<h4 data-number="37.2.4.3" id="a-hibakódok-szerkezete"><span
+class="header-section-number">37.2.4.3</span> A hibakódok
+szerkezete</h4>
+<p><strong>Szabály.</strong> Az EOBD-hibakódok <strong>egy betűből és
+négy számjegyből</strong> állnak, például <code>P0420</code>. A betű a
+rendszerkört mutatja: - <code>P</code> – hajtáslánc (Powertrain): motor
+és váltó, - <code>B</code> – karosszéria (Body), - <code>C</code> –
+futómű (Chassis), - <code>U</code> – hálózati kommunikáció
+(Network).</p>
+<p>A második karakter a kód szabványosságát vagy rendeltetését jelzi:
+<code>0</code> szabványos emissziós kód, <code>1</code>
+gyártóspecifikus, <code>2</code> szabványos, de gyártói kiegészítés,
+<code>3</code> gyártóspecifikus/ott használt. A harmadik karakter a
+hibás alrendszert azonosítja, például <code>P01xx</code> a levegő- és
+üzemanyag-bevitel, <code>P02xx</code> a befecskendező rendszer,
+<code>P03xx</code> az égéskimaradás, <code>P04xx</code> a
+kipufogógáz-utókezelés. Az utolsó két karakter a hiba pontosabb helyét
+adja meg.</p>
+<p><strong>Példa.</strong> A <code>P0302</code> kód feloldása:
+<code>P</code> hajtáslánc, <code>0</code> szabványos, <code>3</code>
+égésrendszer, <code>02</code> a 2. henger égéskimaradása. A
+<code>P0420</code> esetén pedig <code>P</code> hajtáslánc,
+<code>0</code> szabványos, <code>4</code> utókezelés, <code>20</code>
+katalizátor-hatásfok az 1. hengersoron.</p>
+<h4 data-number="37.2.4.4"
+id="mil-lámpa-üzemmódok-és-readiness-kódok"><span
+class="header-section-number">37.2.4.4</span> MIL-lámpa üzemmódok és
+readiness-kódok</h4>
+<p>A MIL-lámpa többféle üzemmódban világíthat: - <strong>folyamatosan
+ég</strong>: megerősített, emissziószempontból kritikus hiba (pl.
+égéskimaradás, katalizátorhatásfok), - <strong>villog</strong>: súlyos
+égéskimaradás, amely katalizátor-károsodást okozhat – ilyenkor azonnal
+csökkenteni kell a terhelést, és lehetőleg leállítani a motort, -
+<strong>nem világít, de kód tárolva van</strong>: a hiba már előfordult,
+de a felügyeleti teszt még nem erősítette meg újra, vagy a hiba nem
+igényel MIL-t.</p>
+<p>A <strong>readiness</strong> bitek megmutatják, hogy az egyes
+felügyelt rendszerek tesztjei elvégezték-e a teljes diagnosztikai
+ciklust. Ha akkumulátorlekötés vagy hibakód-törlés történt, a readiness
+bitek törlődnek, és a járművet előbb <strong>járműspecifikus vezetési
+ciklusnak</strong> (drive cycle, OBD-ciklus) kell alávetni, hogy a
+tesztek újra lefussanak. A tipikus ciklus hidegindítással kezdődik,
+városi gyorsítást-lassítást, országúti szakaszt és alapjáratot
+tartalmaz; pontos feltételei járműtípusonként eltérnek (ellenőrizendő:
+gyártói és járműszoftver-adat).</p>
+<h3 data-number="37.2.5" id="kidolgozott-példák"><span
+class="header-section-number">37.2.5</span> Kidolgozott példák</h3>
+<h4 data-number="37.2.5.1"
+id="példa-hibakód-kiolvasása-és-freeze-frame-elemzése"><span
+class="header-section-number">37.2.5.1</span> 1. példa: Hibakód
+kiolvasása és freeze frame elemzése</h4>
+<p><strong>Adott.</strong> A rendszerteszter Mode 03-ban a
+<code>P0420</code> hibakódot olvassa ki. A Mode 02 freeze frame adatai:
+motorfordulatszám
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n = 2\,100\,\text{1/min}</annotation></semantics></math>,
+járműsebesség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>86</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km/h</mtext></mrow><annotation encoding="application/x-tex">v = 86\,\text{km/h}</annotation></semantics></math>,
+hűtőfolyadék-hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>91</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">T= 91\,{}^{\circ}\text{C}</annotation></semantics></math>,
+légtömegáram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>L</mi></msub><mo>=</mo><mn>28</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">\dot{m}_L = 28\,\text{g/s}</annotation></semantics></math>,
+motorterhelés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>L</mi></msub><mo>=</mo><mn>45</mn><mspace width="0.167em"></mspace><mi>%</mi></mrow><annotation encoding="application/x-tex">R_L = 45\,\%</annotation></semantics></math>.</p>
+<p><strong>Keresett.</strong> Mely üzemállapotban keletkezett a hiba, és
+milyen irányú diagnózist indítasz?</p>
+<p><strong>Megoldás.</strong> A freeze frame mutatja, hogy a hiba meleg
+motoron, részterhelésen, országúti sebességnél keletkezett – pontosan
+abban a tartományban, ahol a katalizátor-hatásfok teszt le szokott
+futni. A légtömegáram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>28</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">28\,\text{g/s}</annotation></semantics></math>
+kétliteres szívómotornál közepes terhelésnek felel meg. A diagnózist a
+katalizátor mögötti oxigénszonda élő jelének, a fűtésének és a
+katalizátor oxigéntároló képességének irányába indítod: élő adatnál a
+hátsó szonda jelváltása gyors-e, vagy esetleg az első szonda is
+ellaposodott. A törlés előtt dokumentáld a freeze frame értékeit, mert a
+törlés ezeket is törli. ∎</p>
+<h4 data-number="37.2.5.2"
+id="példa-readiness-állapot-és-vizsgakészültség"><span
+class="header-section-number">37.2.5.2</span> 2. példa:
+Readiness-állapot és vizsgakészültség</h4>
+<p><strong>Adott.</strong> A járművön akkumulátorcsere után elvégezték a
+szerelést, majd hibakód törlése történt. A rendszerteszter readiness
+képernyőjén a katalizátor- és lambdaszonda-felügyelet „nem kész”
+állapotban van, az égéskimaradás „kész”. A hatósági vizsgálat jövő héten
+esedékes.</p>
+<p><strong>Keresett.</strong> Átmehet-e a jármű emissziómérésen, ha a
+motor jól jár, és nincs hibakód?</p>
+<p><strong>Megoldás.</strong> Nem feltétlenül, mert a hatósági vizsgálat
+– az eljárástól függően – kérheti a readiness állapotok ellenőrzését,
+vagy az EOBD-rendszer által jelzett készültséget. A „nem kész”
+(incomplete) bitek arra utalnak, hogy a katalizátor- és szondatesztek
+még nem futottak le, így a vizsgálóállomás elutasíthatja a járművet. El
+kell végezni a gyártó által előírt vezetési ciklust (pl. hidegindítás,
+városi szakasz, 80–100 km/h országút, alapjárat), majd újra ellenőrizni
+a readiness értékeket. Csak akkor szabad a járművet vizsgára vinni, ha
+minden előírt felügyeleti teszt „kész” állapotú, vagy a vizsgálóállomás
+az adott ellenőrzéshez elfogadja a rendelkezésre álló ready-s biteket.
+∎</p>
+<h3 data-number="37.2.6" id="minőségellenőrzés"><span
+class="header-section-number">37.2.6</span> Minőségellenőrzés</h3>
+<p><strong>Ellenőrzőlista</strong> a diagnosztikai munka előtt és
+közben:</p>
+<ol type="1">
+<li>Gyújtás ki, OBD-csatlakozó érintkezőinek tisztasága, feszültség a
+16. és 4-5. érintkező között
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\,\text{V}</annotation></semantics></math>
+körül (akkumulátor és tesztcsatlakozó állapota).</li>
+<li>Rendszerteszter firmware- és járműadatbázis-frissítése (ha van
+gyártói előírás).</li>
+<li>Mode 03 hibakódok kiolvasása, Mode 02 freeze frame mentése.</li>
+<li>Mode 07 függőben lévő hibák ellenőrzése.</li>
+<li>Mode 01 élő adatok ellenőrzése: lambdajel, hűtővíz-hőmérséklet,
+terhelés, fordulatszám, adaptációs értékek.</li>
+<li>Javítás után Mode 04 hibakód-törlés, majd a megfelelő felügyeleti
+teszt lefuttatása a gyártó szerinti vezetési ciklussal.</li>
+<li>Readiness bitek ellenőrzése, próbaút után hibakódok újbóli
+kiolvasása.</li>
+</ol>
+<h3 data-number="37.2.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">37.2.7</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy 2012-es benzinmotoros jármű ügyfele szerint a MIL-lámpa kétszer
+is kigyulladt, de a lámpa idővel kialudt. A szerelő a Mode 03-ban a
+<code>P0420</code> kódot és a freeze frame-et találja; a Mode 07 szerint
+nincs függőben lévő kód. Az élő adatoknál az első lambdaszonda szép
+szinuszos jelváltást mutat, a katalizátor mögötti szonda azonban szinte
+ugyanolyan gyorsan vált, mint az első, és az amplitúdó is magas. A
+szerelő a kipufogórendszeren repedést vagy tömítetlenséget keres, mert
+az alacsony katalizátorhatásfoknak lehet mechanikai oka is: a
+katalizátor előtti és utáni csatlakozásnál kipufogószivárgás „hamis”
+szegény jelet okozhat. A hővédő lemez eltávolítása után a katalizátor
+bemeneti tömítésénél kormos nyomot talál. A csavart a gyártói
+nyomatékkal (ellenőrizendő: gyártói adat) utánhúzza, azonban a tömítés
+deformálódott, ezért újat szerel be. Javítás után törli a hibakódot,
+lefuttatja a katalizátortesztet, majd a readiness bitek „kész” állapotba
+kerülnek. A próbaúton már nem jelenik meg hiba.</p>
+<h3 data-number="37.2.8" id="gyakorlati-útmutató"><span
+class="header-section-number">37.2.8</span> Gyakorlati útmutató</h3>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Cél.</strong> OBD-hibakód kiolvasása, freeze frame elemzése,
+MIL-lámpa okának feltárása és a javítás utáni readiness ellenőrzése.</p>
+<p><strong>Szükséges szerszámok, műszerek:</strong> OBD/EOBD
+rendszerteszter vagy megfelelő diagnosztikai szoftver, multiméter,
+járműszkennerrel kompatibilis gyári javítási utasítás, védőkesztyű
+(forró motor környezetéhez).</p>
+<p><strong>Munkalépések:</strong></p>
+<ol type="1">
+<li>Rögzítsd a jármű azonosítóit: rendszám, alvázszám, motorszám,
+gyártási év, motorkód (a gyártói adatbázishoz). Kapcsold ki a
+gyújtást.</li>
+<li>Ellenőrizd az OBD-csatlakozó fizikai állapotát, a 16. érintkezőn
+lévő feszültséget a 4-5. érintkezőhöz képest;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>11</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">11{,}5\,\text{V}</annotation></semantics></math>
+alatt az akkumulátort vagy a csatlakozó táplálását ellenőrizd.</li>
+<li>Csatlakoztasd a rendszertesztert, és indítsd el a járművel való
+kommunikációt. Ha a kapcsolat nem jön létre, vizsgáld a gyújtást, a
+csatlakozó testpontjait, a biztosítékokat.</li>
+<li>Olvasd ki a tárolt hibakódokat (Mode 03) és a freeze frame-et (Mode
+02). Jegyezd fel az adatokat, mielőtt bármit törölnél.</li>
+<li>Nézd meg a függőben lévő kódokat (Mode 07), és a readiness
+állapotokat. Ha „nem kész” a teszt, a hibakeresést ne hanyagold el; a
+MIL-lámpa jelenlegi állapotát is rögzítsd.</li>
+<li>A kódok és fagyott keret alapján állíts fel hipotézist, majd Mode 01
+élő adattal, multiméteres méréssel vagy oszcilloszkóppal igazold az
+okot. Szerkezeti hibánál vizsgáld a kipufogószivárgást, vákuumcsöveket,
+csatlakozókat.</li>
+<li>A javítás elvégzése után töröld a hibakódokat (Mode 04) a gyártó
+engedélye szerint. <strong>Figyelem.</strong> A hibakód törlése a freeze
+frame-et és a readiness biteket is törli; ezután a jármű nem rögtön
+vizsgakész.</li>
+<li>Futtasd le a gyártó által előírt felügyeleti tesztet vagy vezetési
+ciklust. Ellenőrizd, hogy a hibakód nem ismétlődik-e meg, és a readiness
+bitek „kész” állapotba kerülnek-e.</li>
+<li>Dokumentáld a munkalapon a kódokat, a freeze frame értékeket, a
+javítás módját és a végső ready állapotot.</li>
+</ol>
+<p><strong>Tipikus hiba.</strong> Ne törölj hibakódot a mérési adatok
+rögzítése nélkül; ne töröld a kódot gyári javítási utasítás nélkül, ha a
+hiba további diagnosztikát igényel.</p>
+<h3 data-number="37.2.9" id="tipikus-hibák"><span
+class="header-section-number">37.2.9</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>Csak a hibakódot törlik, az okot nem javítják.</strong> A
+P0420 kód törlése után a MIL-lámpa egy időre kialszik, de a hiba
+visszatér, és a jármű emissziós vizsgán megbukhat. Helyes gyakorlat:
+először az okot kell megtalálni és javítani, majd törölni a
+kódot.</p></li>
+<li><p><strong>A freeze frame-et figyelmen kívül hagyják.</strong> A kód
+önmagában nem ad elég információt; a befagyasztott keret megmutatja,
+milyen körülmények között lépett fel a hiba. A hibakeresés gyakran csak
+azzal kezdhető, ha tudjuk, hogy hidegen vagy melegen, alapjáraton vagy
+részterhelésen történt-e.</p></li>
+<li><p><strong>A readiness biteket összekeverik a hibakódokkal.</strong>
+A hibakód-törlés után a rendszer „kész” állapot nélkül nem feltétlenül
+vizsgakész; ha a szerelő a műszaki vizsga előtt törli a kódot, a
+járművön elvégzett OBD-tesztek hiányosnak tűnhetnek. Helyes gyakorlat: a
+gyártói vezetési ciklust elvégezni.</p></li>
+</ol>
+<h3 data-number="37.2.10" id="önellenőrzés"><span
+class="header-section-number">37.2.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A <code>P0301</code> kód az 1. henger
+égéskimaradását jelzi. Indokold.</li>
+<li>Mit jelent a „readiness nem kész” állapot, és miért gond a
+vizsgán?</li>
+<li>Mi a különbség a Mode 03 és a Mode 07 között?</li>
+<li>Egy 4 hengeres, 2 literes motornál a freeze frame fordulatszáma
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>840</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">840\,\text{1/min}</annotation></semantics></math>,
+a hűtővíz-hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>35</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">35\,{}^{\circ}\text{C}</annotation></semantics></math>.
+Milyen üzemállapotra utal ez?</li>
+<li>Melyik két lambdaszonda-jel jelzi a leggyakrabban a katalizátor
+romlását?</li>
+<li>Miért hiba a hibakódot a freeze frame mentése és dokumentálása előtt
+törölni?</li>
+</ol>
+<h3 data-number="37.2.11" id="feladatok"><span
+class="header-section-number">37.2.11</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Bontsd fel a <code>P0420</code> és
+<code>P0135</code> hibakódokat a karakterpozíciók szerint.</p>
+<p><strong>2. feladat (A)</strong> Sorold fel az EOBD hét fő felügyelt
+rendszerét (katalizátor, lambdaszonda stb.), és jelöld, melyik állandó,
+melyik időszakos.</p>
+<p><strong>3. feladat (B)</strong> A tárolt hibakód P0171 (rendszer túl
+szegény, 1. hengersor); a rendszerteszter Mode 02 (freeze frame) adatai:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><mn>500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n = 2\,500\,\text{1/min}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>110</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km/h</mtext></mrow><annotation encoding="application/x-tex">v = 110\,\text{km/h}</annotation></semantics></math>,
+fojtószelep-állás 55 %, λ = 1,02. Milyen üzemállapotban keletkezett a
+hiba, és mely okokat vizsgálod?</p>
+<p><strong>4. feladat (B)</strong> Egy járművön a MIL-lámpa villog. Mit
+kell tenni, és miért?</p>
+<p><strong>5. feladat (C)</strong> A P0420 hiba diagnosztikája során a
+szerelő megméri a katalizátor előtti és mögötti oxigénszonda
+feszültségét. Az első szonda 0,2 és 0,8 V között vált 1 Hz-cel, a hátsó
+szonda ugyancsak 0,3 és 0,7 V között vált, de 0,9 Hz-cel. Értékeld a
+mérést; mi lehet a hiba?</p>
+<p><strong>6. feladat (D)</strong> Egy jármű a műszaki vizsga előtt áll,
+a readiness bitek: égéskimaradás „kész”, lambdaszonda „nem kész”,
+katalizátor „nem kész”, EGR „kész”. Milyen teendő a vizsga előtt?</p>
+<h3 data-number="37.2.12" id="megoldások"><span
+class="header-section-number">37.2.12</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Igaz. A <code>P0301</code> a P hajtáslánc, 0 szabványos, 3
+égésrendszer, 01 az 1. henger kimaradása.</li>
+<li>Nem kész readiness azt jelenti, hogy a felügyeleti teszt nem futott
+le teljesen. A vizsgán a rendszer nem tudja igazolni a kibocsátás
+ellenőrzöttségét, ezért elutasítás lehet.</li>
+<li>Mode 03 a tárolt, megerősített hibakódokat adja; Mode 07 a függőben
+lévő, még nem megerősített hibákat jelzi.</li>
+<li>Alapjárati, hideg/félig meleg motor. A hűtővíz 35 °C, ez még
+bemelegedési fázis; a rendszer hidegindítási és bemelegedési stratégiát
+alkalmaz.</li>
+<li>A katalizátor előtti (első) és utáni (második) lambdaszonda jelét. A
+romlás jele, ha a hátsó szonda amplitúdója és váltási frekvenciája
+megközelíti az elsőét.</li>
+<li>A törlés a freeze frame-et és a readiness bitek állapotát is
+elveszi, így a hiba keletkezési körülményei (fordulatszám, terhelés,
+hőmérséklet) elvesznek, és a hibakeresés nehezebbé válik; törlés előtt a
+kódot és a freeze frame-et dokumentálni kell.</li>
+</ol>
+<p><strong>1. feladat megoldása.</strong> <code>P0420</code>: P
+hajtáslánc, 0 szabványos emissziós, 4 kipufogó-utókezelés, 20
+katalizátor-hatásfok az 1. hengersoron. <code>P0135</code>: P
+hajtáslánc, 0 szabványos, 1 levegő- és üzemanyag-bevitel, 35 a fűtőköri
+hiba (ld. gyártói specifikáció).</p>
+<p><strong>2. feladat megoldása.</strong> Állandó felügyelet:
+égéskimaradás, tüzelőanyag-ellátás, lambdaszabályozás. Időszakos:
+katalizátorhatásfok, EGR, szekunderlevegő, EVAP. (A lambdaszabályozás
+állandó, de a szondaalapú felügyelet egy része időszakos lehet.)</p>
+<p><strong>3. feladat megoldása.</strong> A 2500 1/min, 110 km/h, 55
+%-os fojtószelep-állás országúti, meleg, részterhelésű üzem. A λ 1,02
+kissé szegény, ami lehet légtömegmérő szennyezettség, kipufogószivárgás
+a szonda előtt, vagy EGR hiba; további mérést igényel.</p>
+<p><strong>4. feladat megoldása.</strong> A villogó MIL súlyos
+égéskimaradást jelez, ami tönkreteheti a katalizátort. Azonnal
+csökkenteni kell a terhelést (sebesség vissza, fordulatszám vissza),
+lehetőleg meg kell állni, és a motort leállítani, majd hibakódot
+kiolvasni.</p>
+<p><strong>5. feladat megoldása.</strong> A hátsó szonda gyors
+váltakozása és magas amplitúdója nagyon hasonlít az első szondáéhoz, ami
+a katalizátor oxigéntároló képességének elvesztésére utal. Ez lehet
+kiöregedett katalizátor, de mechanikai szivárgás is okozhatja. A pontos
+megoldáshoz tömítettségi vizsgálat, kipufogógáz-nyomásmérés és
+szondavizsgálat szükséges.</p>
+<p><strong>6. feladat megoldása.</strong> A járművön a lambdaszonda- és
+katalizátor felügyelet nem kész. El kell végezni a gyártói vezetési
+ciklust, és utána újra ellenőrizni; ha a bitek továbbra sem készülnek, a
+hibát meg kell keresni. Nem szabad kódot törölni, hogy a readiness
+„késznek” tűnjön – ez manipuláció.</p>
+<h3 data-number="37.2.13" id="rövid-összefoglaló"><span
+class="header-section-number">37.2.13</span> Rövid összefoglaló</h3>
+<p>Az EOBD a fedélzeti állapotfelügyelet eszköze, amely a kibocsátás
+szempontjából kritikus rendszereket folyamatosan vagy időszakosan
+ellenőrzi. A hibakódok (DTC-k) szabványos felépítésűek: a
+<code>P0420</code> jellegű kódok rendszert, alrendszert és konkrét hibát
+azonosítanak, de a tényleges ok megállapításához további mérések
+kellenek. A freeze frame a hibatárolás pillanatának adatait őrzi; ezeket
+a rendezett diagnosztikához dokumentálni kell, mielőtt bármit törölnénk.
+A MIL-lámpa éghet folyamatosan, villoghat, vagy ki lehet aludva; a
+hibatárolás a megerősítési ciklusoktól függ. A readiness bitek azt
+mutatják, hogy a felügyeleti tesztek lefutottak-e; hibakód-törlés vagy
+akkumulátorlekötés után a gyártói vezetési ciklussal kell újra futtatni
+őket. <strong>Továbbvitt eredmény.</strong> Az itt tanult OBD-hibakódok,
+freeze frame és readiness értelmezése közvetlenül szükséges a <a
+href="au134.html">Rendszerteszter-használat: élő adatok, beavatkozó
+teszt, adaptációk, kódolás</a> alfejezetben, ahol a Mode 01/02/06/09
+adatokkal dolgozol, valamint a <a href="au164.html">Írásbeli és szóbeli
+vizsgafelkészülés: témakör-térkép és mintafeladatok</a>
+vizsgafeladataiban. A gyártói javítási utasítás, a járműspecifikus
+protokoll és az érvényes EOBD-előírás ismerete minden diagnosztikai
+munka alapja.</p>
+<h3 data-number="37.2.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">37.2.14</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: ISO 15031-6 (DTC-definíció), ISO 15765-4 (CAN-alapú
+OBD-kommunikáció), SAE J1962 (csatlakozó), ENSZ-EGB és EU EOBD-előírások
+(ellenőrizendő a pontos számok és hatály), gyártói javítási utasítások
+és OBD-ciklusok (járműspecifikus adatok). Az alfejezetben jelölt értékek
+(feszültség, mintavételi példák, hibakódok magyarázata) tanulási példák;
+a konkrét jármű adatait mindig a gyártói dokumentációból kell
+ellenőrizni.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au132.html">← 37.1 Diagnosztikai alapfogalmak és a motor mechanikai állapotvizsgálata</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au134.html">37.3 Rendszerteszter-használat: élő adatok, beavatkozó teszt, adaptációk, kódolás →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

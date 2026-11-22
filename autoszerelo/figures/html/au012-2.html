@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Felületi érdesség: Ra a profilból</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="dur">Profil durvasága</label><input id="dur" type="range" min="0.2" max="5.0" step="0.05" value="1.0" aria-label="Profil durvasága"><output id="dur_o" for="dur"></output></div>
+<div class="row"><label for="fin">Finom hullámok aránya</label><input id="fin" type="range" min="0.0" max="2.0" step="0.1" value="1.0" aria-label="Finom hullámok aránya"><output id="fin_o" for="fin"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 300" role="img" aria-label="Nagyított felületi profil középvonallal és Ra-sávval; a csúszkával a profil durvasága és az Ra értéke változik."></svg>
+<p class="small">Szemléltető profil (nem mért adat), a függőleges lépték erősen nagyított. Az 1× durvaság az ábra Ra = 0,8 µm-es profilja. Az érdesség megadása: MSZ EN ISO 21920-1 / 1302 (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"dur":"×", "fin":"×"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const C = [[1.0, 9.0, 0.0], [0.55, 3.7, 1.1], [0.35, 1.6, 2.3], [0.2, 0.9, 0.4]], N = 400, X0 = 40, W = 560, Y0 = 150;
+const sc = v.dur, k = 45;                  // 1 µm = 45 px
+const z = []; let m = 0;
+for (let i = 0; i <= N; i++) { const x = 40 * i / N; let s = 0;
+  C.forEach(c => s += c[0] * Math.sin(2 * Math.PI * x / c[1] + c[2]) * (c[1] < 2 ? v.fin : 1)); z.push(s); m += s; }
+m /= (N + 1);
+let ra = 0, zmax = -1e9, zmin = 1e9;
+for (let i = 0; i <= N; i++) { z[i] = (z[i] - m) * sc * 1.1117788177311538; ra += Math.abs(z[i]); zmax = Math.max(zmax, z[i]); zmin = Math.min(zmin, z[i]); }
+ra /= (N + 1);
+const X = i => X0 + W * i / N, Y = u => Y0 - u * k;
+let up = "M" + X0 + " " + Y0, lo = "M" + X0 + " " + Y0, pr = "";
+for (let i = 0; i <= N; i++) { up += " L" + X(i) + " " + Y(Math.max(0, z[i])); lo += " L" + X(i) + " " + Y(Math.min(0, z[i]));
+  pr += (i ? " L" : "M") + X(i) + " " + Y(z[i]); }
+up += " L" + X(N) + " " + Y0 + " Z"; lo += " L" + X(N) + " " + Y0 + " Z";
+el("path", {d: up, fill: css("--grid"), stroke: "none"});
+el("path", {d: lo, fill: css("--grid"), "fill-opacity": 0.45, stroke: "none"});
+el("path", {d: pr, fill: "none", stroke: css("--line"), "stroke-width": 1.6});
+el("line", {x1: X0, y1: Y0, x2: X0 + W, y2: Y0, stroke: css("--line"), "stroke-dasharray": "12 3 2 3"});
+[ra, -ra].forEach(u => el("line", {x1: X0, y1: Y(u), x2: X0 + W, y2: Y(u), stroke: css("--hl2"), "stroke-width": 2, "stroke-dasharray": "6 4"}));
+el("text", {x: X0 + W + 4, y: Y(ra) + 4, "font-size": 12}, "+Ra");
+el("text", {x: X0 + W + 4, y: Y(-ra) + 4, "font-size": 12}, "−Ra");
+el("text", {x: X0, y: 290, "font-size": 12}, "középvonal: pontvonal; szaggatott: ±Ra sáv; mérési hossz = a teljes szakasz");
+const cls = ra <= 0.4 ? "finoman köszörült / hónolt tartomány" : ra <= 1.6 ? "köszörült, finom esztergált tartomány" : ra <= 3.2 ? "esztergált tartomány" : "durva megmunkálás / öntött";
+status(`Ra = <b>${fmt(ra, 2)} µm</b> (a profil ordinátáinak átlagos abszolút eltérése a középvonaltól), Rz ≈ ${fmt(zmax - zmin, 1)} µm.<br>Tájékoztató besorolás: ${cls} (szemléltető, nem szabványos határ).`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

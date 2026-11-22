@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feszültségesés-mérés az indítókörön</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="A">1. mérőzsinór</label><select id="A" aria-label="1. mérőzsinór"><option value="0" selected>1. akku + pólus</option><option value="1">2. + saru (kábelvég az akkunál)</option><option value="2">3. indítómotor 30-as kapocs</option><option value="3">4. indítómotor háza</option><option value="4">5. motorblokk testpont</option><option value="5">6. karosszéria testpont</option><option value="6">7. − saru (kábelvég az akkunál)</option><option value="7">8. akku − pólus</option></select></div>
+<div class="row"><label for="B">2. mérőzsinór</label><select id="B" aria-label="2. mérőzsinór"><option value="0">1. akku + pólus</option><option value="1">2. + saru (kábelvég az akkunál)</option><option value="2" selected>3. indítómotor 30-as kapocs</option><option value="3">4. indítómotor háza</option><option value="4">5. motorblokk testpont</option><option value="5">6. karosszéria testpont</option><option value="6">7. − saru (kábelvég az akkunál)</option><option value="7">8. akku − pólus</option></select></div>
+<div class="row"><label for="hiba">szimulált hiba</label><select id="hiba" aria-label="szimulált hiba"><option value="nincs" selected>nincs hiba</option><option value="psaru">korrodált + saru az akkun</option><option value="szalag">laza testszalag</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 290" role="img" aria-label="Feszültségesés-mérés indítókörön: pozitív ág és testoldal mérőzsinór-helyzete terhelés alatt."></svg>
+<p class="small">Szimulált, szemléltető értékek (150 A indítóáram, kitalált átmeneti ellenállások) – nem mérési adat. A határértékek a fejezet példái, ellenőrizendők a gyártói javítási adatban. Indítózás közbeni mérésnél a motor indulását a gyártói módon meg kell akadályozni.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+svg = FIG.svg;
+const P=["akku + pólus", "+ saru (kábelvég az akkunál)", "indítómotor 30-as kapocs", "indítómotor háza", "motorblokk testpont", "karosszéria testpont", "− saru (kábelvég az akkunál)", "akku − pólus"], ROK={"p01": 0.2, "p12": 1.5, "g34": 0.2, "g45": 0.6, "g56": 0.8, "g67": 0.2}, F={"nincs": {}, "psaru": {"p01": 3.0}, "szalag": {"g45": 2.5}}, I=150.0, U0=10.5;
+const R=Object.assign({},ROK,F[v.hiba]);
+const V=[U0]; V[1]=V[0]-I*R.p01/1000; V[2]=V[1]-I*R.p12/1000;
+const G=[]; G[7]=0; G[6]=I*R.g67/1000; G[5]=G[6]+I*R.g56/1000; G[4]=G[5]+I*R.g45/1000; G[3]=G[4]+I*R.g34/1000;
+const pot=[V[0],V[1],V[2],G[3],G[4],G[5],G[6],G[7]];
+const a=+v.A, b=+v.B, U=Math.abs(pot[a]-pot[b]);
+const ln=css("--line");
+// rajz: akku, + kábel, indító, test
+const X=[50,90,400,540,470,300,170,120], Y=[72,60,140,205,250,250,80,72];
+el("rect",{x:20,y:80,width:120,height:80,fill:"none",stroke:ln,"stroke-width":2}); el("text",{x:80,y:125,"text-anchor":"middle","font-size":13},"akku");
+el("rect",{x:400,y:150,width:160,height:60,fill:"none",stroke:ln,"stroke-width":2}); el("text",{x:480,y:185,"text-anchor":"middle","font-size":13},"indítómotor");
+el("polyline",{points:"50,80 50,60 400,60 400,150",fill:"none",stroke:ln,"stroke-width":5});
+el("polyline",{points:"120,80 120,72 170,72 170,250 470,250 520,210",fill:"none",stroke:ln,"stroke-width":5});
+el("text",{x:310,y:275,"font-size":11},"karosszéria → testszalag → motorblokk");
+P.forEach((t,i)=>{ const on=(i===a||i===b);
+  el("circle",{cx:X[i],cy:Y[i],r:on?9:6,fill:on?css("--hl2"):css("--bg"),stroke:ln,"stroke-width":2});
+  el("text",{x:X[i]+10,y:Y[i]-10,"font-size":12},String(i+1)); });
+el("rect",{x:230,y:120,width:120,height:50,fill:css("--bg"),stroke:ln,"stroke-width":2});
+el("text",{x:290,y:153,"text-anchor":"middle","font-size":18,"font-family":"monospace"},fmt(U,2)+" V");
+el("line",{x1:250,y1:170,x2:X[a],y2:Y[a],stroke:css("--hl"),"stroke-width":2,"stroke-dasharray":"6 3"});
+el("line",{x1:330,y1:170,x2:X[b],y2:Y[b],stroke:css("--hl"),"stroke-width":2,"stroke-dasharray":"6 3"});
+let msg;
+const pos=(x)=>x<=2, neg=(x)=>x>=3;
+if(a===b) msg="Válassz két különböző mérőpontot.";
+else if(pos(a)!==pos(b)) msg="A két pont az indítómotor két oldalán van: ez a <b>kapocsfeszültség</b>, nem feszültségesés.";
+else { const lim = pos(a)?0.5:0.3, side=pos(a)?"pozitív ág":"testoldal";
+  msg=`${side}: feszültségesés <b>${fmt(U,2)} V</b> – határ pl. ${fmt(lim,1)} V (ellenőrizendő) → `+(U>lim?'<span class="bad">nagy: átmeneti ellenállás a mért szakaszon!</span>':'<span class="ok">rendben</span>');
+  if((a===1&&b===2)||(a===2&&b===1)) msg+=" <br>Figyelem: a + saru és a pólus közötti érintkezés így kimarad a mérésből (tipikus hiba).";
+  if((a===5&&b===6)||(a===6&&b===5)) msg+=" <br>Figyelem: így csak a testkábelt mérted, a testszalag és a saru kimarad."; }
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

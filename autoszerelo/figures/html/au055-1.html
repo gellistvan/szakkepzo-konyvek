@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oszcilloszkóp-szimulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="sig">Jelforrás</label><select id="sig" aria-label="Jelforrás"><option value="sin">1. példa: szinusz 2,6 V, 2,5 kHz</option><option value="rc" selected>2. példa: RC-kör, 1 kHz (CH1 u_R, CH2 u_gen)</option><option value="sq">négyszög 0–5 V, 1 kHz</option><option value="ind">induktív jeladó (szemléltető)</option><option value="hall">Hall-jel 0–5 V (szemléltető)</option></select></div>
+<div class="row"><label for="vd1">CH1 V/oszt</label><select id="vd1" aria-label="CH1 V/oszt"><option value="0.1">0,1 V/oszt</option><option value="0.2">0,2 V/oszt</option><option value="0.5" selected>0,5 V/oszt</option><option value="1">1 V/oszt</option><option value="2">2 V/oszt</option><option value="5">5 V/oszt</option></select></div>
+<div class="row"><label for="vd2">CH2 V/oszt</label><select id="vd2" aria-label="CH2 V/oszt"><option value="0.1">0,1 V/oszt</option><option value="0.2">0,2 V/oszt</option><option value="0.5">0,5 V/oszt</option><option value="1">1 V/oszt</option><option value="2" selected>2 V/oszt</option><option value="5">5 V/oszt</option></select></div>
+<div class="row"><label for="td">Időalap</label><select id="td" aria-label="Időalap"><option value="0.05">0,05 ms/oszt</option><option value="0.1">0,1 ms/oszt</option><option value="0.2" selected>0,2 ms/oszt</option><option value="0.5">0,5 ms/oszt</option><option value="1">1 ms/oszt</option><option value="2">2 ms/oszt</option><option value="5">5 ms/oszt</option></select></div>
+<div class="row"><label for="cpl">Csatolás</label><select id="cpl" aria-label="Csatolás"><option value="DC" selected>DC</option><option value="AC">AC</option></select></div>
+<div class="row"><label for="src">Trigger forrás</label><select id="src" aria-label="Trigger forrás"><option value="1" selected>CH1</option><option value="2">CH2</option></select></div>
+<div class="row"><label for="edge">Trigger él</label><select id="edge" aria-label="Trigger él"><option value="1" selected>felfutó</option><option value="-1">lefutó</option></select></div>
+<div class="row"><label for="lvl">Trigger szint</label><input id="lvl" type="range" min="-8" max="8" step="0.1" value="0" aria-label="Trigger szint"><output id="lvl_o" for="lvl"></output></div>
+<div class="row"><label for="pset">Szondabeállítás a műszeren</label><select id="pset" aria-label="Szondabeállítás a műszeren"><option value="1">1:1</option><option value="10" selected>10:1</option></select></div>
+<div class="row"><label for="pact">A valós szonda</label><select id="pact" aria-label="A valós szonda"><option value="1">1:1</option><option value="10" selected>10:1</option></select></div>
+<div class="row"><label for="c1">Kurzor 1 (oszt.)</label><input id="c1" type="range" min="0" max="10" step="0.02" value="1" aria-label="Kurzor 1 (oszt.)"><output id="c1_o" for="c1"></output></div>
+<div class="row"><label for="c2">Kurzor 2 (oszt.)</label><input id="c2" type="range" min="0" max="10" step="0.02" value="2.14" aria-label="Kurzor 2 (oszt.)"><output id="c2_o" for="c2"></output></div>
+<div class="row"><label for="hib">Hibás példa: 10:1 szonda, 1:1 beállítás</label><input id="hib" type="checkbox" aria-label="Hibás példa: 10:1 szonda, 1:1 beállítás"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 462" role="img" aria-label="Oszcilloszkóp-képernyő két szinuszjellel; a beállításokkal a kép, a trigger és a fázisszög leolvasása gyakorolható."></svg>
+<p class="small">Szemléltető szimulátor; a jelek a fejezet példái (1. példa: 2,6 V csúcs, 2,5 kHz; 2. példa: R = 100 Ω, C = 220 nF, 1 kHz, 5 V eff), a négyszög-, induktív és Hall-jelek kitalált tanulási jelalakok. A trigger szintjét a jelen kívülre állítva a kép fut.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"lvl":"V", "c1":"oszt", "c2":"oszt"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const RC={f:1000.0,ur:0.9682,ug:7.0711,dt:0.000228};
+let sig=v.sig,vd1=v.vd1,pset=v.pset,pact=v.pact;
+if(v.hib){sig="sin";vd1=1;pset=1;pact=10;}
+const k=pset/pact;   // kijelzett = valós · (beállítás / valós csillapítás)
+function src(t){    // [ch1, ch2] valós feszültség a mérőcsúcson (V)
+  if(sig==="sin")return [2.6*Math.sin(2*Math.PI*2500*t),0];
+  if(sig==="rc")return [RC.ur*Math.sin(2*Math.PI*RC.f*t),RC.ug*Math.sin(2*Math.PI*RC.f*(t-RC.dt))];
+  if(sig==="sq"){const p=(t*1000)%1;return [(p<0.5?5:0),0];}
+  if(sig==="ind"){const tt=t*800,ph=tt%1,tooth=Math.floor(tt)%20;return [tooth>=18?0:2*Math.sin(2*Math.PI*ph),0];}
+  const p=(t*200)%1;return [(p<0.3?5:0),0];}
+const mean={sin:[0,0],rc:[0,0],sq:[2.5,0],ind:[0,0],hall:[1.5,0]}[sig];
+function disp(t){const s=src(t);return [0,1].map(i=>(s[i]-(v.cpl==="AC"?mean[i]:0))*k);}
+const TD=v.td*1e-3, W=10*TD, X0=30, Y0=30, P=50;
+// trigger keresése: első átlépés t∈[TD, 40 periódus]
+const si=v.src-1;let t0=null,prev=disp(-W)[si];
+for(let i=1;i<6000;i++){const t=-W+i*W/400,u=disp(t)[si];
+  if((v.edge>0&&prev<v.lvl&&u>=v.lvl)||(v.edge<0&&prev>v.lvl&&u<=v.lvl)){ if(t>=0){t0=t;break;} } prev=u;}
+const run=(t0===null);
+if(run)t0=Math.random()*W*3;
+if(!window._tm)window._tm=setInterval(()=>{if(window._run)draw();},180);
+window._run=run;
+// képernyő
+el("rect",{x:X0,y:Y0,width:10*P,height:8*P,fill:css("--bg"),stroke:css("--line"),"stroke-width":2});
+for(let i=1;i<10;i++)el("line",{x1:X0+i*P,y1:Y0,x2:X0+i*P,y2:Y0+8*P,stroke:css("--grid"),"stroke-width":i===5?1.6:0.8});
+for(let j=1;j<8;j++)el("line",{x1:X0,y1:Y0+j*P,x2:X0+10*P,y2:Y0+j*P,stroke:css("--grid"),"stroke-width":j===4?1.6:0.8});
+const vds=[vd1,v.vd2];
+for(let ch=0;ch<2;ch++){ if(sig!=="rc"&&ch===1)continue; let d="";
+  for(let i=0;i<=500;i++){const tt=t0-TD+i*W/500;let y=disp(tt)[ch]/vds[ch];y=Math.max(-4.3,Math.min(4.3,y));
+    d+=(i?"L":"M")+(X0+i*P/50)+" "+(Y0+4*P-y*P);}
+  el("path",{d:d,fill:"none",stroke:ch?css("--hl2"):css("--fg"),"stroke-width":2.2,"stroke-dasharray":ch?"8 5":""});}
+// trigger szint jelölő
+const ly=Y0+4*P-(v.lvl/vds[si])*P;
+if(ly>Y0&&ly<Y0+8*P)el("path",{d:"M"+(X0+10*P)+" "+ly+" l10 -6 v12 z",fill:css("--hl")});
+// kurzorok
+[v.c1,v.c2].forEach((c,i)=>el("line",{x1:X0+c*P,y1:Y0,x2:X0+c*P,y2:Y0+8*P,stroke:css("--hl"),"stroke-width":1.5,"stroke-dasharray":"3 3"}));
+el("text",{x:X0,y:Y0+8*P+20,"font-size":11},"CH1 "+fmt(vd1,vd1<1?1:0)+" V/oszt   CH2 "+fmt(v.vd2,v.vd2<1?1:0)+" V/oszt   "+fmt(v.td,v.td<0.1?2:(v.td<1?1:0))+" ms/oszt   "+v.cpl+"   szonda: beállítás 1:"+pset+", valós 1:"+pact);
+const dtc=Math.abs(v.c2-v.c1)*TD, ua=disp(t0-TD+v.c1*TD)[0], ub=disp(t0-TD+v.c2*TD)[0];
+let h="";
+if(run)h+="<span class='bad'>Nincs trigger: a szint a jel tartományán kívül van – a kép „fut”.</span> ";
+else h+="<span class='ok'>Álló kép</span> (trigger: CH"+v.src+", "+(v.edge>0?"felfutó":"lefutó")+" él, "+fmt(v.lvl,1)+" V). ";
+h+="Kurzorok: Δt = <b>"+fmt(dtc*1e3,3)+" ms</b>"+(dtc>0?" (1/Δt = "+fmt(1/dtc,0)+" Hz)":"")+", ΔU(CH1) = "+fmt(ub-ua,2)+" V.<br>";
+if(sig==="sin"){const uc=2.6*k;h+="CH1: U<sub>cs</sub> = "+fmt(uc,2)+" V ("+fmt(uc/vd1,1)+" oszt.), U<sub>eff</sub> = "+fmt(uc/Math.SQRT2,2)+" V, f = 2500 Hz (T = 0,4 ms).";}
+if(sig==="rc")h+="CH1 csúcs "+fmt(RC.ur*k,2)+" V, CH2 csúcs "+fmt(RC.ug*k,2)+" V; T = 1 ms, a CH2 késése Δt = 0,228 ms → φ = −360°·Δt/T ≈ −82,1°. Állítsd a kurzorokat a két felfutó nullátmenetre!";
+if(k!==1)h+=" <span class='bad'>A szondabeállítás nem egyezik a valós szondával: a kijelzés "+(k<1?"tízszer kisebb":"tízszer nagyobb")+" a valódinál!</span>";
+status(h);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

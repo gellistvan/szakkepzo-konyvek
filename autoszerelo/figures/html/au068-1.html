@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Olajszivattyú-szállítás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="vg">fajlagos szállítás V_g</label><input id="vg" type="range" min="5" max="20" step="0.5" value="10" aria-label="fajlagos szállítás V_g"><output id="vg_o" for="vg"></output></div>
+<div class="row"><label for="n">szivattyú-fordulatszám n</label><input id="n" type="range" min="600" max="6000" step="100" value="4000" aria-label="szivattyú-fordulatszám n"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="eta">volumetrikus hatásfok η_v</label><input id="eta" type="range" min="0.6" max="0.95" step="0.01" value="0.85" aria-label="volumetrikus hatásfok η_v"><output id="eta_o" for="eta"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Külső fogaskerekes és rotoros olajszivattyú metszete a szívó- és nyomóoldallal, nyomáshatároló szeleppel."></svg>
+<p class="small">Az alapértékek a fejezet számítási példáját adják (10 cm³, 4000 1/min, 0,85 → ≈ 34 l/min). A kopott szivattyú (nagy fogfej- és oldalhézag) volumetrikus hatásfoka kisebb; a valós adatok gyártóiak (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"vg":"cm³", "n":"1/min", "eta":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const q=v.eta*v.vg*1e-3*v.n, fg=css("--fg");
+if(!window._anim){window._anim=setInterval(draw,60);window._t0=performance.now();}
+const ang=((performance.now()-window._t0)/1000)*v.n/60*360/20;   // 20-szoros lassítás
+function gearS(cx,cy,R,z,ph,fill){let d="";for(let k=0;k<z;k++){const a0=ph+2*Math.PI*k/z,da=2*Math.PI/z;
+  [[0,R-7],[0.18,R+7],[0.42,R+7],[0.6,R-7]].forEach(([f,r],j)=>{const t=a0+f*da;d+=(k||j?"L":"M")+(cx+r*Math.cos(t)).toFixed(1)+" "+(cy+r*Math.sin(t)).toFixed(1);});}
+  el("path",{d:d+"Z",fill:fill,stroke:"#000","stroke-width":1.5});el("circle",{cx:cx,cy:cy,r:8,fill:"#fff",stroke:"#000"});}
+el("rect",{x:20,y:30,width:300,height:250,rx:110,fill:"#eee",stroke:"#000","stroke-width":3});
+const DA=2*Math.PI/10, A=ang*Math.PI/180;
+gearS(108,155,60,10,A-0.3*DA,"#bbb");
+gearS(228,155,60,10,-A+0.2*DA,"#ddd");
+el("text",{x:170,y:300,"text-anchor":"middle","font-size":13},"szívóoldal ↑");
+el("text",{x:170,y:22,"text-anchor":"middle","font-size":13},"↑ nyomóoldal");
+el("text",{x:350,y:70,"font-size":14},"V̇ = η_v · V_g · n");
+el("text",{x:350,y:100,"font-size":14},"= "+fmt(v.eta,2)+" · "+fmt(v.vg,1)+" cm³ · "+v.n+" 1/min");
+el("text",{x:350,y:135,"font-size":19,"font-weight":"bold"},"≈ "+fmt(q,1)+" l/min");
+el("text",{x:350,y:160,"font-size":13},"("+fmt(q/60,3)+" l/s)");
+el("text",{x:350,y:200,"font-size":13,fill:v.eta<0.8?css("--bad"):fg},v.eta<0.8?"kopott szivattyú: nagy belső szivárgás":"ép szivattyú (η_v ≈ 0,8–0,9)");
+status("Elméleti szállítás: "+fmt(v.vg*1e-3*v.n,1)+" l/min · tényleges: <b>"+fmt(q,1)+" l/min</b> (a fogaskerekek 20-szoros lassítással forognak)");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

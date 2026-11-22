@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gumiabroncs-méret összehasonlító</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="w1">1. (eredeti) szélesség</label><input id="w1" type="range" min="135" max="335" step="5" value="205" aria-label="1. (eredeti) szélesség"><output id="w1_o" for="w1"></output></div>
+<div class="row"><label for="a1">1. sorozat</label><input id="a1" type="range" min="25" max="85" step="5" value="55" aria-label="1. sorozat"><output id="a1_o" for="a1"></output></div>
+<div class="row"><label for="r1">1. tárcsa</label><input id="r1" type="range" min="13" max="22" step="1" value="16" aria-label="1. tárcsa"><output id="r1_o" for="r1"></output></div>
+<div class="row"><label for="w2">2. (csere) szélesség</label><input id="w2" type="range" min="135" max="335" step="5" value="225" aria-label="2. (csere) szélesség"><output id="w2_o" for="w2"></output></div>
+<div class="row"><label for="a2">2. sorozat</label><input id="a2" type="range" min="25" max="85" step="5" value="55" aria-label="2. sorozat"><output id="a2_o" for="a2"></output></div>
+<div class="row"><label for="r2">2. tárcsa</label><input id="r2" type="range" min="13" max="22" step="1" value="16" aria-label="2. tárcsa"><output id="r2_o" for="r2"></output></div>
+<div class="row"><label for="tol">Megengedett eltérés</label><input id="tol" type="range" min="1" max="5" step="0.5" value="3" aria-label="Megengedett eltérés"><output id="tol_o" for="tol"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Két abroncsméret külső átmérője, kerülete, eltérése és a sebességmérő hibája"></svg>
+<p class="small">Ellenőrző esetek: 205/55 R16 → 631,9 mm; 225/55 R16 → 653,9 mm (+3,48 %); 225/45 R17 → 634,3 mm (+0,38 %). A ±3 % körüli határ tanulási példa (ellenőrizendő: járműgyártói előírás, a jármű engedélyezett abroncsméretei).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"w1":"mm", "a1":"%", "r1":"col", "w2":"mm", "a2":"%", "r2":"col", "tol":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const sz=(w,a,r)=>{const H=a/100*w,Dt=r*25.4;return {H:H,Dt:Dt,D:2*H+Dt};};
+const t1=sz(v.w1,v.a1,v.r1),t2=sz(v.w2,v.a2,v.r2),dev=(t2.D-t1.D)/t1.D*100,real=100*t2.D/t1.D;
+const sc=190/700;
+[[t1,140,"eredeti "+v.w1+"/"+v.a1+" R"+v.r1],[t2,400,"csere "+v.w2+"/"+v.a2+" R"+v.r2]].forEach(([t,x,lab])=>{
+  el("circle",{cx:x,cy:122,r:t.D/2*sc,fill:"#d9d9d9",stroke:css("--line"),"stroke-width":1.5});
+  el("circle",{cx:x,cy:122,r:t.Dt/2*sc,fill:css("--bg"),stroke:css("--line"),"stroke-width":1.2});
+  el("text",{x:x,y:18,"text-anchor":"middle","font-size":13,"font-weight":"bold"},lab);
+  el("text",{x:x,y:232,"text-anchor":"middle","font-size":12,"font-weight":"bold"},"D = "+fmt(t.D,1)+" mm");
+  el("text",{x:x,y:250,"text-anchor":"middle","font-size":11},"H = "+fmt(t.H,2)+" mm, kerület "+fmt(Math.PI*t.D/1000,3)+" m");});
+const X=d=>280+d*25, Y=275;
+el("rect",{x:X(-v.tol),y:Y-9,width:X(v.tol)-X(-v.tol),height:18,fill:"#d9d9d9",stroke:css("--line"),"stroke-dasharray":"4 3"});
+el("line",{x1:X(-8),y1:Y,x2:X(8),y2:Y,stroke:css("--line")});
+[-8,-4,0,4,8].forEach(d=>el("text",{x:X(d),y:Y+20,"text-anchor":"middle","font-size":10},(d>0?"+":"")+d+" %"));
+const dd=Math.max(-8,Math.min(8,dev)), ok=Math.abs(dev)<=v.tol;
+el("path",{d:"M"+X(dd)+" "+(Y-14)+"l-6 -9h12z",fill:ok?css("--ok"):css("--bad")});
+status("Átmérő-eltérés: <b>"+(dev>=0?"+":"")+fmt(dev,2)+" %</b> ("+(dev>=0?"+":"")+fmt(t2.D-t1.D,1)+" mm) – "+
+ (ok?"<span class=ok>a ±"+fmt(v.tol,1)+" %-os sávon belül</span>":"<span class=bad>a ±"+fmt(v.tol,1)+" %-os sávon kívül: nem ajánlott</span>")+
+ ".<br>Ha a sebességmérő 100 km/h-t mutat, a valódi sebesség ≈ <b>"+fmt(real,1)+" km/h</b> (a mérő "+(real>100?"kevesebbet":"többet")+" mutat a valósnál).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

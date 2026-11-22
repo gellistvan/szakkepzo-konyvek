@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kardáncsukló: szögsebesség-ingadozás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="b1">β1 (1. csukló)</label><input id="b1" type="range" min="0" max="25" step="0.5" value="10" aria-label="β1 (1. csukló)"><output id="b1_o" for="b1"></output></div>
+<div class="row"><label for="b2">β2 (2. csukló)</label><input id="b2" type="range" min="0" max="25" step="0.5" value="10" aria-label="β2 (2. csukló)"><output id="b2_o" for="b2"></output></div>
+<div class="row"><label for="g">Villák fázisa</label><select id="g" aria-label="Villák fázisa"><option value="0" selected>egy síkban (0°)</option><option value="30">30°-kal elforgatva</option><option value="90">90°-kal elforgatva</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 290" role="img" aria-label="A keresztcsukló szögsebesség-ingadozása a hajlásszög függvényében, és kioltása kettős csuklóval."></svg>
+<p class="small">Számítás: θ = atan2(sin φ·cos β1, cos φ), ψ = atan2(sin(θ+γ), cos(θ+γ)·cos β2) − γ; egy csuklóra ω2/ω1 = cos β/(1 − sin²β·sin²φ). Ideális merev csuklók, szemléltető modell; a beépítési szögek gyártói adatok.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"b1":"°", "b2":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const N=361, rad=Math.PI/180, b1=v.b1*rad, b2=v.b2*rad, g=v.g*rad;
+function out(phi){const th=Math.atan2(Math.sin(phi)*Math.cos(b1),Math.cos(phi));
+  const ps=Math.atan2(Math.sin(th+g),Math.cos(th+g)*Math.cos(b2))-g; return [th,ps];}
+function wrap(a){while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a;}
+const W=[],h=1e-3; let mn=9,mx=0,sum=0;
+for(let i=0;i<N;i++){const p=i*rad; const a=out(p-h)[1], b=out(p+h)[1]; const w=wrap(b-a)/(2*h); W.push(w); mn=Math.min(mn,w); mx=Math.max(mx,w); sum+=w;}
+const mean=sum/N, fl=(mx-mn)/mean*100;
+const line=css("--line"), hl=css("--hl"), hl2=css("--hl2");
+const X0=60,Y0=40,PW=300,PH=160, lo=0.85, hi=1.15;
+const yy=w=>Y0+PH-(Math.min(Math.max(w,lo),hi)-lo)/(hi-lo)*PH;
+el("rect",{x:X0,y:Y0,width:PW,height:PH,fill:"none",stroke:line});
+[0.9,1,1.1].forEach(t=>{el("line",{x1:X0,x2:X0+PW,y1:yy(t),y2:yy(t),stroke:css("--grid")});el("text",{x:X0-6,y:yy(t)+4,"text-anchor":"end","font-size":11},fmt(t,2));});
+[0,90,180,270,360].forEach(t=>el("text",{x:X0+PW*t/360,y:Y0+PH+16,"text-anchor":"middle","font-size":11},t+"°"));
+el("text",{x:X0+PW/2,y:Y0+PH+32,"text-anchor":"middle","font-size":12},"φ – a bemenő tengely elfordulása");
+el("text",{x:X0,y:Y0-10,"font-size":12},"ω_ki/ω_be (kettős csukló)");
+let d="";W.forEach((w,i)=>{d+=(i?"L":"M")+(X0+PW*i/360).toFixed(1)+","+yy(w).toFixed(1);});
+el("path",{d:d,fill:"none",stroke:hl,"stroke-width":2.5});
+// forgó tárcsák (animáció)
+const t=(performance.now()/1000*60)%360, phi=t*rad, ps=out(phi)[1];
+el("line",{x1:X0+PW*t/360,x2:X0+PW*t/360,y1:Y0,y2:Y0+PH,stroke:hl2,"stroke-dasharray":"4 3"});
+[[440,90,phi,"bemenő"],[440,200,ps,"kimenő"]].forEach(([cx,cy,a,nm])=>{
+ el("circle",{cx:cx,cy:cy,r:38,fill:"none",stroke:line,"stroke-width":2});
+ el("line",{x1:cx,y1:cy,x2:cx+36*Math.cos(a),y2:cy-36*Math.sin(a),stroke:nm=="bemenő"?line:hl,"stroke-width":4});
+ el("text",{x:cx+48,y:cy+4,"font-size":12},nm);});
+const lag=wrap(ps-phi)/rad;
+el("text",{x:400,y:265,"font-size":12},"szögeltérés: "+fmt(lag,2)+"°");
+let m="Kimenő szögsebesség-ingadozás: <b>"+fmt(fl,2)+" %</b>. ";
+if(fl<0.1) m+='<span class="ok">Egyenletes kimenet: egyenlő hajlásszög és fázishelyes villák.</span>';
+else m+='<span class="bad">Ingadozó kimenet → rezgés'+(Math.abs(v.b1-v.b2)>0.01?' (nem egyenlő hajlásszög)':'')+(v.g!=0?' (a villák el vannak fordítva)':'')+'.</span>';
+status(m);
+if(!window._anim){window._anim=setInterval(draw,80);}
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

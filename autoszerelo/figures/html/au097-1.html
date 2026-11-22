@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rugóerőtárolós fékkamra és kétvezetékes pótkocsifék</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ps">rugótér nyomása</label><input id="ps" type="range" min="0" max="8" step="0.1" value="8.0" aria-label="rugótér nyomása"><output id="ps_o" for="ps"></output></div>
+<div class="row"><label for="pedal">fékpedál lenyomva</label><input id="pedal" type="checkbox" aria-label="fékpedál lenyomva"></div>
+<div class="row"><label for="kezifek">kézifékszelep: rögzítőfék be</label><input id="kezifek" type="checkbox" aria-label="kézifékszelep: rögzítőfék be"></div>
+<div class="row"><label for="tap">tápvezeték szakadt</label><input id="tap" type="checkbox" aria-label="tápvezeték szakadt"></div>
+<div class="row"><label for="vez">vezérlővezeték szakadt</label><input id="vez" type="checkbox" aria-label="vezérlővezeték szakadt"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 760 410" role="img" aria-label="Rugóerőtárolós fékkamra metszete a rugótér és a membrántér nyomásával; a vontató és a pótkocsi táp- és vezérlővezetéke."></svg>
+<p class="small">Szemléltető modell a fejezet példáival: A = 140 cm², F_r = 6,3 kN, oldási nyomás 4,5 bar; üzemi fékezésnél 6 bar szemléltető vezérlőnyomás. Állítsd a rugótér nyomását 3,8 bar-ra (Valós eset): a rugó részben fog. Valós értékek: gyártói adat (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"ps":"bar"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const A=0.014, FR=6300, POLD=FR/A/1e5, PT=8.0;
+const ps = v.kezifek ? 0 : v.ps;                 // rugótér nyomása (bar)
+const pm = v.pedal ? 6.0 : 0;                    // üzemi kamra nyomása (bar), szemléltető
+const Fnet = Math.max(0, FR - ps*1e5*A);         // maradó rugóerő (N)
+const Fm = pm*1e5*A;                             // membránerő (N)
+const line=css("--line"), fg=css("--fg"), grayP="#9a9a9a";
+function R(x,y,w,h,o){return el("rect",Object.assign({x:x,y:y,width:w,height:h,fill:"none",stroke:line,"stroke-width":1.6},o||{}));}
+function L(x1,y1,x2,y2,o){return el("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:line,"stroke-width":2},o||{}));}
+function T(x,y,s,o){return el("text",Object.assign({x:x,y:y,"font-size":13,"text-anchor":"middle"},o||{}),s);}
+// --- fékkamra (nézet: 40..330 × 40..150)
+const xd = 232 + 60*Math.max(Fnet/FR, pm>0?1:0);
+const xp = Fnet>0 ? xd-107 : 70;
+R(40,50,180,90,{fill:css("--bg")}); R(220,50,90,90,{fill:css("--bg")});
+if(ps>0) R(xp+10,50,220-xp-10,90,{fill:grayP,"fill-opacity":Math.min(1,0.25+ps/10),stroke:"none"});
+if(pm>0) R(220,50,xd-220,90,{fill:grayP,stroke:"none"});
+R(40,50,270,90); L(220,50,220,140,{"stroke-width":4});
+let pts=""; const n=12; for(let i=0;i<=n;i++){const x=42+(xp-42)*i/n, y=95+(i%2? (i===n?0:-30):(i===0?0:30)); pts+=x+","+y+" ";}
+el("polyline",{points:pts,fill:"none",stroke:line,"stroke-width":2});
+R(xp,52,10,86,{fill:"#555"});
+L(xp+10,95,Fnet>0?xd:xp+90,95,{"stroke-width":4});
+L(xd,52,xd,138,{"stroke-width":3});
+L(xd,95,400,95,{"stroke-width":6});
+R(5,90,40,10,{fill:css("--bg")}); R(0,84,8,22,{fill:"#555"});
+T(130,40,"rugóerőtároló (rögzítőfék)",{"font-size":12}); T(265,40,"üzemi kamra",{"font-size":12});
+T(5,165,"kioldócsavar",{"font-size":11,"text-anchor":"start"});
+const braking = Fnet>0 || pm>0;
+T(410,100,braking?"tolórúd: fékez →":"tolórúd: kiold",{"font-size":13,"font-weight":"bold","text-anchor":"start"});
+// --- pótkocsi (nézet: y 200..400)
+const tapOK=!v.tap, vezOK=!v.vez;
+const vezP = v.pedal ? 6.0 : 0;
+let vezAtP = vezOK ? vezP : 0;
+let tapP = tapOK ? PT : 0;
+if(!vezOK && v.pedal) tapP = 0;   // a vezérlőszelep fékezéskor ejti a tápnyomást (kivitelfüggő)
+const trBrake = tapP===0 ? "vészfékezés (teljes tartálynyomás a kamrákra)" : (vezAtP>0 ? "üzemi fékezés ("+fmt(vezAtP,1)+" bar vezérlőnyomással)" : "oldva");
+function BX(x,y,w,h,s,f){R(x,y,w,h,{fill:f||css("--bg")});s.split("\n").forEach((r,i,a)=>T(x+w/2,y+h/2+(i-(a.length-1)/2)*15+4,r,{"font-size":12}));}
+el("rect",{x:20,y:205,width:290,height:190,fill:"none",stroke:css("--muted"),"stroke-dasharray":"6 4"});T(30,222,"vontató",{"text-anchor":"start","font-weight":"bold"});
+el("rect",{x:450,y:205,width:290,height:190,fill:"none",stroke:css("--muted"),"stroke-dasharray":"6 4"});T(460,222,"pótkocsi",{"text-anchor":"start","font-weight":"bold"});
+BX(35,240,95,50,"légtartály\n8 bar","#c8c8c8"); BX(165,235,110,110,"pótkocsi-\nvezérlő-\nszelep");
+L(130,265,165,265,{"stroke-width":5});
+function PIPE(y,p,ok,name){const w=p>0?6:2, d=p>0?"":"7 5";
+  if(ok){L(275,y,500,y,{"stroke-width":w,"stroke-dasharray":d});}
+  else{L(275,y,360,y,{"stroke-width":w,"stroke-dasharray":d});L(400,y,500,y,{"stroke-width":2,"stroke-dasharray":"7 5"});
+       T(380,y+5,"✗",{"font-size":20,fill:css("--bad")});}
+  el("circle",{cx:338,cy:y,r:9,fill:css("--bg"),stroke:line,"stroke-width":2});
+  T(388,y-12,name+" "+fmt(p,1)+" bar",{"font-size":12});}
+PIPE(255,tapP,tapOK,"táp (piros):"); PIPE(320,vezAtP,vezOK,"vezérlő (sárga):");
+BX(500,235,105,110,"pótkocsi-\nfékszelep"); BX(630,240,95,50,"tartály\n"+fmt(tapOK?PT:(v.pedal&&!vezOK?PT:PT),0)+" bar","#c8c8c8");
+L(605,265,630,265,{"stroke-width":5});
+const tb = trBrake!=="oldva";
+[640,700].forEach(x=>{el("circle",{cx:x,cy:350,r:20,fill:tb?grayP:css("--bg"),stroke:line,"stroke-width":2});
+  L(552,345,552,375,{"stroke-width":tb?5:2,"stroke-dasharray":tb?"":"6 4"});L(552,375,x,375,{"stroke-width":tb?5:2,"stroke-dasharray":tb?"":"6 4"});L(x,375,x,370,{"stroke-width":tb?5:2});});
+T(670,322,"fékkamrák",{"font-size":12});
+// --- állapot
+let s = "<b>Vontató rugóerőtároló:</b> rugótér "+fmt(ps,1)+" bar; ";
+if(ps>=POLD) s += "<span class='ok'>oldva</span> (≥ "+fmt(POLD,1)+" bar). ";
+else if(ps>0) s += "<span class='bad'>részben befékezett</span>: maradó rugóerő "+fmt(Fnet/1000,2)+" kN (F_r − p·A = 6,3 kN − "+fmt(ps*1e5*A/1000,2)+" kN). ";
+else s += "<span class='bad'>rögzítőfék fog</span> (teljes rugóerő "+fmt(FR/1000,1)+" kN). ";
+if(pm>0) s += "Üzemi fék: "+fmt(pm,1)+" bar → F = p·A = "+fmt(Fm/1000,1)+" kN. ";
+s += "<br><b>Pótkocsi:</b> "+(tb?"<span class='bad'>"+trBrake+"</span>":"<span class='ok'>oldva</span>")+".";
+if(!tapOK) s+=" A tápvezeték nyomásesése miatt a pótkocsi-fékszelep a pótkocsi tartályának nyomását a fékkamrákra engedi.";
+if(!vezOK && !v.pedal) s+=" A vezérlővezeték szakadása fékezés nélkül nem látszik – fékpróbán derül ki.";
+if(!vezOK && v.pedal) s+=" Fékezéskor a vontató pótkocsi-vezérlőszelepe a tápnyomást ejti, így a pótkocsi vészfékez (kivitelfüggő, ellenőrizendő).";
+status(s);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

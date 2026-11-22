@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>32.3 Vezetőtámogató rendszerek és kalibrálásuk –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Gépjármű-villamosság és -elektronika</a> › <a href="index.html#auch31">32 Adatbuszok és vezetőtámogató rendszerek</a></p>
+<div class="links"><a class="prev" rel="prev" href="au115.html">← 32.2 Buszhibák és az adatbusz-hálózatok diagnosztikája</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au117.html">33.1 Hibrid és elektromos hajtások áttekintése →</a></div>
+</nav>
+<h2 data-number="32.3" id="au116"><span
+class="header-section-number">32.3</span> Vezetőtámogató rendszerek és
+kalibrálásuk</h2>
+<h3 data-number="32.3.1" id="motiváció"><span
+class="header-section-number">32.3.1</span> Motiváció</h3>
+<p>A műhelyben egyre gyakrabban találkozol olyan ügyfélpanasszal, amely
+nem a klasszikus mechanikus alkatrészre vonatkozik: „szélvédőcsere után
+világít a sávtartó hibajelzése”, „a vészfékrendszer ok nélkül
+belassított az autópályán”, vagy „a holttérfigyelő nem veszi észre a
+mellettem haladó autót”. Az autóban ilyenkor több vezérlőegység,
+nagysebességű adatbusz és precízen beállított érzékelő dolgozik együtt.
+Ha nem érted a vezetőtámogató rendszerek (ADAS – Advanced Driver
+Assistance Systems) felépítését és illesztését, az autó javítása
+„dobozcserévé” válik, költséges és veszélyes lesz. Ez az alfejezet a
+rendszerek működését és azok kalibrálási elvét tanítja meg, hogy a
+javítás után a jármű biztonságosan közlekedjen.</p>
+<h3 data-number="32.3.2"
+id="szemléletes-kép-az-adas-érzékelők-elhelyezkedése"><span
+class="header-section-number">32.3.2</span> Szemléletes kép: az
+ADAS-érzékelők elhelyezkedése</h3>
+<p>Képzeld el a járművet felülnézetből. A szélvédő tetejénél, a belső
+visszapillantó tükör mögött a <strong>mono- vagy sztereó kamera</strong>
+figyeli a sávfelfestést és az előtted haladó objektumokat. Az első
+lökhárító mögött, gyakran a gyártói embléma takarásában egy <strong>nagy
+hatótávolságú radar</strong> (Long Range Radar – LRR) sugároz előre, míg
+a lökhárító sarkaiban <strong>rövid hatótávolságú radarok</strong> és
+<strong>ultrahangos érzékelők</strong> dolgoznak a keresztirányú
+forgalom figyelésére. A visszapillantó tükrökben vagy a hátsó lökhárító
+mögött <strong>radarérzékelők</strong> pásztázzák a holtteret. A
+kormányoszlopon a <strong>kormányszög-érzékelő</strong>, a kasznin a
+<strong>perdülési és gyorsulásérzékelők</strong> adják a jármű
+mozgásállapotának jeleit. Mindezeket a <a
+href="au116.html">Vezetőtámogató rendszerek és kalibrálásuk</a> fejezet
+szempontjából úgy fogd fel, mint egy
+<strong>szenzorháromszöget</strong>: a kamera a fényképet, a radar a
+távolságot, az ultrahang a közvetlen közelteret adja, az ESP-érzékelők
+pedig a saját jármű mozgását mérik.</p>
+<figure id="fig-au116-1">
+<div class="fig-interactive"><iframe src="figures/html/au116-1.html" title="ADAS-érzékelők elhelyezése és látómezői felülnézetben." loading="lazy" style="width:100%;border:0;height:520px"></iframe><noscript><img src="figures/img/au116-1.png" style="width:90.0%"
+alt="ADAS-érzékelők elhelyezése és látómezői felülnézetben." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au116-1.png" style="width:90.0%"
+alt="ADAS-érzékelők elhelyezése és látómezői felülnézetben." /></details></div>
+<figcaption>Az ADAS-érzékelők elhelyezése és látómezői felülnézetben:
+kamera (kb. 50°, kb. 120 m), hosszú hatótávú radar (keskeny nyaláb, kb.
+250 m), sarokradarok oldalra és hátra, ultrahangos érzékelők a
+lökhárítókban (0,2–5 m); a hatótávolságok nem
+méretarányosak</figcaption>
+</figure>
+<p>Az interaktív változatban az egyes érzékelőtípusok látómezője ki- és
+bekapcsolható, rámutatásra az érzékelő neve és feladata jelenik meg.</p>
+<h3 data-number="32.3.3" id="alapfogalmak-és-felépítés"><span
+class="header-section-number">32.3.3</span> Alapfogalmak és
+felépítés</h3>
+<p><strong>Definíció.</strong> A <strong>vezetőtámogató rendszer
+(ADAS)</strong> olyan elektronikus rendszer, amely a jármű közvetlen
+környezetéről gyűjtött érzékelőjelek alapján tájékoztatja a vezetőt,
+figyelmezteti, vagy a menetstabilizáló, a kormány- és a fékrendszerbe
+beavatkozva aktívan befolyásolja a jármű mozgását.</p>
+<p><strong>Definíció.</strong> A <strong>kalibrálás</strong> az érzékelő
+és a jármű geometriai viszonyának, nulla-pontjának és szoftveres
+határainak a gyártói specifikáció szerinti beállítása. Célja, hogy az
+érzékelő koordináta-rendszerét pontosan a jármű hossz- és keresztirányú
+tengelyéhez, valamint a vízszinteshez igazítsuk.</p>
+<p>A rendszerek működésének alapja a tárgyfelismerés. Az érzékelő jeleit
+a vezérlőegység (pl. kamera-ECU, radar-ECU) elődolgozza: a kamera képe
+alapján felismeri a sávfelfestést, a táblákat, a gyalogosokat és a
+járműveket; a radar a visszavert hullám idejéből és
+Doppler-eltolódásából a tárgy távolságát, sebességét és szögét számolja
+ki. Az így kapott „célobjektumok” listája a CAN- vagy FlexRay-buszon
+eljut a fék- és motorvezérlőbe, a szervokormányba és a kijelzőkbe.</p>
+<h3 data-number="32.3.4" id="a-főbb-adas-funkciók-és-működésük"><span
+class="header-section-number">32.3.4</span> A főbb ADAS-funkciók és
+működésük</h3>
+<h4 data-number="32.3.4.1" id="adaptív-sebességszabályozás-acc"><span
+class="header-section-number">32.3.4.1</span> Adaptív
+sebességszabályozás (ACC)</h4>
+<p>Az ACC a hagyományos tempomat továbbfejlesztése. A radar (és gyakran
+a kamera) folyamatosan méri az előttünk haladó jármű távolságát és
+sebességét. Ha az út üres, az ACC a beállított sebességet tartja. Ha
+lassabb jármű kerül elénk, a rendszer a motor nyomatékát csökkenti
+(gázelvétel, esetleg visszaváltás), majd a kereket fékezi, hogy betartsa
+a beállított követési távolságot. Az automata vészfékrendszer logikája
+erre épül, de ott a beavatkozás jóval erőteljesebb.</p>
+<h4 data-number="32.3.4.2"
+id="kármérséklő-és-vészfékrendszer-aeb-cmbs"><span
+class="header-section-number">32.3.4.2</span> Kármérséklő és
+vészfékrendszer (AEB / CMBS)</h4>
+<p><strong>Összefüggés.</strong> Az AEB (Autonomous Emergency Braking)
+az ütközési kockázatot becsli. A kritikus távolság és az ütközésig
+hátralévő idő a járműsebesség és a relatív sebesség függvénye. A
+rendszer a féknyomást előtölti (prefill), figyelmezteti a vezetőt, majd
+ha nem reagál, automatikusan maximális féknyomást épít fel. A cél az
+ütközési sebesség csökkentése vagy kis relatív sebességnél az ütközés
+elkerülése.</p>
+<h4 data-number="32.3.4.3"
+id="sávrendszerek-sávelhagyás-figyelmeztetés-és-sávtartó-asszisztens"><span
+class="header-section-number">32.3.4.3</span> Sávrendszerek:
+sávelhagyás-figyelmeztetés és sávtartó asszisztens</h4>
+<p>A kamera a sávelhagyás-figyelmeztetés (LDW – Lane Departure Warning)
+esetében csak figyelmeztet (kormánykerék-remegés vagy hangjelzés), ha az
+irányjelző használata nélkül átlépjük a sávot. A sávtartó asszisztens
+(LKA – Lane Keeping Assist) aktívan besegít: az elektromechanikus
+szervokormányra (<a href="au091.html">Szervokormányok: hidraulikus,
+elektrohidraulikus, elektromechanikus és aktív kormányzás</a>) adott kis
+nyomatékkal visszatereli a járművet a sáv közepére. Újabb rendszereknél
+az aktív sávközép-tartás a kormányzást folyamatosan, kis erővel, a
+vezetői kéz jelenlétét ellenőrizve végzi.</p>
+<h4 data-number="32.3.4.4"
+id="holttérfigyelő-és-sávváltási-asszisztens"><span
+class="header-section-number">32.3.4.4</span> Holttérfigyelő és
+sávváltási asszisztens</h4>
+<p>A hátsó radarok a holttérben haladó, vagy onnan gyorsan közeledő
+járművet érzékelik. Ha a holttérben jármű van, a külső tükörben
+jelzőfény világít; ha a vezető ilyenkor irányjelzést ad, a jelzés
+villogóra vált, és hangjelzés is szólhat. A sávváltási asszisztens ezen
+túlmenően a kormányrendszeren keresztül ellenjavaslatot adhat.</p>
+<h4 data-number="32.3.4.5" id="guminyomás-ellenőrzés-tpms"><span
+class="header-section-number">32.3.4.5</span> Guminyomás-ellenőrzés
+(TPMS)</h4>
+<p>Két fajtája van. A <strong>direkt TPMS</strong> a kerékben (szelepen
+vagy a futófelülethez rögzítve) lévő nyomás- és hőmérséklet-érzékelő
+adatait rádiófrekvencián küldi a vevőnek. A <strong>közvetett (indirekt)
+TPMS</strong> nem méri a nyomást, hanem a kerékfordulatszám-érzékelők
+jeleit elemzi: a leengedett gumi kisebb gördülési sugarú, ezért
+gyorsabban forog. A rendszer ezt az eltérést jelzi. Az indirekt
+rendszert guminyomás-beállítás után kalibrálni (resetelni) kell, míg a
+direkt rendszer érzékelőit kerékcserénél vagy szelepcsere után újra kell
+tanítani.</p>
+<h4 data-number="32.3.4.6"
+id="integrált-aktív-kormányzás-és-adaptív-világítás"><span
+class="header-section-number">32.3.4.6</span> Integrált aktív kormányzás
+és adaptív világítás</h4>
+<p>Az aktív kormányzás a kormányáttételt és a kormányzási szöget a
+sebesség függvényében módosítja, együttműködve az ESP-vel és a
+sávtartóval. Az adaptív világítás (AFL – Adaptive Front Lighting) a
+kormányszög és a járműsebesség jelei alapján a xenon- vagy LED-fényszóró
+modulját a kanyar irányába fordítja; a halogén rendszereknél gyakran
+külön kanyarvilágító izzó kapcsol be.</p>
+<h3 data-number="32.3.5" id="példák-az-együttműködésre"><span
+class="header-section-number">32.3.5</span> Példák az
+együttműködésre</h3>
+<p><strong>1. példa (AEB működési lánc).</strong> Egy autópályán haladó
+járműben az ACC 130 km/h-ra van állítva. Előtte 80 km/h-val halad egy
+kamion. A radar érzékeli a kamiont, és kiszámolja a relatív sebességet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mrow><mi>r</mi><mi>e</mi><mi>l</mi></mrow></msub><mo>=</mo><msub><mi>v</mi><mtext mathvariant="normal">saját</mtext></msub><mo>−</mo><msub><mi>v</mi><mtext mathvariant="normal">cél</mtext></msub><mo>=</mo><mn>130</mn><mo>−</mo><mn>80</mn><mo>=</mo><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km/h</mtext><mo>≈</mo><mn>13</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v_{rel} = v_{\text{saját}} - v_{\text{cél}} = 130 - 80 = 50\,\text{km/h} \approx 13{,}9\,\text{m/s}</annotation></semantics></math>.
+A rendszer a biztonságos követési távolságot a reakcióidő és a lassulás
+alapján tartja, ezért a járművet lefékezi 80 km/h-ra. Amikor a kamion
+letér az útról, a radar elveszti a célt, a rendszer visszagyorsítja az
+autót 130 km/h-ra.</p>
+<p><strong>2. példa (Kamera és sávtartó).</strong> A kamera a szélvédőn
+keresztül filmez. Ha a szélvédőt kicserélik, és az új üveg fénytörése
+vagy a konzol hajlása miatt a kamera optikai tengelye a hosszanti
+tengelyhez képest akár csak 0,5 fokkal is eltér, a kamera a hidat vagy a
+szalagkorlátot tévesen sávelhagyási vonalként értelmezheti. Ezért
+kötelező a kamera kalibrálása.</p>
+<h3 data-number="32.3.6" id="érzékelőtípusok-összehasonlítása"><span
+class="header-section-number">32.3.6</span> Érzékelőtípusok
+összehasonlítása</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Érzékelő</th>
+<th style="text-align: left;">Jellemző hatótávolság</th>
+<th style="text-align: left;">Elsősorban mire való?</th>
+<th style="text-align: left;">Előny</th>
+<th style="text-align: left;">Hátrány</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Ultrahang</strong></td>
+<td style="text-align: left;">0,2–5 m</td>
+<td style="text-align: left;">Parkolóradar, parkolóasszisztens, tolatási
+vészfék</td>
+<td style="text-align: left;">Olcsó, közelre pontos</td>
+<td style="text-align: left;">Nagyon rövid hatótáv, lassú</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Kamera
+(mono/sztereo)</strong></td>
+<td style="text-align: left;">0–120 m (sztereo 0–250 m)</td>
+<td style="text-align: left;">Sávtartás, közlekedési tábla, lámpa,
+gyalogos, AEB, távolsági fényszóró</td>
+<td style="text-align: left;">2D kép, osztályozás</td>
+<td style="text-align: left;">Rossz látási viszonyokra, szennyeződésre
+érzékeny</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Radar (LRR/MRR)</strong></td>
+<td style="text-align: left;">1–250 m</td>
+<td style="text-align: left;">ACC, AEB, holttérfigyelő, vészfék</td>
+<td style="text-align: left;">Rossz időben is stabil, jól méri a
+sebességet</td>
+<td style="text-align: left;">Nem ismeri fel a tárgy típusát, kisebb a
+szögfelbontása</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Lidar</strong></td>
+<td style="text-align: left;">5–150 m</td>
+<td style="text-align: left;">Térképezés, jármű környezeti modell,
+AEB</td>
+<td style="text-align: left;">3D pontfelhő, nagy felbontás</td>
+<td style="text-align: left;">Drága, időjárásra érzékenyebb</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: gyártói adat / hatályos
+előírás).</p>
+<h3 data-number="32.3.7" id="kalibrálási-eljárások"><span
+class="header-section-number">32.3.7</span> Kalibrálási eljárások</h3>
+<p>Az ADAS-érzékelők nem „plug and play” alkatrészek. A mechanikai
+rögzítés után a szoftveres tanítást is el kell végezni.</p>
+<h4 data-number="32.3.7.1" id="mikor-kötelező-a-kalibrálás"><span
+class="header-section-number">32.3.7.1</span> Mikor kötelező a
+kalibrálás?</h4>
+<p><strong>Szabály.</strong> Kalibrálni kell az érzékelőt, ha: - a
+kamera vagy a radar egysége ki-/beszerelésre került, - a szélvédőt
+cserélték (kamera esetén), - a futóművet állították (különösen a hátsó
+összetartást), mert ez megváltoztatja a geometriai menettengelyt,
+amelyhez az előre néző érzékelők igazodnak; futómű-beállítás után a
+kormányszög-érzékelő nullpontját is be kell tanítani (ellenőrizendő:
+gyártói eljárás), - a kormányközép állapot változott, - a jármű érte
+olyan ütközés, amely a szenzortartó konzolt deformálhatta, - a rendszer
+a diagnosztikában „nincs kalibrálva” hibakódot tárol.</p>
+<h4 data-number="32.3.7.2" id="statikus-kalibrálás"><span
+class="header-section-number">32.3.7.2</span> Statikus kalibrálás</h4>
+<p>A statikus kalibrálást műhelyben, álló járművön, sík padlón végezzük.
+A jármű elé, a gyártó által előírt távolságra, precíz méretű kalibrációs
+táblákat vagy tükröket helyezünk. A diagnosztikai műszeren keresztül
+elindítjuk a kalibrációs rutint. A műszer a kamera képét elemzi, és a
+szoftverben úgy tolja el a képkoordinátákat, hogy a táblán lévő
+referenciapontok a megfelelő szögben és magasságban legyenek.</p>
+<p><strong>Előírás.</strong> Statikus kalibrálásnál a gyártói hátsó
+tengely síkja és a kalibrációs tábla közötti távolságot, a tábla
+középpontjának a jármű hosszanti szimmetriatengelyétől való eltérését,
+valamint a jármű terhelési állapotát a gyártói javítási utasítás
+pontosan előírja. Gyakori követelmény az üres csomagtartó, a fél tank
+üzemanyag és a járművízszint ellenőrzése. <strong>(ellenőrizendő:
+gyártói javítási adat)</strong></p>
+<figure id="fig-au116-2">
+<div class="fig-interactive"><iframe src="figures/html/au116-2.html" title="A kamera statikus kalibrálásának elrendezése felülnézetben és oldalnézetben." loading="lazy" style="width:100%;border:0;height:430px"></iframe><noscript><img src="figures/img/au116-2.png" style="width:90.0%"
+alt="A kamera statikus kalibrálásának elrendezése felülnézetben és oldalnézetben." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au116-2.png" style="width:90.0%"
+alt="A kamera statikus kalibrálásának elrendezése felülnézetben és oldalnézetben." /></details></div>
+<figcaption>A kamera statikus kalibrálásának elrendezése: (a)
+felülnézetben a hátsó kerekek középpontján át húzott geometriai
+menettengely, a tábla közepe ezen a tengelyen, a tábla távolsága (L) a
+gyártói adat szerint; (b) oldalnézetben a tábla középmagassága (h) és a
+sík, vízszintes padló</figcaption>
+</figure>
+<p>Az elrendezés tipikus hibái a tábla oldalirányú eltolása és a
+menettengelytől eltérő igazítás. A szöghiba hatása a távolsággal nő:
+0,5° hiba 50 m-en
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mo>⋅</mo><mrow><mi>tan</mi><mo>&#8289;</mo></mrow><mn>0</mn><mo>,</mo><msup><mn>5</mn><mo>∘</mo></msup><mo>≈</mo><mn>0</mn><mo>,</mo><mn>44</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext></mrow><annotation encoding="application/x-tex">50\,\text{m} \cdot \tan 0{,}5^{\circ} \approx 0{,}44\,\text{m}</annotation></semantics></math>
+oldalirányú eltérést jelent a sávbecslésben. Az interaktív változatban a
+tábla eltolása és a menettengely szöghibája csúszkával állítható, és a
+program kiírja a kamera látóirányának hibáját és a sávbecslés hibáját 50
+m-en.</p>
+<h4 data-number="32.3.7.3" id="dinamikus-kalibrálás"><span
+class="header-section-number">32.3.7.3</span> Dinamikus kalibrálás</h4>
+<p>Az érzékelő szoftverének van egy olyan tanuló üzemmódja, amelyet a
+jármű gyorsulásából, kormányzási szögéből és a környezeti képből
+állítunk be. Ehhez a diagnosztikai műszert csatlakoztatva, a gyártói
+utasítás szerinti útvonalon, meghatározott sebességgel kell haladni. A
+dinamikus kalibrálást gyakran kiegészítésként használják a statikus
+kalibrálás után, vagy egyes gyártók kizárólag ezt írják elő a
+futómű-beállítás utáni nullpont-egyeztetésre.</p>
+<h4 data-number="32.3.7.4"
+id="munkalépések-kamera-statikus-kalibrálása"><span
+class="header-section-number">32.3.7.4</span> Munkalépések – kamera
+statikus kalibrálása</h4>
+<ol type="1">
+<li><strong>Azonosítás:</strong> Olvasd ki a rendszerteszterrel a
+hibakódokat és a jármű kódolását; ellenőrizd a gyártói javítási
+utasítást.</li>
+<li><strong>Előkészítés:</strong> Ellenőrizd és állítsd be a
+guminyomást, a jármű terhelését; zárd be az ajtókat és a
+motorháztetőt.</li>
+<li><strong>Környezet:</strong> Helyezd a járművet sík, vízszintes
+emelőpadlóra; ügyelj az egyenletes megvilágításra (ne érje a kamerát
+közvetlen napfény vagy erős lámpa).</li>
+<li><strong>Felszerelés:</strong> Állítsd be a jármű középvonalához
+igazított kalibrációs keretet és táblát; a lézeres távolságmérővel
+pontosan mérd be a gyártói távolságot.</li>
+<li><strong>Futtatás:</strong> A diagnosztikai műszerben válaszd a
+kamera kalibrálását; kövesd a képernyőn megjelenő utasításokat.</li>
+<li><strong>Ellenőrzés:</strong> Amikor a rendszer „kalibrálás sikeres”
+üzenetet ad, olvasd ki újra a hibakódokat; töröld a memóriát, és nézd
+meg az élő adatokban a kalibrálási állapotot.</li>
+<li><strong>Dokumentálás:</strong> A munkalapon rögzítsd a távolságot, a
+szoftververziót és a kapott sikeres állapotot.</li>
+</ol>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<h3 data-number="32.3.8" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">32.3.8</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy ügyfél azzal hozta be az autóját, hogy a szélvédő repedés miatt
+egy üvegcserés cég kicserélte az üveget. A csere után az ESP- és a
+sávtartó-visszajelző sárgán világított, és az olvasólámpa mögötti
+kamerasávból folyamatosan halk búgás hallatszott.</p>
+<p>A műhelyben a rendszerteszter a kamera vezérlőegységében a következő
+hibakódot tárolta: „Kamera nincs kalibrálva / szenzororientáció hibás”.
+Az első lépés a mechanikai ellenőrzés volt: a kamera konzolja stabilan
+rögzült, de a beszerelés során a konzol apró, észrevehetetlen elhajlást
+szenvedett. A konzol új, gyári alkatrészre cserélése után a statikus
+kalibrációs eljárást lefuttatták. A táblát a gyártói érték szerint 1,5 m
+távolságra állították fel <strong>(ellenőrizendő: gyártói javítási
+adat)</strong>, a jármű hátsó tengelyéhez képest milliméterre
+beállították. A diagnosztikai műszer a kalibrálás után megfelelőnek
+találta a kamera dőlés- és legyezési szögét. A hibakódot törölték, és az
+autó próbaútján a sávtartó újra pontosan felismerte a felfestést. A hiba
+oka a mechanikai elhajlás volt, amelyet a szoftveres kalibrálás egyedül
+nem tudott volna kompenzálni.</p>
+<h3 data-number="32.3.9" id="tipikus-hibák"><span
+class="header-section-number">32.3.9</span> Tipikus hibák</h3>
+<ul>
+<li><strong>A futóművet kalibrálják, a kamerát nem.</strong> A
+kerékösszetartás vagy a dőlés megváltoztatásával a jármű a volán egyenes
+állása mellett is oldalra húzhat. Ha a kamera kalibrálása elmarad, a
+sávtartó „ferdén” látja a világot, és folyamatosan a sáv széléről befelé
+kormányozhat.</li>
+<li><strong>Nem ellenőrzik a szenzortartó mechanikáját.</strong> A
+kalibrálás előtti konzol-ellenőrzés kihagyása a leggyakoribb mechanikai
+mulasztás. Ha a konzol deformálódott, a kalibrálás elvileg is lehetetlen
+(a kamera látómezeje fizikailag eltér).</li>
+<li><strong>Kódolás és kalibrálás nélkül építenek be új
+érzékelőt.</strong> A radar vagy kamera cseréjekor a rendszerek gyakran
+kódolást és adaptálást igényelnek. Ha a beszerelés után nem fut le a
+kalibrálás, az autó még akkor is hibát jelez, ha az alkatrész fizikailag
+tökéletesen működik.</li>
+<li><strong>A szintet nem ellenőrzik.</strong> A statikus kalibrációnál
+a padló enyhe lejtése is nagy szöghibát okozhat, mert a járművízszint
+eltér a valóságtól.</li>
+</ul>
+<h3 data-number="32.3.10" id="önellenőrzés"><span
+class="header-section-number">32.3.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Sorold fel az ADAS-rendszerek három alapvető érzékelőjét, és írd le,
+melyik miben jó.</li>
+<li>Miért kötelező a kamera kalibrálása szélvédőcsere után?</li>
+<li>Mi a különbség a direkt és az indirekt TPMS között?</li>
+<li>Igaz vagy hamis? Az AEB (autonóm vészfék) rendszer kizárólag a
+kamera jelét használja fel, ezért csak nappal működik. Indokold!</li>
+<li>Melyik kalibrálás történik álló járművön, kalibrációs táblával?</li>
+</ol>
+<h3 data-number="32.3.11" id="feladatok"><span
+class="header-section-number">32.3.11</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Hasonlítsd össze a radar és a kamera
+előnyeit/hátrányait a rossz látási viszonyok és a tárgyfelismerés
+szempontjából.</p>
+<p><strong>2. feladat (A).</strong> Írd le, mi a különbség az LDW és az
+LKA között.</p>
+<p><strong>3. feladat (B).</strong> Egy autó 30 m/s sebességgel halad.
+Az ACC rendszer érzékeli az előtte 20 m/s sebességgel haladó járművet.
+Mekkora a relatív sebesség? Ha a rendszer 4 s alatt lassít a követési
+sebességre, mekkora a jármű átlagos lassulása? Összeférhet-e ez az ACC
+jellemző fékezési tartományával (kb. legfeljebb 2–3,5 m/s²,
+ellenőrizendő)?</p>
+<p><strong>4. feladat (B).</strong> Sorold fel azokat az eseményeket,
+amelyek után a gyártói utasítás szerint kötelező a radar
+kalibrálása.</p>
+<p><strong>5. feladat (C).</strong> Miért tilos a futóművet úgy
+beállítani, hogy a kormány nincs középállásban, ha az autón aktív
+sávtartó rendszer van? Mi a következménye a jármű egyenesfutására?</p>
+<p><strong>6. feladat (D).</strong> Az ügyfél panasza: „a holttérfigyelő
+tévesen riaszt, amikor szalagkorlát mellett haladok”. A diagnosztikai
+műszer nem mutat hibakódot a hátsó radarban. Mi lehet a jelenség két
+leggyakoribb oka?</p>
+<h3 data-number="32.3.12" id="megoldások"><span
+class="header-section-number">32.3.12</span> Megoldások</h3>
+<h4 data-number="32.3.12.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">32.3.12.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li><strong>Ultrahang:</strong> parkolás, közelre pontos, rövid hatótáv.
+<strong>Kamera:</strong> 2D kép, tárgyfelismerés, sávtartás; rossz
+időjárásra érzékeny. <strong>Radar:</strong> távolság és sebesség
+mérése, rossz időben is működik, de típusfelismerésre nem alkalmas.</li>
+<li>Mert az üvegcsere miatt a kamera optikai tengelye a jármű hosszanti
+tengelyéhez képest eltérhet, és a rendszer tévesen ítéli meg a
+sávfelfestés helyzetét.</li>
+<li>A direkt TPMS a kerékben méri a nyomást és rádiójelben küldi; az
+indirekt a kerékfordulatszám-érzékelők jeléből számol (a leengedett
+kerék gyorsabban forog).</li>
+<li>Hamis. Az AEB gyakran a radar és a kamera jeleit egyesíti
+(szenzorfúzió), és a radar rossz látási viszonyok között is
+működik.</li>
+<li>A statikus kalibrálás.</li>
+</ol>
+<h4 data-number="32.3.12.2" id="feladatok-válaszok"><span
+class="header-section-number">32.3.12.2</span> Feladatok – válaszok</h4>
+<p><strong>1. feladat (A).</strong> A radar a rádióhullámok
+visszaverődését méri: jól méri a távolságot és a sebességet, esőben,
+ködben is stabil. A kamera a látható fényt érzékeli, ezért a tárgyak
+típusát (autó, gyalogos, tábla, sáv) egyedül ő tudja azonosítani,
+viszont koszos szélvédő, erős napsütés vagy éjszakai fényhiány esetén a
+jel megbízhatósága csökken.</p>
+<p><strong>2. feladat (A).</strong> Az LDW (sávelhagyás-figyelmeztetés)
+passzív rendszer: ha a jármű irányjelző nélkül átlépi a sávvonalat, a
+vezetőt hanggal vagy kormányrezgéssel figyelmezteti. Az LKA (sávtartó
+asszisztens) aktív: az EPS (szervokormány) segítségével nyomatékot ad a
+kormányra, és visszatereli a járművet a sávba, vagy folyamatosan a
+sávközépen tartja.</p>
+<p><strong>3. feladat (B).</strong> Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mtext mathvariant="normal">saját</mtext></msub><mo>=</mo><mn>30</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v_{\text{saját}} = 30\,\text{m/s}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mtext mathvariant="normal">cél</mtext></msub><mo>=</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v_{\text{cél}} = 20\,\text{m/s}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">t = 4\,\text{s}</annotation></semantics></math>.
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mrow><mi>r</mi><mi>e</mi><mi>l</mi></mrow></msub><annotation encoding="application/x-tex">v_{rel}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mrow><mi>r</mi><mi>e</mi><mi>l</mi></mrow></msub><mo>=</mo><msub><mi>v</mi><mtext mathvariant="normal">saját</mtext></msub><mo>−</mo><msub><mi>v</mi><mtext mathvariant="normal">cél</mtext></msub><mo>=</mo><mn>30</mn><mo>−</mo><mn>20</mn><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v_{rel} = v_{\text{saját}} - v_{\text{cél}} = 30 - 20 = 10\,\text{m/s}</annotation></semantics></math>.
+Az átlagos lassulás:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mfrac><mrow><mi mathvariant="normal">Δ</mi><mi>v</mi></mrow><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>v</mi><mtext mathvariant="normal">cél</mtext></msub><mo>−</mo><msub><mi>v</mi><mtext mathvariant="normal">saját</mtext></msub></mrow><mi>t</mi></mfrac><mo>=</mo><mfrac><mrow><mn>20</mn><mo>−</mo><mn>30</mn></mrow><mn>4</mn></mfrac><mo>=</mo><mi>−</mi><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">m/s</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">a = \frac{\Delta v}{\Delta t} = \frac{v_{\text{cél}} - v_{\text{saját}}}{t} = \frac{20 - 30}{4} = -2{,}5\,\text{m/s}^2</annotation></semantics></math>.
+Tehát a relatív sebesség 10 m/s, az átlagos lassulás 2,5 m/s². Igen, ez
+az ACC tartományába esik; ha ennél nagyobb lassulás kellene, a rendszer
+a vezetőt figyelmezteti, illetve az AEB lép közbe.</p>
+<p><strong>4. feladat (B).</strong> A radart kalibrálni kell (a gyártói
+utasítás szerint): a radaregység cseréjekor; a radartartó konzol
+állításakor vagy deformációja utáni javításkor; a hátsó kerekek
+összetartásának (menettengely-változás) vagy az összkerékgeometria utáni
+állításakor; a radart érő ütközés után; ha a diagnosztika kalibrálási
+hibát jelez.</p>
+<p><strong>5. feladat (C).</strong> Ha a kormánykerék egyenes haladásnál
+nem áll középen, a kormányszög-érzékelő egyenesfutás közben is
+elfordított kormányt jelez (ellenőrizendő: gyártói javítási adat). Az
+ESP és a sávtartó ezt kormányzási szándéknak veszi: a sávtartó
+ellenkormányoz vagy aszimmetrikusan avatkozik be, az ESP hamis
+beavatkozást végezhet. Ezért a beállítást kormányközépállásban végezzük,
+utána a kormányszög-érzékelőt nullázzuk, és szükség szerint a kamerát
+kalibráljuk.</p>
+<p><strong>6. feladat (D).</strong> A leggyakoribb okok: 1.
+<strong>Érzékelő szögének romlása.</strong> A radar rögzítése a
+lökhárító vagy a kocsiszekrény enyhe deformációja miatt elhajlott. A
+szalagkorlát fémfelülete erős radarvisszaverő, ezért a tévesztett
+szögben álló radar az oldalsó sávban lévő korlátot tévesen járműként
+azonosítja. 2. <strong>Szennyeződés vagy jég.</strong> A hátsó lökhárító
+mögötti radar sárral vagy hóval lepermetezve szintén torzíthatja a
+jelet. Ilyenkor először a szenzort és a konzolt kell átvizsgálni, majd
+szükség szerint kalibrálni.</p>
+<h3 data-number="32.3.13" id="rövid-összefoglaló"><span
+class="header-section-number">32.3.13</span> Rövid összefoglaló</h3>
+<p>A vezetőtámogató rendszerek az érzékelőik (kamera, radar, ultrahang)
+jeleit a CAN- vagy FlexRay-buszon osztják meg, és a fék, motor, kormány
+vagy világítás rendszerébe avatkoznak be. Az ACC a követési távolságot
+tartja, az AEB vészfékez, a sávtartó asszisztens a kormányzást segíti, a
+holttérfigyelő oldalra néz, a TPMS a guminyomást ellenőrzi, az aktív
+kormányzás az áttételt módosítja. Az ADAS-érzékelő csak akkor működik
+pontosan, ha a járműhöz képesti geometriája a gyártói specifikáció
+szerinti. Ezért a szélvédőcsere, a futómű beállítása, az érzékelő
+kicserélése vagy a szenzortartó javítása után kötelező a statikus vagy
+dinamikus kalibrálás; a munkát diagnosztikai műszerrel, az előírt
+táblákkal, a járműterhelés és a padló vízszintjének ellenőrzése mellett
+végezzük. <strong>Továbbvitt eredmény.</strong> A hibás ADAS-kalibrálás
+a <a href="au155.html">Elektronikus rendszerek javítása: ABS/ESP,
+légzsák, komfort, klíma és ADAS</a> alfejezetben a javítási munka
+kiindulópontja; az itt megismert érzékelő- és beavatkozó-lánc
+elengedhetetlen az ok-okozati hibakereséshez.</p>
+<h3 data-number="32.3.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">32.3.14</span> Források és ellenőrzési
+hiányok</h3>
+<ul>
+<li>Forrástípus: uniós általános biztonsági rendelet (GSR – General
+Safety Regulation, korábbi (EK) 661/2009, újabb (EU) 2019/2144 – pontos
+hatály és alkalmazandó rendszerek ellenőrizendő).</li>
+<li>Forrástípus: gyártói javítási utasítások (statikus kalibrációs
+távolságok, terhelési állapot, várakozási idők, meghúzási nyomatékok –
+ellenőrizendő).</li>
+<li>Forrástípus: ISO-szabványok a kalibrációs környezetre és az
+ADAS-rendszerelemekre (pontos szabványszámok ellenőrizendők).</li>
+<li>A táblázatban szereplő hatótávolságok és rendszernevek gyártónként
+eltérnek, tanulási példák.</li>
+</ul>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au115.html">← 32.2 Buszhibák és az adatbusz-hálózatok diagnosztikája</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au117.html">33.1 Hibrid és elektromos hajtások áttekintése →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

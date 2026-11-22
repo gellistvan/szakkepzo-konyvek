@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tengelykapcsoló: holtjáték és szorítóerő</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="s">Holtjáték (pedál)</label><input id="s" type="range" min="0" max="15" step="0.5" value="12" aria-label="Holtjáték (pedál)"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="mu">Súrlódási tényező μ</label><input id="mu" type="range" min="0.25" max="0.45" step="0.01" value="0.35" aria-label="Súrlódási tényező μ"><output id="mu_o" for="mu"></output></div>
+<div class="row"><label for="fn">Névleges F_n</label><input id="fn" type="range" min="3000" max="6000" step="100" value="4200" aria-label="Névleges F_n"><output id="fn_o" for="fn"></output></div>
+<div class="row"><label for="mm">Motornyomaték M_max</label><input id="mm" type="range" min="150" max="400" step="5" value="280" aria-label="Motornyomaték M_max"><output id="mm_o" for="mm"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 290" role="img" aria-label="Tengelykapcsoló félmetszete: a holtjáték csökkenésével a kinyomócsapágy előfeszíti a tányérrugót, a szorítóerő és az átvihető nyomaték csökken."></svg>
+<p class="small">Szemléltető modell: a pedál-holtjáték 5 mm alatti részén a csapágy egyre jobban előfeszíti a nyelveket, 0 mm-nél kb. 40 %-os szorítóerő-vesztéssel számol (nem mért érték). A képlet és az alapadatok a fejezet 1. példájából; a holtjáték előírt értéke (pl. 10–15 mm) tanulási példa, ellenőrizendő: gyártói adat. Az r_m = 0,105 m, z = 2.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"s":"mm", "mu":"", "fn":"N", "mm":"Nm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const Z=2, RM=0.105;
+const k=Math.min(Math.max(v.s,0),5)/5, Fn=v.fn*(0.6+0.4*k), MK=Z*v.mu*Fn*RM, r=MK/v.mm;
+const line=css("--line"), fg=css("--fg"), hl=css("--hl"), bad=css("--bad");
+// félmetszet-vázlat
+el("line",{x1:20,y1:200,x2:540,y2:200,stroke:line,"stroke-dasharray":"8 4 2 4"});
+el("rect",{x:40,y:50,width:40,height:150,fill:"none",stroke:line,"stroke-width":2});
+el("text",{x:60,y:40,"text-anchor":"middle","font-size":12},"lendkerék");
+el("rect",{x:84,y:90,width:10,height:60,fill:"#888",stroke:line});
+el("text",{x:89,y:170,"text-anchor":"middle","font-size":11},"tárcsa");
+el("rect",{x:98,y:80,width:26,height:80,fill:"none",stroke:line,"stroke-width":2});
+el("text",{x:111,y:72,"text-anchor":"middle","font-size":11},"nyomólap");
+const tip=200 - (v.s<5 ? (5-v.s)*2.4 : 0);
+el("line",{x1:124,y1:100,x2:150,y2:90,stroke:line,"stroke-width":5});
+el("line",{x1:150,y1:90,x2:tip,y2:180,stroke:line,"stroke-width":5});
+el("text",{x:170,y:70,"text-anchor":"middle","font-size":11},"tányérrugó");
+const bx = tip + 4 + Math.max(v.s-5,0)*1.5;
+el("rect",{x:bx,y:165,width:34,height:30,fill:"#bbb",stroke:line});
+el("text",{x:bx+17,y:215,"text-anchor":"middle","font-size":11},"kinyomócsapágy");
+el("line",{x1:bx+34,y1:180,x2:bx+120,y2:120,stroke:line,"stroke-width":3});
+el("text",{x:bx+130,y:115,"font-size":11},"villa → munkahenger");
+// erőnyíl
+const L=40+60*Fn/6000;
+el("line",{x1:124+L,y1:130,x2:126,y2:130,stroke:hl,"stroke-width":4,"marker-end":"url(#ah)"});
+const d=el("defs",{}); const m=document.createElementNS("http://www.w3.org/2000/svg","marker");
+m.setAttribute("id","ah");m.setAttribute("markerWidth","8");m.setAttribute("markerHeight","8");m.setAttribute("refX","6");m.setAttribute("refY","3");m.setAttribute("orient","auto");
+const pth=document.createElementNS("http://www.w3.org/2000/svg","path");pth.setAttribute("d","M0,0 L6,3 L0,6 z");pth.setAttribute("fill",hl);m.appendChild(pth);d.appendChild(m);
+el("text",{x:130+L,y:134,"font-size":12,fill:hl},"F_n = "+fmt(Fn,0)+" N");
+// arány-sáv
+const W=300, x0=200, y0=250;
+el("rect",{x:x0,y:y0,width:W,height:14,fill:"none",stroke:line});
+const rr=Math.min(r,2); el("rect",{x:x0,y:y0,width:W*rr/2,height:14,fill:r<1?bad:(r<1.2?css("--hl2"):css("--ok"))});
+[1,1.2].forEach(t=>{el("line",{x1:x0+W*t/2,y1:y0-4,x2:x0+W*t/2,y2:y0+18,stroke:line});el("text",{x:x0+W*t/2,y:y0+30,"text-anchor":"middle","font-size":11},fmt(t,1));});
+el("text",{x:x0-8,y:y0+12,"text-anchor":"end","font-size":12},"M_K/M_max = "+fmt(r,2));
+let msg="Csapágyhézag a nyelveknél: "+(v.s>=5?"van – a csapágy szabad.":"elfogyott – a csapágy előfeszíti a tányérrugót.")+
+ "<br>M_K = 2·"+fmt(v.mu,2)+"·"+fmt(Fn,0)+" N·0,105 m = <b>"+fmt(MK,1)+" Nm</b>; M_K/M_max = "+fmt(r,2)+". ";
+if(r<1) msg+='<span class="bad">A kuplung csúszik.</span>';
+else if(r<1.2) msg+='<span class="bad">A biztonsági tartalék (β = 1,2) nem teljesül.</span>';
+else msg+='<span class="ok">Megfelelő (β ≥ 1,2).</span>';
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

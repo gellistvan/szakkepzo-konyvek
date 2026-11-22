@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vezérlési kördiagram</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="sz_e">szívó előnyitás (FHP előtt)</label><input id="sz_e" type="range" min="0" max="40" step="1" value="20" aria-label="szívó előnyitás (FHP előtt)"><output id="sz_e_o" for="sz_e"></output></div>
+<div class="row"><label for="sz_u">szívó utánzárás (AHP után)</label><input id="sz_u" type="range" min="20" max="80" step="1" value="50" aria-label="szívó utánzárás (AHP után)"><output id="sz_u_o" for="sz_u"></output></div>
+<div class="row"><label for="k_e">kipufogó előnyitás (AHP előtt)</label><input id="k_e" type="range" min="20" max="80" step="1" value="50" aria-label="kipufogó előnyitás (AHP előtt)"><output id="k_e_o" for="k_e"></output></div>
+<div class="row"><label for="k_u">kipufogó utánzárás (FHP után)</label><input id="k_u" type="range" min="0" max="40" step="1" value="20" aria-label="kipufogó utánzárás (FHP után)"><output id="k_u_o" for="k_u"></output></div>
+<div class="row"><label for="n">főtengely-fordulatszám</label><input id="n" type="range" min="600" max="7000" step="100" value="800" aria-label="főtengely-fordulatszám"><output id="n_o" for="n"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 480" role="img" aria-label="Kördiagram: szívószelep 20° FHP előtt nyit, 50° AHP után zár; kipufogószelep 50° AHP előtt nyit, 20° FHP után zár; összenyitás 40°."></svg>
+<p class="small">A spirál belső menete az 1. főtengely-fordulat (szívás, sűrítés), a külső a 2. (munka, kipufogás); a forgásirány az óramutatóé. Az alapértékek a fejezet kidolgozott példáját adják (250°, 250°, 40°); a valós vezérlési szögek gyártói adatok (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"sz_e":"°", "sz_u":"°", "k_e":"°", "k_u":"°", "n":"1/min"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const se=v.sz_e, su=v.sz_u, ke=v.k_e, ku=v.k_u, n=v.n;
+const thS=se+180+su, thK=ke+180+ku, ov=se+ku, T=60/n, t=thS/360*T;
+const R0=100, DR=75/720, cx=260, cy=240;
+function P(th,dr){const r=R0+DR*th+(dr||0), a=th*Math.PI/180; return [cx+r*Math.sin(a), cy-r*Math.cos(a)];}
+function path(a,b,dr){let d=""; for(let th=a; th<=b+0.01; th+=2){const p=P(th,dr); d+=(d?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1);} return d;}
+const fg=css("--fg");
+el("path",{d:path(-30,750),fill:"none",stroke:css("--grid"),"stroke-width":1});
+let poly=[]; for(let th=-se; th<=ku; th+=2) poly.push(P(th+720,10)); for(let th=ku; th>=-se; th-=2) poly.push(P(th+720,24));
+if(ov>0) el("polygon",{points:poly.map(p=>p.join(",")).join(" "),fill:css("--hl2"),"fill-opacity":0.35,stroke:fg,"stroke-width":0.8});
+el("path",{d:path(-se,180+su),fill:"none",stroke:css("--hl"),"stroke-width":7});
+el("path",{d:path(540-ke,720+ku),fill:"none",stroke:fg,"stroke-width":4,"stroke-dasharray":"9 5"});
+el("line",{x1:cx,y1:cy-210,x2:cx,y2:cy+210,stroke:fg,"stroke-dasharray":"6 3 1 3"});
+el("text",{x:cx,y:18,"text-anchor":"middle","font-weight":"bold"},"FHP");
+el("text",{x:cx,y:465,"text-anchor":"middle","font-weight":"bold"},"AHP");
+[[90,"szívás",-22],[270,"sűrítés",-22],[450,"munka",18],[630,"kipufogás",18]].forEach(([th,s,dr])=>{const p=P(th,dr);
+  el("text",{x:p[0],y:p[1]+4,"text-anchor":"middle","font-size":12,"font-style":"italic"},s);});
+[[-se,"Sz. nyit "+se+"° FHP előtt"],[180+su,"Sz. zár "+su+"° AHP után"],[540-ke,"K. nyit "+ke+"° AHP előtt"],[720+ku,"K. zár "+ku+"° FHP után"]]
+ .forEach(([th,s])=>{const p=P(th,0), q=P(th,th>360?40:-40); el("circle",{cx:p[0],cy:p[1],r:4,fill:fg});
+  el("line",{x1:p[0],y1:p[1],x2:q[0],y2:q[1],stroke:fg}); el("text",{x:q[0]+(q[0]<cx?-4:4),y:q[1]+4,"text-anchor":q[0]<cx?"end":"start","font-size":12},s);});
+status("Szívószelep nyitvatartása: <b>"+thS+"°</b> · kipufogószelep: <b>"+thK+"°</b> · szelepösszenyitás: <b>"+ov+"°</b><br>"+
+ "n = "+n+" 1/min: egy főtengely-fordulat T = 60/n = "+fmt(T,4)+" s, a szívószelep nyitvatartási ideje t = ϑ/360°·T = <b>"+fmt(t,4)+" s</b> ("+fmt(t*1000,1)+" ms); vezérműtengely: "+(n/2)+" 1/min");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

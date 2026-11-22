@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>27.3 Elektronikai elemek a gépjármű villamos hálózatában –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Gépjármű-villamosság és -elektronika</a> › <a href="index.html#auch26">27 A gépjármű villamos hálózata</a></p>
+<div class="links"><a class="prev" rel="prev" href="au099.html">← 27.2 Vezetékek, csatlakozók, biztosítók, relék és fénykábelek</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au101.html">28.1 Az indítóakkumulátor: felépítés, jellemzők, kiválasztás és töltés →</a></div>
+</nav>
+<h2 data-number="27.3" id="au100"><span
+class="header-section-number">27.3</span> Elektronikai elemek a gépjármű
+villamos hálózatában</h2>
+<h3 data-number="27.3.1" id="motiváció"><span
+class="header-section-number">27.3.1</span> Motiváció</h3>
+<p>A műhelyben egyre ritkább az olyan hiba, amelyet csak „nincs táp”
+vagy „nincs test” alapon lehet megtalálni. Egy modern autó tompított
+fényét, hűtőventilátorát, klímakompresszorát vagy üzemanyag-szivattyúját
+gyakran nem közvetlenül egy kapcsoló, hanem egy vezérlőegység félvezetős
+végfokozata kapcsolja. Ha a kapcsolási rajzon diódát, tranzisztort vagy
+„ECU” feliratot látsz, akkor nemcsak azt kell tudnod, hogy van-e
+feszültség, hanem azt is, hogy a vezérlőegység éppen milyen módon
+kapcsol: a fogyasztó előtt (high-side) vagy a fogyasztó után (low-side),
+esetleg impulzusszélesség-modulációval. Ebben az alfejezetben a IV.
+részben megismert félvezetőket járműves kapcsolásokra alkalmazzuk, és
+felkészülünk a későbbi motorirányítási és komfortelektronikai rendszerek
+értelmezésére.</p>
+<h3 data-number="27.3.2" id="szemléletes-kép"><span
+class="header-section-number">27.3.2</span> Szemléletes kép</h3>
+<p>Az alábbi kapcsolási vázlat egy tipikus járműves helyzetet mutat: a
+vezérlőegység egy NPN tranzisztoron keresztül, úgynevezett
+<strong>low-side</strong> kimenettel húz be egy relétekercset, a relé
+munkaérintkezője pedig egy izzót kapcsol.</p>
+<figure>
+<img src="assets/au100-diagram-1.png"
+alt="ECU low-side kimenet: relétekercs kapcsolása szabadonfutó diódával - Szemléltető kapcsolási vázlat tanulási célra (alapállapot: S1 nyitva, T1 zárva, relé elengedve); a 30, 15, 85, 86, 87 kapocsjelölés a DIN 72552 szerinti gyakorlatot követi, a konkrét bekötést a gyártói rajz határozza meg (ellenőrizendő)." />
+<figcaption aria-hidden="true">ECU low-side kimenet: relétekercs
+kapcsolása szabadonfutó diódával - Szemléltető kapcsolási vázlat
+tanulási célra (alapállapot: S1 nyitva, T1 zárva, relé elengedve); a 30,
+15, 85, 86, 87 kapocsjelölés a DIN 72552 szerinti gyakorlatot követi, a
+konkrét bekötést a gyártói rajz határozza meg
+(ellenőrizendő).</figcaption>
+</figure>
+<p>A 30-as kapocs a biztosítékon át közvetlenül az akkumulátor pluszra
+csatlakozik. A 15-ös kapocs csak gyújtáskapcsolás után kap feszültséget.
+Amikor az ECU a T1 tranzisztort nyitja, a K1 relétekercs árama a 15-ös
+kapocsról a tekercsen és a T1 kollektorán–emitterén át a test felé
+folyik. A K1 érintkezője behúz, és a 30-as ág felől bekapcsolja az E1
+izzót. A V1 szabadonfutó dióda a tekercs kikapcsolási feszültségcsúcsát
+vezeti le. A szaggatott ECU-keret a T1 tranzisztort és az R1
+bázisellenállást fogja körbe: a vezérlőegység kimenete a T1 kollektora,
+ez a tekercs 85-ös kapcsára csatlakozik.</p>
+<h3 data-number="27.3.3" id="definíciók"><span
+class="header-section-number">27.3.3</span> Definíciók</h3>
+<p><strong>Definíció. Low-side kapcsolás:</strong> a kapcsoló félvezető
+(tranzisztor) a fogyasztó és a test (31) között áll; bekapcsoláskor a
+fogyasztó alsó, test felőli végét zárja a testre. A fogyasztó másik
+kivezetése a táphoz (például 15 vagy 30) csatlakozik.</p>
+<p><strong>Definíció. High-side kapcsolás:</strong> a kapcsoló félvezető
+a tápfeszültség és a fogyasztó között áll; bekapcsoláskor a fogyasztó
+felső, tápfelőli végét köti a tápra, a fogyasztó másik vége pedig
+közvetlenül testre kötött.</p>
+<p><strong>Definíció. Szabadonfutó dióda:</strong> induktív terheléssel
+(relétekercs, mágnesszelep) párhuzamosan, záróirányban kötött dióda.
+Kikapcsoláskor utat ad az induktivitásban tárolt áramnak, és
+megakadályozza a nagy feszültségcsúcsot.</p>
+<p><strong>Definíció. Polaritásvédelem:</strong> a tápfeszültség
+bemenettel sorba kötött dióda, amely helyes polaritásnál nyit, fordított
+bekötésnél zár, így a védett áramkörre nem jut káros feszültség.</p>
+<h3 data-number="27.3.4" id="felépítés-és-működés"><span
+class="header-section-number">27.3.4</span> Felépítés és működés</h3>
+<h4 data-number="27.3.4.1" id="diódák-a-jármű-kapcsolásaiban"><span
+class="header-section-number">27.3.4.1</span> Diódák a jármű
+kapcsolásaiban</h4>
+<p>A dióda egyirányú áramvezető: nyitóirányban az áram a P-rétegtől az
+N-réteg felé folyik, és a nyitófeszültség szilíciumdiódánál jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}8\,\text{V}</annotation></semantics></math>
+közé esik. A járművillamosságban három szerep a leggyakoribb.</p>
+<ol type="1">
+<li><p><strong>Egyenirányítás.</strong> A generátorban a háromfázisú
+váltakozó feszültséget hat diódából álló híd egyenirányítja. A diódák a
+pozitív félhullámot a B+ kapocsra, a negatív félhullámot a testre
+engedik.</p></li>
+<li><p><strong>Szabadonfutó dióda.</strong> Amikor egy tranzisztor
+kikapcsol egy relétekercset vagy mágnesszelepet, a tekercs önindukciója
+az áramot fenn akarja tartani. A dióda nélkül a kollektoron nagyon
+rövid, nagy feszültségű csúcs keletkezhetne, amely tönkreteheti a
+tranzisztort. Kikapcsoláskor a tekercs árama a szabadonfutó diódán át
+záródik, így a kollektoron a feszültség csak a tápfeszültség + kb. 0,7
+V-ig emelkedik.</p></li>
+<li><p><strong>Polaritásvédelem.</strong> Sorba kötött diódával
+megvédhetjük a készüléket, ha valaki fordítva köti be az akkumulátort
+vagy egy csatlakozót. Hátránya a kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>
+feszültségesés és a nagy áramú körökben a veszteségi hő, ezért
+nagyteljesítményű körökben inkább p-csatornás MOSFET-es védelmet vagy
+más megoldást használnak.</p></li>
+</ol>
+<h4 data-number="27.3.4.2" id="zener-dióda-feszültségkorlátozás"><span
+class="header-section-number">27.3.4.2</span> Zener-dióda:
+feszültségkorlátozás</h4>
+<p>A Zener-dióda záróirányban egy meghatározott, gyártásilag beállított
+letörési feszültség
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mi>Z</mi></msub><annotation encoding="application/x-tex">U_Z</annotation></semantics></math>)
+felett vezetni kezd. A járműelektronikában elsősorban
+feszültségkorlátozásra és referenciafeszültség előállítására használják.
+Például egy vezérlőegység analóg bemenetét szenzorcsatlakozónál
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5{,}6\,\text{V}</annotation></semantics></math>-os
+vagy hasonló Zener-diódával lehet védőkötni a véletlenül odakerülő
+töltőfeszültség ellen (ellenőrizendő: az adott kapcsolás gyártói
+adatai). Amíg a bemeneti feszültség a letörési feszültség alatt van, a
+Zener gyakorlatilag nem avatkozik be; amikor eléri a küszöböt, az áramot
+a test felé vezetve igyekszik a feszültséget a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mi>Z</mi></msub><annotation encoding="application/x-tex">U_Z</annotation></semantics></math>
+környékén tartani.</p>
+<h4 data-number="27.3.4.3"
+id="tranzisztoros-végfokok-low-side-és-high-side"><span
+class="header-section-number">27.3.4.3</span> Tranzisztoros végfokok:
+low-side és high-side</h4>
+<p>A tranzisztor a motorvezérlőkben, komfort- és világításvezérlőkben
+elsősorban <strong>vezérelt kapcsolóként</strong> működik, nem pedig
+erősítőcélú üzemmódban. Lezárt állapotban csak a maradékáram folyik,
+telítésben pedig a kollektor–emitter (vagy drain–source) feszültségesés
+nagyon kicsi. Ezért a kapcsolóüzemi melegedés elfogadható marad.</p>
+<p><strong>Low-side kapcsolás.</strong> Az NPN-tranzisztor vagy
+n-csatornás MOSFET emittere (source) a testen van, kollektora (drain)
+pedig a fogyasztón keresztül a tápfeszültségre kötött. Nyugalmi
+állapotban a kimenet a fogyasztón keresztül a táp közelébe emelkedik,
+bekapcsolt állapotban a test közelébe esik. A vezérlőjel a bázisra
+(gate-re)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>
+(illetve a MOSFET küszöbfeszültsége) felett kerül. Az áramkör egyszerű
+és olcsó, de a fogyasztó egyik kivezetése mindig táp alatt van, ezért
+testzárlat esetén a fogyasztó bekapcsolhat.</p>
+<p><strong>High-side kapcsolás.</strong> A PNP-tranzisztort vagy
+p-csatornás MOSFET-et a táp és a fogyasztó közé kötik. A fogyasztó másik
+vége közvetlenül testre kerül. Bekapcsoláskor a kimenet a táp közelébe
+emelkedik. A high-side kimenet előnye, hogy kikapcsolt állapotban a
+fogyasztó és a hozzá vezető kábel feszültségmentes; ha a kábel
+testzárlatos, a fogyasztó nem kapcsol be magától, legfeljebb
+bekapcsoláskor rövidzárlati áram indul, amelyet a végfok rövidzárvédelme
+lekapcsol. Sok modern vezérlőegység high-side intelligens végfokai
+áramérzékeléssel, túlmelegedés- és rövidzárvédelemmel rendelkeznek.</p>
+<p><strong>PWM-vezérlés.</strong> A tranzisztort nagy frekvencián ki-be
+kapcsolgatva a fogyasztó átlagos feszültsége a kitöltési tényezővel
+arányos:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mi>D</mi><mo>⋅</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=D\cdot U_{\text{táp}},</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
+a bekapcsolt idő aránya
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>≤</mo><mi>D</mi><mo>≤</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0\le D\le 1</annotation></semantics></math>).
+Ellenállásterhelésnél az effektív feszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><msqrt><mi>D</mi></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{eff}}=U_{\text{táp}}\sqrt{D}.</annotation></semantics></math></p>
+<p>PWM-mel vezérlik például a fűtőventilátor, az üzemanyag-szivattyú
+modulált üzemét, a LED-es nappali fény tompítását és az elektromos
+kormányrásegítés teljesítményfokozatait.</p>
+<h4 data-number="27.3.4.4" id="tirisztorok-a-járművillamosságban"><span
+class="header-section-number">27.3.4.4</span> Tirisztorok a
+járművillamosságban</h4>
+<p>A tirisztor reteszelő kapcsoló: gyújtóimpulzussal bekapcsol, és
+mindaddig vezet, amíg az áram a tartóáram alá nem esik. Egyenáramú
+körben csak árammegszakítással lehet kikapcsolni, ezért a mai
+járművillamosságban ritka; a régi kondenzátorkisütéses (HKZ / CDI elvű)
+gyújtásokban kapott szerepet, ahol a kondenzátor kisütését vezérelte a
+gyújtótekerccsel. A korszerű gyújtások ezt már tranzisztoros vagy
+MOSFET-es végfokokkal oldják meg.</p>
+<h4 data-number="27.3.4.5"
+id="vezérlőegység-bemenetei-és-kimenetei"><span
+class="header-section-number">27.3.4.5</span> Vezérlőegység bemenetei és
+kimenetei</h4>
+<p>Egy ECU felépítését leegyszerűsítve három rétegként érdemes
+nézni:</p>
+<figure>
+<img src="assets/au100-diagram-2.png"
+alt="Vezérlőegység jelfeldolgozási lánca - Szemléltető rétegábra; a tényleges ECU felépítés és a beavatkozók típusa a gyártó dokumentációja szerint ellenőrizendő." />
+<figcaption aria-hidden="true">Vezérlőegység jelfeldolgozási lánca -
+Szemléltető rétegábra; a tényleges ECU felépítés és a beavatkozók típusa
+a gyártó dokumentációja szerint ellenőrizendő.</figcaption>
+</figure>
+<p>A <strong>bemeneti fokozat</strong> leggyakoribb formái:</p>
+<ul>
+<li><p><strong>Kapcsoló a testre:</strong> a kapcsoló (például
+ajtónyitó, féklámpakapcsoló) a vezérlőegység bemenetét a testre zárja.
+Az ECU-ban egy felhúzó ellenállás
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mtext mathvariant="normal">up</mtext></msub><annotation encoding="application/x-tex">R_{\text{up}}</annotation></semantics></math>)
+a bemenetet a belső tápfeszültségre, például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5\,\text{V}</annotation></semantics></math>-ra
+emeli nyugalmi állapotban. Amikor a kapcsoló zár, a bemenet a test felé
+húzódik. A mikrovezérlő a feszültségszintből ismeri fel az
+állapotot.</p></li>
+<li><p><strong>Kapcsoló a tápra:</strong> ebben az esetben a kapcsoló a
+bemenetet a 12 V-os táphoz zárja. Az ECU feszültségosztóval (például 2:1
+arányú) csökkenti a jelet, hogy az a mikrovezérlő biztonságos
+tartományába kerüljön. Az 5 V-os referenciafeszültség és a
+feszültségosztó a motorirányítás érzékelőinél is visszatér
+majd.</p></li>
+<li><p><strong>Analóg érzékelők:</strong> például hőmérséklet-érzékelő
+(NTC) vagy potenciométer jelét feszültségosztóval alakítják át, majd
+analóg-digitális átalakító dolgozza fel.</p></li>
+</ul>
+<p>A <strong>kimeneti fokozat</strong> lehet közönséges tranzisztor,
+intelligens MOSFET, relés kimenet vagy PWM. Az ECU gyakran nem kapcsol
+közvetlenül nagy fogyasztókat, hanem egy relét húz be, ahogy a fenti
+kapcsolási vázlaton is látható. A relés kimenet galvanikusan leválasztja
+a vezérlőegységet a nagy áramú áramkörtől, és a meghibásodás
+egyszerűbben diagnosztizálható.</p>
+<h3 data-number="27.3.5" id="kidolgozott-példák"><span
+class="header-section-number">27.3.5</span> Kidolgozott példák</h3>
+<p><strong>Példa 1. LED előtét-ellenállás méretezése.</strong> Egy jármű
+LED-es belső világítást kap. A LED nyitófeszültsége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>F</mi></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_F=2{,}1\,\text{V}</annotation></semantics></math>,
+üzemi árama
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>F</mi></msub><mo>=</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I_F=20\,\text{mA}</annotation></semantics></math>.
+Számítsuk ki az előtét-ellenállást
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{táp}}=14{,}4\,\text{V}</annotation></semantics></math>
+töltési feszültségnél!</p>
+<p><strong>Megoldás.</strong> Az ellenállásra jutó feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>R</mi></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>−</mo><msub><mi>U</mi><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">U_R=U_{\text{táp}}-U_F</annotation></semantics></math>.
+Ohm-törvényből:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mfrac><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>−</mo><msub><mi>U</mi><mi>F</mi></msub></mrow><msub><mi>I</mi><mi>F</mi></msub></mfrac><mo>=</mo><mfrac><mrow><mn>14</mn><mo>,</mo><mn>4</mn><mo>−</mo><mn>2</mn><mo>,</mo><mn>1</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>020</mn></mrow></mfrac><mo>=</mo><mn>615</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">R=\frac{U_{\text{táp}}-U_F}{I_F}=\frac{14{,}4-2{,}1}{0{,}020}=615\,\Omega.</annotation></semantics></math></p>
+<p>A szabványos ellenállássorból
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>620</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">620\,\Omega</annotation></semantics></math>
+választható. Az ellenállás teljesítménye:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>R</mi></msub><mo>=</mo><msubsup><mi>I</mi><mi>F</mi><mn>2</mn></msubsup><mi>R</mi><mo>=</mo><mn>0</mn><mo>,</mo><msup><mn>020</mn><mn>2</mn></msup><mo>⋅</mo><mn>620</mn><mo>≈</mo><mn>0</mn><mo>,</mo><mn>25</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_R=I_F^2 R=0{,}020^2\cdot 620\approx 0{,}25\,\text{W}.</annotation></semantics></math></p>
+<p>Legalább
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{W}</annotation></semantics></math>
+névleges terhelhetőségű alkatrészt válasszunk, mert a járműben magasabb
+feszültség és hőmérséklet is előfordulhat. ∎</p>
+<p><strong>Példa 2. PWM-jel átlagfeszültsége és teljesítménye.</strong>
+Egy ECU egy fűtőventilátor ellenállását PWM jellel,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{táp}}=14{,}0\,\text{V}</annotation></semantics></math>
+mellett
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>35</mn></mrow><annotation encoding="application/x-tex">D=0{,}35</annotation></semantics></math>
+kitöltési tényezővel kapcsolja. A fogyasztó ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>3</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R=3\,\Omega</annotation></semantics></math>.
+Határozzuk meg az átlagfeszültséget, az effektív feszültséget és az
+átlagos teljesítményt!</p>
+<p><strong>Megoldás.</strong> Az átlagfeszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mi>D</mi><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>35</mn><mo>⋅</mo><mn>14</mn><mo>,</mo><mn>0</mn><mo>=</mo><mn>4</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=D\,U_{\text{táp}}=0{,}35\cdot 14{,}0=4{,}9\,\text{V}.</annotation></semantics></math></p>
+<p>Az effektív feszültség ellenállásterhelésnél:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><msqrt><mi>D</mi></msqrt><mo>=</mo><mn>14</mn><mo>,</mo><mn>0</mn><msqrt><mrow><mn>0</mn><mo>,</mo><mn>35</mn></mrow></msqrt><mo>≈</mo><mn>8</mn><mo>,</mo><mn>28</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{eff}}=U_{\text{táp}}\sqrt{D}=14{,}0\sqrt{0{,}35}\approx 8{,}28\,\text{V}.</annotation></semantics></math></p>
+<p>Az átlagos teljesítményt az effektív feszültségből számoljuk:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mfrac><msubsup><mi>U</mi><mtext mathvariant="normal">eff</mtext><mn>2</mn></msubsup><mi>R</mi></mfrac><mo>=</mo><mfrac><mrow><mn>8</mn><mo>,</mo><msup><mn>28</mn><mn>2</mn></msup></mrow><mn>3</mn></mfrac><mo>≈</mo><mn>22</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{átlag}}=\frac{U_{\text{eff}}^2}{R}=\frac{8{,}28^2}{3}\approx 22{,}9\,\text{W}.</annotation></semantics></math></p>
+<p>Ellenőrzésképp: ha a kapcsoló ideálisan zár, a csúcsteljesítmény
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>14</mn><mn>2</mn></msup><mi>/</mi><mn>3</mn><mo>≈</mo><mn>65</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">14^2/3\approx 65{,}3\,\text{W}</annotation></semantics></math>,
+és a PWM átlag ezt a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
+aránnyal csökkenti, tehát
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>65</mn><mo>,</mo><mn>3</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>35</mn><mo>≈</mo><mn>22</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">65{,}3\cdot0{,}35\approx 22{,}9\,\text{W}</annotation></semantics></math>.
+Az egyezés nagyságrendileg helyes. ∎</p>
+<h3 data-number="27.3.6" id="minőségellenőrzés"><span
+class="header-section-number">27.3.6</span> Minőségellenőrzés</h3>
+<p>A félvezetős kapcsolások ellenőrzésekor mindig a kapcsolási rajz, a
+gyártói javítási utasítás és a biztonsági előírások az irányadók.
+Általános mérési fogások:</p>
+<ul>
+<li><strong>Diódavizsgálat multiméterrel.</strong> A multiméter
+dióda-tartományában a nyitóirányú feszültségesést mérjük:
+szilíciumdiódánál tipikusan
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}8\,\text{V}</annotation></semantics></math>.
+Záróirányban a készülék „OL” vagy szakadás jelzést mutathat. A
+Zenerdióda nyitóirányban ugyanúgy mérhető; záróirányban a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mi>Z</mi></msub><annotation encoding="application/x-tex">U_Z</annotation></semantics></math>
+alatt szakadás, felette letörés mérhető, de ehhez megfelelő feszültségű
+és áramkorlátos mérőberendezés kell.</li>
+<li><strong>Tranzisztor gyorsteszt.</strong> Bipoláris tranzisztornál a
+bázis–emitter és bázis–kollektor átmenetek egy-egy diódaként
+viselkednek. A kollektor–emitter szakasznak mindkét irányban szakadást
+kell mutatnia (a beépített védődiódás típusoknál az egyik irányban
+diódaesést).</li>
+<li><strong>Low-side kimenet feszültségmérése.</strong> Nyugalomban a
+kimeneti kapocs a fogyasztón keresztül a táp közelébe kerül. Kapcsolási
+parancs után a telítéses feszültségesésnek kicsinek (például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">0{,}2</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>)
+kell lennie; ha jelentősen magasabb, a tranzisztor nem telít, a terhelés
+vagy a végfok hibás.</li>
+<li><strong>High-side kimenet feszültségmérése.</strong> Nyugalomban a
+kapocs a testhez közel van, bekapcsolva a táphoz közeli értékre
+emelkedik. A tápfeszültség és a kimenet közti különbség a kapcsolóelem
+feszültségesése.</li>
+<li><strong>PWM-jel vizsgálata.</strong> Oszcilloszkóppal mérjük a
+kapcsolási frekvenciát, a periódusidőt és a bekapcsolt időt. A kitöltési
+tényező:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><msub><mi>t</mi><mtext mathvariant="normal">be</mtext></msub><mi>/</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">D=t_{\text{be}}/T</annotation></semantics></math>.
+Egyszerű átlagmérő multiméter csak tájékoztató értéket ad.</li>
+</ul>
+<p><strong>Ellenőrzőlista.</strong></p>
+<ol type="1">
+<li>Rajz alapján azonosítsd, hogy a fogyasztó low-side vagy high-side
+kapcsolást kap.</li>
+<li>Mérés előtt ellenőrizd a tápfeszültséget és a biztosítékot.</li>
+<li>Kapcsolási parancsra figyeld a vezérlőegység kimenetét; ne terheld
+fölöslegesen.</li>
+<li>Induktív terhelésnél ellenőrizd a szabadonfutó dióda jelenlétét és
+polaritását.</li>
+<li>A javítás után ellenőrizd a teljes funkciót, és töröld a hibakódot,
+ha releváns.</li>
+</ol>
+<h3 data-number="27.3.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">27.3.7</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Ügyfélpanasz:</strong> a klímakompresszor nem kapcsol be, a
+belső ventilátor jár, a hűtőventilátor nem indul. A diagnosztikai műszer
+a motorvezérlőben „klímakompresszor relé – szakadás” hibakódot
+tárol.</p>
+<p><strong>Vizsgálat.</strong> A kapcsolási rajz szerint az ECU egy
+low-side kimenettel húz egy relét. A gyújtást bekapcsolva a relétekercs
+táp oldalán a gyártói adat szerint megvan a feszültség. Az ECU kimeneti
+kapcsán nyugalomban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12{,}5\,\text{V}</annotation></semantics></math>
+mérhető, mert a nem vezető tranzisztoron keresztül a tekercs felé csak a
+mérőműszer kis árama folyik. A klímakapcsoló bekapcsolása után az ECU
+kimenetnek
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">0{,}2</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>
+közelébe kellene esnie, de a műszer
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>11</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">11{,}8\,\text{V}</annotation></semantics></math>-ot
+mutat. A relé tehát nem húz, mert a végfok nem zárja a kört a testre. A
+kábelköteg és a csatlakozó átvizsgálása után a hiba az ECU kimeneti
+tranzisztorának szakadására utal.</p>
+<p><strong>Javítás.</strong> A vezérlőegységet a gyártói javítási
+utasítás szerint kell mérni és cserélni vagy szakszervizben javíttatni.
+Nem szabad a kimenetet egyszerűen testre kötve „kipróbálni”, mert az a
+végfok további sérüléséhez vezethet. A teljes rendszer ellenőrzése után
+a hibakódot törölni kell, és a klímát működés közben ellenőrizni.</p>
+<p><strong>Tanulság.</strong> A kimeneten mért feszültség és a végfok
+tényleges kapcsolása két külön kérdés; a low-side kimenet nyugalmi
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\,\text{V}</annotation></semantics></math>-ja
+nem jelenti azt, hogy az áramkör zárt.</p>
+<h3 data-number="27.3.8" id="tipikus-hibák"><span
+class="header-section-number">27.3.8</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>Hiba:</strong> A low-side kimenetet működő
+vezérlőegységnél közvetlenül testre kötik, hogy „kipróbálják, van-e
+táp”. <strong>Helyes:</strong> a kimenetet csak a gyártói eljárás
+szerint, megfelelő mérőeszközzel, terhelés nélkül vagy az előírt
+terheléssel szabad vizsgálni; a rövidzár megölheti a
+tranzisztort.</p></li>
+<li><p><strong>Hiba:</strong> A diódát az induktív terheléssel
+párhuzamosan, fordított irányban kötik be. <strong>Helyes:</strong> a
+szabadonfutó diódát úgy kell bekötni, hogy normál üzemben záróirányban
+legyen; ellenkező esetben már bekapcsoláskor rövidzárat okoz.</p></li>
+<li><p><strong>Hiba:</strong> LED-et előtét-ellenállás nélkül kötnek a
+járműhálózatra. <strong>Helyes:</strong> mindig ki kell számolni a soros
+ellenállást a legnagyobb töltési feszültségre, és ellenőrizni az
+ellenállás teljesítményét, különben a LED tönkremegy.</p></li>
+<li><p><strong>Hiba:</strong> A PWM-jelet hagyományos átlagmérő
+multiméterrel mérik, és az eredményt tényleges effektív feszültségként
+értelmezik. <strong>Helyes:</strong> oszcilloszkóppal vagy megfelelő
+műszerrel kell mérni, és a fogyasztó jellegének megfelelően kiszámolni
+az átlagos vagy effektív értéket.</p></li>
+</ol>
+<h3 data-number="27.3.9" id="önellenőrzés"><span
+class="header-section-number">27.3.9</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e, hogy low-side kapcsolásnál a fogyasztó a tápfeszültség és a
+tranzisztor között van?</li>
+<li>Számítsd ki egy PWM-jel átlagfeszültségét, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{táp}}=12\,\text{V}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>25</mn></mrow><annotation encoding="application/x-tex">D=0{,}25</annotation></semantics></math>!</li>
+<li>Mi a feladata a szabadonfutó diódának egy relétekercsen?</li>
+<li>A Zener-dióda nyitóirányban úgy viselkedik, mint egy normál
+szilíciumdióda?</li>
+<li>A fenti kapcsolási vázlat alapján mi történik, ha a T1 tranzisztor
+kollektor–emitter átmenete szakad?</li>
+<li>Mi a hiba ebben a gondolatmenetben? „A vezérlőegység kimenetén
+nyugalomban 12 V-ot mértem, kapcsolás után is 12 V-ot, tehát a kimenet
+jól kapcsol.”</li>
+</ol>
+<h3 data-number="27.3.10" id="feladatok"><span
+class="header-section-number">27.3.10</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Magyarázd el, miért véd a sorba
+kötött dióda a fordított polaritás ellen, és mi a fő hátránya a
+nagyteljesítményű körökben.</p>
+<p><strong>2. feladat (A).</strong> Egy LED-es jelzőlámpa LED-je
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>F</mi></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_F=3{,}2\,\text{V}</annotation></semantics></math>
+nyitófeszültségű, üzemi árama
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">15\,\text{mA}</annotation></semantics></math>.
+A járműhálózat legnagyobb üzemi (töltési) feszültsége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">14{,}4\,\text{V}</annotation></semantics></math>.
+Számítsd ki a szükséges előtét-ellenállást és annak minimális
+teljesítményét!</p>
+<p><strong>3. feladat (B).</strong> Egy low-side kapcsolású fűtőbetét
+ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>6</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R=6\,\Omega</annotation></semantics></math>,
+a tápfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>13</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">13{,}5\,\text{V}</annotation></semantics></math>,
+a telítéses tranzisztor feszültségesése
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>C</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{CE(\text{sat})}=0{,}3\,\text{V}</annotation></semantics></math>.
+Számítsd ki a betét áramát és a rajta hővé alakuló teljesítményt!</p>
+<p><strong>4. feladat (B).</strong> Egy PWM-kimenet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">D=0{,}4</annotation></semantics></math>
+kitöltési tényezővel,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>14</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{táp}}=14\,\text{V}</annotation></semantics></math>
+mellett egy ellenállásterhelést kapcsol. Számítsd ki az
+átlagfeszültséget, az effektív feszültséget és az átlagos teljesítményt,
+ha a terhelés ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R=5\,\Omega</annotation></semantics></math>!</p>
+<p><strong>5. feladat (C).</strong> Hasonlítsd össze a low-side és
+high-side kapcsolást abból a szempontból, hogy mi történik, ha a
+fogyasztó test felőli oldalán (vagy a kábelen) testzárlat
+keletkezik.</p>
+<p><strong>6. feladat (D).</strong> Egy relétekercs ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>87</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">87\,\Omega</annotation></semantics></math>,
+a relé tápoldalán gyújtáskapcsolás után
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12{,}4\,\text{V}</annotation></semantics></math>
+mérhető. A vezérlőegység kimeneti kapcsa nyugalomban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12{,}1\,\text{V}</annotation></semantics></math>,
+bekapcsoláskor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">10{,}7\,\text{V}</annotation></semantics></math>.
+A relé nem húz. Elemezd a mérési értékeket, és határozd meg a
+legvalószínűbb hibát, valamint a szükséges további méréseket!</p>
+<h3 data-number="27.3.11" id="megoldások"><span
+class="header-section-number">27.3.11</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li><strong>Igaz.</strong> A low-side fogyasztó egyik vége a tápra,
+másik vége a tranzisztor kollektorára (drainjére) csatlakozik; az
+emitter (source) a testen van.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mi>D</mi><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>25</mn><mo>⋅</mo><mn>12</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=D\,U_{\text{táp}}=0{,}25\cdot 12=3{,}0\,\text{V}</annotation></semantics></math>.</li>
+<li>A szabadonfutó dióda záróirányban párhuzamos a tekercscsel;
+kikapcsoláskor utat ad a tekercs áramának, és levezeti az önindukciós
+feszültségcsúcsot.</li>
+<li><strong>Igaz:</strong> a Zener nyitóirányban hagyományos diódaként
+viselkedik, záróirányban viszont a letörési feszültségénél vezet.</li>
+<li>A K1 relétekercs árama sohasem tud záródni, ezért a relé nem húz be,
+az E1 izzó nem kap tápot a K1 érintkezőjén át.</li>
+<li>A folyamatos
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\,\text{V}</annotation></semantics></math>
+azt jelenti, hogy a low-side tranzisztor <strong>nem</strong> zárja a
+kört a testre; ez a végfok vagy annak vezérlési hibájára utal. A
+kimenetnek kapcsoláskor a test közelébe kellene esnie.</li>
+</ol>
+<p><strong>1. feladat megoldása.</strong> Helyes polaritásnál a dióda
+nyitóirányú, a rajta eső feszültség kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>.
+Fordított polaritásnál a dióda záróirányban van, ezért megakadályozza a
+káros áram kialakulását. Hátránya a folyamatos nyitóirányú
+feszültségesés és az ebből adódó
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mi>U</mi><mi>I</mi></mrow><annotation encoding="application/x-tex">P=UI</annotation></semantics></math>
+melegedés, ami nagy áramú körökben számottevő veszteséget okoz.</p>
+<p><strong>2. feladat megoldása.</strong> Az ellenállásra jutó
+feszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>R</mi></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>4</mn><mo>−</mo><mn>3</mn><mo>,</mo><mn>2</mn><mo>=</mo><mn>11</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_R=14{,}4-3{,}2=11{,}2\,\text{V}.</annotation></semantics></math></p>
+<p>Az ellenállás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mfrac><mrow><mn>11</mn><mo>,</mo><mn>2</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>015</mn></mrow></mfrac><mo>=</mo><mn>747</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">R=\frac{11{,}2}{0{,}015}=747\,\Omega,</annotation></semantics></math></p>
+<p>ami a szabványos
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>750</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">750\,\Omega</annotation></semantics></math>-os
+értékkel közelíthető; ezzel az áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">14{,}9\,\text{mA}</annotation></semantics></math>
+lesz (a névleges
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">15\,\text{mA}</annotation></semantics></math>
+alatt), ami megfelelő. A teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mn>0</mn><mo>,</mo><msup><mn>0149</mn><mn>2</mn></msup><mo>⋅</mo><mn>750</mn><mo>≈</mo><mn>0</mn><mo>,</mo><mn>17</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P=0{,}0149^2\cdot 750\approx 0{,}17\,\text{W}.</annotation></semantics></math></p>
+<p>Legalább
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>25</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">0{,}25\,\text{W}</annotation></semantics></math>-os,
+de inkább
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{W}</annotation></semantics></math>-os
+ellenállást használjunk. ∎</p>
+<p><strong>3. feladat megoldása.</strong> A fűtőbetétre jutó feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>R</mi></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>−</mo><msub><mi>U</mi><mrow><mi>C</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>13</mn><mo>,</mo><mn>5</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>3</mn><mo>=</mo><mn>13</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_R=U_{\text{táp}}-U_{CE(\text{sat})}=13{,}5-0{,}3=13{,}2\,\text{V}</annotation></semantics></math>.
+Az áram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><msub><mi>U</mi><mi>R</mi></msub><mi>R</mi></mfrac><mo>=</mo><mfrac><mrow><mn>13</mn><mo>,</mo><mn>2</mn></mrow><mn>6</mn></mfrac><mo>=</mo><mn>2</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I=\frac{U_R}{R}=\frac{13{,}2}{6}=2{,}2\,\text{A}.</annotation></semantics></math></p>
+<p>A betét teljesítménye:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><msup><mi>I</mi><mn>2</mn></msup><mi>R</mi><mo>=</mo><mn>2</mn><mo>,</mo><msup><mn>2</mn><mn>2</mn></msup><mo>⋅</mo><mn>6</mn><mo>=</mo><mn>29</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P=I^2 R=2{,}2^2\cdot 6=29{,}0\,\text{W}.</annotation></semantics></math></p>
+<p>A tranzisztoron hővé alakuló teljesítmény
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>T</mi></msub><mo>=</mo><msub><mi>U</mi><mrow><mi>C</mi><mi>E</mi></mrow></msub><mo>⋅</mo><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>3</mn><mo>⋅</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>66</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_T=U_{CE}\cdot I=0{,}3\cdot2{,}2=0{,}66\,\text{W}</annotation></semantics></math>,
+ami a kapcsolóüzemi előny: a fogyasztó teljesítménye jóval nagyobb, mint
+a kapcsoló vesztesége. ∎</p>
+<p><strong>4. feladat megoldása.</strong> Az átlagfeszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn><mo>⋅</mo><mn>14</mn><mo>=</mo><mn>5</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=0{,}4\cdot 14=5{,}6\,\text{V}.</annotation></semantics></math></p>
+<p>Az effektív feszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><mn>14</mn><msqrt><mrow><mn>0</mn><mo>,</mo><mn>4</mn></mrow></msqrt><mo>≈</mo><mn>8</mn><mo>,</mo><mn>85</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{eff}}=14\sqrt{0{,}4}\approx 8{,}85\,\text{V}.</annotation></semantics></math></p>
+<p>Az átlagos teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mfrac><mrow><mn>8</mn><mo>,</mo><msup><mn>85</mn><mn>2</mn></msup></mrow><mn>5</mn></mfrac><mo>≈</mo><mn>15</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{átlag}}=\frac{8{,}85^2}{5}\approx 15{,}7\,\text{W}.</annotation></semantics></math></p>
+<p>Ellenőrzés: a csúcsteljesítmény
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>14</mn><mn>2</mn></msup><mi>/</mi><mn>5</mn><mo>=</mo><mn>39</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">14^2/5=39{,}2\,\text{W}</annotation></semantics></math>,
+ezt
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">D=0{,}4</annotation></semantics></math>-gyel
+szorozva
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mo>,</mo><mn>68</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">15{,}68\,\text{W}</annotation></semantics></math>,
+tehát a számítás helyes. ∎</p>
+<p><strong>5. feladat megoldása.</strong> Low-side kapcsolásnál a
+fogyasztó táp felőli oldala mindig a táphoz kötött, a tranzisztor csak a
+test felőli oldalt zárja. Ha a fogyasztó test felőli oldalán vagy annak
+kábelén testzárlat keletkezik, a fogyasztó a tranzisztor nélkül is
+bekapcsolhat. High-side kapcsolásnál a fogyasztó test felőli oldala
+gyárilag testelt, és a tranzisztor a táp felől kapcsol; ha a fogyasztó
+felőli kábel testzárlatos, az áram a védelmen keresztül záródik, és a
+vezérlőegység rövidzárvédelme leállíthatja a végfokot. Ezért a high-side
+kimenet kedvezőbb lehet a testzárlattal szembeni védelemben.</p>
+<p><strong>6. feladat megoldása.</strong> A relétekercs ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>87</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">87\,\Omega</annotation></semantics></math>,
+a tápfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12{,}4\,\text{V}</annotation></semantics></math>.
+Ha a tekercs teljes feszültséget kapna, az áram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mrow><mn>12</mn><mo>,</mo><mn>4</mn></mrow><mn>87</mn></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>143</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I=\frac{12{,}4}{87}\approx 0{,}143\,\text{A}.</annotation></semantics></math></p>
+<p>A mért kimeneti feszültség bekapcsolt állapotban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">10{,}7\,\text{V}</annotation></semantics></math>,
+tehát a tranzisztoron nem a telítéses
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">0{,}2</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>,
+hanem kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">10{,}7\,\text{V}</annotation></semantics></math>
+esik. Ez azt jelenti, hogy a tranzisztor csak részben nyit, vagy a vele
+soros ág nagy ellenállású (szakadt kötés, kontaktushiba). A tekercs
+árama a mért feszültségkülönbségből:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">tekercs</mtext></msub><mo>=</mo><mfrac><mrow><mn>12</mn><mo>,</mo><mn>4</mn><mo>−</mo><mn>10</mn><mo>,</mo><mn>7</mn></mrow><mn>87</mn></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>0195</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>,</mo></mrow><annotation encoding="application/x-tex">I_{\text{tekercs}}=\frac{12{,}4-10{,}7}{87}\approx 0{,}0195\,\text{A},</annotation></semantics></math></p>
+<p>ami túl kicsi a relé behúzásához. A legvalószínűbb hiba a vezérlő
+bázisjelének hiánya/gyengesége, a tranzisztor nem telített állapota,
+vagy a kimenet és a test közötti nagy ellenállású kontaktus. Tovább kell
+mérni a tranzisztor bázisának vezérlőjelét, a testcsatlakozást és a
+vezérlőegység csatlakozóját, valamint a kimeneti kapocs érintkezését.
+∎</p>
+<h3 data-number="27.3.12" id="rövid-összefoglaló"><span
+class="header-section-number">27.3.12</span> Rövid összefoglaló</h3>
+<p>A jármű elektronikus rendszereinek kapcsolási rajzain a dióda
+elsősorban egyenirányításra, szabadonfutó védelemre és
+polaritásvédelemre szolgál. A Zener-dióda a letörési feszültségénél
+feszültséget korlátoz. A tranzisztor a vezérlőegységekben általában
+kapcsolóüzemben dolgozik: low-side típusnál a fogyasztó után, high-side
+típusnál a fogyasztó előtt szakítja meg az áramkört. A PWM-vezérlés a
+bekapcsolási hányaddal átlagol:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mi>D</mi><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=D\,U_{\text{táp}}</annotation></semantics></math>,
+ellenállásterhelésnél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><msqrt><mi>D</mi></msqrt></mrow><annotation encoding="application/x-tex">U_{\text{eff}}=U_{\text{táp}}\sqrt{D}</annotation></semantics></math>.
+A vezérlőegységek bemenetei felhúzó ellenállással, feszültségosztóval és
+referenciafeszültséggel dolgoznak, kimeneteik pedig relét, low-side vagy
+high-side tranzisztort, illetve PWM jelet vezérelhetnek.
+<strong>Továbbvitt eredmény.</strong> A be- és kimeneti fokozatok
+felismerése a(z) <a href="au108.html">Egyéb fogyasztók,
+komfortelektronika és rádiózavar-szűrés</a>, a(z) <a href="au111.html">A
+motorirányítás alapjai</a> és a(z) <a
+href="au114.html">Adatbusz-hálózatok: CAN, LIN, FlexRay, MOST és
+Ethernet</a> alfejezetekben szükséges. A méréseket mindig a gyártói
+kapcsolási rajz és javítási utasítás szerint végezzük; a vezérlőegység
+kimeneteit tilos rövidre zárni.</p>
+<h3 data-number="27.3.13" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">27.3.13</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: félvezető-gyártói adatlapok (dióda nyitófeszültség,
+Zener-letörési feszültség, tranzisztor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>C</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">U_{CE(\text{sat})}</annotation></semantics></math>
+és kapcsolási idők), járműgyártói kapcsolási rajzok és javítási
+utasítások, MSZ EN 60617 / IEC 60617 szerinti rajzjelek, DIN 72552
+szerinti kapocsjelölések. A fejezetben szereplő konkrét
+feszültségértékek (LED nyitófeszültség, Zener-küszöb, telítési
+feszültség) és a PWM-példák <strong>tanulási példák</strong>; a
+tényleges értékek az adott alkatrész és jármű gyártói adatai szerint
+ellenőrizendők. Az ECU be- és kimeneti fokozatainak felépítése
+típusonként eltérhet; az ellenőrzési igényt a szövegben jeleztem.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au099.html">← 27.2 Vezetékek, csatlakozók, biztosítók, relék és fénykábelek</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au101.html">28.1 Az indítóakkumulátor: felépítés, jellemzők, kiválasztás és töltés →</a></div>
+</nav>
+</body>
+</html>

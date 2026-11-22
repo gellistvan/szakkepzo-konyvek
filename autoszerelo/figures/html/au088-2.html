@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gyűrődési zóna – energia, átlagerő, lassulás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="m">Tömeg m</label><input id="m" type="range" min="800" max="2500" step="50" value="1400" aria-label="Tömeg m"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="vk">Ütközési sebesség v</label><input id="vk" type="range" min="10" max="100" step="5" value="50" aria-label="Ütközési sebesség v"><output id="vk_o" for="vk"></output></div>
+<div class="row"><label for="s">Gyűrődési út s</label><input id="s" type="range" min="0.2" max="1.0" step="0.05" value="0.6" aria-label="Gyűrődési út s"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="dbl">Kétszeres sebesség</label><input id="dbl" type="checkbox" aria-label="Kétszeres sebesség"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 260" role="img" aria-label="Ütközési energia, átlagerő és átlagos lassulás a tömeg, a sebesség és a gyűrődési út függvényében"></svg>
+<p class="small">Ellenőrző eset (a fejezet példája): 1400 kg, 50 km/h, 0,6 m → 135 kJ, 225 kN, ≈161 m/s² (≈16 g). Egyenletes lassulást és teljes energiaelnyelést feltételező közelítés; az utasra jutó lassulást az öv és a légzsák külön módosítja. Tanulási példa, a valós gyűrődési hossz gyártói adat (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m":"kg", "vk":"km/h", "s":"m"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const vk=v.vk*(v.dbl?2:1), ms=vk/3.6, W=0.5*v.m*ms*ms, F=W/v.s, a=ms*ms/(2*v.s), g=a/9.81;
+const W1=0.5*v.m*Math.pow(v.vk/3.6,2);
+// oszlopok: W (kJ) és F (kN) – közös skála 1 egység = 1
+const mx=Math.max(1500,F/1000*1.1), Y=u=>220-180*u/mx;
+[[W/1000,"W = "+fmt(W/1000,0)+" kJ",120,""],[F/1000,"F átlag = "+fmt(F/1000,0)+" kN",300,"6 3"]].forEach(([u,t,x,d])=>{
+  el("rect",{x:x,y:Y(u),width:110,height:220-Y(u),fill:"#d9d9d9",stroke:css("--line"),"stroke-dasharray":d});
+  el("text",{x:x+55,y:Y(u)-6,"text-anchor":"middle","font-size":13,"font-weight":"bold"},t);});
+el("line",{x1:80,y1:220,x2:520,y2:220,stroke:css("--line")});
+el("text",{x:280,y:244,"text-anchor":"middle","font-size":12},"átlagos lassulás: "+fmt(a,0)+" m/s² ≈ "+fmt(g,1)+" g");
+status("v = "+fmt(vk,0)+" km/h = "+fmt(ms,2)+" m/s → <b>W = "+fmt(W/1000,1)+" kJ</b>, <b>F<sub>átlag</sub> = W/s = "+fmt(F/1000,1)+" kN</b>, "+
+ "<b>a = v²/(2s) = "+fmt(a,0)+" m/s²</b> ("+fmt(g,1)+" g)."+(v.dbl?"<br>Kétszeres sebességnél az energia a "+fmt(W1/1000,1)+" kJ-nak a <b>négyszerese</b>.":""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

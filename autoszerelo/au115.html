@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>32.2 Buszhibák és az adatbusz-hálózatok diagnosztikája –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Gépjármű-villamosság és -elektronika</a> › <a href="index.html#auch31">32 Adatbuszok és vezetőtámogató rendszerek</a></p>
+<div class="links"><a class="prev" rel="prev" href="au114.html">← 32.1 Adatbusz-hálózatok: CAN, LIN, FlexRay, MOST és Ethernet</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au116.html">32.3 Vezetőtámogató rendszerek és kalibrálásuk →</a></div>
+</nav>
+<h2 data-number="32.2" id="au115"><span
+class="header-section-number">32.2</span> Buszhibák és az
+adatbusz-hálózatok diagnosztikája</h2>
+<h3 data-number="32.2.1" id="motiváció"><span
+class="header-section-number">32.2.1</span> Motiváció</h3>
+<p>Egy autó úgy érkezik a műhelybe, hogy az ABS-lámpa ég, a motorvezérlő
+hibakódjai között pedig az U0121 kód olvasható: „nincs kommunikáció az
+ABS/ESP vezérlővel”. A jármű motorja jár, a teszter mégis csak néhány
+vezérlővel tud kapcsolatot felépíteni. Ilyenkor a szerelő nem cserélheti
+ki azonnal az ABS-vezérlőt; előbb azt kell eldöntenie, hogy maga a
+vezérlő hibás, vagy a hozzá tartozó adatbusz-vonal szakadt meg,
+zárlatos, esetleg egy csatlakozó korrodált. Ebben az alfejezetben a
+leggyakoribb CAN-buszhibákat, azok multiméteres és oszcilloszkópos
+mérését, valamint a hálózati hibakódok értelmezését tanuljuk meg.</p>
+<h3 data-number="32.2.2"
+id="szemléletes-kép-két-vezérlő-két-lezáró-ellenállás"><span
+class="header-section-number">32.2.2</span> Szemléletes kép: két
+vezérlő, két lezáró ellenállás</h3>
+<p>A buszhálózatot két lezáró ellenállással rendelkező, közös
+kétvezetékes adatcsatornának érdemes elképzelni. A következő kapcsolási
+rajz két vezérlőt (ECU1, ECU2), valamint a busz két végén elhelyezett
+lezáró ellenállásokat mutatja:</p>
+<figure>
+<img src="assets/au115-diagram-1.png"
+alt="CAN busz két vezérlővel és két lezáró ellenállással - Szemléltető kapcsolási rajz, nem gyártói áramútrajz. Az R1 és R2 lezáró ellenállás a busz két legszélső pontján van; a vezérlők (ECU 1, ECU 2) a kettő között csatlakoznak. A lezáró ellenállások értéke jellemzően 120 Ω, de a tényleges érték és hely (külön ellenállás vagy ECU-n belül) a gyártói specifikáció szerint ellenőrizendő." />
+<figcaption aria-hidden="true">CAN busz két vezérlővel és két lezáró
+ellenállással - Szemléltető kapcsolási rajz, nem gyártói áramútrajz. Az
+R1 és R2 lezáró ellenállás a busz két legszélső pontján van; a vezérlők
+(ECU 1, ECU 2) a kettő között csatlakoznak. A lezáró ellenállások értéke
+jellemzően 120 Ω, de a tényleges érték és hely (külön ellenállás vagy
+ECU-n belül) a gyártói specifikáció szerint ellenőrizendő.</figcaption>
+</figure>
+<p>Az ábrán a CAN-H és a CAN-L vezeték párhuzamosan fut. Az R1 és R2
+lezáró ellenállások a busz végein a CAN-H és a CAN-L közé vannak kötve,
+hogy a nagysebességű jelváltozások ne verődjenek vissza a
+vezetékvégekről. A diagnosztikai csatlakozón (DLC) jellemzően a CAN-H a
+6-os, a CAN-L a 14-es kapocshoz tartozik, de ez gyártófüggő lehet
+<strong>(ellenőrizendő: a gyártói kapcsolási rajz szerint)</strong>.</p>
+<p>Az oszcilloszkópon egészséges busz esetén a két jel tükörképszerűen
+változik:</p>
+<figure>
+<img src="assets/au115-plot-1.png"
+alt="CAN-H és CAN-L jelalak egy szemléltető bitsorozatnál - Szemléltető, nem mért jelalak; a feszültségszintek típusfüggők (ellenőrizendő: gyártói adat)." />
+<figcaption aria-hidden="true">CAN-H és CAN-L jelalak egy szemléltető
+bitsorozatnál - Szemléltető, nem mért jelalak; a feszültségszintek
+típusfüggők (ellenőrizendő: gyártói adat).</figcaption>
+</figure>
+<p>Az ábrán a nyugalmi (recesszív) szinten mindkét vonal körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>-on
+van. Amikor egy adó domináns bitet küld, a CAN-H körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">3{,}5\,\text{V}</annotation></semantics></math>-ra
+emelkedik, a CAN-L pedig körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">1{,}5\,\text{V}</annotation></semantics></math>-ra
+süllyed.</p>
+<h3 data-number="32.2.3" id="definíciók-és-összefüggések"><span
+class="header-section-number">32.2.3</span> Definíciók és
+összefüggések</h3>
+<p><strong>Definíció. Domináns és recesszív bitszint.</strong> A
+nagysebességű CAN-hálózaton a busznak két logikai állapota van.
+Recesszív állapotban (logikai 1) a CAN-H és a CAN-L feszültsége közel
+azonos, jellemzően egyaránt körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>.
+Domináns állapotban (logikai 0) a CAN-H és a CAN-L eltávolodik
+egymástól: jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>≈</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-H}} \approx 3{,}5\,\text{V}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub><mo>≈</mo><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-L}} \approx 1{,}5\,\text{V}</annotation></semantics></math>
+<strong>(ellenőrizendő: a járműtípus és a CAN-szabvány
+szerint)</strong>.</p>
+<p><strong>Összefüggés. Differenciális feszültség.</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub></mrow><annotation encoding="application/x-tex">
+U_{\text{diff}} = U_{\text{CAN-H}} - U_{\text{CAN-L}}
+</annotation></semantics></math></p>
+<p>Egészséges domináns bitnél:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>≈</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{diff}} \approx 3{,}5\,\text{V} - 1{,}5\,\text{V} = 2{,}0\,\text{V}
+</annotation></semantics></math></p>
+<p>Recesszív bitnél:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>≈</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{diff}} \approx 2{,}5\,\text{V} - 2{,}5\,\text{V} = 0\,\text{V}
+</annotation></semantics></math></p>
+<p>A vevő nem az egyes vezetékek földhöz viszonyított feszültségét,
+hanem ezt a különbséget érzékeli. Ezért a CAN kevésbé érzékeny a közös
+módusú zavarokra, amelyek mindkét vezetéket egyszerre emelik vagy
+süllyesztik.</p>
+<p><strong>Összefüggés. Lezáró ellenállások párhuzamos eredője.</strong>
+Ha a busz mindkét végén
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+lezáró ellenállás van, akkor a diagnosztikai csatlakozón CAN-H és CAN-L
+között mérhető eredő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">mért</mtext></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mn>1</mn></msub><msub><mi>R</mi><mn>2</mn></msub></mrow><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>120</mn><mo>⋅</mo><mn>120</mn></mrow><mrow><mn>120</mn><mo>+</mo><mn>120</mn></mrow></mfrac><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">
+R_{\text{mért}} = \frac{R_1 R_2}{R_1 + R_2} = \frac{120 \cdot 120}{120 + 120} = 60\,\Omega
+</annotation></semantics></math></p>
+<p>Ha az egyik lezáró ellenállás kiesik vagy a hozzá vezető szakasz
+szakadt, akkor a mérés körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+lesz. Ha a CAN-H és a CAN-L rövidre zár, a mérés közel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">0\,\Omega</annotation></semantics></math>.</p>
+<h3 data-number="32.2.4" id="meghibásodások-a-buszvonalakon"><span
+class="header-section-number">32.2.4</span> Meghibásodások a
+buszvonalakon</h3>
+<p>A buszhálózat hibái ritkán az elektronika belsejéből indulnak;
+gyakrabban a vezeték, a csatlakozó vagy az illesztés hibásodik meg.</p>
+<h4 data-number="32.2.4.1" id="szakadás"><span
+class="header-section-number">32.2.4.1</span> Szakadás</h4>
+<p>A CAN-H vagy CAN-L vezeték szakadása miatt az érintett vezérlő nem
+tud kommunikálni, vagy csak időszakosan kommunikál. A szakadás lehet
+teljes, amikor a vezeték két vége fizikailag eltávolodik, vagy
+bizonytalan szakadás, amikor a vezeték mozgatás hatására néha
+érintkezik. A teszter gyakran „nincs kommunikáció” vagy „bus off”
+jellegű hibát mutat.</p>
+<h4 data-number="32.2.4.2" id="can-h-és-can-l-közötti-rövidzár"><span
+class="header-section-number">32.2.4.2</span> CAN-H és CAN-L közötti
+rövidzár</h4>
+<p>Ha a két buszvezeték egymáshoz ér, az oszcilloszkópon a
+differenciális jel eltűnik, mert a CAN-H és a CAN-L feszültsége közel
+azonos lesz. A vonalak egymással való zárlata gyakran sérült szigetelés,
+becsípődött kábel vagy átázott csatlakozó következménye.</p>
+<h4 data-number="32.2.4.3" id="testzárlat-és-tápzárlat"><span
+class="header-section-number">32.2.4.3</span> Testzárlat és
+tápzárlat</h4>
+<p>Testzárlat esetén az egyik buszvezeték a testre, vagyis a jármű
+földpotenciáljára záródik. Ha például a CAN-H testzárlatos, akkor az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><annotation encoding="application/x-tex">U_{\text{CAN-H}}</annotation></semantics></math>
+gyakorlatilag
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0\,\text{V}</annotation></semantics></math>
+körül marad, így a differenciális jel deformálódik. Tápzárlatnál a
+vezeték a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\,\text{V}</annotation></semantics></math>-os
+fedélzeti hálózatra záródik; ekkor az adott vonal állandóan magas
+feszültségen lehet, és a vevők nem tudják értelmezni a kereteket.</p>
+<h4 data-number="32.2.4.4" id="nedvesség-és-korrózió"><span
+class="header-section-number">32.2.4.4</span> Nedvesség és korrózió</h4>
+<p>A járműkülső területeken, például a kerékjáratban, az alvázon vagy az
+ajtóban futó csatlakozókba nedvesség juthat. A korrózió megnöveli az
+átmeneti ellenállást, félvezető jellegű utat képezhet a buszvezetékek és
+a test között, és időszakos hibákat okoz. Gyakori jel a zöldes, fehér
+oxidréteg és a felpuhult, megbarnult szigetelés.</p>
+<h4 data-number="32.2.4.5" id="lezárási-hiba"><span
+class="header-section-number">32.2.4.5</span> Lezárási hiba</h4>
+<p>Ha a lezáró ellenállás hiányzik, az adatkeretek visszaverődhetnek,
+ezért a kommunikáció időnként vagy folyamatosan hibás lehet. Ha pedig a
+buszon a szükséges kettőnél több lezáró ellenállás kerül valahova, az
+eredő ellenállás túl kicsi lesz, és a busz szintjei is torzulhatnak.</p>
+<h3 data-number="32.2.5"
+id="mérés-multiméterrel-és-oszcilloszkóppal"><span
+class="header-section-number">32.2.5</span> Mérés multiméterrel és
+oszcilloszkóppal</h3>
+<p><strong>Figyelem.</strong> A lezáró ellenállást, a
+vezetékfolytonosságot és a zárlatokat csak feszültségmentes állapotban
+mérjük! A feszültség alatt lévő busz ellenállásmérése hamis értéket
+adhat, és a multimétert is károsíthatja. A mérés előtt a gyújtást
+kapcsoljuk ki, az akkumulátort a gyártói előírás szerint kössük le, és
+várjuk meg a gyártó által megadott kondenzátorkisülési időt
+<strong>(ellenőrizendő: gyártói előírás)</strong>.</p>
+<h4 data-number="32.2.5.1" id="lezáró-ellenállás-mérése"><span
+class="header-section-number">32.2.5.1</span> Lezáró ellenállás
+mérése</h4>
+<p>A diagnosztikai csatlakozón a CAN-H és a CAN-L között mérünk.
+Egészséges, két darab
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+lezáró ellenállást tartalmazó buszon a mért érték körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>.
+A mérés önmagában nem bizonyítja, hogy a busz minden vezérlővel
+kommunikál, de gyorsan kimutatja a súlyos lezárási hibát, a CAN-H/CAN-L
+zárlatot és a teljes szakadást.</p>
+<h4 data-number="32.2.5.2" id="nyugalmi-feszültségek"><span
+class="header-section-number">32.2.5.2</span> Nyugalmi feszültségek</h4>
+<p>Ha a multimétert feszültségmérésre kapcsoljuk, és a busz nyugalomban
+van, a CAN-H és a CAN-L is körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>
+közelében lehet. Aktív kommunikáció közben a váltakozó jel miatt a
+digitális multiméter átlagértéket vagy zavart értéket mutathat, ezért a
+busz állapotát a nyugalmi feszültségmérésből csak korlátozottan szabad
+megítélni. Ha például az egyik vezetéken tartósan
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0\,\text{V}</annotation></semantics></math>
+mérhető, testzárlatra, ha tartósan
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\,\text{V}</annotation></semantics></math>
+közeli feszültség, tápzárlatra gyanakodhatunk.</p>
+<h4 data-number="32.2.5.3" id="oszcilloszkópos-jelalak"><span
+class="header-section-number">32.2.5.3</span> Oszcilloszkópos
+jelalak</h4>
+<p>A pontosabb vizsgálathoz kétcsatornás oszcilloszkópot használunk. Az
+egyik csatornát a CAN-H-ra, a másikat a CAN-L-re kötjük, és a készülék
+matematikai funkciójával képezzük az A−B különbséget. Egészséges buszon
+a következő képet várjuk:</p>
+<ul>
+<li>recesszív szinten mindkét jel körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>;</li>
+<li>domináns bitnél a CAN-H felfelé, a CAN-L lefelé mozdul;</li>
+<li>a differenciális jel domináns csúcsa körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2\,\text{V}</annotation></semantics></math>;</li>
+<li>a jel éles, szabályos, nincs erős csengetés vagy lassú, ferde
+él.</li>
+</ul>
+<p>A tipikus buszhibák jelképét az ép jellel összevetve mutatja a
+következő ábra; minden panel alatt a feszültségmentesen mért CAN-H–CAN-L
+ellenállás várható értéke is szerepel (a fenti táblázattal
+egyezően).</p>
+<figure id="fig-au115-1">
+<div class="fig-interactive"><iframe src="figures/html/au115-1.html" title="Ép CAN-jel és öt tipikus buszhiba oszcilloszkópos képe." loading="lazy" style="width:100%;border:0;height:480px"></iframe><noscript><img src="figures/img/au115-1.png" style="width:90.0%"
+alt="Ép CAN-jel és öt tipikus buszhiba oszcilloszkópos képe." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au115-1.png" style="width:90.0%"
+alt="Ép CAN-jel és öt tipikus buszhiba oszcilloszkópos képe." /></details></div>
+<figcaption>Ép CAN-jel és öt tipikus buszhiba szemléltető
+oszcilloszkópos képe (CAN-H folytonos, CAN-L szaggatott vonal): H–L
+zárlatnál nincs domináns szint, CAN-H testzárlatnál a CAN-H ≈ 0 V, CAN-L
+tápzárlatnál a CAN-L ≈ 12 V, hiányzó lezárásnál csengetés az éleken,
+korróziónál lekerekített élek (képletből számolt, nem mért
+jelek)</figcaption>
+</figure>
+<p>Az interaktív változatban a hibafajta választható, és a különbségi
+(A−B) jel is bekapcsolható; a jel mellett a várható ellenállásérték is
+megjelenik.</p>
+<p>Az alábbi táblázat a gyakori lezárási mérési eredményeket foglalja
+össze.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mért ellenállás CAN-H–CAN-L között</th>
+<th>Lehetséges állapot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kb. 60 Ω</td>
+<td>Egészséges busz két 120 Ω-os lezáróval</td>
+</tr>
+<tr>
+<td>kb. 120 Ω</td>
+<td>Egy lezáró vagy az ahhoz vezető szakasz hiányzik</td>
+</tr>
+<tr>
+<td>kb. 0 Ω</td>
+<td>CAN-H és CAN-L közötti rövidzár</td>
+</tr>
+<tr>
+<td>végtelen vagy nagyon nagy</td>
+<td>Mindkét lezáró hiánya, vagy teljes buszszakadás</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: a gyártói adat és a
+tényleges hálózati topológia).</p>
+<h3 data-number="32.2.6"
+id="hálózati-hibakódok-alvó-üzem-nyugalmi-áram-és-ébresztés"><span
+class="header-section-number">32.2.6</span> Hálózati hibakódok, alvó
+üzem, nyugalmi áram és ébresztés</h3>
+<p><strong>Előírás.</strong> A fedélzeti diagnosztika hibakódjainak
+formátuma az ISO 15031 szabványsorozaton és az OBD-re vonatkozó
+nemzetközi DTC-megállapodáson alapul <strong>(ellenőrizendő: a hatályos
+ISO 15031 / SAE J2012 kiadás)</strong>. A hálózati hibákat a kód első
+karaktere, az „U” jelöli. A pontos kódértelmezést mindig a gyártói
+diagnosztikai adatbázis vagy a rendszerteszter súgója adja.</p>
+<table>
+<thead>
+<tr>
+<th>Példa U-kód</th>
+<th>Jelentés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U0001</td>
+<td>CAN busz alapvető kommunikációs hiba</td>
+</tr>
+<tr>
+<td>U0100</td>
+<td>Nincs kommunikáció a motorvezérlővel</td>
+</tr>
+<tr>
+<td>U0121</td>
+<td>Nincs kommunikáció az ABS/ESP vezérlővel</td>
+</tr>
+<tr>
+<td>U0140</td>
+<td>Nincs kommunikáció a karosszériavezérlővel</td>
+</tr>
+</tbody>
+</table>
+<p>A kódok tanulási példák; a pontos járműspecifikus értelmezés
+ellenőrizendő a gyártói diagnosztikai utasításban.</p>
+<p>Az U-kódok csak a tünetet mutatják, nem az okot. Az U0121 például azt
+jelenti, hogy az ABS-vezérlő nem válaszol a hálózaton, de nem mondja
+meg, hogy a tápegysége hiányzik, a buszvezetéke szakadt, vagy maga a
+vezérlő hibás.</p>
+<p><strong>Szabály. Alvó üzem és nyugalmi áram.</strong> A jármű
+lezárása után a vezérlők egy része nem kapcsol ki azonnal. A biztonsági
+és komfortrendszerek meghatározott ideig éberek maradnak, majd a
+hálózatmenedzsment alvó üzembe küldi őket. A busz alvó állapotában a
+jármű nyugalmi árama a gyártói határ alá csökken; jellemző célértékként
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>30</mn><annotation encoding="application/x-tex">30</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">40\,\text{mA}</annotation></semantics></math>
+alatti áram szerepel, de ez típusfüggő <strong>(ellenőrizendő: a gyártói
+karbantartási adat)</strong>. Ha például egy vezérlő nem alszik el, mert
+épített ébresztőjele miatt folyamatosan kommunikál, a nyugalmi áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>180</mn><annotation encoding="application/x-tex">180</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>250</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">250\,\text{mA}</annotation></semantics></math>
+lehet, és az akkumulátor néhány nap alatt lemerül.</p>
+<p><strong>Ébresztés.</strong> A fedélzeti hálózatot gyújtásráadás,
+ajtónyitás, távirányító, ülésfoglalás-érzékelő vagy más buszüzenet
+ébresztheti fel. Az ébresztés diagnosztikájában azt vizsgáljuk, hogy az
+alvó jármű nyugalmi árama indokolt, vagy egy hibás vezérlő tartja ébren
+a hálózatot.</p>
+<h3 data-number="32.2.7"
+id="hibakeresési-algoritmus-vezérlők-leválasztása-csillagpont-csatlakozó-vizsgálat"><span
+class="header-section-number">32.2.7</span> Hibakeresési algoritmus:
+vezérlők leválasztása, csillagpont, csatlakozó-vizsgálat</h3>
+<p>A hálózati hiba behatárolásának általános lánca a következő:</p>
+<ol type="1">
+<li>Olvassuk ki az összes hibakódot minden vezérlőből, és jegyezzük fel,
+mely vezérlők nem válaszolnak.</li>
+<li>Ellenőrizzük az érintett vezérlő tápfeszültségét, testpontját és
+biztosítékait.</li>
+<li>Mérjük meg a busz lezáró ellenállását feszültségmentes
+állapotban.</li>
+<li>Vizsgáljuk meg a busz nyugalmi feszültségeit és az oszcilloszkópos
+jelalakot.</li>
+<li>Ha a hiba továbbra is fennáll, nézzük meg a csatlakozókat, a
+vezetékek külső sérüléseit és a gyári hálózati topológiát.</li>
+<li>Csillagpontos vagy átjáró (gateway) hálózaton először azt állapítsuk
+meg, hogy az adott buszág önállóan hibás-e, vagy a közös átjáróhoz
+tartozó több ág is érintett.</li>
+<li>Vezérlőnként bontsuk le egyenként az érintett buszág résztvevőit, és
+minden leválasztás után ismételjük meg a mérést. A leválasztás új
+hibakódokat írhat be, ezért a javítás végén törölni kell a hibakódokat,
+és újra kell olvasni a vezérlőket.</li>
+<li>A megtalált hibás vezetéket vagy csatlakozót a gyártói javítási
+útmutató szerint javítsuk, majd ellenőrizzük a nyugalmi áramot, a
+hibakód-mentességet és a kommunikációt.</li>
+</ol>
+<h3 data-number="32.2.8" id="kidolgozott-példák"><span
+class="header-section-number">32.2.8</span> Kidolgozott példák</h3>
+<h4 data-number="32.2.8.1"
+id="példa-lezáró-ellenállás-értelmezése"><span
+class="header-section-number">32.2.8.1</span> 1. példa: lezáró
+ellenállás értelmezése</h4>
+<p><strong>Számítás.</strong> Egy nagysebességű CAN-buszon két darab
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+lezáró ellenállás van, ahogyan a kapcsolási rajz is mutatja. A
+diagnosztikai csatlakozón CAN-H és CAN-L között mért eredő
+ellenállás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">mért</mtext></msub><mo>=</mo><mfrac><mrow><mn>120</mn><mo>⋅</mo><mn>120</mn></mrow><mrow><mn>120</mn><mo>+</mo><mn>120</mn></mrow></mfrac><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">
+R_{\text{mért}} = \frac{120 \cdot 120}{120 + 120} = 60\,\Omega
+</annotation></semantics></math></p>
+<p>Ha a mérés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+körüli értéket ad, az arra utal, hogy a két lezáró közül csak az egyik
+vesz részt az áramkörben. Ha a mérés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">0\,\Omega</annotation></semantics></math>
+közeli, a CAN-H és a CAN-L vezeték egymással rövidrezárt.</p>
+<h4 data-number="32.2.8.2"
+id="példa-differenciális-feszültség-számítása"><span
+class="header-section-number">32.2.8.2</span> 2. példa: differenciális
+feszültség számítása</h4>
+<p><strong>Számítás.</strong> Az oszcilloszkóp egy adott pillanatban a
+következő feszültségeket mutatja:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-H}} = 3{,}6\,\text{V}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub><mo>=</mo><mn>1</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-L}} = 1{,}4\,\text{V}</annotation></semantics></math>.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>1</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{diff}} = 3{,}6\,\text{V} - 1{,}4\,\text{V} = 2{,}2\,\text{V}
+</annotation></semantics></math></p>
+<p>Ez domináns bitként értelmezhető. Ha egy későbbi pillanatban mindkét
+vezeték
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>-ot
+mutat, akkor a differenciális feszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{diff}} = 2{,}5\,\text{V} - 2{,}5\,\text{V} = 0\,\text{V}
+</annotation></semantics></math></p>
+<p>ez recesszív állapot.</p>
+<h4 data-number="32.2.8.3"
+id="példa-nyugalmi-áram-és-akkumulátor-lemerülés"><span
+class="header-section-number">32.2.8.3</span> 3. példa: nyugalmi áram és
+akkumulátor-lemerülés</h4>
+<p><strong>Számítás.</strong> Egy jármű gyári nyugalmi áram-határa
+legyen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">40\,\text{mA}</annotation></semantics></math>,
+a beépített akkumulátor kapacitása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>70</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">70\,\text{Ah}</annotation></semantics></math>.
+Tegyük fel, hogy egy hibás vezérlő miatt a mért nyugalmi áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">200\,\text{mA}</annotation></semantics></math>,
+vagyis
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">0{,}20\,\text{A}</annotation></semantics></math>.
+Ha az akkumulátor a hasznos kapacitásának feléig engedhető le, akkor a
+rendelkezésre álló töltésmennyiség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mtext mathvariant="normal">felhasználható</mtext></msub><mo>≈</mo><mn>70</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo>=</mo><mn>35</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">
+C_{\text{felhasználható}} \approx 70\,\text{Ah} \cdot 0{,}5 = 35\,\text{Ah}
+</annotation></semantics></math></p>
+<p>A merülési idő hozzávetőlegesen:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mn>35</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><mrow><mn>0</mn><mo>,</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mn>175</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>7</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">nap</mtext></mrow><annotation encoding="application/x-tex">
+t = \frac{35\,\text{Ah}}{0{,}20\,\text{A}} = 175\,\text{h} \approx 7{,}3\,\text{nap}
+</annotation></semantics></math></p>
+<p>Ha a jármű valódi nyugalmi árama a gyári határon belül, például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">40\,\text{mA}</annotation></semantics></math>
+lenne, akkor:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mn>35</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><mrow><mn>0</mn><mo>,</mo><mn>040</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mn>875</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>36</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">nap</mtext></mrow><annotation encoding="application/x-tex">
+t = \frac{35\,\text{Ah}}{0{,}040\,\text{A}} = 875\,\text{h} \approx 36\,\text{nap}
+</annotation></semantics></math></p>
+<p>Ez szemlélteti, miért okozhat egyetlen éber vezérlő néhány nap alatt
+lemerült akkumulátort. A számítás erős egyszerűsítés; a tényleges
+merülési időt a hőmérséklet, az akkumulátor öregedése és a rendszeres
+indítások is befolyásolják.</p>
+<h3 data-number="32.2.9" id="minőségellenőrzés"><span
+class="header-section-number">32.2.9</span> Minőségellenőrzés</h3>
+<p>A buszjavítás minőségét csak többlépéses ellenőrzéssel szabad
+elfogadni.</p>
+<p><strong>Ellenőrzőlista buszjavítás után</strong></p>
+<ul>
+<li>A gyújtás bekapcsolása után a rendszerteszter minden korábban nem
+válaszoló vezérlőt elér.</li>
+<li>A hibakódok törölhetők, és próbaút után nem térnek vissza.</li>
+<li>A CAN-H–CAN-L lezáró ellenállás a gyártói adat szerinti tartományban
+van, feszültségmentes állapotban mérve.</li>
+<li>Az oszcilloszkópos jelalak éles, a domináns és recesszív szintek a
+gyártói tűrésen belül vannak.</li>
+<li>A sérült csatlakozó tisztítása vagy cseréje után nincs zöld oxid, a
+tömítőelemek vissza vannak szerelve.</li>
+<li>Az alvó üzem után a nyugalmi áram a gyártói határ alatt van.</li>
+<li>A javítás dokumentálva van, a hibakódok és a mérési értékek a
+munkalapon szerepelnek.</li>
+</ul>
+<h3 data-number="32.2.10" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">32.2.10</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Ügyfélpanasz.</strong> Egy dízel személyautó
+ABS-visszajelzője menet közben kigyulladt, és a teszter az U0121 kódot
+tárolta: nincs kommunikáció az ABS/ESP vezérlővel. A motorvezérlővel a
+teszter tudott kommunikálni, tehát a diagnosztikai műszer és a DLC
+alapműködése rendben volt.</p>
+<p><strong>Vizsgálat.</strong> A szerelő először az ABS-vezérlő
+biztosítékait, tápfeszültségét és testpontját ellenőrizte; ezek rendben
+voltak. Feszültségmentesítés után a DLC-n CAN-H és CAN-L között
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>
+körüli ellenállást mért, ezért a lezáró ellenállásokkal nem volt gond. A
+gyújtás ráadása után a multiméter a CAN-L vonalon gyanúsan alacsony,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">1{,}2\,\text{V}</annotation></semantics></math>
+körüli feszültséget mutatott. Oszcilloszkópon a CAN-L jel nem a várt
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">1{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>
+között mozgott, hanem erősen zajos volt, és a busz időnként
+hibakereteket küldött.</p>
+<p><strong>Ok.</strong> A bal első kerékjárat mögött futó kábelköteg
+egyik gumitömítése sérült volt, a csatlakozóba nedvesség jutott. A CAN-L
+érintkezőn zöld korróziós réteg képződött, ami időszakos testzárlatot
+okozott. A hiba hőmérséklet- és rázkódásfüggő volt, ezért csak időnként
+jelentkezett.</p>
+<p><strong>Javítás és ellenőrzés.</strong> A szerelő a gyártói javítási
+utasítás szerint kicserélte a sérült csatlakozóházat és a CAN-L
+javítóvezetéket, majd visszaállította a kábelköteg tömítését. A javítás
+után az oszcilloszkópos jelalak tiszta lett, az U0121 kód törölhető
+volt, és próbaút után nem tért vissza. A nyugalmi áram alvó üzemben a
+gyári határon belül maradt.</p>
+<h3 data-number="32.2.11"
+id="gyakorlati-útmutató-can-buszhiba-behatárolása"><span
+class="header-section-number">32.2.11</span> Gyakorlati útmutató:
+CAN-buszhiba behatárolása</h3>
+<p><strong>Cél:</strong> A nem kommunikáló vezérlő hátterének
+behatárolása anélkül, hogy alkatrészt cserélnénk találomra.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> Alvázszám, motorszám,
+modellév, felszereltség, gyártói diagnosztikai utasítás és aktuális
+kapcsolási rajz.</p>
+<p><strong>Szerszámok, mérőeszközök, anyagok:</strong> Multiméter CAT
+III besorolással, kétcsatornás oszcilloszkóp megfelelő szondákkal,
+rendszerteszter, gyártói javítóhuzal és vízzáró hüvely,
+csatlakozótisztító, hőzsugor cső, kéziszerszámok, munkalap.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák. A mérést
+feszültségmentes állapotban és a gyártói óvintézkedések szerint
+végezzük. Nagyfeszültségű (HV) járművön előbb a HV-feszültségmentesítést
+csak arra kiképzett, jogosult személy végezheti el.</p>
+<p><strong>Környezetvédelem.</strong> A csatlakozótisztítóból és a
+sérült vezetékdarabokból származó hulladékot az anyagbiztonsági adatlap
+és a helyi veszélyeshulladék-szabályzat szerint gyűjtsük, ne öntsük
+csatornába.</p>
+<p><strong>Lépések</strong></p>
+<ol type="1">
+<li><strong>Tünet és hibakódok rögzítése.</strong> Olvassuk ki az összes
+vezérlő hibakódját, és jegyezzük fel, mely vezérlők nem
+válaszolnak.</li>
+<li><strong>Tápellátás ellenőrzése.</strong> Az érintett vezérlő
+biztosítékait, testpontjait és tápfeszültségét mérjük meg.</li>
+<li><strong>Feszültségmentesítés.</strong> Kapcsoljuk ki a gyújtást,
+kössük le az akkumulátort a gyártói előírás szerint, és várjunk a
+megadott ideig.</li>
+<li><strong>Lezáró ellenállás mérése.</strong> A DLC-n CAN-H és CAN-L
+között mérjünk ellenállást. Egészséges kétterminálos buszon jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>
+körüli értéket várunk <strong>(ellenőrizendő: gyártói
+adat)</strong>.</li>
+<li><strong>Zárlatvizsgálat.</strong> Mérjünk ellenállást a CAN-H és a
+test, a CAN-L és a test, majd a CAN-H és a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\,\text{V}</annotation></semantics></math>-os
+táp, valamint a CAN-L és a táp között. Szakadás vagy zárlat jele esetén
+a gyártói kapcsolási rajz alapján keressük meg a hibás szakaszt.</li>
+<li><strong>Feszültség-visszakapcsolás után nyugalmi feszültség
+mérése.</strong> Gyújtás bekapcsolva mérjük a CAN-H és a CAN-L testhez
+mért feszültségét (multiméterrel forgalom közben kb. 2,5–2,7 V, illetve
+2,3–2,5 V átlag, ellenőrizendő). A tartós
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0\,\text{V}</annotation></semantics></math>
+vagy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\,\text{V}</annotation></semantics></math>
+közeli érték zárlatra utal.</li>
+<li><strong>Oszcilloszkópos vizsgálat.</strong> Két csatornával mérjük a
+CAN-H és a CAN-L jelet, és értékeljük az A−B differenciális jelet.
+Keressünk ellaposodó, ferde vagy hiányzó jelet.</li>
+<li><strong>Vezérlők szakszerű leválasztása.</strong> Egyesével bontsuk
+le az érintett buszág vezérlőit, és figyeljük, hogy a jel visszatér-e. A
+leválasztás előtt a gyújtás legyen kikapcsolva.</li>
+<li><strong>Csatlakozók és kábelköteg ellenőrzése.</strong> Vizsgáljuk
+meg a csatlakozókat korrózió, sérült tömítés, kihúzódott érintkező és
+becsípődött vezeték szempontjából.</li>
+<li><strong>Javítás.</strong> Cseréljük a sérült vezetéket vagy
+csatlakozót a gyártói javítási eljárás szerint.</li>
+<li><strong>Záró ellenőrzés.</strong> Töröljük a hibakódokat, végezzünk
+próbaút, majd ellenőrizzük az újraolvasás eredményét, a kommunikációt és
+a nyugalmi áramot.</li>
+<li><strong>Dokumentálás.</strong> A munkalapon rögzítsük a mért
+ellenállásokat, a hibakódokat, a javítás módját és a záró
+méréseket.</li>
+</ol>
+<h3 data-number="32.2.12" id="tipikus-hibák"><span
+class="header-section-number">32.2.12</span> Tipikus hibák</h3>
+<p><strong>Hiba: feszültség alatt mérünk ellenállást.</strong> A szerelő
+a gyújtást bekapcsolva méri a CAN-H és CAN-L közötti ellenállást. A
+műszer akár sérülhet, a mért érték pedig használhatatlan. Helyes:
+feszültségmentesítés után mérni.</p>
+<p><strong>Hiba: a multiméter átlagértékéből ítéljük meg a
+buszt.</strong> Aktív kommunikáció közben a digitális feszültségmérő
+változó, zajos értéket mutathat, ezért a szerelő tévesen vezérlőhibát
+állapít meg. Helyes: oszcilloszkóppal vizsgálni a busz időbeli
+jelalakját.</p>
+<p><strong>Hiba: csak a lezáró ellenállásra hagyatkozunk.</strong> A
+lezáró ellenállás mérése lehet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>,
+miközben egy vezérlő mégsem kommunikál, mert az adott vezérlőhöz vezető
+ág szakadt, vagy a vezérlő tápellátása hiányzik. Helyes: a teljes
+hibakeresési láncot követni.</p>
+<p><strong>Hiba: azonnal vezérlőt cserélünk.</strong> U0121 hibakódnál a
+tapasztalatlan szerelő egyből ABS-vezérlőt rendel. Valójában gyakrabban
+csatlakozó-, tápellátási vagy vezetékhiba áll a háttérben. Helyes:
+először a vezeték és a csatlakozó vizsgálata.</p>
+<p><strong>Hiba: nem dokumentáljuk a leválasztott vezérlőket.</strong> A
+diagnosztika során keletkezett hibakódokat elfelejtik törölni, így a
+javítás után zavaró, régi hibakódok maradnak a rendszerben. Helyes: a
+folyamatot jegyzőkönyvezni, a végén minden hibakódot törölni és
+újraolvasni.</p>
+<h3 data-number="32.2.13" id="önellenőrzés"><span
+class="header-section-number">32.2.13</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Egészséges nagysebességű CAN-buszon a CAN-H és a CAN-L között a
+diagnosztikai csatlakozónál mért ellenállás jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>.
+Igaz vagy hamis? Indokold röviden.</li>
+<li>Milyen feszültségeket várunk nyugalmi, recesszív állapotban a CAN-H
+és a CAN-L vonalon?</li>
+<li>Egy vezérlő nem kommunikál. A lezáró ellenállás mérése
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>,
+a CAN-H és a CAN-L nyugalmi feszültsége is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>.
+Magyarázd el, miért nem elég ez a mérés annak kizárásához, hogy az adott
+vezérlő ága szakadt.</li>
+<li>Mit jelent röviden az U0100 hibakód?</li>
+<li>Miért veszélyes vagy hibás a busz ellenállásának mérése bekapcsolt
+gyújtás mellett?</li>
+<li>Egy lezárt jármű nyugalmi árama
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>250</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">250\,\text{mA}</annotation></semantics></math>.
+Milyen hibára gyanakodhatunk?</li>
+</ol>
+<h3 data-number="32.2.14" id="feladatok"><span
+class="header-section-number">32.2.14</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Határozd meg a domináns és a
+recesszív bitszint fogalmát, és számítsd ki a differenciális
+feszültséget, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-H}} = 3{,}4\,\text{V}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub><mo>=</mo><mn>1</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-L}} = 1{,}6\,\text{V}</annotation></semantics></math>.</p>
+<p><strong>2. feladat (A)</strong> Egy buszon két darab
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+lezáró ellenállás van. Számítsd ki a várható ellenállást a CAN-H és a
+CAN-L között. Mekkora értéket mérnél, ha csak egy lezáró ellenállás
+venne részt az áramkörben?</p>
+<p><strong>3. feladat (B)</strong> A teszter U0121 hibakódot mutat. A
+lezáró ellenállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>,
+a nyugalmi feszültségek CAN-H és CAN-L vonalon is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>.
+Sorolj fel legalább három lehetséges okot, amelyeket ez az eredmény még
+nem zár ki, és írd le, milyen következő méréssel dönthetnéd el, hogy az
+ABS-vezérlőhöz vezető ág szakadt-e.</p>
+<p><strong>4. feladat (B)</strong> Kétcsatornás oszcilloszkópon az A
+csatorna a CAN-H jelet, a B csatorna a CAN-L jelet méri. Egy adott
+pillanatban az A csatorna
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">3{,}7\,\text{V}</annotation></semantics></math>-ot,
+a B csatorna
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">1{,}3\,\text{V}</annotation></semantics></math>-ot
+mutat. Számítsd ki a differenciális feszültséget, és magyarázd el, miért
+jobb a differenciális jel értékelése a különálló feszültségek
+helyett.</p>
+<p><strong>5. feladat (C)</strong> Egy járműben a kommunikáció
+időszakosan megszakad. A lezáró ellenállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>,
+az oszcilloszkópos jel általában jó, de a kábelköteg mozgatásakor a
+CAN-H jel néha ellaposodik. Melyik hibafajta a legvalószínűbb? Tervezd
+meg a hibakeresés lépéseit a járművön.</p>
+<p><strong>6. feladat (D)</strong> Egy szervizben a buszjavítás után az
+akkumulátor másnap reggelre lemerül. A mért nyugalmi áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">200\,\text{mA}</annotation></semantics></math>,
+a gyártói határ
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">40\,\text{mA}</annotation></semantics></math>.
+Magyarázd el, hogyan állapítható meg, melyik vezérlő nem alszik el, és
+milyen méréssel igazolod a javítás sikerét.</p>
+<h3 data-number="32.2.15" id="megoldások"><span
+class="header-section-number">32.2.15</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Hamis. Két darab
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+lezáró ellenállás párhuzamos eredője
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>;
+a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+mérés egy lezáró hiányára utalhat.</li>
+<li>Mindkét vonal jellemzően körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>-on
+van.</li>
+<li>A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>
+és a nyugalmi
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}5\,\text{V}</annotation></semantics></math>
+csak a busz alapállapotát mutatja; az adott vezérlőhöz vezető rövid
+szakasz is lehet szakadt. A vezérlőcsatlakozónál folytonosság-,
+feszültség- és oszcilloszkópos méréssel kell tovább vizsgálni.</li>
+<li>Nincs kommunikáció a motorvezérlővel.</li>
+<li>A feszültség alatt lévő áramkör ellenállásmérése hamis értéket
+adhat, és a műszert károsíthatja; emellett balesetveszélyes is
+lehet.</li>
+<li>Arra, hogy valamelyik vezérlő nem lép alvó üzembe, vagy egy
+fogyasztó a busz ébresztő hálózatát folyamatosan indítja, ezért a jármű
+nyugalmi árama túl magas.</li>
+</ol>
+<p><strong>1. feladat megoldása</strong></p>
+<p>Domináns bitnél a CAN-H és a CAN-L feszültsége eltávolodik, ezért a
+differenciális feszültség nagy. Recesszív bitnél a két feszültség közel
+azonos, ezért a differenciális feszültség közel nulla. A megadott
+értékekkel:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>1</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>1</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{diff}} = 3{,}4\,\text{V} - 1{,}6\,\text{V} = 1{,}8\,\text{V}
+</annotation></semantics></math></p>
+<p>Ez domináns bitként értelmezhető.</p>
+<p><strong>2. feladat megoldása</strong></p>
+<p>Két
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+párhuzamos eredője:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">mért</mtext></msub><mo>=</mo><mfrac><mrow><mn>120</mn><mo>⋅</mo><mn>120</mn></mrow><mrow><mn>120</mn><mo>+</mo><mn>120</mn></mrow></mfrac><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">
+R_{\text{mért}} = \frac{120 \cdot 120}{120 + 120} = 60\,\Omega
+</annotation></semantics></math></p>
+<p>Ha csak egy lezáró ellenállás vesz részt, akkor a mérés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>.</p>
+<p><strong>3. feladat megoldása</strong></p>
+<p>A lezáró ellenállás és a nyugalmi feszültség normális, ezért a hiba
+lehet például:</p>
+<ul>
+<li>az ABS-vezérlőhöz vezető saját buszág szakadt;</li>
+<li>az ABS-vezérlő tápellátásának hiánya egy rossz biztosító vagy
+testpont miatt;</li>
+<li>maga az ABS-vezérlő belső hibás.</li>
+</ul>
+<p>A szakadás eldöntéséhez a gyártói kapcsolási rajz alapján megkeressük
+az ABS-vezérlő CAN-csatlakozóját, feszültségmentes állapotban megmérjük
+a vezeték folytonosságát a DLC és az ABS-csatlakozó között, majd
+bekapcsolt gyújtásnál oszcilloszkóppal ellenőrizzük, hogy az ABS-vezérlő
+csatlakozóján ugyanaz a buszjel látható-e.</p>
+<p><strong>4. feladat megoldása</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>1</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{diff}} = 3{,}7\,\text{V} - 1{,}3\,\text{V} = 2{,}4\,\text{V}
+</annotation></semantics></math></p>
+<p>A differenciális jel azért előnyös, mert a zavarok gyakran mindkét
+vezetéket azonos irányban emelik vagy süllyesztik, így a különbségképzés
+a közös zavart elnyomja. A vevő számára a domináns vagy recesszív
+állapotot éppen ez a különbség hordozza.</p>
+<p><strong>5. feladat megoldása</strong></p>
+<p>A legvalószínűbb időszakos szakadás vagy nagy átmeneti ellenállású
+csatlakozó a CAN-H ágban. A hibakeresés lépései:</p>
+<ol type="1">
+<li>A hibakódok kiolvasása és a nem válaszoló vezérlők rögzítése.</li>
+<li>A lezáró ellenállás és a tápfeszültségek ellenőrzése.</li>
+<li>A kábelköteg szakszerű, óvatos mozgatása közben az oszcilloszkópon a
+CAN-H jel figyelése.</li>
+<li>A gyanús köteg, csatlakozó vagy törési pont vizuális
+ellenőrzése.</li>
+<li>Feszültségmentes állapotban a szakasz folytonosságának és átmeneti
+ellenállásának mérése.</li>
+<li>Javítás után az oszcilloszkópos kép, a hibakódok és a nyugalmi áram
+ellenőrzése.</li>
+</ol>
+<p><strong>6. feladat megoldása</strong></p>
+<p>A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">200\,\text{mA}</annotation></semantics></math>
+nyugalmi áram azt mutatja, hogy a hálózat nem alszik el. A nem alvó
+vezérlő megkereséséhez a járművet lezárjuk (az ajtózárakat és a
+motorháztető-kapcsolót csukott állásba állítjuk), az áramot lakatfogóval
+vagy áthidalással bekötött árammérővel mérjük, és megvárjuk a gyártói
+alvási időt (ellenőrizendő). Ezután a biztosítékokon eső feszültséget
+mérjük millivoltos tartományban, a biztosíték kihúzása nélkül (a kihúzás
+megszakítja a tápot, felébreszti a hálózatot és meghamisítja az
+eredményt); amelyiken a többinél nagyobb feszültség esik, annak az
+ágkörében folyik a többletáram (a biztosíték típusához tartozó mV–mA
+táblázat alapján, ellenőrizendő). Így találjuk meg azt az ágkört,
+amelyik ébren tartja a hálózatot. Ezután az ágkört vezérlőkre bontva
+meghatározhatjuk a tényleges nem alvó egységet. A javítás sikere akkor
+igazolt, ha a jármű lezárása és a gyártói várakozási idő letelte után a
+nyugalmi áram tartósan a határérték alatt marad.</p>
+<h3 data-number="32.2.16" id="rövid-összefoglaló"><span
+class="header-section-number">32.2.16</span> Rövid összefoglaló</h3>
+<p>A CAN-hálózat hibái leggyakrabban nem magukban a vezérlőkben, hanem a
+vezetékekben, csatlakozókban, lezáró ellenállásokban vagy a
+tápfeszültség-ellátásban keresendők. A lezáró ellenállás
+feszültségmentes mérésével gyorsan kimutatható a CAN-H–CAN-L zárlat, a
+teljes szakadás és a hiányzó lezáró. Két darab
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+lezáró párhuzamos eredője
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">60\,\Omega</annotation></semantics></math>.
+A busz jelalakját oszcilloszkóppal, lehetőleg differenciális A−B
+üzemmódban kell értékelni, mert a digitális multiméter átlagértéke
+félrevezető lehet. A hálózati hibakódok „U” kezdettel jelzik a
+kommunikáció hiányát; az U0121 például az ABS/ESP-vezérlő elvesztésére
+utal, de az okot külön méréssel kell megtalálni. A javítás végén a
+hibakódokat törölni, a kommunikációt ellenőrizni, és az alvó üzemi
+nyugalmi áramot a gyártói határ alatt igazolni kell. <strong>Továbbvitt
+eredmény.</strong> A buszhálózat szisztematikus, feszültségmentesítés
+utáni ellenállás- és feszültségmérése, valamint az ágazatonkénti
+leválasztás logikája az <a href="au145.html">Áramút-alapú hibakeresés:
+feszültségesés, szakadás, zárlat, nyugalmi áram</a> alfejezetben tovább
+használható.</p>
+<h3 data-number="32.2.17" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">32.2.17</span> Források és ellenőrzési
+hiányok</h3>
+<p>Az alfejezet a gépjármű-hálózati diagnosztika általános
+méréstechnikai gyakorlatára, az ISO 15031 szabványsorozat
+OBD-hibakódrendszerére és a CAN-hálózatok ISO-szabványaira épül. A
+konkrét kapocsjelölések, a DLC-lábkiosztás, a feszültségszintek, a
+lezáró ellenállások értéke, a nyugalmi áram határértéke, a várakozási
+idők és a hibakód-jelentések gyártó- és típusfüggők, ezért azokat a
+kiadás előtt a gyártói javítási utasítás és a hatályos szabványok
+szerint ellenőrizni kell. Az U-kódok értelmezésénél a gyártói
+diagnosztikai adatbázis a mérvadó.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au114.html">← 32.1 Adatbusz-hálózatok: CAN, LIN, FlexRay, MOST és Ethernet</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au116.html">32.3 Vezetőtámogató rendszerek és kalibrálásuk →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

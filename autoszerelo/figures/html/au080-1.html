@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bolygómű-kalkulátor (Willis-egyenlet)</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="zs">Napkerék fogszáma z_s</label><input id="zs" type="range" min="12" max="60" step="1" value="30" aria-label="Napkerék fogszáma z_s"><output id="zs_o" for="zs"></output></div>
+<div class="row"><label for="zg">Gyűrűkerék fogszáma z_g</label><input id="zg" type="range" min="40" max="120" step="1" value="90" aria-label="Gyűrűkerék fogszáma z_g"><output id="zg_o" for="zg"></output></div>
+<div class="row"><label for="fix">Rögzített elem</label><select id="fix" aria-label="Rögzített elem"><option value="g" selected>gyűrűkerék</option><option value="s">napkerék</option><option value="t">tartó</option></select></div>
+<div class="row"><label for="drv">Hajtó elem</label><select id="drv" aria-label="Hajtó elem"><option value="s" selected>napkerék</option><option value="g">gyűrűkerék</option><option value="t">tartó</option></select></div>
+<div class="row"><label for="nin">Bemenő fordulatszám</label><input id="nin" type="range" min="500" max="6000" step="100" value="2400" aria-label="Bemenő fordulatszám"><output id="nin_o" for="nin"></output></div>
+<div class="row"><label for="Min">Bemenő nyomaték</label><input id="Min" type="range" min="50" max="400" step="10" value="200" aria-label="Bemenő nyomaték"><output id="Min_o" for="Min"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 400" role="img" aria-label="Egyszerű bolygómű nap-, bolygó- és gyűrűkerékkel; választható rögzített és hajtó elem, animált forgás, kiírt áttétel, fordulatszám és nyomaték."></svg>
+<p class="small">A kidolgozott példa (z_s = 30, z_g = 90): gyűrű rögzítve, nap hajt → i = 4; nap rögzítve, tartó hajt → i = 0,75; tartó rögzítve, nap hajt → i = −3. A 3. feladat (z_s = 27, z_g = 81, tartó rögzítve, gyűrű hajt) → i = −0,333: irányváltó és gyorsító (a nyomaték csökken). Az animáció lassított, a szögsebességek aránya valós.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"zs":"", "zg":"", "nin":"1/min", "Min":"Nm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const N={s:"napkerék",g:"gyűrűkerék",t:"tartó"};
+const zs=Math.round(v.zs), zg=Math.round(v.zg);
+el("rect",{x:0,y:0,width:560,height:400,fill:"#fff"});
+if(!window.__T0){window.__T0=performance.now();}
+if(!window.__anim){window.__anim=setInterval(draw,70);}
+const fixed=v.fix, drive=v.drv;
+if(fixed===drive){status("A rögzített és a hajtó elem nem lehet ugyanaz – válassz mást.");return;}
+if((zg-zs)%2!==0||zg<=zs+8){status("<b>Nem szerelhető:</b> z<sub>g</sub> − z<sub>s</sub> legyen páros (z<sub>p</sub> = (z<sub>g</sub> − z<sub>s</sub>)/2 egész), és a gyűrűkerék legyen elég nagy.");return;}
+const zp=(zg-zs)/2, i0=zg/zs, out=["s","g","t"].filter(e=>e!==fixed&&e!==drive)[0];
+const n={}; n[fixed]=0; n[drive]=1;
+if(out==="s") n.s=(1+i0)*n.t-i0*n.g; else if(out==="g") n.g=((1+i0)*n.t-n.s)/i0; else n.t=(n.s+i0*n.g)/(1+i0);
+const i=1/n[out], nout=v.nin/i, Mout=v.Min*i;
+const kind=i<0?"irányváltó (hátramenet)":(Math.abs(i)>1?"lassító (a nyomaték nő)":"gyorsító (overdrive, a nyomaték csökken)");
+// animáció: szögek a valódi fordulatszám-arányokkal, lassítva
+const tt=(performance.now()-window.__T0)/1000, w=0.35*2*Math.PI;
+const th={s:n.s*w*tt,g:n.g*w*tt,t:n.t*w*tt};
+const m=165/zg, rs=m*zs, rg=m*zg, rp=m*zp, rc=rs+rp, cx=200, cy=200;
+function gearPath(x,y,r,z,ph,inner){let d="";const h=1.1*(2*r/z);for(let k=0;k<z*4;k++){const a=ph+2*Math.PI*k/(z*4);const on=(k%4===1||k%4===2);
+ const rr=inner?(r+h/2-(on?h:0)):(r-h/2+(on?h:0));d+=(k?"L":"M")+(x+rr*Math.cos(a)).toFixed(1)+" "+(y+rr*Math.sin(a)).toFixed(1);}return d+"Z";}
+el("circle",{cx:cx,cy:cy,r:rg+18,fill:"#e6e6e6",stroke:"#000"});
+el("path",{d:gearPath(cx,cy,rg,zg,-th.g,true),fill:"#fff",stroke:"#000"});
+el("path",{d:gearPath(cx,cy,rs,zs,-th.s,false),fill:"#cfcfcf",stroke:"#000"});
+for(let k=0;k<3;k++){const a=-th.t+2*Math.PI*k/3, px=cx+rc*Math.cos(a), py=cy+rc*Math.sin(a);
+ const pa=-(th.t+(th.t-th.s)*zs/zp);
+ el("path",{d:gearPath(px,py,rp,zp,pa,false),fill:"#fff",stroke:"#000","stroke-dasharray":"none"});
+ el("line",{x1:px,y1:py,x2:px+rp*0.8*Math.cos(pa),y2:py+rp*0.8*Math.sin(pa),stroke:"#000","stroke-width":1.5});
+ el("line",{x1:cx,y1:cy,x2:px,y2:py,stroke:"#000","stroke-width":5,"stroke-dasharray":"8 4"});
+ el("circle",{cx:px,cy:py,r:5,fill:"#000"});}
+el("line",{x1:cx,y1:cy,x2:cx+rs*0.8*Math.cos(-th.s),y2:cy+rs*0.8*Math.sin(-th.s),stroke:"#000","stroke-width":2});
+el("line",{x1:cx+(rg+2)*Math.cos(-th.g),y1:cy+(rg+2)*Math.sin(-th.g),x2:cx+(rg+16)*Math.cos(-th.g),y2:cy+(rg+16)*Math.sin(-th.g),stroke:"#000","stroke-width":3});
+el("circle",{cx:cx,cy:cy,r:7,fill:"#000"});
+const fx={s:[cx,cy-rs*0.45],g:[cx+rg+9,cy],t:[cx,cy-rc]}[fixed];
+el("circle",{cx:fx[0],cy:fx[1],r:12,fill:"none",stroke:"#000","stroke-width":3});
+el("line",{x1:fx[0]-8,y1:fx[1]-8,x2:fx[0]+8,y2:fx[1]+8,stroke:"#000","stroke-width":3});
+const L=[["rögzített",N[fixed]+" (⊗)"],["hajt",N[drive]],["hajtott",N[out]],["z_p",String(zp)],["i₀ = z_g/z_s",fmt(i0,3)],
+ ["áttétel i",fmt(i,3)],["n kimenő",fmt(nout,0)+" 1/min"],["M kimenő (ideális)",fmt(Mout,0)+" Nm"]];
+L.forEach((r,k)=>{el("text",{x:400,y:40+k*40,"font-size":12,fill:"#555","text-anchor":"start"},r[0]);el("text",{x:400,y:56+k*40,"font-size":13,fill:"#000","font-weight":"bold"},r[1]);});
+status("Willis: n<sub>s</sub> + i<sub>0</sub>·n<sub>g</sub> = (1 + i<sub>0</sub>)·n<sub>t</sub> → <b>i = "+fmt(i,3)+"</b>, "+kind+". Kimenő fordulatszám "+fmt(nout,0)+" 1/min"+(nout<0?" (ellentétes irány)":"")+", nyomaték "+fmt(Mout,0)+" Nm (veszteség nélkül).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

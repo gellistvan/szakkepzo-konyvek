@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>32.1 Adatbusz-hálózatok: CAN, LIN, FlexRay, MOST és Ethernet –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Gépjármű-villamosság és -elektronika</a> › <a href="index.html#auch31">32 Adatbuszok és vezetőtámogató rendszerek</a></p>
+<div class="links"><a class="prev" rel="prev" href="au113.html">← 31.3 Beavatkozók: injektorok, gyújtótekercsek, fojtószelep, alapjárat-szabályozó, EGR-szelep</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au115.html">32.2 Buszhibák és az adatbusz-hálózatok diagnosztikája →</a></div>
+</nav>
+<h2 data-number="32.1" id="au114"><span
+class="header-section-number">32.1</span> Adatbusz-hálózatok: CAN, LIN,
+FlexRay, MOST és Ethernet</h2>
+<h3 data-number="32.1.1" id="motiváció"><span
+class="header-section-number">32.1.1</span> Motiváció</h3>
+<p>Egy mai autóban harminc–hetven elektronikus vezérlőegység (ECU) is
+dolgozhat: motorvezérlő, ABS, légzsák, műszeregység, klíma, ajtómodulok,
+kamerák, radar. Ha minden egyes jelhez – például a vízhőmérséklet, a
+kerékfordulatszám, a gázpedálállás – külön vezetéket és külön bemenetet
+kellene kihúzni, akkor a gépjármű kábelkötege több száz kilogramm és
+több kilométer vezeték lenne. Ráadásul minden új funkciónál újabb
+vezetékeket kellene tervezni, a csatlakozók száma megsokszorozódna, a
+hiba­keresés pedig áttekinthetetlenné válna. A járművekben ezért a
+vezérlőegységek egy-egy közös adatátviteli rendszeren,
+<strong>buszrendszeren</strong> osztoznak: a jeleket digitális üzenetek
+formájában, címzéssel és hiba­kezeléssel továbbítják. A legismertebb és
+legelterjedtebb járműipari adatbusz a <strong>CAN</strong> (Controller
+Area Network), de mellette a komfort- és prémiumrendszerekben LIN,
+FlexRay, MOST és a gyorsan terjedő autóipari Ethernet is előfordul.
+Ahhoz, hogy a hibrid diagnosztikai, valamint a vezetőtámogató rendszerek
+kalibrálását és a fedélzeti diagnosztikát megértsd, először látnod kell
+a buszok felépítését és az adatátvitel alapjait.</p>
+<h3 data-number="32.1.2" id="szemléletes-kép"><span
+class="header-section-number">32.1.2</span> Szemléletes kép</h3>
+<p>Képzelj el egy hosszú, két eres, összesodort vezetékpárt, amely
+keresztülfut az autón az első fényszórótól a hátsó lökhárítóig. A
+vezetékpár két ágát CAN-High (CAN-H) és CAN-Low (CAN-L) néven jelöljük,
+a csavart érpár a mágneses zavarokat igyekszik kioltani. A busz mindkét
+végén egy-egy <strong>120 Ω-os lezáró ellenállás</strong> ül a CAN-H és
+CAN-L között. A buszra több vezérlőegység csatlakozik, mindegyik egy
+CAN-kontrolleren és egy CAN-adó­vevőn (transceiveren) keresztül. Amikor a
+motor-ECU elküldi a hűtőfolyadék-hőmérsékletet, a jel nem egyetlen
+vezetéken halad, hanem a két szál feszültségkülönbsége változik. A
+műszeregység ezt a különbséget figyeli, ezért a közös zavarófeszültség
+(például egy gyújtászaj) mindkét vezetéken egyszerre jelenik meg, és a
+különbségképzés kiejti. Ez a <strong>differenciális jelátvitel</strong>
+a CAN robusztusságának egyik kulcsa.</p>
+<h3 data-number="32.1.3" id="definíciók-és-alapfogalmak"><span
+class="header-section-number">32.1.3</span> Definíciók és
+alapfogalmak</h3>
+<p><strong>Definíció.</strong> <strong>Adatbusz</strong> a járműben
+olyan közös átviteli közeg, amelyre több elektronikus vezérlőegység
+csatlakozik, és amelyen digitális üzeneteket cserélnek meghatározott
+protokoll szerint. A busz nem csak a fizikai vezetéket jelenti, hanem a
+hozzá tartozó szabályrendszert (protokollt) is, amely meghatározza, ki
+mikor beszélhet, milyen formátumban és mi történik hiba esetén.</p>
+<p><strong>Definíció.</strong> <strong>Differenciális
+jelátvitel</strong> esetén az információt nem egyetlen vezeték
+földpotenciálhoz képest mért feszültsége, hanem két vezeték
+feszültségkülönbsége hordozza. A CAN esetében a vevő a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{diff}} = U_{\text{CAN-H}} - U_{\text{CAN-L}}</annotation></semantics></math>
+értéket figyeli; a nagy abszolútértékű különbség domináns, a nulla
+körüli recesszív bitet jelent.</p>
+<p><strong>Definíció.</strong> <strong>Gateway</strong> (átjáró) olyan
+csomópont, amely különböző buszrendszerek között továbbítja, szűri,
+adott esetben konvertálja az üzeneteket. Például a motorfordulatszám a
+hajtáslánci CAN-ról a komfort-CAN-ra vagy a LIN hálózatra a gatewayen
+keresztül jut el.</p>
+<p><strong>Definíció.</strong> <strong>Arbitráció</strong> a CAN-ben az
+az eljárás, amellyel több egység egyidejű adási kísérletekor a hálózat
+eldönti, melyik üzenet kapott jogot az adat továbbítására. A CAN
+esetében ez bitenként, az azonosító mezőben történik: a domináns bitet
+adó üzenet nyer, a vesztes pedig azonnal vétel üzemmódba vált.</p>
+<h3 data-number="32.1.4" id="a-járműipari-buszok-áttekintése"><span
+class="header-section-number">32.1.4</span> A járműipari buszok
+áttekintése</h3>
+<p>A buszrendszerek megválasztása mindig kompromisszum: a gyors,
+determinisztikus és hibatűrő rendszerek drágák, az olcsóbb buszok
+viszont lassúak vagy kevésbé megbízhatóak. A következő táblázat a
+legfontosabb jellemzőket foglalja össze.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Busz</th>
+<th>Jellemző adatsebesség</th>
+<th>Topológia</th>
+<th>Költségszint</th>
+<th>Jellemző alkalmazás</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CAN High-speed</td>
+<td>125 kbit/s – 1 Mbit/s</td>
+<td>kétvezetékes busz</td>
+<td>alacsony</td>
+<td>hajtáslánc, fék, menetdinamika</td>
+</tr>
+<tr>
+<td>CAN Low-speed</td>
+<td>125 kbit/s</td>
+<td>kétvezetékes, hibatűrő</td>
+<td>alacsony</td>
+<td>komfort, ajtómodulok</td>
+</tr>
+<tr>
+<td>LIN</td>
+<td>19,2 kbit/s</td>
+<td>egyvezetékes, master–slave</td>
+<td>nagyon alacsony</td>
+<td>ablakemelő, ülés, kapcsolók</td>
+</tr>
+<tr>
+<td>FlexRay</td>
+<td>10 Mbit/s</td>
+<td>kétcsatornás, busz/csillag</td>
+<td>magas</td>
+<td>futómű, x-by-wire, hajtáslánc</td>
+</tr>
+<tr>
+<td>MOST</td>
+<td>150 Mbit/s (MOST150)</td>
+<td>optikai gyűrű</td>
+<td>magas</td>
+<td>multimédia, infotainment</td>
+</tr>
+<tr>
+<td>Ethernet</td>
+<td>100 Mbit/s – 1 Gbit/s</td>
+<td>csillag, switch</td>
+<td>változó</td>
+<td>kamera, radar, OTA frissítés</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: aktuális szabványkiadás és
+gyártói adat).</p>
+<p><strong>Összefüggés.</strong> A busz kiválasztásakor a fő szempontok:
+a szükséges átviteli sebesség, a determinizmus (a válaszidő
+garantálhatósága), a hibatűrés, a kábelezés költsége és a tömeg. A
+lassú, de olcsó LIN a nem idő­kritikus komfortfunkciókra ideális, a gyors
+FlexRay a x-by-wire rendszerekhez, a nagy sávszélességű Ethernet pedig a
+kamerás- és radaros vezetőtámogató rendszerekhez kell.</p>
+<h3 data-number="32.1.5" id="a-can-hálózat-fizikai-felépítése"><span
+class="header-section-number">32.1.5</span> A CAN hálózat fizikai
+felépítése</h3>
+<p>A CAN High-speed (HS-CAN, ISO 11898 – ellenőrizendő: aktuális kiadás)
+a járműhajtás és a menetbiztonsági rendszerek leggyakoribb busza.
+Fizikailag két, egymáshoz csavart, árnyékolatlan vagy árnyékolt vezeték
+alkotja: a CAN-H és a CAN-L. A csavart érpár csökkenti a külső
+elektromágneses zavarok behatolását, mert a zavar többnyire közös módusú
+feszültséget indukál mindkét szálban, amit a különbség­képzés kiejt. A
+busz nagy sebessége ellenére (akár 1 Mbit/s) a hosszúság és a sebesség
+összefügg: rövid, néhány tíz méteres járműhálózaton az 1 Mbit/s
+elérhető, nagyobb hossz esetén kisebb sebességet kell választani.</p>
+<p>A busz <strong>lezárása</strong> a két végén – és csak a két végén –
+egy-egy 120 Ω-os ellenállással történik (2 × 120 Ω). Ez az ellenállás a
+csavart érpár hullámimpedanciájához igazodik, és megakadályozza, hogy a
+jelfrontok a busz végéről visszaverődjenek, ami torzítaná a jelet. A két
+párhuzamosan kapcsolt lezáró ellenállás egyenáramú ellenállása épp 60 Ω:
+ha tehát a gyújtás kikapcsolása és megfelelő várakozás után a busz CAN-H
+és CAN-L ága között ellenállást mérünk, ép hálózaton körülbelül 60 Ω-ot
+kell kapnunk (a tényleges érték típusonként eltérhet, ezért a gyártói
+javítási adat az irányadó). Ha csak 120 Ω-ot mérünk, akkor valamelyik
+lezáró ellenállás hiányzik vagy szakadt; ha ennél sokkal kisebbet, akkor
+rövidzár vagy több lezáró ellenállás van a hálózatban.</p>
+<p>A következő kapcsolási rajz a CAN-hálózat fizikai felépítését
+szemlélteti: két vezérlőegység csatlakozik a buszra, a CAN-H és CAN-L
+vezeték a két végén 120 Ω-os ellenállással van lezárva.</p>
+<figure>
+<img src="assets/au114-diagram-1.png"
+alt="CAN High-speed busz két ECU-val - Tanulási vázlat: a CAN-H és CAN-L párhuzamos vezetékpár; az ECU A és az ECU B adóvevője rövid leágazással csatlakozik mindkét vezetékre, a 120 Ω-os lezárások (R1, R2) a busz két végén vannak. A valódi járműben a lezáró ellenállások az ECU-kben vagy a csatlakozókon lehetnek (ellenőrizendő: gyártói rajz)." />
+<figcaption aria-hidden="true">CAN High-speed busz két ECU-val -
+Tanulási vázlat: a CAN-H és CAN-L párhuzamos vezetékpár; az ECU A és az
+ECU B adóvevője rövid leágazással csatlakozik mindkét vezetékre, a 120
+Ω-os lezárások (R1, R2) a busz két végén vannak. A valódi járműben a
+lezáró ellenállások az ECU-kben vagy a csatlakozókon lehetnek
+(ellenőrizendő: gyártói rajz).</figcaption>
+</figure>
+<p>Az ECU A és az ECU B rövid leágazással csatlakozik a buszra (mindkét
+vezérlő adóvevője a CAN-H és a CAN-L vezetékre is); a 120 Ω-os lezárások
+a busz két végén vannak. A valódi járműben a lezáró ellenállás gyakran
+az ECU-n belül van, ezért a rajzon látható „külön” ellenállás a
+kábelkötegben nem mindig található meg (ellenőrizendő: gyártói
+rajz).</p>
+<p>A CAN-adóvevő a digitális jeleket a következő módon alakítja
+feszültségszintekké: nyugalmi (<strong>recesszív</strong>) állapotban
+mindkét vezeték körülbelül 2,5 V-on van (a közös módusú feszültség), így
+a differenciális feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>≈</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{diff}} \approx 0\,\text{V}</annotation></semantics></math>.
+<strong>Domináns</strong> bitnél a CAN-H körülbelül 3,5 V-ra emelkedik,
+a CAN-L pedig körülbelül 1,5 V-ra süllyed, így a különbség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>≈</mo><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{diff}} \approx 2{,}0\,\text{V}</annotation></semantics></math>
+lesz. A vevő oldalon az adatot tehát nem a testhez, hanem egymáshoz
+képest kell mérni. Ha például egy zavar mindkét vezetéken +1 V-ot emel,
+a recesszív szintből 3,5 V és 3,5 V lesz, a különbség pedig továbbra is
+0 V – ezért a CAN nagyon zavartűrő.</p>
+<p><strong>Számítás.</strong> Ha domináns bitnél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-H}} = 3{,}5\,\text{V}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub><mo>=</mo><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-L}} = 1{,}5\,\text{V}</annotation></semantics></math>,
+akkor<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+U_{\text{diff}} &amp;= U_{\text{CAN-H}} - U_{\text{CAN-L}} \\
+&amp;= 3{,}5\,\text{V} - 1{,}5\,\text{V} = 2{,}0\,\text{V} .
+\end{aligned}</annotation></semantics></math><br />
+Recesszív bitnél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>≈</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-H}} \approx 2{,}5\,\text{V}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub><mo>≈</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-L}} \approx 2{,}5\,\text{V}</annotation></semantics></math>,
+tehát
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>≈</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{diff}} \approx 0\,\text{V}</annotation></semantics></math>.
+Ez a kettes számrendszerbeli
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>
+megfeleltetése (domináns = logikai
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>,
+recesszív = logikai
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>
+a CAN keretben).</p>
+<h3 data-number="32.1.6" id="a-can-üzenetkeret-és-az-arbitráció"><span
+class="header-section-number">32.1.6</span> A CAN üzenetkeret és az
+arbitráció</h3>
+<p>A CAN klasszikus adatkerete a következő fő részekből áll:
+<strong>SOF</strong> (start of frame, a keret kezdete),
+<strong>azonosító</strong> (identifier, standard esetben 11 bit,
+kiterjesztett változatban 29 bit), <strong>vezérlőmező</strong>, amely
+az adatbájtok számát (DLC) és a formátumjelzőket tartalmazza,
+<strong>adatmező</strong> (klasszikus CAN: 0–8 bájt),
+<strong>CRC</strong> ellenőrzőösszeg, <strong>ACK</strong> nyugtázó
+mező, és <strong>EOF</strong> (end of frame). A CAN FD (Flexible
+Data-rate) további fejlesztése nagyobb adatmezőt (gyakorlatilag 64
+bájtig, ellenőrizendő: aktuális ISO 11898-1 kiadás) és az adatfázisban
+nagyobb bitsebességet tesz lehetővé, miközben az arbitrációs fázis
+lassabb marad a kompatibilitás miatt.</p>
+<p>Az <strong>arbitráció</strong> során az azonosító mező bitjeit minden
+adó egyszerre küldi, és egyszerre figyeli a buszt. Ha egy adó recesszív
+bitet írna, de a buszon domináns bitet lát, akkor elveszítette az
+arbitrációt, és azonnal vételi módba kapcsol. Mivel a domináns bit a
+logikai
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>,
+és a busz bitértékét a domináns határozza meg, az <strong>alacsonyabb
+numerikus értékű azonosító</strong> élvez prioritást. Például ha a
+motor-ECU üzenetének azonosítója
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>100</mn></mrow><annotation encoding="application/x-tex">0x100</annotation></semantics></math>
+(azaz 256 decimálisan), az ABS üzeneté pedig
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>0</mn><mi>F</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">0x0F0</annotation></semantics></math>
+(240 decimálisan), akkor az ABS üzenet nyer, mert 11 biten
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>100</mn><mo>=</mo><mn>001</mn><mspace width="0.167em"></mspace><mn>0000</mn><mspace width="0.167em"></mspace><mn>0000</mn></mrow><annotation encoding="application/x-tex">0x100 = 001\,0000\,0000</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>0</mn><mi>F</mi><mn>0</mn><mo>=</mo><mn>000</mn><mspace width="0.167em"></mspace><mn>1111</mn><mspace width="0.167em"></mspace><mn>0000</mn></mrow><annotation encoding="application/x-tex">0x0F0 = 000\,1111\,0000</annotation></semantics></math>;
+az első eltérő bitnél (balról a 3.) az ABS domináns
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>-t
+küld, a motor-ECU recesszív
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>-et,
+ezért a motor-ECU elveszíti az arbitrációt.</p>
+<figure id="fig-au114-1">
+<div class="fig-interactive"><iframe src="figures/html/au114-1.html" title="CAN-H és CAN-L jelszintek domináns és recesszív bitnél, valamint három azonosító bitenkénti arbitrációja." loading="lazy" style="width:100%;border:0;height:520px"></iframe><noscript><img src="figures/img/au114-1.png" style="width:90.0%"
+alt="CAN-H és CAN-L jelszintek domináns és recesszív bitnél, valamint három azonosító bitenkénti arbitrációja." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au114-1.png" style="width:90.0%"
+alt="CAN-H és CAN-L jelszintek domináns és recesszív bitnél, valamint három azonosító bitenkénti arbitrációja." /></details></div>
+<figcaption>CAN-jelszintek és arbitráció: (a) CAN-H (folytonos) és CAN-L
+(szaggatott) egy 10 bites mintán, alatta a különbségi feszültség; (b) a
+3. feladat három azonosítójának bitenkénti arbitrációja – A a 8., B a 6.
+bitnél esik ki, C nyer (szemléltető, nem mért jel)</figcaption>
+</figure>
+<p>Az ábra (a) részén látszik, hogy domináns bitnél a két vezeték
+szétválik (3,5 V és 1,5 V,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub><mo>≈</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{diff}} \approx 2\,\text{V}</annotation></semantics></math>),
+recesszív bitnél mindkettő 2,5 V-on van. A (b) rész a busz „huzalozott
+ÉS” viselkedését mutatja: a busz szintje minden bitnél a domináns 0, ha
+legalább egy adó 0-t küld; az az adó, amely 1-et küld, de 0-t lát a
+buszon, kiesik. Az interaktív változatban az arbitráció bitenként
+léptethető, és saját hexadecimális azonosítók is kipróbálhatók.</p>
+<h3 data-number="32.1.7"
+id="lin-flexray-most-és-autóipari-ethernet"><span
+class="header-section-number">32.1.7</span> LIN, FlexRay, MOST és
+autóipari Ethernet</h3>
+<p>A <strong>LIN</strong> (Local Interconnect Network) egy
+<strong>egyvezetékes, master–slave</strong> busz, jellemzően 19,2 kbit/s
+sebességgel. A LIN-hálózaton egy master egység ütemezi a kommunikációt,
+a slave-ek csak válaszolnak. A LIN olcsó, ezért az ablakemelők, tükrök,
+eső­szenzor, ülésállítás, kapcsolópanelek és hasonló, nem idő­kritikus
+komfortfunkciók hálózata. A LIN jele nem differenciális, hanem egyetlen
+vezetéken a járműtesthez képest változik, így zavartűrése kisebb, mint a
+CAN-é. Nyugalmi (recesszív) állapotban a LIN-vezeték az
+akkumulátorfeszültség közelében van (a master felhúzó ellenállása
+miatt), domináns bitnél a test közelébe húzzák; multiméterrel forgalom
+közben az átlag az akkumulátorfeszültség és a test közötti érték,
+oszcilloszkóppal kb. 0–12 V közötti négyszögjel látható (ellenőrizendő:
+gyártói adat). A LIN-t sokszor egy CAN-ról kapott gateway-en keresztül
+érik el.</p>
+<p>A <strong>FlexRay</strong> nagy sebességű (10 Mbit/s),
+determinisztikus, hibatűrő busz, amelyet elsősorban a futómű, x-by-wire
+és nagy biztonság­kritikus hajtáslánci rendszerek használnak. Két
+független csatornával és időosztásos ütemezéssel dolgozik, így
+garantálható, hogy egy üzenet adott időn belül célba ér. A FlexRay
+fizikai rétege is differenciális, és gyakran csillagtopológiát használ
+aktív hubokkal. A költsége magas, ezért a tömegpiaci autókban ritkább, a
+prémium és a biztonság­kritikus alkalmazásokban viszont elterjedt.</p>
+<p>A <strong>MOST</strong> (Media Oriented Systems Transport) elsősorban
+<strong>optikai szálas gyűrű</strong>, amely a multimédia- és
+infotainment-rendszerek nagy sávszélességű összeköttetésére szolgál. A
+MOST150 már 150 Mbit/s sebességet érhet el, és az audio-, video- és
+navigációs adatok átvitelére optimalizálták. Az optikai szál immunis az
+elektromágneses zavarokra, nem sugároz, de a csatlakozók és a szálak
+kezelése gondos munkát igényel, és a törés, szennyeződés azonnal hibát
+okoz.</p>
+<p>Az <strong>autóipari Ethernet</strong> az utóbbi években terjed
+leginkább a vezetőtámogató rendszerek (ADAS) kameráinak, radarjainak és
+a fedélzeti szoftverfrissítés (OTA) adatforgalmának kiszolgálására. A
+szabványos Ethernet a hagyományos irodai hálózatból származik, de a
+járműipari változat <strong>egyetlen csavart érpáron</strong> is működik
+(100BASE-T1, 1000BASE-T1), ami csökkenti a kábel súlyát és költségét. Az
+Ethernet csillagtopológiát használ switch-ekkel, jól skálázható, és
+lehetővé teszi a TCP/IP protokollcsalád használatát, ami a gyártói és
+diagnosztikai kommunikációt is modernizálja.</p>
+<h3 data-number="32.1.8" id="topológiák-és-a-gateway"><span
+class="header-section-number">32.1.8</span> Topológiák és a gateway</h3>
+<p>A busz­hálózat topológiája azt írja le, hogy a csomópontok milyen
+elrendezésben kapcsolódnak egymáshoz. A CAN alapvetően
+<strong>busz</strong> topológiájú: minden résztvevő ugyanarra a közös
+vezetékre csatlakozik, a busz végein lezárásokkal. A LIN többnyire
+egyvezetékes busz vagy kis csillag, a FlexRay busz vagy csillag, a MOST
+gyűrű, az Ethernet pedig csillag. A gyakorlatban a modern járművekben
+több különböző busz létezik egymás mellett, és ezeket
+<strong>gateway</strong> köti össze. A gateway lehet külön
+vezérlőegység, vagy egy meglévő egység (például műszeregység,
+komfort-ECU) része. A feladata, hogy az egyik buszról érkező üzenetet a
+másik buszra átemelje, szűrje és konvertálja; ezen keresztül éri el a
+diagnosztikai műszer is a különböző hálózatokat. Ha a gateway nem
+működik, egyes alrendszerek közötti kommunikáció megszakad, bár a
+lokális buszokon az adatforgalom még fennállhat.</p>
+<p>A következő rétegábra a járműhálózati hierarchiát szemlélteti: alul
+az olcsó érzékelő/aktuátor szintek, felette a funkcionális buszok, majd
+a központi gateway, végül a nagy sávszélességű infotainment és ADAS
+hálózatok.</p>
+<figure>
+<img src="assets/au114-diagram-2.png"
+alt="Járműhálózati hierarchia (szemléltető vázlat) - A mai járművekben a LIN érzékelő/aktuátor szinten, a CAN és FlexRay a funkcionális ECU-k között, az Ethernet és MOST pedig a nagy sávszélességű rendszerek felé használatos. A konkrét architektúra gyártónként eltér (ellenőrizendő: gyártói adat)." />
+<figcaption aria-hidden="true">Járműhálózati hierarchia (szemléltető
+vázlat) - A mai járművekben a LIN érzékelő/aktuátor szinten, a CAN és
+FlexRay a funkcionális ECU-k között, az Ethernet és MOST pedig a nagy
+sávszélességű rendszerek felé használatos. A konkrét architektúra
+gyártónként eltér (ellenőrizendő: gyártói adat).</figcaption>
+</figure>
+<h3 data-number="32.1.9" id="minőségellenőrzés"><span
+class="header-section-number">32.1.9</span> Minőségellenőrzés</h3>
+<p>A CAN-hálózat ellenőrzésekor a három leggyakoribb művelet a lezáró
+ellenállás mérése, a differenciális feszültségek mérése multiméterrel,
+valamint az oszcilloszkópos jelalak­vizsgálat. Fontos, hogy a
+vezérlőegységek csatlakozóinak bontása és mérése előtt a gyújtást ki
+kell kapcsolni, a gyártói várakozási időt be kell tartani, és a gyártói
+rajz alapján kell azonosítani a CAN-H, CAN-L és a testpontokat. A mérés
+során a csatlakozókat óvatosan kell kezelni, hogy a sérülékeny tűk ne
+hajoljanak meg.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák. A gyújtás kikapcsolását
+és az akkumulátor lekötését a gyártói eljárás szerint, a hibrid és
+elektromos járművek nagyfeszültségű rendszerére vonatkozó előírások
+betartásával kell végezni (ha releváns).</p>
+<p><strong>Gyakorlat.</strong> A lezáró ellenállás ellenőrzéséhez a
+járművön keresd meg a CAN-busz legkönnyebben elérhető csatlakozóját,
+általában a diagnosztikai csatlakozó közelében vagy a gyártói kapcsolási
+rajz szerint. Kikapcsolt gyújtásnál mérd meg multiméterrel a CAN-H és a
+CAN-L közötti ellenállást. Ép hálózaton a várt érték körülbelül 60 Ω
+(két 120 Ω párhuzamosan), de a gyártói előírás ettől eltérhet. Ha 120
+Ω-ot mérsz, az egyik lezárás szakadt vagy hiányzik; ha nagyon alacsony
+értéket, akkor rövidzárra vagy harmadik lezáró ellenállásra gyanakodj. A
+mérés után győződj meg arról, hogy a csatlakozókat
+visszaillesztetted.</p>
+<p><strong>Figyelem.</strong> A CAN-hálózaton multiméterrel feszültséget
+mérni csak a gyártói áramútrajz és a megfelelő mérési pontok ismeretében
+szabad. A buszvezetékeket tilos testre vagy tápfeszültségre kötni, mert
+a vezérlőegységek megsérülhetnek.</p>
+<h3 data-number="32.1.10" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">32.1.10</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy szervizbe érkezik egy személygépkocsi azzal a panasszal, hogy a
+műszeregység időnként nem mutatja a hűtőfolyadék-hőmérsékletet és a
+motorfordulatszámot, a hibakódmemóriában pedig kommunikációs hibák
+találhatók a hajtáslánci CAN buszra vonatkozóan. A járművön a
+hajtáslánci CAN csatlakozóját megkeresve a gyújtás kikapcsolása után a
+CAN-H és CAN-L között 120 Ω-ot mérünk, nem pedig a várt 60 Ω-ot. Ez arra
+utal, hogy az egyik 120 Ω-os lezáró ellenállás hiányzik vagy szakadt. A
+gyártói rajz szerint az egyik lezárás a motor-ECU-ban, a másik egy jobb
+oldali csatlakozó­házban található. A csatlakozóház megbontásánál
+kiderül, hogy az egyik tű korrodált, és a lezáró ellenállás nem
+érintkezik. A csatlakozó tisztítása, a tű kicserélése és a csatlakozó­ház
+rögzítése után az ellenállásmérés már 60 Ω-ot mutat. A hibakódok törlése
+és próbaút után a műszeregység ismét megbízhatóan dolgozik. A hiba
+gyökere a korrózió okozta szakadás volt; a lezárás hiánya a
+jelvisszaverődések miatt adatvesztést okozott.</p>
+<h3 data-number="32.1.11" id="tipikus-hibák"><span
+class="header-section-number">32.1.11</span> Tipikus hibák</h3>
+<p><strong>Hiba.</strong> A technikus a testhez mért CAN-H vagy CAN-L
+feszültségből (multiméteres átlagból) az üzenetforgalom épségére
+következtet. A testhez mért feszültség (jellemzően kb. 2,6 V a CAN-H és
+kb. 2,4 V a CAN-L vezetéken forgalom közben; ellenőrizendő) a zárlatok –
+testzárlat, tápzárlat, CAN-H–CAN-L zárlat – felismerésére jó, a bitek és
+a keretek vizsgálatához azonban kétcsatornás oszcilloszkóp kell, amelyen
+a két jel tükörképe és a különbségük is látszik; a vevő a két vezeték
+különbségét értékeli.</p>
+<p><strong>Hiba.</strong> A lezáró ellenállás mérésénél a busz
+feszültség alatt vagy túl korán, a kondenzátorok kisülése előtt mérnek,
+így a mért érték torz. Mindig a gyártói utasítás szerinti nyugalmi
+állapotban és megfelelő várakozási idő után mérjünk.</p>
+<p><strong>Hiba.</strong> A CAN, LIN és FlexRay buszokat összekeverik,
+mert mindegyiknek van „CAN-jellegű” diagnosztikája. Pedig fizikai
+rétegükben és protokolljukban alapvetően eltérnek; a LIN egyvezetékes, a
+FlexRay kétcsatornás, időosztásos, a CAN pedig arbitrációs. A hibát az
+áramútrajz és a gyártói besorolás figyelmen kívül hagyása okozza.</p>
+<h3 data-number="32.1.12" id="önellenőrzés"><span
+class="header-section-number">32.1.12</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e, hogy a CAN-H és CAN-L közötti lezáró ellenállások párhuzamos
+eredője miatt 60 Ω a várt érték, ha mindkét 120 Ω-os lezáró ellenállás
+ép? Indokold röviden.</li>
+<li>Mi a különbség a domináns és a recesszív bit között a CAN fizikai
+rétegén?</li>
+<li>Melyik üzenet nyer CAN arbitráció esetén: az azonosító
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>200</mn></mrow><annotation encoding="application/x-tex">0x200</annotation></semantics></math>
+vagy az azonosító
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>1</mn><mi>A</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">0x1A0</annotation></semantics></math>?
+Miért?</li>
+<li>Miért van szükség gatewayre egy modern járműben, ha több különböző
+busz (CAN, LIN, FlexRay, Ethernet) van?</li>
+<li>Igaz-e, hogy a LIN busz sebessége nagyobb, mint a CAN High-speed
+sebessége? Indokold.</li>
+<li>Milyen mérési eredmény utal szakadt lezáró ellenállásra, ha a CAN-H
+és CAN-L közötti ellenállást mérjük?</li>
+</ol>
+<h3 data-number="32.1.13" id="feladatok"><span
+class="header-section-number">32.1.13</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Definiáld röviden az adatbusz, a
+differenciális jelátvitel és a gateway fogalmát.</p>
+<p><strong>2. feladat (A).</strong> Számítsd ki a CAN-H és CAN-L közötti
+differenciális feszültséget domináns bitnél, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-H}} = 3{,}6\,\text{V}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub><mo>=</mo><mn>1</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-L}} = 1{,}4\,\text{V}</annotation></semantics></math>.
+Recesszív bitnél pedig
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-H}} = 2{,}5\,\text{V}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{CAN-L}} = 2{,}5\,\text{V}</annotation></semantics></math>.</p>
+<p><strong>3. feladat (B).</strong> CAN arbitráció: az A vezérlőegység
+azonosítója
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>300</mn></mrow><annotation encoding="application/x-tex">0x300</annotation></semantics></math>,
+a B egységé
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>2</mn><mi>F</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">0x2F0</annotation></semantics></math>.
+A harmadik C egységé
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>2</mn><mi>A</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">0x2A0</annotation></semantics></math>.
+Az adás előtt mindhárom azonosító bitfolyama elindul. Add meg, milyen
+sorrendben kapnak adásjogot, és indokold.</p>
+<p><strong>4. feladat (B).</strong> Egy CAN-hálózaton a két lezáró
+ellenállás mindegyike 120 Ω. Rajzold le a busz felépítését vázlatosan,
+és számítsd ki a CAN-H és CAN-L közötti várható egyenáramú ellenállást.
+Ha ez a 60 Ω helyett 80 Ω-ot mérsz, milyen hibára gyanakodhatsz?</p>
+<p><strong>5. feladat (C).</strong> Magyarázd el, miért okoz a hiányzó
+lezáró ellenállás a nagysebességű CAN buszon adatátviteli hibákat, még
+akkor is, ha az ellenállás értéke csak egy passzív elem. Milyen fizikai
+jelenség játszik szerepet?</p>
+<p><strong>6. feladat (D).</strong> Hibakeresés: egy járműben az egyik
+komfortrendszer (LIN buszon) nem kommunikál a masterrel. A LIN busz
+feszültsége testhez képest 0 V, a tápellátás 12 V jelen van, a slave
+egység csatlakozója ép. Milyen további mérést vagy ellenőrzést végeznél,
+és mi lehet a hiba?</p>
+<h3 data-number="32.1.14" id="megoldások"><span
+class="header-section-number">32.1.14</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Igaz. Két azonos, 120 Ω-os ellenállás párhuzamosan:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">e</mtext></msub><mo>=</mo><mfrac><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><mn>2</mn></mfrac><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{e}} = \frac{120\,\Omega}{2} = 60\,\Omega</annotation></semantics></math>.</li>
+<li>Domináns bitnél a CAN-H és CAN-L között körülbelül 2 V különbség van
+(CAN-H magasabb, CAN-L alacsonyabb), recesszív bitnél a különbség közel
+nulla (mindkettő kb. 2,5 V).</li>
+<li>Az alacsonyabb azonosító nyer, mert az arbitrációban a domináns
+(logikai 0) bit uralkodik. A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>1</mn><mi>A</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">0x1A0</annotation></semantics></math>
+(decimálisan kisebb, mint
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>200</mn></mrow><annotation encoding="application/x-tex">0x200</annotation></semantics></math>)
+nyer.</li>
+<li>A gateway továbbítja és szűri az üzeneteket a különböző buszok
+között, mivel azok fizikai rétege, sebessége és protokollja eltérő;
+közvetlen összekötésük nem lehetséges vagy nem megbízható.</li>
+<li>Hamis. A LIN jellemző sebessége 19,2 kbit/s, a CAN High-speed akár 1
+Mbit/s is lehet, tehát a CAN gyorsabb.</li>
+<li>Ha a CAN-H és CAN-L közötti ellenállás 120 Ω (és nem 60 Ω), az egyik
+lezáró ellenállás hiányzik vagy szakadt.</li>
+</ol>
+<p><strong>1. feladat megoldása.</strong> - <strong>Adatbusz:</strong>
+közös átviteli közeg, amelyre több ECU csatlakozik, és digitális
+üzenetekkel, meghatározott protokoll szerint kommunikál. -
+<strong>Differenciális jelátvitel:</strong> az információt két vezeték
+feszültségkülönbsége hordozza; a közös zavarófeszültségek kiesnek. -
+<strong>Gateway:</strong> átjáró, amely különböző buszrendszerek között
+továbbítja, szűri, esetleg konvertálja az üzeneteket.</p>
+<p><strong>2. feladat megoldása.</strong> Domináns bitnél:<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">CAN-H</mtext></msub><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">CAN-L</mtext></msub></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>3</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>1</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+U_{\text{diff}} &amp;= U_{\text{CAN-H}} - U_{\text{CAN-L}} \\
+&amp;= 3{,}6\,\text{V} - 1{,}4\,\text{V} = 2{,}2\,\text{V}.
+\end{aligned}</annotation></semantics></math><br />
+Recesszív bitnél:<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>U</mi><mtext mathvariant="normal">diff</mtext></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+U_{\text{diff}} &amp;= 2{,}5\,\text{V} - 2{,}5\,\text{V} = 0\,\text{V}.
+\end{aligned}</annotation></semantics></math></p>
+<p><strong>3. feladat megoldása.</strong><br />
+A CAN azonosító numerikus értéke alapján dönt, minél kisebb a
+hexadecimális érték, annál nagyobb a prioritás.<br />
+-
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>2</mn><mi>A</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">0x2A0</annotation></semantics></math>
+(672 decimálisan) a legkisebb, így C nyer először.<br />
+- Ezután
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>2</mn><mi>F</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">0x2F0</annotation></semantics></math>
+(752 decimálisan) B nyer.<br />
+- Végül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mn>300</mn></mrow><annotation encoding="application/x-tex">0x300</annotation></semantics></math>
+(768 decimálisan) A kap adásjogot.<br />
+A sorrend tehát: C, B, A.</p>
+<p><strong>4. feladat megoldása.</strong><br />
+A busz vázlata: CAN-H felső vezeték, CAN-L alsó vezeték, bal és jobb
+végén egy-egy 120 Ω ellenállás a két vezeték között.<br />
+A két párhuzamos ellenállás eredője:<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>R</mi><mtext mathvariant="normal">e</mtext></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>⋅</mo><msub><mi>R</mi><mn>2</mn></msub></mrow><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>⋅</mo><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mfrac><mrow><mn>14</mn><mspace width="0.167em"></mspace><mn>400</mn><mspace width="0.167em"></mspace><msup><mi mathvariant="normal">Ω</mi><mn>2</mn></msup></mrow><mrow><mn>240</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+R_{\text{e}} &amp;= \frac{R_1 \cdot R_2}{R_1 + R_2} = \frac{120\,\Omega \cdot 120\,\Omega}{120\,\Omega + 120\,\Omega} \\
+&amp;= \frac{14\,400\,\Omega^2}{240\,\Omega} = 60\,\Omega .
+\end{aligned}</annotation></semantics></math><br />
+Ha 80 Ω-ot mérünk:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>e</mi></msub><mo>=</mo><mn>80</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_e = 80\,\Omega</annotation></semantics></math>
+esetén az egyik ág
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>x</mi></msub><mo>=</mo><mstyle displaystyle="true"><mfrac><mrow><mn>120</mn><mo>⋅</mo><mn>80</mn></mrow><mrow><mn>120</mn><mo>−</mo><mn>80</mn></mrow></mfrac></mstyle><mo>=</mo><mn>240</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_x = \dfrac{120 \cdot 80}{120 - 80} = 240\,\Omega</annotation></semantics></math>,
+vagyis az egyik lezáró ágban kb. 120 Ω-mal nagyobb az ellenállás a
+vártnál (átmeneti ellenállás korrodált csatlakozónál, sérült vezeték
+vagy nem megfelelő értékű lezáró ellenállás;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>∥</mo><mn>240</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>80</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega \parallel 240\,\Omega = 80\,\Omega</annotation></semantics></math>).
+Párhuzamos szivárgási ellenállás az eredőt csökkentené, nem növelné; ha
+az egyik lezárás teljesen hiányzik,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">120\,\Omega</annotation></semantics></math>
+mérhető. A két lezárást külön mérjük (az egyik végpont ECU-ját vagy
+csatlakozóját leválasztva az ép ágon 120 Ω), így azonosítható a hibás
+ág. A pontos diagnózishoz a gyártói rajzot kell követni.</p>
+<p><strong>5. feladat megoldása.</strong><br />
+A CAN busz nagysebességű jelátvitele során a jelfrontok gyors
+felfutással terjednek a csavart érpáron. A vezetékpárnak
+hullámimpedanciája van, a lezáró ellenállásnak ehhez kell illeszkednie,
+hogy a jel reflektálódását megakadályozza. Ha a lezárás hiányzik, a jel
+a busz végéről visszaverődik, a visszavert hullám torzítja a jelfrontot,
+sőt feszültség­túllövéseket okoz, amit a vevő hibás bitként értelmezhet.
+Ezért a hiányzó lezáró ellenállás passzív alkatrész, de a rendszer
+szintjén fontos szerepet játszik a jeltisztaság megőrzésében.</p>
+<p><strong>6. feladat megoldása.</strong><br />
+A LIN busz feszültsége testhez képest 0 V, a tápellátás 12 V jelen van.
+Normálisan a LIN-vezetéken kb. 12 V (nyugalmi szint) vagy 0–12 V közötti
+négyszögjel mérhető; a tartós 0 V testzárlatra vagy a master felhúzó
+ágának/tápjának hibájára utal. Ellenőrizni kell a LIN vezeték
+szempontjából a testhez való rövidzárat vagy a szakadást. A master
+oldali és a slave oldali csatlakozón meg kell mérni a LIN jelvezeték
+ellenállását a testhez képest; ha 0 Ω-ot mérünk, akkor rövidzár van. Ha
+a vezeték szakadt, akkor a slave nem kap jelet; ezt folytonosság­méréssel
+lehet ellenőrizni. A hiba lehet a LIN-jelvezeték szakadása vagy
+testzárlata, ami meggátolja a kommunikációt.</p>
+<h3 data-number="32.1.15" id="rövid-összefoglaló"><span
+class="header-section-number">32.1.15</span> Rövid összefoglaló</h3>
+<p>Az adatbuszok a modern jármű üzenetváltó gerincét alkotják, mert a
+pont-pont vezetékezés tömegét, költségét és bonyolultságát drasztikusan
+csökkentik. A CAN High-speed a differenciális jelátvitelre épül: a vevő
+a CAN-H és CAN-L közötti feszültségkülönbséget értékeli, így a közös
+módusú zavarok kiesnek. A busz mindkét végét 120 Ω-os lezáró
+ellenállással kell illeszteni a csavart érpár hullámimpedanciájához; a
+hiányzó vagy rossz lezárás jelvisszaverődést és adatvesztést okoz. A
+CAN-keretben az azonosító egyben prioritást ad: az arbitráció során az
+alacsonyabb azonosítójú üzenet nyer. A LIN olcsó, egyvezetékes
+master–slave hálózat; a FlexRay időosztásos, redundáns, nagysebességű
+busz; a MOST optikai gyűrű a multimédiához; az autóipari Ethernet pedig
+csillagtopológiás, nagy sávszélességű megoldás a kamera-, radar- és
+OTA-adatokhoz. A gateway az eltérő buszok között továbbít és szűr.
+<strong>Továbbvitt eredmény:</strong> a CAN fizikai rétegének ismerete –
+a csavart érpár, a 2 × 120 Ω-os lezárás, a differenciális
+feszültségszintek és a domináns/recesszív logika – közvetlenül szükséges
+a <a href="au115.html">Buszhibák és az adatbusz-hálózatok
+diagnosztikája</a>, a <a href="au116.html">Vezetőtámogató rendszerek és
+kalibrálásuk</a>, valamint a <a href="au133.html">Fedélzeti
+diagnosztika: OBD és EOBD</a> alfejezetekben.</p>
+<h3 data-number="32.1.16" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">32.1.16</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: ISO 11898 szabványsorozat (CAN fizikai és
+adatkapcsolati réteg), LIN-specifikáció (LIN Consortium),
+FlexRay-specifikáció (FlexRay Consortium), IEEE 802.3 (Ethernet),
+MOST-specifikáció, gyártói diagnosztikai és javítási útmutatók, MSZ EN
+60617 / IEC 60617 rajzjelek, DIN 72552 kapocsjelölések. A konkrét
+értékek – a buszsebesség, a lezáró ellenállás értéke, a
+CAN-feszültségszintek, a CAN-FD adatmező hossza – szabvány­kiadástól és
+járműtípustól függően változhatnak, ezért a pontos tervezési vagy mérési
+adatokat a gyártói javítási utasításból és az aktuális szabványkiadásból
+kell ellenőrizni. A példákban szereplő hibakódok, azonosítók és
+hibatünetek tanulási célúak, nem valós mért adatok.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au113.html">← 31.3 Beavatkozók: injektorok, gyújtótekercsek, fojtószelep, alapjárat-szabályozó, EGR-szelep</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au115.html">32.2 Buszhibák és az adatbusz-hálózatok diagnosztikája →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

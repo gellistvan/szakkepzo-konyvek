@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refraktométer-leolvasó gyakorló</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="n">Feladat sorszáma</label><input id="n" type="range" min="1" max="30" step="1" value="1" aria-label="Feladat sorszáma"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="sol">Megoldás mutatása</label><input id="sol" type="checkbox" aria-label="Megoldás mutatása"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Refraktométer látómezeje etilénglikol-fagyáspont skálával és határvonallal; leolvasási gyakorlat."></svg>
+<p class="small">Sematikus skála: a glikolskála a fejezet fagyáspont-pontjaiból lineáris koncentrációosztással készült; a valódi műszer saját skáláját (etilén- és propilénglikol külön!) kell használni. Ellenőrizendő a gyártói adatok szerint.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const FP=[[0, 0], [33, -18], [50, -37], [60, -52]];
+function fp(c){for(let i=1;i<FP.length;i++){if(c<=FP[i][0]){const a=FP[i-1],b=FP[i];return a[1]+(b[1]-a[1])*(c-a[0])/(b[0]-a[0]);}}return FP[FP.length-1][1];}
+function cof(t){for(let i=1;i<FP.length;i++){if(t>=FP[i][1]){const a=FP[i-1],b=FP[i];return a[0]+(b[0]-a[0])*(t-a[1])/(b[1]-a[1]);}}return 60;}
+const c=15+((v.n*37+11)%44), cx=280, cy=160, R=135, top=cy-0.8*R, bot=cy+0.8*R, Y=q=>top+(bot-top)*q/60;
+el("rect",{x:0,y:0,width:560,height:320,fill:"#fff"});
+el("defs",{}).innerHTML='<clipPath id="cp"><circle cx="'+cx+'" cy="'+cy+'" r="'+R+'"/></clipPath>';
+el("circle",{cx:cx,cy:cy,r:R,fill:"#fff",stroke:"#000","stroke-width":2});
+el("rect",{x:cx-R,y:cy-R,width:2*R,height:Y(c)-cy+R,fill:"#9a9a9a","clip-path":"url(#cp)"});
+el("line",{x1:cx-R,y1:Y(c),x2:cx+R,y2:Y(c),stroke:"#000","stroke-width":2.5,"clip-path":"url(#cp)"});
+el("line",{x1:cx-10,y1:top,x2:cx-10,y2:bot,stroke:"#000"});
+for(let t=0;t>=-50;t-=5){const y=Y(cof(t)),L=t%10?8:14;el("line",{x1:cx-10-L,y1:y,x2:cx-10,y2:y,stroke:"#000"});
+  if(t%10===0)el("text",{x:cx-30,y:y+4,"font-size":12,"text-anchor":"end",fill:"#000"},String(t).replace("-","−"));}
+el("text",{x:cx-60,y:22,"font-size":12,"text-anchor":"middle",fill:"#000"},"etilénglikol, fagyáspont °C");
+const f=fp(c);
+status(v.sol?("Határvonal ≈ <b>"+fmt(f,0).replace("-","−")+" °C</b> (≈ "+fmt(c,0)+" % glikol). "+(f>-25?"<span class='bad'>Kevés a fagyálló a téli igényhez.</span>":(c>60?"<span class='bad'>Túl tömény.</span>":"<span class='ok'>Megfelelő tartomány (ellenőrizendő a gyártói előírással).</span>"))):"Olvassa le a határvonal helyén a fagyáspontot (5 °C-os osztás), majd kapcsolja be a megoldást.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tányérrugós tengelykapcsoló: pedálút, kopás, átvihető nyomaték</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ped">Pedálút</label><input id="ped" type="range" min="0" max="100" step="1" value="0" aria-label="Pedálút"><output id="ped_o" for="ped"></output></div>
+<div class="row"><label for="wear">Betétkopás (a holtjáték elfogyásáig)</label><input id="wear" type="range" min="0" max="130" step="1" value="0" aria-label="Betétkopás (a holtjáték elfogyásáig)"><output id="wear_o" for="wear"></output></div>
+<div class="row"><label for="mm">Motornyomaték</label><input id="mm" type="range" min="100" max="320" step="5" value="180" aria-label="Motornyomaték"><output id="mm_o" for="mm"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 420 470" role="img" aria-label="Egytárcsás tányérrugós tengelykapcsoló félmetszete; a pedálút és a kopás csúszkájával a tányérrugó billen, kijelzett szorítóerő és átvihető nyomaték."></svg>
+<p class="small">Sematikus, nem méretarányos rajz. A kidolgozott 1. példa adatai: z = 2, μ = 0,35, F<sub>n</sub> = 4 200 N, r<sub>m</sub> = 0,09 m → 264,6 Nm zárt állapotban. A szorítóerő pedálút szerinti lefutása és a kopás hatása (a nyelvek a csapágy felé vándorolnak, a holtjáték elfogy, 100 % fölött a csapágy előfeszíti a rugót és a kuplung csúszik) szemléltető modell, nem gyártói jelleggörbe; a valós tányérrugó-karakterisztika nemlineáris. Holtjáték és kopáshatár: gyártói adat (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"ped":"%", "wear":"%", "mm":"Nm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const G={"FW": 1.6, "LIN": 0.15, "CAR": 0.1, "FUL": [2.95, 4.35], "OUT0": [2.65, 5.05], "TIP0": [3.88, 1.95], "S0": 0.25, "EL": 0.2, "DMAX": 0.75, "Z": 2, "MU": 0.35, "FN0": 4200.0, "RM": 0.09};
+const rot=(p,th)=>{const x=p[0]-G.FUL[0],y=p[1]-G.FUL[1];return [G.FUL[0]+x*Math.cos(th)-y*Math.sin(th),G.FUL[1]+x*Math.sin(th)+y*Math.cos(th)];};
+const ped=v.ped/100, wear=v.wear/100;
+const dlin=0.036*wear, thw=2*dlin/(G.OUT0[1]-G.FUL[1]), tipw=rot(G.TIP0,thw);
+const s0=Math.max(0,G.S0-(tipw[0]-G.TIP0[0])), pre=Math.max(0,(tipw[0]-G.TIP0[0])-G.S0);
+const db=ped*G.DMAX, push=Math.max(0,db-s0)+pre, Fn=G.FN0*Math.max(0,1-push/G.EL);
+const Lt=Math.hypot(G.TIP0[0]-G.FUL[0],G.TIP0[1]-G.FUL[1]), lth=Math.max(0,push-G.EL)/Lt, th=thw-lth, lift=lth*(G.OUT0[1]-G.FUL[1]);
+const MK=G.Z*G.MU*Fn*G.RM;
+const K=62, X=x=>20+K*(x+0.3), Y=y=>445-K*y;
+const ln=css("--fg")||"#111";
+function R(x,y,w,h,f,extra){return el("rect",Object.assign({x:X(x),y:Y(y+h),width:w*K,height:h*K,fill:f,stroke:"#000","stroke-width":1},extra||{}));}
+el("rect",{x:0,y:0,width:420,height:470,fill:"#fff"});
+el("line",{x1:X(-0.3),y1:Y(0),x2:X(5.6),y2:Y(0),stroke:"#000","stroke-dasharray":"8 3 2 3"});
+const lin=G.LIN-dlin, off=lift/2, xc=G.FW+lin+off, pp=xc+G.CAR+lin+off;
+el("polygon",{points:[[0.6,0],[0.6,6.0],[1.0,6.3],[1.6,6.3],[1.6,3.4],[1.25,3.0],[1.25,1.1],[1.0,1.1],[1.0,0]].map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"#ddd",stroke:"#000"});
+R(-0.3,0,0.9,1.1,"#c8c8c8");
+R(0.7,0,4.8,0.55,"#f2f2f2");
+R(1.7,0.55,0.8,0.5,"#e0e0e0");
+R(xc,1.05,G.CAR,4.45,"#bbb");
+R(G.FW+off,3.55,lin,1.85,"#fff",{"stroke-width":1.5});R(xc+G.CAR,3.55,lin,1.85,"#fff",{"stroke-width":1.5});
+el("polygon",{points:[[pp,3.5],[pp,5.5],[pp+0.45,5.5],[pp+0.45,5.15],[pp+0.6,5.15],[pp+0.6,4.9],[pp+0.45,4.9],[pp+0.45,3.5]].map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"#ddd",stroke:"#000"});
+el("polygon",{points:[[1.6,5.75],[1.6,6.05],[3.25,6.05],[3.25,4.15],[3.1,4.15],[3.1,5.85],[1.75,5.85],[1.75,5.75]].map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"#cfcfcf",stroke:"#000"});
+const o=rot(G.OUT0,th), t=rot(G.TIP0,th);
+el("line",{x1:X(o[0]),y1:Y(o[1]),x2:X(t[0]),y2:Y(t[1]),stroke:"#000","stroke-width":7,"stroke-linecap":"round"});
+el("line",{x1:X(o[0]),y1:Y(o[1]),x2:X(t[0]),y2:Y(t[1]),stroke:"#fff","stroke-width":2.5,"stroke-linecap":"round"});
+el("circle",{cx:X(G.FUL[0]),cy:Y(G.FUL[1]),r:4,fill:"#000"});
+let bx=(db<s0)?(G.TIP0[0]+G.S0-db):t[0];
+R(2.9,0.55,2.3,0.3,"#f7f7f7");R(bx,0.9,0.5,1.25,"#fff",{"stroke-width":1.5});
+el("circle",{cx:X(bx+0.25),cy:Y(1.5),r:0.16*K,fill:"#999",stroke:"#000"});
+el("polyline",{points:[[bx+0.5,1.5],[bx+0.9,1.6],[bx+1.3,3.2]].map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"none",stroke:"#000","stroke-width":3});
+if(Fn>0){const a=Math.min(1,Fn/G.FN0);
+ el("polyline",{points:[[-0.2,0.75],[0.8,2.6],[1.45,4.4],[G.FW+lin*0.5,4.4],[xc+G.CAR/2,4.0],[xc+G.CAR/2,1.2],[2.1,0.85],[5.4,0.27]].map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"none",stroke:"#777","stroke-width":2+5*a,"stroke-opacity":0.6,"stroke-linejoin":"round"});
+ el("text",{x:X(4.3),y:Y(-0.35),"font-size":13,fill:"#000"},"nyomatékút");}
+el("text",{x:X(0.0),y:Y(6.55),"font-size":13,fill:"#000"},"lendkerék");
+el("text",{x:X(3.35),y:Y(5.0),"font-size":13,fill:"#000"},"kuplungház");
+el("text",{x:X(3.5),y:Y(3.6),"font-size":13,fill:"#000"},"tányérrugó");
+el("text",{x:X(4.2),y:Y(2.6),"font-size":13,fill:"#000"},"kinyomócsapágy");
+el("text",{x:X(2.05),y:Y(2.0),"font-size":13,fill:"#000"},"tárcsa");
+el("text",{x:X(1.9),y:Y(6.55),"font-size":13,fill:"#000"},"szorítótárcsa");
+const slip=(MK<v.mm);
+status("Holtjáték s₀: <b>"+(s0>0.005?fmt(100*s0/G.S0,0)+" %":"elfogyott")+"</b> · szorítóerő <b>F<sub>n</sub> = "+fmt(Fn,0)+" N</b> · átvihető nyomaték <b>M<sub>K</sub> = z·μ·F<sub>n</sub>·r<sub>m</sub> = 2·0,35·"+fmt(Fn,0)+"·0,09 = "+fmt(MK,1)+" Nm</b> → "+
+ (Fn>=G.FN0-1e-6?"zárt":(Fn>0?"csúszva zár / old":"oldott"))+(Fn>0?(slip?" · a "+fmt(v.mm,0)+" Nm motornyomatéknál <b>CSÚSZIK</b>":" · a "+fmt(v.mm,0)+" Nm motornyomaték átvihető"):"")+".");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

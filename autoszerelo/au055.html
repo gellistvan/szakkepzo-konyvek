@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>15.3 Oszcilloszkóp, váltakozó áramú mérések és félvezetők
+vizsgálata – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz4">IV. RÉSZ – Elektrotechnika, elektronika és villamos mérések</a> › <a href="index.html#auch14">15 Villamos mérések</a></p>
+<div class="links"><a class="prev" rel="prev" href="au054.html">← 15.2 Egyenáramú alapmérések</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au056.html">16.1 Belső égésű motorok csoportosítása, a négyütemű Otto-motor működése és körfolyamata →</a></div>
+</nav>
+<h2 data-number="15.3" id="au055"><span
+class="header-section-number">15.3</span> Oszcilloszkóp, váltakozó áramú
+mérések és félvezetők vizsgálata</h2>
+<p>A multiméterrel mért „12 V” gyakran csak egy időbeli átlag. A jármű
+fedélzeti elektronikájában azonban gyors jelváltozások, fáziseltolások
+és egyedi jelalakok hordozzák a diagnosztikai információt: a
+főtengely-jeladó fogankénti impulzusai, a gyújtótekercs primer
+feszültségcsúcsa, a lambdaszonda változó jelszintje. Ebben az
+alfejezetben az oszcilloszkópot és a hozzá kapcsolódó váltakozó áramú
+méréseket építjük fel a tanműhelyi méréstől a járműdiagnosztikai
+alkalmazásig.</p>
+<h3 data-number="15.3.1" id="szemléletes-kép"><span
+class="header-section-number">15.3.1</span> Szemléletes kép</h3>
+<p>Képzeljünk el egy kétcsatornás oszcilloszkópot. Az 1. csatornára egy
+szinuszos jelet kötünk, a 2. csatornára ugyanannak a jelnek egy
+fáziskésleltetett változatát. A képernyőn két, egymáshoz képest időben
+eltolt görbét látunk. A feszültségosztás (függőleges) például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V/oszt}</annotation></semantics></math>,
+az időalap (vízszintes)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}2\,\text{ms/oszt}</annotation></semantics></math>.
+Az oszcilloszkóp belső triggerje a jel felfutó élénél indítja a
+rajzolást, így a kép nem „fut”, hanem áll.</p>
+<figure>
+<img src="assets/au055-diagram-1.png"
+alt="Kétcsatornás fázismérés szemléltető jelei (f = 1 kHz) - Szemléltető szinuszos jelek: u1 (folytonos) és u2 (szaggatott); f = 1 kHz, T = 1 ms, Δt ≈ 0,080 ms → φ = 360°·Δt/T ≈ 28,6° (u2 késik). A jelalak nem mért érték, hanem a mérési elv bemutatására szolgál." />
+<figcaption aria-hidden="true">Kétcsatornás fázismérés szemléltető jelei
+(f = 1 kHz) - Szemléltető szinuszos jelek: u1 (folytonos) és u2
+(szaggatott); f = 1 kHz, T = 1 ms, Δt ≈ 0,080 ms → φ = 360°·Δt/T ≈ 28,6°
+(u2 késik). A jelalak nem mért érték, hanem a mérési elv bemutatására
+szolgál.</figcaption>
+</figure>
+<p>A vízszintes tengelyen az idő, a függőlegesen a feszültség van. A két
+görbe közötti vízszintes eltolásból számítható a fázisszög (itt
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi><mo>≈</mo><mn>0</mn><mo>,</mo><mn>080</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">\Delta t \approx 0{,}080\,\text{ms}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = 1\,\text{ms}</annotation></semantics></math>,
+így
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>≈</mo><mn>28</mn><mo>,</mo><msup><mn>6</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi \approx 28{,}6^{\circ}</annotation></semantics></math>,
+u2 késik), a csúcsértékből pedig az effektív feszültség.</p>
+<p><strong>Definíció.</strong> Az <strong>oszcilloszkóp</strong> olyan
+mérőműszer, amely a feszültség időbeli alakját rajzolja ki. A
+hagyományos analóg oszcilloszkóp elektronsugárral, a modern digitális
+tárolós oszcilloszkóp (DSO) pedig a jel mintavételezésével és
+A/D-átalakítás után digitálisan jeleníti meg a jelalakot.</p>
+<p><strong>Összefüggés.</strong> A jelalak leolvasásának két
+alapbeállítása a <strong>függőleges csatorna</strong> (feszültségosztás,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mtext mathvariant="normal">div</mtext></msub><annotation encoding="application/x-tex">V_{\text{div}}</annotation></semantics></math>)
+és az <strong>időalap</strong> (időosztás,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">div</mtext></msub><annotation encoding="application/x-tex">t_{\text{div}}</annotation></semantics></math>).
+Ha egy jel csúcsa
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+osztás magas, periódusa
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>
+osztás széles, akkor</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><mo>=</mo><mi>N</mi><mo>⋅</mo><msub><mi>V</mi><mtext mathvariant="normal">div</mtext></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>T</mi><mo>=</mo><mi>M</mi><mo>⋅</mo><msub><mi>t</mi><mtext mathvariant="normal">div</mtext></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>f</mi><mo>=</mo><mfrac><mn>1</mn><mi>T</mi></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U_{\text{cs}} = N \cdot V_{\text{div}},
+\qquad
+T = M \cdot t_{\text{div}},
+\qquad
+f = \frac{1}{T}.
+</annotation></semantics></math></p>
+<p>Szinuszos jel esetén az effektív érték:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><mfrac><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><msqrt><mn>2</mn></msqrt></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U_{\text{eff}} = \frac{U_{\text{cs}}}{\sqrt{2}}.
+</annotation></semantics></math></p>
+<p><strong>Szabály.</strong> Mérés előtt meg kell győződni a mérőszonda
+csillapításáról (jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1{:}1</annotation></semantics></math>
+vagy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>).
+Ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>
+szondát használunk, az oszcilloszkóp feszültségosztás-beállításánál is
+ezt kell kiválasztani, különben tízszeres hibával olvasunk le.</p>
+<h3 data-number="15.3.2" id="felépítés-és-működés"><span
+class="header-section-number">15.3.2</span> Felépítés és működés</h3>
+<p>A <strong>jelgenerátor</strong> (függvénygenerátor) a mérési
+összeállítás aktív forrása. Kezelőszervei: - jelalak-választó (sinus,
+négyszög, háromszög), - frekvenciabeállító, amplitúdó- és
+offset-szabályzó, - kimeneti csatlakozó, gyakran
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">50\,\Omega</annotation></semantics></math>
+belső ellenállással, - esetleg százalékos kitöltési tényező (duty cycle)
+beállítás, ami négyszögjelnél fontos.</p>
+<p>A laboratóriumi oszcilloszkóp fő egységei: - <strong>függőleges
+erősítő</strong> és bemeneti csatolás (AC/DC), feszültségosztó, -
+<strong>időalap-generátor</strong>, amely a vízszintes eltérítést
+vezérli, - <strong>trigger</strong>, amely a kép indítását stabilizálja,
+- kijelző, digitális készüléknél memória és mérési kurzorok.</p>
+<figure id="fig-au055-2">
+<div class="fig-interactive"><iframe src="figures/html/au055-2.html" title="Kétcsatornás oszcilloszkóp számozott kezelőszervekkel és a 10:1-es mérőfej részei." loading="lazy" style="width:100%;border:0;height:520px"></iframe><noscript><img src="figures/img/au055-2.png" style="width:95.0%"
+alt="Kétcsatornás oszcilloszkóp számozott kezelőszervekkel és a 10:1-es mérőfej részei." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au055-2.png" style="width:95.0%"
+alt="Kétcsatornás oszcilloszkóp számozott kezelőszervekkel és a 10:1-es mérőfej részei." /></details></div>
+<figcaption>Kétcsatornás oszcilloszkóp előlapja számozott
+kezelőszervekkel és a 10:1-es mérőfej részei</figcaption>
+</figure>
+<p>A rajz a felsorolt egységeket a kezelőszerveken mutatja: 1 kijelző, 2
+függőleges erősítő (V/oszt, pozíció), 3 AC/DC/GND csatolás, 4 időalap, 5
+trigger (szint, forrás, él), 6 Run/Stop és Auto, 7 BNC-bemenetek; a
+mérőfejen 8 mérőcsúcs, 9 ×1/×10 kapcsoló, 10 földcsipesz, 11 kompenzáló
+trimmer, 12 BNC-csatlakozó. A földcsipesz a műszer védőföldjén van,
+ezért csak a mérendő kör testére köthető. A HTML-kiadásban a részekre
+mutatva megjelenik a nevük és a hatásuk.</p>
+<p><strong>Trigger.</strong> A trigger akkor indítja a kép
+felfrissítését, amikor a jel egy beállított feszültségszintet adott
+irányban (felfutó vagy lefutó él) átlép. Ha a trigger szintje a jel
+tartományán kívül van, normál üzemmódban nem indul rajzolás, a kép áll
+vagy vándorol.</p>
+<p><strong>Példa.</strong> Egy szinuszjel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2\,\text{V}</annotation></semantics></math>
+csúcsú, a trigger szint
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>,
+felfutó él. A rajzolás akkor indul, amikor a jel felfelé átlépi az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V}</annotation></semantics></math>-ot.
+Így a megjelenített időablak mindig azonos fázisban kezdődik.</p>
+<p>A digitális oszcilloszkóp <strong>mintavételi frekvenciája</strong>
+és <strong>sávszélessége</strong> határozza meg, milyen gyors
+változásokat képes hűen mutatni. A gyakorlati szabály: a műszer
+sávszélessége legalább a mért jel legnagyobb értelmes harmonikus
+frekvenciájának többszöröse legyen (ellenőrizendő: a gyártói
+specifikáció alapján).</p>
+<h3 data-number="15.3.3" id="váltakozó-áramú-mérések"><span
+class="header-section-number">15.3.3</span> Váltakozó áramú mérések</h3>
+<h4 data-number="15.3.3.1" id="reaktancia-és-impedancia"><span
+class="header-section-number">15.3.3.1</span> Reaktancia és
+impedancia</h4>
+<p>Egy alkatrész reaktanciáját vagy impedanciáját a tanműhelyben
+feszültség- és árammérésből határozhatjuk meg. A <a
+href="au046.html">Váltakozó áram, reaktanciák, RLC-körök és
+teljesítmény</a> alfejezetben már megismertük:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mi>L</mi></msub><mo>=</mo><mi>ω</mi><mi>L</mi><mo>=</mo><mn>2</mn><mi>π</mi><mi>f</mi><mi>L</mi><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>X</mi><mi>C</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mi>ω</mi><mi>C</mi></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>π</mi><mi>f</mi><mi>C</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+X_L = \omega L = 2\pi f L,
+\qquad
+X_C = \frac{1}{\omega C} = \frac{1}{2\pi f C}.
+</annotation></semantics></math></p>
+<p>Soros RL vagy RC körben a teljes impedancia:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo>=</mo><msqrt><mrow><msup><mi>R</mi><mn>2</mn></msup><mo>+</mo><msup><mi>X</mi><mn>2</mn></msup></mrow></msqrt><mo>,</mo><mspace width="2.0em"></mspace><mi>φ</mi><mo>=</mo><mrow><mi>arctan</mi><mo>&#8289;</mo></mrow><mfrac><mi>X</mi><mi>R</mi></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+Z = \sqrt{R^2 + X^2},
+\qquad
+\varphi = \arctan\frac{X}{R},
+</annotation></semantics></math></p>
+<p>ahol a fázisszög előjele RL körnél pozitív (feszültség siet), RC
+körnél negatív (feszültség késik).</p>
+<p><strong>Mérési elv.</strong> Az impedancia méréséhez kapcsoljunk
+sorba egy ismert ellenállást és a mérendő elemet. A jelgenerátor
+szinuszos feszültségét
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+frekvencián kapcsoljuk a körre. Mérjük meg: - a teljes feszültséget
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>),
+- az áramot
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math>)
+multiméterrel vagy az ismert ellenállás feszültségéből
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><msub><mi>U</mi><mi>R</mi></msub><mi>/</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">I = U_R / R</annotation></semantics></math>),
+- a fáziskülönbséget oszcilloszkóppal
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\Delta t</annotation></semantics></math>-ből).</p>
+<p>Ebből:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>Z</mi><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mfrac><mi>U</mi><mi>I</mi></mfrac><mo>,</mo><mspace width="2.0em"></mspace><mi>R</mi><mo>=</mo><mo stretchy="false" form="prefix">|</mo><mi>Z</mi><mo stretchy="false" form="prefix">|</mo><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>X</mi><mo>=</mo><mo stretchy="false" form="prefix">|</mo><mi>Z</mi><mo stretchy="false" form="prefix">|</mo><mrow><mi>sin</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+|Z| = \frac{U}{I},
+\qquad
+R = |Z|\cos\varphi,
+\qquad
+X = |Z|\sin\varphi.
+</annotation></semantics></math></p>
+<p>A mért
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+és az ismert
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+segítségével a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+vagy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
+visszaszámolható. A gyakorlatban azonban tekercsnél a soros ohmos
+ellenállás, kondenzátornál a veszteség is befolyásolja az eredményt.</p>
+<h4 data-number="15.3.3.2"
+id="fáziskülönbség-mérése-kétcsatornás-üzemben"><span
+class="header-section-number">15.3.3.2</span> Fáziskülönbség mérése
+kétcsatornás üzemben</h4>
+<p>Kétcsatornás oszcilloszkóppal a fáziseltolást időeltolásból mérjük.
+Az 1. csatornát a referenciajelre, a 2. csatornát a vizsgált jelre
+kötjük. A periódusidő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>,
+a két jel azonos pontja (pl. felfutó nullátmenet) közötti idő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\Delta t</annotation></semantics></math>.
+A fázisszög:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>⋅</mo><mfrac><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi></mrow><mi>T</mi></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\varphi = 360^{\circ} \cdot \frac{\Delta t}{T}.
+</annotation></semantics></math></p>
+<p>Ha a 2. csatorna jele jobbra tolódik (késik), a fázisszög negatív, ha
+balra (siet), pozitív.</p>
+<h4 data-number="15.3.3.3" id="egyfázisú-teljesítmény-mérése"><span
+class="header-section-number">15.3.3.3</span> Egyfázisú teljesítmény
+mérése</h4>
+<p>A feszültség és az áram effektív értékének, valamint a
+fáziskülönbségnek az ismeretében a teljesítmények:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><msub><mi>I</mi><mtext mathvariant="normal">eff</mtext></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>P</mi><mo>=</mo><mi>S</mi><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>Q</mi><mo>=</mo><mi>S</mi><mrow><mi>sin</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+S = U_{\text{eff}} I_{\text{eff}},
+\qquad
+P = S \cos\varphi,
+\qquad
+Q = S \sin\varphi.
+</annotation></semantics></math></p>
+<p>Tanműhelyi mérésnél a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><annotation encoding="application/x-tex">U_{\text{eff}}</annotation></semantics></math>-et
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mtext mathvariant="normal">eff</mtext></msub><annotation encoding="application/x-tex">I_{\text{eff}}</annotation></semantics></math>-et
+multiméterrel, a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>-t
+oszcilloszkóppal mérjük. Laborkörnyezetben gyakran wattmérőt is
+használunk, amely közvetlenül a hatásos teljesítményt mutatja.</p>
+<p><strong>Figyelem.</strong> Hálózati feszültségen csak megfelelő
+mérési kategóriájú (CAT II vagy CAT III, ellenőrizendő) műszerrel,
+leválasztó transzformátorról vagy biztonsági mérővezetékkel dolgozzunk.
+A csupasz mérési pont érintése életveszélyes.</p>
+<p><strong>Tilos.</strong> A hálózati táplálású oszcilloszkóp szondáinak
+földelő csipesze a védőföldhöz kapcsolódik; nem köthető fázisvezetőre
+vagy nem földpotenciálú pontra, mert zárlat, a szonda és a műszer
+tönkremenetele, áramütés és ívsérülés lehet a következmény. Hálózati
+körben csak leválasztó transzformátorról táplált mérőpanelen, vagy
+differenciális (leválasztott) szondával, illetve leválasztott csatornás,
+megfelelő mérési kategóriájú műszerrel mérünk, oktató felügyeletével. A
+két csatorna földelő csipesze mindig ugyanarra a pontra kerüljön.</p>
+<h3 data-number="15.3.4"
+id="félvezetők-vizsgálata-és-jelleggörbe-felvétele"><span
+class="header-section-number">15.3.4</span> Félvezetők vizsgálata és
+jelleggörbe felvétele</h3>
+<p>A dióda a gépjármű-villamosságban gyakori elem: generátor
+egyenirányító hídjában, relék védődiódájaként, LED-es világításban. A
+helyes méréshez ismernünk kell a félvezető nyitó- és záróirányú
+viselkedését.</p>
+<p><strong>Dióda mérése multiméterrel.</strong> A multiméter dióda-teszt
+állásában a műszer kis mérőáramot bocsát az alkatrészen át.
+Nyitóirányban egy szilíciumdiódánál körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>
+feszültségesés mérhető, záróirányban pedig lényegében nincs áram, a
+műszer túlcsordulást vagy nagy ellenállást mutat (ellenőrizendő: konkrét
+típusadat). Schottky-diódánál a nyitófeszültség alacsonyabb, jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">0{,}2</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}4\,\text{V}</annotation></semantics></math>.</p>
+<p>Az egyszerű áramköri vizsgálathoz a következő kapcsolást
+használjuk:</p>
+<figure>
+<img src="assets/au055-diagram-2.png"
+alt="Dióda-jelleggörbe mérési kapcsolás - Szemléltető kapcsolás; a feszültséget változtatjuk, a dióda áramát az ampermérőn (vagy az R1 feszültségéből, I_D = U_R/R), a dióda feszültségét (U_D) a vele párhuzamos voltmérővel mérjük. X-Y üzemmódban: X = U_D (a dióda két kivezetése), Y = U_R1 (az R1 két kivezetése), DC csatolással. Az alkatrészértékek tanulási példák." />
+<figcaption aria-hidden="true">Dióda-jelleggörbe mérési kapcsolás -
+Szemléltető kapcsolás; a feszültséget változtatjuk, a dióda áramát az
+ampermérőn (vagy az R1 feszültségéből, I_D = U_R/R), a dióda
+feszültségét (U_D) a vele párhuzamos voltmérővel mérjük. X-Y üzemmódban:
+X = U_D (a dióda két kivezetése), Y = U_R1 (az R1 két kivezetése), DC
+csatolással. Az alkatrészértékek tanulási példák.</figcaption>
+</figure>
+<p><strong>Jelleggörbe felvétele pontonként.</strong> A
+forrásfeszültséget lépésben növeljük, és minden lépésnél leolvassuk a
+dióda feszültségét
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mi>D</mi></msub><annotation encoding="application/x-tex">U_D</annotation></semantics></math>)
+és áramát
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>D</mi></msub><annotation encoding="application/x-tex">I_D</annotation></semantics></math>).
+Az összetartozó értékpárokból ábrázoljuk az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>D</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>D</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">I_D(U_D)</annotation></semantics></math>
+görbét. A nyitóirányú áram a küszöbfeszültség alatt alig változik, majd
+gyorsan nő.</p>
+<p><strong>X-Y üzemmód.</strong> Az oszcilloszkópon a vízszintes
+eltérítést a dióda feszültségével, a függőlegest az árammal arányos
+feszültséggel hajtjuk. Így a készülék közvetlenül a jelleggörbét
+rajzolja ki. Az áram méréséhez az ismert soros ellenállás feszültségét
+használjuk, mert
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>D</mi></msub><mo>=</mo><msub><mi>U</mi><mi>R</mi></msub><mi>/</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">I_D = U_R / R</annotation></semantics></math>.
+A vízszintes és függőleges csatolást DC állásba kell tenni, hogy az
+egyenkomponens is megjelenjen.</p>
+<p><strong>Egyszerű elektronikus áramkör mérése.</strong> A híddiódás
+egyenirányító és a pufferkondenzátor klasszikus mérési feladat. Az
+oszcilloszkóp 1. csatornáját a váltakozó bemenetre, 2. csatornáját a
+kondenzátor kimenetére kötjük. A bemeneten szinuszjelet, a kimeneten
+egyenirányított, enyhén hullámos feszültséget látunk. A hullámosság
+csúcsértéke (búgófeszültség) a terheléstől és a kondenzátor értékétől
+függ. Ezt a mérést felhasználhatjuk a generátor egyenirányító hibájának
+megértéséhez is: ha az egyik dióda szakadt, a hullámosság megnő, és a
+feszültség alacsonyabb lesz.</p>
+<h3 data-number="15.3.5"
+id="átvezetés-a-járműdiagnosztikai-oszcilloszkópra"><span
+class="header-section-number">15.3.5</span> Átvezetés a
+járműdiagnosztikai oszcilloszkópra</h3>
+<p>A járműiparban az oszcilloszkóp a dinamikus jelalakok elsődleges
+vizsgálóeszköze. A márkaszervizek <strong>járműdiagnosztikai
+oszcilloszkóppal</strong> (gyakran rendszerteszterbe épített vagy
+különálló műszerrel) veszik fel a jeladók jeleit, és a mért jelalakot a
+gyártói referenciajelhez hasonlítják. Például az induktív
+főtengely-jeladó feszültsége közel szinuszos, a Hall-jeladó négyszöges,
+a gyújtótekercs primer oldalán pedig nagy induktív feszültségcsúcs
+figyelhető meg.</p>
+<p><strong>Továbbvitt eredmény.</strong> A feszültségosztás, az időalap
+és a trigger beállításának, valamint a kétcsatornás fázis- és
+jelalakmérésnek az itt tanult módszere közvetlenül használható a <a
+href="au112.html">Érzékelők és jeladók</a> alfejezetben a jeladójelek
+vizsgálatára, a <a href="au115.html">Buszhibák és az adatbusz-hálózatok
+diagnosztikája</a> alfejezetben a buszfeszültség-mintázatok
+ellenőrzésére, valamint a <a href="au143.html">Gyújtásvizsgálat és
+oszcilloszkópos gyújtásdiagnosztika</a> alfejezetben a gyújtótekercs és
+a jeladó jeleinek mérésére.</p>
+<h3 data-number="15.3.6" id="kidolgozott-példák"><span
+class="header-section-number">15.3.6</span> Kidolgozott példák</h3>
+<p><strong>1. példa (A szint).</strong> Az oszcilloszkóp függőleges
+osztása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V/oszt}</annotation></semantics></math>,
+a szinuszjel csúcsa
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">5{,}2</annotation></semantics></math>
+osztás magas. Az időalap
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}1\,\text{ms/oszt}</annotation></semantics></math>,
+a periódus
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">4{,}0</annotation></semantics></math>
+osztás széles. Számítsuk ki a csúcsfeszültséget, az effektív
+feszültséget és a frekvenciát.</p>
+<p>Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">div</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V/oszt</mtext></mrow><annotation encoding="application/x-tex">V_{\text{div}}=0{,}5\,\text{V/oszt}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>5</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">N=5{,}2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">div</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms/oszt</mtext><mo>=</mo><mn>1</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">s/oszt</mtext></mrow><annotation encoding="application/x-tex">t_{\text{div}}=0{,}1\,\text{ms/oszt}=1\cdot 10^{-4}\,\text{s/oszt}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>4</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">M=4{,}0</annotation></semantics></math>.
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><annotation encoding="application/x-tex">U_{\text{cs}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><annotation encoding="application/x-tex">U_{\text{eff}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>.</p>
+<p>Képlet és behelyettesítés:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><mo>=</mo><mn>5</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>,</mo></mrow><annotation encoding="application/x-tex">
+U_{\text{cs}} = 5{,}2 \cdot 0{,}5\,\text{V} = 2{,}6\,\text{V},
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><mfrac><mrow><mn>2</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><msqrt><mn>2</mn></msqrt></mfrac><mo>≈</mo><mn>1</mn><mo>,</mo><mn>84</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>,</mo></mrow><annotation encoding="application/x-tex">
+U_{\text{eff}} = \frac{2{,}6\,\text{V}}{\sqrt{2}} \approx 1{,}84\,\text{V},
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>4</mn><mo>,</mo><mn>0</mn><mo>⋅</mo><mn>1</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext><mo>=</mo><mn>4</mn><mo>,</mo><mn>0</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext><mo>,</mo></mrow><annotation encoding="application/x-tex">
+T = 4{,}0 \cdot 1\cdot 10^{-4}\,\text{s} = 4{,}0\cdot 10^{-4}\,\text{s},
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mfrac><mn>1</mn><mi>T</mi></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>4</mn><mo>,</mo><mn>0</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow></mfrac><mo>=</mo><mn>2500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kHz</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">
+f = \frac{1}{T} = \frac{1}{4{,}0\cdot 10^{-4}\,\text{s}} = 2500\,\text{Hz} = 2{,}5\,\text{kHz}.
+</annotation></semantics></math></p>
+<p>Az eredmény nagyságrendje tipikus tanműhelyi jel, az egység pedig
+helyes. ∎</p>
+<p><strong>2. példa (B szint).</strong> Soros RC körben
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R = 100\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>220</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">nF</mtext></mrow><annotation encoding="application/x-tex">C = 220\,\text{nF}</annotation></semantics></math>,
+a generátor frekvenciája
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kHz</mtext></mrow><annotation encoding="application/x-tex">f = 1\,\text{kHz}</annotation></semantics></math>.
+Számítsuk ki a kapacitív reaktanciát, az impedanciát és a fázisszöget,
+majd ellenőrizzük mérési eljárással.</p>
+<p>Képletek:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mi>C</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>π</mi><mi>f</mi><mi>C</mi></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>π</mi><mo>⋅</mo><mn>1000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext><mo>⋅</mo><mn>220</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>9</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">F</mtext></mrow></mfrac><mo>≈</mo><mn>723</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
+X_C = \frac{1}{2\pi f C} = \frac{1}{2\pi \cdot 1000\,\text{Hz} \cdot 220\cdot 10^{-9}\,\text{F}} \approx 723\,\Omega,
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo>=</mo><msqrt><mrow><msup><mi>R</mi><mn>2</mn></msup><mo>+</mo><msubsup><mi>X</mi><mi>C</mi><mn>2</mn></msubsup></mrow></msqrt><mo>=</mo><msqrt><mrow><msup><mn>100</mn><mn>2</mn></msup><mo>+</mo><msup><mn>723</mn><mn>2</mn></msup></mrow></msqrt><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>≈</mo><mn>730</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
+Z = \sqrt{R^2 + X_C^2} = \sqrt{100^2 + 723^2}\,\Omega \approx 730\,\Omega,
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><mrow><mi>arctan</mi><mo>&#8289;</mo></mrow><mfrac><mrow><mi>−</mi><msub><mi>X</mi><mi>C</mi></msub></mrow><mi>R</mi></mfrac><mo>=</mo><mrow><mi>arctan</mi><mo>&#8289;</mo></mrow><mfrac><mrow><mi>−</mi><mn>723</mn></mrow><mn>100</mn></mfrac><mo>≈</mo><mi>−</mi><mn>82</mn><mo>,</mo><msup><mn>1</mn><mo>∘</mo></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\varphi = \arctan\frac{-X_C}{R} = \arctan\frac{-723}{100} \approx -82{,}1^{\circ}.
+</annotation></semantics></math></p>
+<p>A mérés során a generátor feszültsége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><msub><mtext mathvariant="normal">V</mtext><mtext mathvariant="normal">eff</mtext></msub></mrow><annotation encoding="application/x-tex">U = 5\,\text{V}_{\text{eff}}</annotation></semantics></math>,
+a mért áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>≈</mo><mn>6</mn><mo>,</mo><mn>85</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I \approx 6{,}85\,\text{mA}</annotation></semantics></math>,
+így
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>Z</mi><mo stretchy="false" form="prefix">|</mo><mo>≈</mo><mn>730</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">|Z| \approx 730\,\Omega</annotation></semantics></math>,
+ami egyezik a számolttal. A fázismérésnél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>228</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">\Delta t = 0{,}228\,\text{ms}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = 1\,\text{ms}</annotation></semantics></math>,
+ezért
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>≈</mo><mi>−</mi><mn>82</mn><mo>,</mo><msup><mn>1</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi \approx -82{,}1^{\circ}</annotation></semantics></math>.
+A negatív előjel azt mutatja, hogy a feszültség késik az áramhoz képest,
+ami RC körben elvárt. ∎</p>
+<p><strong>Hibás példa.</strong> A tanuló
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>
+szondát használ, de az oszcilloszkópot
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1{:}1</annotation></semantics></math>-es
+szondabeállításon felejti. A képernyőn a jel csúcsa
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>26</mn></mrow><annotation encoding="application/x-tex">0{,}26</annotation></semantics></math>
+osztás, a feszültségosztás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V/oszt</mtext></mrow><annotation encoding="application/x-tex">1\,\text{V/oszt}</annotation></semantics></math>,
+ezért
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>26</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}26\,\text{V}</annotation></semantics></math>-ot
+olvas le. A valós csúcs ettől tízszer nagyobb,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}6\,\text{V}</annotation></semantics></math>.
+A hiba tipikus, mert a csillapítás beállítását elfelejtik. A helyes
+gyakorlat: a szonda felirata és a műszer beállítása mindig egyezzen meg,
+és a mérés előtt a kalibráló jellel ellenőrizzük.</p>
+<h3 data-number="15.3.7" id="minőségellenőrzés"><span
+class="header-section-number">15.3.7</span> Minőségellenőrzés</h3>
+<p><strong>Ellenőrzőlista.</strong> Mielőtt egy oszcilloszkópos mérési
+eredményt elfogadunk, végezzük el az alábbi ellenőrzéseket: 1. A szonda
+csillapítása és a műszer csatornabeállítása azonos
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1{:}1</annotation></semantics></math>
+vagy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>).
+2. A bemeneti csatolás a mérésnek megfelelő: DC, ha az egyenkomponens is
+fontos, AC, ha csak a váltakozó rész. 3. A trigger forrása, szintje és
+éliránya a jelalak stabilizálására alkalmas. 4. A képernyőn legalább egy
+teljes periódus látható. 5. A leolvasásnál a kurzorokat vagy az
+osztáshálót használjuk, ne becsüljünk szemre. 6. A dióda mérésénél a
+nyitó- és záróirányt is ellenőrizzük.</p>
+<p><strong>Dióda ellenőrzés.</strong> Szilíciumdiódánál a
+nyitófeszültség körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>,
+záróirányban a multiméter nem mutat áramot. Ha a nyitóirányú
+feszültségesés ennél lényegesen nagyobb, vagy záróirányban is folyik
+áram, a dióda hibás.</p>
+<h3 data-number="15.3.8" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">15.3.8</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Figyelem.</strong> A gyújtótekercs primer oldalán a
+megszakításkor több száz voltos csúcs jelenik meg: csak a
+csúcsfeszültségre méretezett csillapító szondával (pl. 10:1 vagy 20:1)
+vagy a gyártói gyújtásadapterrel mérj; a szekunder (nagyfeszültségű)
+oldalt közvetlenül mérni tilos, arra kapacitív gyújtásfogó való. Járó
+motornál ügyelj a forgó és forró alkatrészekre, zárt térben csak
+elszívással járasd a motort.</p>
+<p><strong>Ügyfélpanasz:</strong> „A motor melegen időnként kihagy,
+hidegen jól jár, és a hibatárolóban néha gyújtáskihagyás kód van.”</p>
+<p><strong>Tünet–hipotézis–mérés–ok–javítás.</strong> A szerelő a
+gyújtótekercs primer vezérlőjelét és a főtengely-jeladó jelét
+oszcilloszkóppal méri. Hideg motornál a primer feszültség jelalakja
+szabályos: rövid zárási felfutás, lapos gerjesztési szakasz, éles
+megszakítási csúcs. Meleg motornál a 2. henger gyújtótekercsénél a
+zárási szakasz hirtelen megrövidül, a megszakítási csúcs kisebb,
+időnként teljesen elmarad. A hőre jelentkező hiba a gyújtómodul vagy a
+primer kör csatlakozójának melegedésre megnövekvő ellenállására utal. A
+multiméter nem mutatta a hibát, mert az átlagos feszültséget és
+ellenállást hideg állapotban mérte. A csatlakozó tisztítása és a
+gyújtómodul cseréje után a primer jelalak meleg motornál is stabil, a
+hiba eltűnik.</p>
+<p><strong>Tanulság.</strong> Az oszcilloszkóp akkor a leghasznosabb,
+amikor a hiba csak meleg állapotban, terhelés alatt vagy időszakosan
+jelentkezik.</p>
+<h3 data-number="15.3.9" id="gyakorlati-útmutató"><span
+class="header-section-number">15.3.9</span> Gyakorlati útmutató</h3>
+<p><strong>Munkalap: dióda jelleggörbe felvétele és oszcilloszkópos
+alapmérés</strong></p>
+<p><strong>Cél:</strong> a dióda nyitóirányú jelleggörbéjének felvétele,
+valamint az oszcilloszkóp feszültség- és időalap-beállításának
+gyakorlása.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> tanműhelyi mérőpanel;
+dióda típusa jegyzőkönyvben rögzítve, például 1N4007 (ellenőrizendő:
+típusadat).</p>
+<p><strong>Szükséges műszerek, szerszámok, anyagok:</strong> digitális
+oszcilloszkóp (két csatorna, X-Y üzemmód), függvénygenerátor, két
+multiméter, változtatható egyenfeszültségű tápegység, mérőpanel,
+mérővezetékek, dióda, ellenállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">100\,\Omega</annotation></semantics></math>,
+jegyzőkönyv.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Munkavédelmi és környezetvédelmi lépések:</strong> a mérési
+pontokon csak feszültségmentes állapotban csatlakoztassuk át a
+vezetékeket; az elektronikai próbapanelt ne hagyjuk feszültség alatt
+felügyelet nélkül; a hibás vagy feleslegessé vált alkatrészeket
+elektronikai hulladékként kezeljük.</p>
+<p><strong>Számozott munkalépések:</strong> 1. Ellenőrizzük, hogy a
+tápegység kikapcsolt állapotban van, a kimeneti feszültség nullán. 2.
+Állítsuk össze a diódás kapcsolást az ábra szerint: forrás pozitív
+kapcsa, soros ellenállás, dióda nyitóirányban, árammérő, visszavezetés a
+negatív kapocsra. 3. A multimétert párhuzamosan a diódára kötjük
+feszültségméréshez. 4. Kapcsoljuk be a tápegységet, és növeljük a
+feszültséget kis lépésekben. 5. Minden lépésnél jegyezzük fel az áramot
+és a diódafeszültséget. 6. A mérési pontokból ábrázoljuk a jelleggörbét,
+majd hasonlítsuk össze a tipikus küszöbfeszültséggel. 7. Kapcsoljuk ki a
+tápegységet, és válasszuk le a mérővezetékeket.</p>
+<p><strong>Ellenőrzési pontok:</strong> nyitóirányú küszöbfeszültség
+körül a várt érték
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>;
+záróirányú mérésnél a multiméter ne mutasson áramot; a mért pontok sima
+exponenciális jellegű görbét adjanak.</p>
+<p><strong>Tipikus hibák:</strong> a dióda fordított bekötése, a
+tápegység feszültségének túl gyors növelése, a soros ellenállás
+elhagyása, amitől nagy áram folyhat és a dióda tönkremehet.</p>
+<p><strong>Dokumentálás:</strong> mérési jegyzőkönyvben a mérési pontok
+táblázata, a görbe, a használt műszerek típusa és a mért jellemzők.</p>
+<h3 data-number="15.3.10"
+id="eljárás-oszcilloszkóp-beállítási-lépéssor"><span
+class="header-section-number">15.3.10</span> Eljárás: oszcilloszkóp
+beállítási lépéssor</h3>
+<p><strong>Számozott eljárás.</strong> Ha bármilyen jelalakot szeretnénk
+megjeleníteni, kövessük ezt a sorrendet: 1. Kapcsoljuk be az
+oszcilloszkópot, és várjuk meg az önteszt lefutását. 2. Csatlakoztassuk
+a mérőszondát a csatornához, és a földelő krokodilt a mérendő áramkör
+testpontjához (járműn: a test/31; hálózati körön lásd a Tilos-dobozt).
+3. Válasszuk ki a szonda csillapítását a műszeren
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1{:}1</annotation></semantics></math>
+vagy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>).
+4. Állítsunk be durva feszültségosztást, például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V/oszt</mtext></mrow><annotation encoding="application/x-tex">1\,\text{V/oszt}</annotation></semantics></math>.
+5. Állítsunk be időalapot, például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{ms/oszt}</annotation></semantics></math>.
+6. Válasszunk bemeneti csatolást: DC vagy AC. 7. Adjunk jelet a
+generátorból, és forgassuk a trigger szintjét addig, amíg a kép stabil
+nem lesz. 8. Finomítsuk a feszültség- és időosztást, hogy a jel
+kényelmesen kitöltse a képernyőt. 9. Olvassuk le a csúcs- és
+periódusértékeket az osztásháló vagy a kurzorok segítségével.</p>
+<figure id="fig-au055-1">
+<div class="fig-interactive"><iframe src="figures/html/au055-1.html" title="Oszcilloszkóp-képernyő két szinuszjellel; a beállításokkal a kép, a trigger és a fázisszög leolvasása gyakorolható." loading="lazy" style="width:100%;border:0;height:1000px"></iframe><noscript><img src="figures/img/au055-1.png" style="width:80.0%"
+alt="Oszcilloszkóp-képernyő két szinuszjellel; a beállításokkal a kép, a trigger és a fázisszög leolvasása gyakorolható." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au055-1.png" style="width:80.0%"
+alt="Oszcilloszkóp-képernyő két szinuszjellel; a beállításokkal a kép, a trigger és a fázisszög leolvasása gyakorolható." /></details></div>
+<figcaption>Oszcilloszkóp-képernyő a 2. példa beállításával: CH1 0,5
+V/oszt, CH2 2 V/oszt, 0,2 ms/oszt; T = 1 ms, Δt = 0,228 ms</figcaption>
+</figure>
+<p>A statikus ábra a 2. példa képernyőjét mutatja: a CH1 az ellenálláson
+eső, az árammal arányos feszültség (folytonos), a CH2 a
+generátorfeszültség (szaggatott); a periódus 5 osztás = 1 ms, a CH2
+késése 1,14 osztás = 0,228 ms, így
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>≈</mo><mi>−</mi><mn>82</mn><mo>,</mo><msup><mn>1</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi \approx -82{,}1^{\circ}</annotation></semantics></math>.
+A HTML-kiadás oszcilloszkóp-szimulátorában a lépéssor gyakorolható:
+V/oszt, időalap, csatolás, trigger forrás, szint és él, a szonda
+csillapítása (a műszeren és a valós szondán külön), kurzorok; a trigger
+szintjét a jelen kívülre állítva a kép „fut”, a „hibás példa”
+kapcsolóval pedig a 10:1-es szonda 1:1-es beállítása miatti 0,26 V-os
+téves leolvasás látható.</p>
+<h3 data-number="15.3.11" id="tipikus-hibák"><span
+class="header-section-number">15.3.11</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>Elfelejtett
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>
+szondacsillapítás.</strong> A tanuló a képernyőn leolvasott értéket nem
+szorozza be, vagy a műszer beállítását nem egyezteti a szondával. Helyes
+gyakorlat: mindig ellenőrizni a szonda jelölését és a csatorna
+beállítást, majd kalibráló jellel tesztelni.</p></li>
+<li><p><strong>Rossz triggerbeállítás.</strong> Ha a trigger szint a
+jelen kívül van, vagy a forrás rossz csatornára hivatkozik, a kép
+vándorol vagy nem indul el. Helyes gyakorlat: a trigger forrása legyen a
+jelcsatorna, a szint a jel középső tartományába essen, és az él iránya a
+jelalaknak megfelelő legyen.</p></li>
+<li><p><strong>Hosszú, tekeredő földelővezeték.</strong> A szonda
+földelő krokodilja hosszú vezetékkel felcsatolja a zajt, és a gyors
+jeleknél csengést okozhat. Helyes gyakorlat: a lehető legrövidebb
+földelési utat használjuk, lehetőleg közvetlenül a mérési pont
+közelében.</p></li>
+<li><p><strong>AC csatolással egyenjelet mérni.</strong> AC csatolásnál
+az oszcilloszkóp leválasztja az egyenkomponenst, így például egy szenzor
+tápfeszültség-szintjét nem tudjuk leolvasni. Helyes gyakorlat: az egyen-
+és váltakozó komponenst egyaránt tartalmazó jelnél DC csatolást
+használjunk, és ha szükséges, külön mérjük az egyenszintet
+multiméterrel.</p></li>
+</ol>
+<h3 data-number="15.3.12" id="önellenőrzés"><span
+class="header-section-number">15.3.12</span> Önellenőrzés</h3>
+<ol type="1">
+<li><strong>Igaz vagy hamis?</strong> A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>
+oszcilloszkópszonda csökkenti a mérőműszer által a vizsgált áramkörből
+elvett terhelést, ezért a leolvasott feszültséget nem kell módosítani.
+(Indokold!)</li>
+<li>Oszcilloszkópon a feszültségosztás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{V/oszt}</annotation></semantics></math>,
+a szinusz csúcsa
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">6{,}0</annotation></semantics></math>
+osztás; az időalap
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}2\,\text{ms/oszt}</annotation></semantics></math>,
+a periódus
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">5{,}0</annotation></semantics></math>
+osztás. Mekkora a csúcsfeszültség, az effektív feszültség és a
+frekvencia?</li>
+<li>Kétcsatornás mérésnél a periódusidő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = 2\,\text{ms}</annotation></semantics></math>,
+a két jel közötti időtolás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">\Delta t = 0{,}5\,\text{ms}</annotation></semantics></math>.
+Mekkora a fáziskülönbség fokban?</li>
+<li>Miért vándorol vagy áll meg a kép, ha az oszcilloszkóp normál
+trigger üzemmódban van, és a trigger szint nincs a jel tartományán
+belül?</li>
+<li>Mit mutat a multiméter dióda-teszt állásban egy egészséges
+szilíciumdiódánál nyitó- és záróirányban?</li>
+<li>Miért helytelen AC csatolással mérni egy olyan jel egyenszintjét,
+amely egyen- és váltakozó komponenst is tartalmaz?</li>
+</ol>
+<h3 data-number="15.3.13" id="feladatok"><span
+class="header-section-number">15.3.13</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Definiálja az oszcilloszkóp
+időalapját és feszültségosztását, majd adja meg, hogyan számítjuk a
+periódusidőt és a csúcsfeszültséget egy leolvasásnál.</p>
+<p><strong>2. feladat (A).</strong> Egy szinuszjel csúcsa az
+oszcilloszkópon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">4{,}4</annotation></semantics></math>
+osztás, a feszültségosztás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}2\,\text{V/oszt}</annotation></semantics></math>.
+A jel tizenkét periódusa
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">6{,}0</annotation></semantics></math>
+osztás széles, az időalap
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms/oszt</mtext></mrow><annotation encoding="application/x-tex">0{,}1\,\text{ms/oszt}</annotation></semantics></math>.
+Számítsa ki a csúcsfeszültséget, az effektív feszültséget és a
+frekvenciát.</p>
+<p><strong>3. feladat (B).</strong> Soros RL körben
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>47</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R = 47\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mH</mtext></mrow><annotation encoding="application/x-tex">L = 10\,\text{mH}</annotation></semantics></math>,
+a mérőfrekvencia
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kHz</mtext></mrow><annotation encoding="application/x-tex">f = 2\,\text{kHz}</annotation></semantics></math>.
+Számítsa ki a reaktanciát, az impedanciát és a fázisszöget. Rajzolja le
+a mérési kapcsolást, és adja meg, milyen műszereket kötne be.</p>
+<p><strong>4. feladat (B).</strong> Kétcsatornás oszcilloszkóppal
+mérünk. A referenciajel periódusideje
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = 4\,\text{ms}</annotation></semantics></math>,
+a vizsgált jel felfutó nullátmenete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">1{,}2\,\text{ms}</annotation></semantics></math>-mal
+később van. Mekkora a fáziskülönbség, és milyen előjelű? Hogyan állítaná
+be a triggert a méréshez?</p>
+<p><strong>5. feladat (C).</strong> Soros RLC rezgőkörben
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mH</mtext></mrow><annotation encoding="application/x-tex">L = 10\,\text{mH}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">nF</mtext></mrow><annotation encoding="application/x-tex">C = 100\,\text{nF}</annotation></semantics></math>.
+Számítsa ki a rezonanciafrekvenciát. Ismertesse, hogyan mérné meg az
+oszcilloszkóppal a rezonanciapontot: mit jelez a körben mérhető áram
+vagy az ellenálláson eső feszültség a rezonanciafrekvencia
+közelében?</p>
+<p><strong>6. feladat (D).</strong> Ügyfélpanasz: egy Hall-elvű
+vezérműtengely-jeladó jelét az ECU nem fogadja el, a motor nem indul. Az
+oszcilloszkóppal a jeladó kimenetén a tápfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0\,\text{V}</annotation></semantics></math>,
+a jel kimenete lebeg. A multiméter ellenállásmérése a jeladó testpontja
+és a járműtest között
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">0{,}2\,\Omega</annotation></semantics></math>.
+Mi a következő mérési lépés, és mi lehet a hiba oka?</p>
+<h3 data-number="15.3.14" id="megoldások"><span
+class="header-section-number">15.3.14</span> Megoldások</h3>
+<h4 data-number="15.3.14.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">15.3.14.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li><p><strong>Hamis.</strong> A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>
+szonda valóban kisebb terhelést jelent a mért áramkörre, de a leolvasott
+feszültséget a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math>
+csillapítás figyelembevételével kell értékelni. Ha a műszeren is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">10{:}1</annotation></semantics></math>-es
+szondabeállítás van, a kijelzett érték már a tényleges feszültség; ha
+viszont
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1{:}1</annotation></semantics></math>-es
+beállításon mérünk, a leolvasott értéket meg kell szorozni
+tízzel.</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><mo>=</mo><mn>6</mn><mo>,</mo><mn>0</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{cs}} = 6{,}0 \cdot 0{,}5\,\text{V} = 3{,}0\,\text{V}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>≈</mo><mn>2</mn><mo>,</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{eff}} \approx 2{,}12\,\text{V}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>5</mn><mo>,</mo><mn>0</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext><mo>=</mo><mn>1</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = 5{,}0 \cdot 0{,}2\,\text{ms} = 1{,}0\,\text{ms}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kHz</mtext></mrow><annotation encoding="application/x-tex">f = 1\,\text{kHz}</annotation></semantics></math>.</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>⋅</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><mrow><mn>2</mn><mo>,</mo><mn>0</mn></mrow></mfrac><mo>=</mo><msup><mn>90</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi = 360^{\circ} \cdot \frac{0{,}5}{2{,}0} = 90^{\circ}</annotation></semantics></math>.</p></li>
+<li><p>Normál trigger üzemmódban a kép felfrissítése csak akkor indul,
+ha a kiválasztott triggerforrás jele átlépi a beállított szintet. Ha a
+szint a jel tartományán kívül van, nincs trigger esemény, ezért a kép
+nem rajzolódik ki, vagy véletlenszerűen indul, így vándorol.</p></li>
+<li><p>Nyitóirányban egészséges szilíciumdiódánál a multiméter
+körülbelül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>
+feszültségesést mutat. Záróirányban nem mutat áramot, a kijelzés
+általában túlcsordulást vagy nagyon nagy ellenállást jelez.</p></li>
+<li><p>Az AC csatolás egy soros kondenzátorral leválasztja az
+egyenkomponenst, ezért a mért feszültségből eltűnik az egyenszint. Az
+egyenkomponens leolvasásához DC csatolást kell használni, vagy a jelet
+külön multiméterrel kell megmérni.</p></li>
+</ol>
+<h4 data-number="15.3.14.2" id="feladatok-megoldása"><span
+class="header-section-number">15.3.14.2</span> Feladatok megoldása</h4>
+<p><strong>1. feladat.</strong> Az időalap az oszcilloszkóp vízszintes
+tengelyének skálája, megadja, hogy egy osztás hány másodpercnek felel
+meg
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">div</mtext></msub><annotation encoding="application/x-tex">t_{\text{div}}</annotation></semantics></math>).
+A feszültségosztás a függőleges tengely skálája, megadja, hogy egy
+osztás hány volttal egyenlő
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mtext mathvariant="normal">div</mtext></msub><annotation encoding="application/x-tex">V_{\text{div}}</annotation></semantics></math>).
+A periódusidő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mi>M</mi><mo>⋅</mo><msub><mi>t</mi><mtext mathvariant="normal">div</mtext></msub></mrow><annotation encoding="application/x-tex">T = M \cdot t_{\text{div}}</annotation></semantics></math>,
+a csúcsfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><mo>=</mo><mi>N</mi><mo>⋅</mo><msub><mi>V</mi><mtext mathvariant="normal">div</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{cs}} = N \cdot V_{\text{div}}</annotation></semantics></math>,
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>
+az osztások száma a periódusra,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+az osztások száma a csúcsra.</p>
+<p><strong>2. feladat.</strong> Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>4</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">N = 4{,}4</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">div</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V/oszt</mtext></mrow><annotation encoding="application/x-tex">V_{\text{div}} = 0{,}2\,\text{V/oszt}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>12</mn><annotation encoding="application/x-tex">12</annotation></semantics></math>
+periódus
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mn>12</mn></msub><mo>=</mo><mn>6</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">M_{12} = 6{,}0</annotation></semantics></math>
+osztáson,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">div</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms/oszt</mtext></mrow><annotation encoding="application/x-tex">t_{\text{div}} = 0{,}1\,\text{ms/oszt}</annotation></semantics></math>.<br />
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><annotation encoding="application/x-tex">U_{\text{cs}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><annotation encoding="application/x-tex">U_{\text{eff}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><mo>=</mo><mn>4</mn><mo>,</mo><mn>4</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>88</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{cs}} = 4{,}4 \cdot 0{,}2 = 0{,}88\,\text{V}</annotation></semantics></math>.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>88</mn></mrow><msqrt><mn>2</mn></msqrt></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>62</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{eff}} = \frac{0{,}88}{\sqrt{2}} \approx 0{,}62\,\text{V}</annotation></semantics></math>.</p>
+<p>Egy periódus osztásszáma:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>6</mn><mo>,</mo><mn>0</mn><mi>/</mi><mn>12</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>50</mn></mrow><annotation encoding="application/x-tex">M = 6{,}0/12 = 0{,}50</annotation></semantics></math>
+osztás.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext><mo>=</mo><mn>0</mn><mo>,</mo><mn>05</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext><mo>=</mo><mn>5</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">T = 0{,}5 \cdot 0{,}1\,\text{ms} = 0{,}05\,\text{ms} = 5\cdot 10^{-5}\,\text{s}</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>1</mn><mi>/</mi><mi>T</mi><mo>=</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kHz</mtext></mrow><annotation encoding="application/x-tex">f = 1/T = 20\,\text{kHz}</annotation></semantics></math>.</p>
+<p>Ellenőrzés: a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kHz</mtext></mrow><annotation encoding="application/x-tex">20\,\text{kHz}</annotation></semantics></math>
+tipikus tanműhelyi jel, a tételek az egységekkel együtt rendben. ∎</p>
+<p><strong>3. feladat.</strong> Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>47</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R = 47\,\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mH</mtext><mo>=</mo><mn>0</mn><mo>,</mo><mn>01</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">H</mtext></mrow><annotation encoding="application/x-tex">L = 10\,\text{mH} = 0{,}01\,\text{H}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>2000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f = 2000\,\text{Hz}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mi>L</mi></msub><mo>=</mo><mn>2</mn><mi>π</mi><mi>f</mi><mi>L</mi><mo>=</mo><mn>2</mn><mi>π</mi><mo>⋅</mo><mn>2000</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>01</mn><mo>≈</mo><mn>125</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">X_L = 2\pi f L = 2\pi \cdot 2000 \cdot 0{,}01 \approx 125{,}7\,\Omega</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo>=</mo><msqrt><mrow><msup><mn>47</mn><mn>2</mn></msup><mo>+</mo><mn>125</mn><mo>,</mo><msup><mn>7</mn><mn>2</mn></msup></mrow></msqrt><mo>≈</mo><mn>134</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">Z = \sqrt{47^2 + 125{,}7^2} \approx 134\,\Omega</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><mrow><mi>arctan</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>125</mn><mo>,</mo><mn>7</mn><mi>/</mi><mn>47</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>69</mn><mo>,</mo><msup><mn>5</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi = \arctan(125{,}7/47) \approx 69{,}5^{\circ}</annotation></semantics></math>.<br />
+A méréshez a jelgenerátort sorba kötjük az ellenállással és a
+tekerccsel. A teljes feszültséget multiméterrel, az áramot az ellenállás
+feszültségéből számítva vagy árammérővel mérjük. Az oszcilloszkóp két
+csatornájával a generátor feszültségét és az ellenállás feszültségét
+mérjük, az időtolásból a fázisszög meghatározható.</p>
+<p><strong>4. feladat.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = 4\,\text{ms}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">\Delta t = 1{,}2\,\text{ms}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>⋅</mo><mfrac><mrow><mn>1</mn><mo>,</mo><mn>2</mn></mrow><mrow><mn>4</mn><mo>,</mo><mn>0</mn></mrow></mfrac><mo>=</mo><msup><mn>108</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi = 360^{\circ} \cdot \frac{1{,}2}{4{,}0} = 108^{\circ}</annotation></semantics></math>.<br />
+A vizsgált jel késik, ezért a fázisszög
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><mi>−</mi><msup><mn>108</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi = -108^{\circ}</annotation></semantics></math>
+(vagy ekvivalensen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><msup><mn>252</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">+252^{\circ}</annotation></semantics></math>).
+A triggert a referenciajel csatornájára állítanám felfutó élre, és a
+szintet a jel középső tartományába.</p>
+<p><strong>5. feladat.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mn>0</mn></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>π</mi><msqrt><mrow><mi>L</mi><mi>C</mi></mrow></msqrt></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>π</mi><msqrt><mrow><mn>10</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup><mo>⋅</mo><mn>100</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>9</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>≈</mo><mn>5033</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f_0 = \frac{1}{2\pi \sqrt{LC}} = \frac{1}{2\pi \sqrt{10\cdot 10^{-3} \cdot 100\cdot 10^{-9}}} \approx 5033\,\text{Hz}</annotation></semantics></math>.
+Soros rezgőkörben a rezonanciafrekvencián az impedancia minimális, ezért
+az áram maximális, és az ellenálláson eső feszültség is maximális. Az
+oszcilloszkóppal az ellenállás feszültségét figyelve a frekvenciát
+lassan változtatjuk, és megkeressük a maximumot.</p>
+<p><strong>6. feladat.</strong> A következő mérés a jeladó
+tápfeszültség-csatlakozójának feszültségmérése az ECU felőli
+csatlakozónál, terhelés alatt is. Ha a tápfeszültség ott megvan, akkor a
+vezeték szakadt vagy a csatlakozó érintkezője hibás. A testedés jó
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">0{,}2\,\Omega</annotation></semantics></math>),
+így a testkör vélhetően rendben. A hiba oka lehet: szakadt tápvezeték,
+korrodált csatlakozópont vagy az ECU tápkimenetének hibája. A mérési
+lépést feszültségmentes állapotban, majd a csatlakozók visszanyomása
+után terhelés alatt is el kell végezni.</p>
+<h3 data-number="15.3.15" id="rövid-összefoglaló"><span
+class="header-section-number">15.3.15</span> Rövid összefoglaló</h3>
+<p>Az oszcilloszkóp a feszültség időbeli alakját jeleníti meg. A mérés
+előtt a szonda csillapítását és a csatorna feszültségosztását egyeztetni
+kell, az időalapot pedig a periódushoz kell igazítani. A trigger felfutó
+vagy lefutó élre, megfelelő szintre állítva stabil képet ad. Szinuszos
+jelnél a csúcsfeszültségből az effektív érték
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">cs</mtext></msub><mi>/</mi><msqrt><mn>2</mn></msqrt></mrow><annotation encoding="application/x-tex">U_{\text{eff}} = U_{\text{cs}}/\sqrt{2}</annotation></semantics></math>,
+a periódusidőből a frekvencia
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>1</mn><mi>/</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">f = 1/T</annotation></semantics></math>
+számítható. Kétcsatornás üzemben a fázisszög
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>⋅</mo><mi mathvariant="normal">Δ</mi><mi>t</mi><mi>/</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">\varphi = 360^{\circ}\cdot \Delta t/T</annotation></semantics></math>.
+A váltakozó áramú impedancia mérésénél a feszültség-, áram- és
+fázismérésből
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>Z</mi><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mi>U</mi><mi>/</mi><mi>I</mi></mrow><annotation encoding="application/x-tex">|Z| = U/I</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mo stretchy="false" form="prefix">|</mo><mi>Z</mi><mo stretchy="false" form="prefix">|</mo><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi></mrow><annotation encoding="application/x-tex">R = |Z|\cos\varphi</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>=</mo><mo stretchy="false" form="prefix">|</mo><mi>Z</mi><mo stretchy="false" form="prefix">|</mo><mrow><mi>sin</mi><mo>&#8289;</mo></mrow><mi>φ</mi></mrow><annotation encoding="application/x-tex">X = |Z|\sin\varphi</annotation></semantics></math>.
+A félvezető dióda nyitóirányú feszültségesése szilíciumtípusnál
+jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0{,}7\,\text{V}</annotation></semantics></math>,
+záróirányban nem folyik áram; a jelleggörbe X-Y üzemmódban is felvehető.
+<strong>Továbbvitt eredmény.</strong> A feszültségosztás, az időalap, a
+trigger és a kétcsatornás fázismérés a járműdiagnosztikai
+oszcilloszkópos méréseknél a <a href="au112.html">Érzékelők és
+jeladók</a>, a <a href="au115.html">Buszhibák és az adatbusz-hálózatok
+diagnosztikája</a> és a <a href="au143.html">Gyújtásvizsgálat és
+oszcilloszkópos gyújtásdiagnosztika</a> alfejezetekben használatos.</p>
+<h3 data-number="15.3.16" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">15.3.16</span> Források és ellenőrzési
+hiányok</h3>
+<p>Az alfejezet az általános elektronikai méréstechnikai alapokra, az
+MSZ EN 60617 jelképrendszerére és a műszergyártói mérési gyakorlatra
+épül. A mérőműszerek műszaki jellemzői (sávszélesség, mintavételi
+frekvencia, CAT-kategória, dióda nyitófeszültség) típus- és
+gyártófüggők, ezért azokat a konkrét műszer dokumentációja szerint kell
+ellenőrizni. A hálózati feszültségű mérések munkavédelmi követelményei a
+hatályos villamos biztonsági előírások és a mérési kategóriák
+(ellenőrizendő: MSZ EN 61010 sorozat) szerint alakulnak. A járműipari
+referenciajelalakok és a gyújtásrendszer jellemzői a gyártói javítási
+adatokból veendők; ezeket az alfejezet csak szemléltetésre mutatja
+be.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au054.html">← 15.2 Egyenáramú alapmérések</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au056.html">16.1 Belső égésű motorok csoportosítása, a négyütemű Otto-motor működése és körfolyamata →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

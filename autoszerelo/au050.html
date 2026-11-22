@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>14.2 Tranzisztorok, tirisztorok és optoelektronika –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz4">IV. RÉSZ – Elektrotechnika, elektronika és villamos mérések</a> › <a href="index.html#auch13">14 Elektronika</a></p>
+<div class="links"><a class="prev" rel="prev" href="au049.html">← 14.1 Félvezetők, diódák, Zener-dióda és egyenirányítók</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au051.html">14.3 Impulzustechnika: RC-tagok, vágók, billenőkörök, Schmitt-trigger →</a></div>
+</nav>
+<h2 data-number="14.2" id="au050"><span
+class="header-section-number">14.2</span> Tranzisztorok, tirisztorok és
+optoelektronika</h2>
+<h3 data-number="14.2.1" id="motiváció"><span
+class="header-section-number">14.2.1</span> Motiváció</h3>
+<p>Egy modern autóban a hűtőventilátor nemcsak bekapcsol vagy kikapcsol,
+hanem fokozat nélkül felpörög, ha a hűtővíz hőmérséklete emelkedik. A
+belső világítás halványul, a LED-es nappali menetfény időnként
+tompítottan világít, a gyújtótekercs nagy áramát pedig egyetlen rozsdás
+érintkező sem kapcsolgatja. E mögött szinte mindig valamelyik félvezető
+kapcsolóelem dolgozik: tranzisztor, MOSFET, IGBT, ritkábban tirisztor.
+Ha hibát keresünk – például egy ventilátor nem forog, egy izzó nem kap
+feszültséget, vagy egy LED-lámpa halvány –, nem elég a vezetéket és a
+biztosítékot nézni: a kapcsoló félvezetőt is mérni kell. Ebben az
+alfejezetben a(z) <a href="au049.html">Félvezetők, diódák, Zener-dióda
+és egyenirányítók</a> alfejezetben megismert p-n átmenetekből felépülő,
+három- és négykivezetésű kapcsolóelemeket, azok járműipari
+kapcsolóüzemét, valamint a fényérzékelő és fénykibocsátó elemeket
+tanuljuk meg.</p>
+<h3 data-number="14.2.2"
+id="szemléletes-kép-a-tranzisztor-mint-vezérelt-vízcsap"><span
+class="header-section-number">14.2.2</span> Szemléletes kép: a
+tranzisztor mint vezérelt vízcsap</h3>
+<p>A bipoláris tranzisztort egy kézzel állítható vízcsaphoz
+hasonlíthatjuk: a nagy kollektoráramot kis bázisárammal nyitjuk. A
+MOSFET inkább egy elektromosan szigetelt tolózár: a kapura adott
+feszültség hozza létre a vezető csatornát, és a vezérlő gyakorlatilag
+nem vesz fel teljesítményt. A tirisztor pedig reteszelő kapcsoló: egy
+kis gyújtóimpulzus bekapcsolja, de csak akkor zár le, ha a főáram
+megszakad. A fényelektromos elemek a fény és az elektromos jel között
+fordítanak, ezért a járműben érzékelőként és leválasztóként használjuk
+őket.</p>
+<h3 data-number="14.2.3" id="definíciók-és-alapösszefüggések"><span
+class="header-section-number">14.2.3</span> Definíciók és
+alapösszefüggések</h3>
+<p><strong>Definíció.</strong> A <strong>bipoláris tranzisztor</strong>
+(bipolar junction transistor, BJT) két p-n átmenetből felépülő, három
+kivezetésű félvezető eszköz. Az NPN tranzisztor kivezetései:
+<strong>bázis</strong> (B), <strong>kollektor</strong> (C) és
+<strong>emitter</strong> (E). A bázisba folyó kis áram a kollektor és
+emitter közötti nagy áramot vezérli.</p>
+<p><strong>Összefüggés.</strong> Normál aktív üzemben, közelítőleg:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>C</mi></msub><mo>≈</mo><mi>β</mi><mspace width="0.167em"></mspace><msub><mi>I</mi><mi>B</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">I_C \approx \beta \, I_B,</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+az egyenáramú áramerősítési tényező (jellemzően néhány tíztől néhány
+százig; gyártói adat, erős szórással – ellenőrizendő).</p>
+<p><strong>Definíció.</strong> A bipoláris tranzisztor
+<strong>kapcsolóüzemben</strong> két határozott állapotban dolgozik:</p>
+<ul>
+<li><strong>lezárás:</strong> a bázisáram gyakorlatilag nulla, ezért
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>C</mi></msub><mo>≈</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">I_C \approx 0</annotation></semantics></math>,
+a kollektor–emitter feszültség majdnem a teljes tápfeszültség;</li>
+<li><strong>telítés:</strong> a bázisáram akkora, hogy a tranzisztor már
+nem tud erősítőként dolgozni; a kollektor–emitter feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>C</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">U_{CE(\text{sat})}</annotation></semantics></math>
+nagyon kicsi, NPN-tranzisztornál jellemzően 0,1–0,3 V (tanulási példa,
+katalógusadat – ellenőrizendő).</li>
+</ul>
+<p>A kapcsolóüzem azért jó, mert a két szélső állapotban a tranzisztoron
+disszipált teljesítmény kicsi: lezárva nincs áram, telítésben kicsi a
+feszültségesés.</p>
+<p><strong>Definíció.</strong> A <strong>Darlington-kapcsolás</strong>
+két bipoláris tranzisztort fűz össze úgy, hogy az első emittere a
+második bázisát hajtja. Az eredő áramerősítés közelítőleg a két tényező
+szorzata:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mtext mathvariant="normal">összes</mtext></msub><mo>≈</mo><msub><mi>β</mi><mn>1</mn></msub><mspace width="0.167em"></mspace><msub><mi>β</mi><mn>2</mn></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">\beta_{\text{összes}} \approx \beta_1 \,\beta_2.</annotation></semantics></math></p>
+<p>Hátránya a nagyobb telítési feszültség, jellemzően 1,2–1,4 V körül
+(tanulási példa, ellenőrizendő), ezért itt nagyobb a disszipáció.</p>
+<p><strong>Definíció.</strong> A <strong>PWM</strong> (pulse-width
+modulation, impulzusszélesség-moduláció) olyan kapcsolóüzemi vezérlés,
+ahol a félvezetőt állandó frekvenciával kapcsolgatjuk, és a bekapcsolt
+idő arányát változtatjuk. A kitöltési tényező:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mfrac><msub><mi>t</mi><mtext mathvariant="normal">be</mtext></msub><mi>T</mi></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">D = \frac{t_{\text{be}}}{T},</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">be</mtext></msub><annotation encoding="application/x-tex">t_{\text{be}}</annotation></semantics></math>
+a bekapcsolt idő,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+a periódusidő. A fogyasztóra jutó átlagos feszültség ideális négyszögjel
+esetén:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mi>D</mi><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{átlag}} = D \, U_{\text{táp}}.</annotation></semantics></math></p>
+<p>Például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">D=0{,}4</annotation></semantics></math>-nél
+12 V-os hálózatban az átlagfeszültség 4,8 V. A motor fordulatszáma
+nagyjából ezt az átlagot követi, mert a motortekercs induktivitása
+simítja az áramot. Fűtőszál, izzó vagy ellenállás esetén azonban a
+hőfejlődéshez az <strong>effektív</strong> feszültség tartozik:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><msqrt><mi>D</mi></msqrt></mrow><annotation encoding="application/x-tex">U_{\text{eff}} = U_{\text{táp}}\sqrt{D}</annotation></semantics></math>,
+ezért teljesítményszámításnál ezt kell használni.</p>
+<p><strong>Definíció.</strong> A <strong>MOSFET</strong>
+(metal-oxide-semiconductor field-effect transistor) unipoláris,
+feszültség vezérelt tranzisztor. N-csatornás MOSFET kivezetései:
+<strong>gate</strong> (G), <strong>drain</strong> (D),
+<strong>source</strong> (S). A gate-tet vékony oxidréteg szigeteli,
+ezért a vezérlő bemenet egyenáramú ellenállása rendkívül nagy. A
+gate–source feszültség egy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>G</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">th</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">U_{GS(\text{th})}</annotation></semantics></math>
+küszöbérték felett nyitja a drain–source csatornát; a csatorna
+bekapcsolt ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">R_{DS(\text{on})}</annotation></semantics></math>.
+Ez a modern járművekben gyakran néhány milliohm és néhány tíz milliohm
+közötti (tanulási példa, katalógusadat – ellenőrizendő).</p>
+<p><strong>Definíció.</strong> Az <strong>IGBT</strong> (insulated-gate
+bipolar transistor) a MOSFET szigetelt kapuját kombinálja a bipoláris
+tranzisztor kis vezetési feszültségesésével. Emiatt nagy áramú,
+kapcsolóüzemi alkalmazásokban használják: gyújtásvégfokokban, elektromos
+és hibrid járművek invertereiben, DC/DC átalakítókban.</p>
+<p><strong>Definíció.</strong> A <strong>tirisztor</strong> (thyristor)
+négyrétegű p-n-p-n félvezető eszköz, kivezetései: anód (A), katód (K) és
+gyújtóelektróda (G). Ha az anód a katódhoz képest pozitív, egy kis
+gyújtóimpulzus begyújtja, és a tirisztor mindaddig vezet, amíg az
+anódáram a tartóáram alá nem csökken. A gate a bekapcsolás után
+elveszíti a vezérlő szerepét. A <strong>triak</strong> kétirányú
+tirisztorként viselkedik, ezért váltakozó áramú körben is
+használható.</p>
+<p><strong>Definíció.</strong> A <strong>fotoellenállás</strong> (LDR,
+light-dependent resistor) olyan félvezető ellenállás, amelynek
+ellenállása a rá eső fény erősségének növekedésével csökken. A
+<strong>fotodióda</strong> p-n átmenetéből fény hatására záróirányú áram
+folyik; gyorsabb és jobban reprodukálható, mint a fotoellenállás. A
+<strong>LED</strong> (light-emitting diode, fénykibocsátó dióda)
+nyitóirányú áram hatására fényt bocsát ki. Az
+<strong>optocsatoló</strong> egy tokozásban lévő LED-ből és egy
+fényérzékelő félvezetőből (fotodióda, fototranzisztor) áll, és
+galvanikus leválasztást ad két áramkör között.</p>
+<h3 data-number="14.2.4"
+id="felépítés-és-működés-kapcsolóüzemű-járműrendszerekben"><span
+class="header-section-number">14.2.4</span> Felépítés és működés
+kapcsolóüzemű járműrendszerekben</h3>
+<h4 data-number="14.2.4.1"
+id="bipoláris-tranzisztor-mint-reléhajtó"><span
+class="header-section-number">14.2.4.1</span> Bipoláris tranzisztor mint
+reléhajtó</h4>
+<p>A műszerfal alatti relétárban sok esetben egy motorvezérlő (ECU) kis
+teljesítményű kimenete kapcsolja a relé tekercsét. A régi autókban ezt
+gyakran mechanikus kapcsoló tette, ma inkább tranzisztor. Az alábbi
+vázlat NPN tranzisztoros relé-meghajtást mutat.</p>
+<figure>
+<img src="assets/au050-diagram-1.png"
+alt="NPN tranzisztoros relé-meghajtás védődiódával - Gyújtás ráadott állapot (15 feszültség alatt), a tranzisztor lezárt, a relé alapállapotban. A D1 védődióda anódja a 86-os (kollektor), katódja a 85-ös (+15) kapcson van, így a lekapcsolási feszültségcsúcsot zárja. A K1 munkaérintkezője (30–87) a ventilátormotort kapcsolja. A megadott értékek tanulási példák." />
+<figcaption aria-hidden="true">NPN tranzisztoros relé-meghajtás
+védődiódával - Gyújtás ráadott állapot (15 feszültség alatt), a
+tranzisztor lezárt, a relé alapállapotban. A D1 védődióda anódja a 86-os
+(kollektor), katódja a 85-ös (+15) kapcson van, így a lekapcsolási
+feszültségcsúcsot zárja. A K1 munkaérintkezője (30–87) a
+ventilátormotort kapcsolja. A megadott értékek tanulási
+példák.</figcaption>
+</figure>
+<p>A 15-ös kapocs a gyújtáskapcsolás utáni tápfeszültséget adja a relé
+85-ös kapcsára. Az ECU kimenete az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>B</mi></msub><annotation encoding="application/x-tex">R_B</annotation></semantics></math>
+bázisellenálláson át vezérli a tranzisztort. Amikor az ECU bekapcsol, a
+bázisáram megnyitja a kollektor–emitter áramkört: a relétekercs 86-os
+kapcsa a T1-en keresztül testre zár, a tekercs meghúz, a relé a 30-as
+érintkezőjét 87-re kapcsolja. Amikor az ECU lezár, a tekercs árama
+hirtelen megszakadna; a tekercs induktivitása miatt azonnal nagy
+önindukciós feszültséglökés keletkezik:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>L</mi></msub><mo>=</mo><mi>−</mi><mi>L</mi><mspace width="0.167em"></mspace><mfrac><mrow><mi mathvariant="normal">Δ</mi><mi>I</mi></mrow><mrow><mi mathvariant="normal">Δ</mi><mi>t</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">U_L = -L\,\frac{\Delta I}{\Delta t}.</annotation></semantics></math></p>
+<p>Ez a feszültségcsúcs átütheti a tranzisztort. A D1 védődióda anódja a
+tranzisztoros oldalon, katódja a tápfeszültséges oldalon van, így a
+lökést úgy zárja rövidre, hogy az áram a tekercsben még egy rövid ideig
+körben folyhat.</p>
+<h4 data-number="14.2.4.2"
+id="mosfet-és-igbt-teljesítménykapcsolóként"><span
+class="header-section-number">14.2.4.2</span> MOSFET és IGBT
+teljesítménykapcsolóként</h4>
+<p>A bipoláris tranzisztorral szemben a MOSFET gate-jét feszültséggel
+vezéreljük. Ha az ECU kimenete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>G</mi><mi>S</mi></mrow></msub><annotation encoding="application/x-tex">U_{GS}</annotation></semantics></math>-et
+a küszöbfeszültség fölé emeli, a drain–source ellenállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">R_{DS(\text{on})}</annotation></semantics></math>-ra
+csökken. A vezérléshez alig kell áram, csak a gate kapacitását kell
+feltölteni; ezért a MOSFET kiváló nagyfrekvenciás kapcsoló.</p>
+<p>A modern hűtőventilátorokban az ECU nem hagyományos relét, hanem
+PWM-mel működtetett MOSFET-et hajt. A jel hasonlít az alábbi
+ábrához.</p>
+<figure id="fig-au050-1">
+<div class="fig-interactive"><iframe src="figures/html/au050-1.html" title="40 %-os kitöltésű PWM-jel 12 V-on, átlagfeszültség 4,8 V, effektív feszültség 7,59 V." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au050-1.png" style="width:90.0%"
+alt="40 %-os kitöltésű PWM-jel 12 V-on, átlagfeszültség 4,8 V, effektív feszültség 7,59 V." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au050-1.png" style="width:90.0%"
+alt="40 %-os kitöltésű PWM-jel 12 V-on, átlagfeszültség 4,8 V, effektív feszültség 7,59 V." /></details></div>
+<figcaption>PWM-jel 40%-os kitöltéssel 12 V-on: átlag- és effektív
+feszültség (a 2. példa adataival, ideális négyszögjel)</figcaption>
+</figure>
+<p>Az ábrán a periódusidő 10 ms, a bekapcsolt idő 4 ms, tehát
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">D=0{,}4</annotation></semantics></math>.
+Az átlagfeszültség 4,8 V. Az effektív feszültség ennél nagyobb,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><msqrt><mrow><mn>0</mn><mo>,</mo><mn>4</mn></mrow></msqrt><mo>≈</mo><mn>7</mn><mo>,</mo><mn>59</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12\sqrt{0{,}4} \approx 7{,}59\,\text{V}</annotation></semantics></math>
+(pontvonal); ohmos terhelés (fűtőszál, izzó) teljesítményét ez határozza
+meg, a motor fordulatszámát viszont az átlag. Az interaktív
+kalkulátorban a kitöltési tényező, a tápfeszültség, a terhelés és az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">R_{DS(\text{on})}</annotation></semantics></math>
+állítható; a 2. példa és a 4. feladat adatai betölthetők. A valóságban a
+jel felfutása és lefutása nem végtelenül meredek, mert a vezeték
+induktivitása, a gate kapacitása és a kapcsolási idők kerekítik.</p>
+<p><strong>Példa.</strong> Egy jármű fűtőventilátor-motorja 12 V-ról
+PWM-vezérléssel kap táplálást. A motor induktivitása miatt a
+fordulatszám az átlagfeszültséget követi, nem az RMS-t. A PWM frekvencia
+jellemzően 100 Hz és néhány kHz közötti (gyártói rendszerfüggő,
+ellenőrizendő). A félvezető kapcsoló szerepe az, hogy a rajta disszipált
+teljesítmény kicsi maradjon: bekapcsolt állapotban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">R_{DS(\text{on})}</annotation></semantics></math>
+kicsi, lezárva pedig közel nulla az áram.</p>
+<p><strong>Szabály.</strong> A MOSFET gate-je szigetelt, ezért
+<strong>rendkívül érzékeny az elektrosztatikus kisülésre (ESD)</strong>.
+Tároláskor, beültetéskor és méréskor be kell tartani a gyártói
+ESD-előírásokat; a gate-et ne érintsük meg védelem nélkül.</p>
+<h4 data-number="14.2.4.3" id="tirisztor-és-triak"><span
+class="header-section-number">14.2.4.3</span> Tirisztor és triak</h4>
+<p>A tirisztor kevésbé alkalmas az egyenáramú PWM-kapcsolásra, mert a
+bekapcsolás után a gate már nem oltja le: az áramnak külsőleg meg kell
+szakadnia. Váltakozó áramú körben azonban az áram minden félperiódusban
+nullán megy át, ezért például fényerő-szabályozóként működik. A
+járművekben történeti szerepe van a <strong>kondenzátoros (HKZ)
+gyújtásban</strong>: a gyújtókondenzátort tirisztor süti ki a
+gyújtótekercsbe. Ezt a rendszert a(z) <a
+href="au105.html">Gyújtóberendezések: a hagyományostól a teljesen
+elektronikus gyújtásig</a> alfejezetben vizsgáljuk részletesen.</p>
+<h4 data-number="14.2.4.4" id="optoelektronika-a-járműben"><span
+class="header-section-number">14.2.4.4</span> Optoelektronika a
+járműben</h4>
+<ul>
+<li><strong>Fényérzékelő (automatikus világítás).</strong> A szélvédő
+mögé szerelt fotodióda vagy fotoellenállás a környezeti fény erősségét
+méri; a vezérlő a jel alapján kapcsolja a tompított fényszórót. A pontos
+küszöbértékeket és a beállítási eljárást a gyártó adja (ellenőrizendő:
+gyártói adat).</li>
+<li><strong>Esőérzékelő.</strong> A szélvédő belső oldalán egy
+infravörös LED fényét a tiszta üveg teljes visszaverődéssel egy
+fotodiódára veri vissza. A vízcseppek csökkentik a visszavert fényt, a
+vezérlő ebből állítja az ablaktörlő működését. Szélvédőcsere után az
+érzékelő tapadását, tisztaságát és a gyártói kalibrálást ellenőrizni
+kell (ellenőrizendő: gyártói adat).</li>
+<li><strong>LED-lámpa.</strong> A LED árama előtétellenállással vagy
+áramgenerátoros meghajtóval korlátozandó:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo>−</mo><msub><mi>U</mi><mi>F</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>I</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>12</mn><mo>−</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>/</mi><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>=</mo><mn>490</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R = (U - U_F)/I = (12 - 2{,}2)\,\text{V}/20\,\text{mA} = 490\,\Omega</annotation></semantics></math>,
+szabványos
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>470</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">470\,\Omega</annotation></semantics></math>
+ellenállással az áram kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">20{,}9\,\text{mA}</annotation></semantics></math>
+(tanulási példaadatok; ellenőrizendő: a LED adatlapja). A
+járművilágításban a LED-hez rendszerint áramgenerátoros meghajtó
+tartozik, mert a fedélzeti feszültség ingadozik.</li>
+<li><strong>Optocsatoló.</strong> A LED fénye a fototranzisztorra jut, a
+két oldal között nincs villamos összeköttetés, ezért a nagyfeszültségű
+(HV) és a 12 V-os kört galvanikusan elválasztja (leválasztott
+jelátvitel). Ez nem helyettesíti a feszültségmentesítést: HV-rendszeren
+a munka előtt a gyártói feszültségmentesítési eljárást és a
+feszültségmentesség ellenőrzését akkor is el kell végezni.</li>
+</ul>
+<h3 data-number="14.2.5" id="kidolgozott-példák"><span
+class="header-section-number">14.2.5</span> Kidolgozott példák</h3>
+<h4 data-number="14.2.5.1"
+id="példa-bázisellenállás-méretezése-relés-kapcsolóhoz"><span
+class="header-section-number">14.2.5.1</span> 1. példa: bázisellenállás
+méretezése relés kapcsolóhoz</h4>
+<p><strong>Adott:</strong> relétekercs ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">tekercs</mtext></msub><mo>=</mo><mn>80</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_\text{tekercs}=80\,\Omega</annotation></semantics></math>,
+tápfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_\text{táp}=12\,\text{V}</annotation></semantics></math>,
+NPN tranzisztor minimális áramerősítése
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mi>min</mi></msub><mo>=</mo><mn>80</mn></mrow><annotation encoding="application/x-tex">\beta_{\min}=80</annotation></semantics></math>,
+telítési bázis–emitter feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>B</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{BE(\text{sat})}=0{,}8\,\text{V}</annotation></semantics></math>,
+vezérlőjel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">vez</mtext></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{vez}}=5\,\text{V}</annotation></semantics></math>.
+A telítés biztosításához kétszeres túlvezérlést választunk
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">k=2</annotation></semantics></math>).</p>
+<p><strong>Keresett:</strong> a szükséges bázisellenállás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>B</mi></msub><annotation encoding="application/x-tex">R_B</annotation></semantics></math>.</p>
+<p><strong>Számítás.</strong> A relé tekercs árama telítő
+tranzisztorral:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>C</mi></msub><mo>=</mo><mfrac><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><msub><mi>R</mi><mtext mathvariant="normal">tekercs</mtext></msub></mfrac><mo>=</mo><mfrac><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>80</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I_C=\frac{U_\text{táp}}{R_\text{tekercs}}=\frac{12\,\text{V}}{80\,\Omega}=0{,}15\,\text{A}=150\,\text{mA}.</annotation></semantics></math></p>
+<p>A minimálisan szükséges bázisáram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>B</mi></msub><mo>=</mo><mfrac><msub><mi>I</mi><mi>C</mi></msub><msub><mi>β</mi><mi>min</mi></msub></mfrac><mo>=</mo><mfrac><mrow><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><mn>80</mn></mfrac><mo>=</mo><mn>1</mn><mo>,</mo><mn>875</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I_B=\frac{I_C}{\beta_{\min}}=\frac{150\,\text{mA}}{80}=1{,}875\,\text{mA}.</annotation></semantics></math></p>
+<p>Kétszeres túlvezérléssel:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>B</mi></msub><mo>=</mo><mi>k</mi><mspace width="0.167em"></mspace><mfrac><msub><mi>I</mi><mi>C</mi></msub><msub><mi>β</mi><mi>min</mi></msub></mfrac><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>875</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>=</mo><mn>3</mn><mo>,</mo><mn>75</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I_B=k\,\frac{I_C}{\beta_{\min}}=2\cdot 1{,}875\,\text{mA}=3{,}75\,\text{mA}.</annotation></semantics></math></p>
+<p>A bázisellenállásra jutó feszültség a vezérlőjel és a bázis–emitter
+feszültség különbsége:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>B</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>U</mi><mtext mathvariant="normal">vez</mtext></msub><mo>−</mo><msub><mi>U</mi><mrow><mi>B</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub></mrow><msub><mi>I</mi><mi>B</mi></msub></mfrac><mo>=</mo><mfrac><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>0</mn><mo>,</mo><mn>00375</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>4</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>0</mn><mo>,</mo><mn>00375</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow></mfrac><mo>=</mo><mn>1120</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">R_B=\frac{U_{\text{vez}}-U_{BE(\text{sat})}}{I_B}=\frac{5\,\text{V}-0{,}8\,\text{V}}{0{,}00375\,\text{A}}=\frac{4{,}2\,\text{V}}{0{,}00375\,\text{A}}=1120\,\Omega.</annotation></semantics></math></p>
+<p>Az E12 sorból válasszunk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">1{,}2\,\text{k}\Omega</annotation></semantics></math>-ot
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1200</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">1200\,\Omega</annotation></semantics></math>).
+Ezzel a bázisáram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>B</mi></msub><mo>=</mo><mfrac><mrow><mn>4</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>1200</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>,</mo></mrow><annotation encoding="application/x-tex">I_B=\frac{4{,}2\,\text{V}}{1200\,\Omega}=3{,}5\,\text{mA},</annotation></semantics></math></p>
+<p>ami még mindig nagyobb a minimális 1,875 mA-nél, tehát a tranzisztor
+telítésbe kerül. A telítési veszteség közelítőleg:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">veszt</mtext></msub><mo>≈</mo><msub><mi>U</mi><mrow><mi>C</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mspace width="0.167em"></mspace><msub><mi>I</mi><mi>C</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>30</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mW</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{veszt}} \approx U_{CE(\text{sat})}\,I_C=0{,}2\,\text{V}\cdot 0{,}15\,\text{A}=30\,\text{mW}.</annotation></semantics></math></p>
+<p>Ez kicsi, ezért a tranzisztor lényegében hűvös marad. ∎</p>
+<h4 data-number="14.2.5.2"
+id="példa-pwm-vezérelt-mosfet-izzófűtőszál"><span
+class="header-section-number">14.2.5.2</span> 2. példa: PWM-vezérelt
+MOSFET izzó/fűtőszál</h4>
+<p><strong>Adott:</strong> tápfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_\text{táp}=12\,\text{V}</annotation></semantics></math>,
+PWM kitöltési tényező
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">D=0{,}4</annotation></semantics></math>,
+a terhelés tiszta ohmos jellegű
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R=2\,\Omega</annotation></semantics></math>,
+a MOSFET csatorna-ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>25</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{DS(\text{on})}=25\,\text{m}\Omega</annotation></semantics></math>.</p>
+<p><strong>Keresett:</strong> átlagfeszültség, effektív feszültség,
+átlagos teljesítmény a terhelésen, bekapcsolt állapot csúcsárama, és a
+MOSFET átlagos vesztesége.</p>
+<p><strong>Számítás.</strong> Az átlagfeszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mi>D</mi><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn><mo>⋅</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>4</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=D\,U_\text{táp}=0{,}4\cdot 12\,\text{V}=4{,}8\,\text{V}.</annotation></semantics></math></p>
+<p>Az effektív feszültség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><msqrt><mi>D</mi></msqrt><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><msqrt><mrow><mn>0</mn><mo>,</mo><mn>4</mn></mrow></msqrt><mo>=</mo><mn>12</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>6325</mn><mo>=</mo><mn>7</mn><mo>,</mo><mn>59</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{\text{eff}}=U_\text{táp}\sqrt{D}=12\,\text{V}\cdot \sqrt{0{,}4}=12\cdot 0{,}6325=7{,}59\,\text{V}.</annotation></semantics></math></p>
+<p>A terhelés átlagos teljesítménye:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mfrac><msubsup><mi>U</mi><mtext mathvariant="normal">eff</mtext><mn>2</mn></msubsup><mi>R</mi></mfrac><mo>=</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mn>7</mn><mo>,</mo><mn>59</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mrow><mn>2</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>57</mn><mo>,</mo><mn>6</mn></mrow><mn>2</mn></mfrac><mo>=</mo><mn>28</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{átlag}}=\frac{U_{\text{eff}}^2}{R}=\frac{(7{,}59\,\text{V})^2}{2\,\Omega}=\frac{57{,}6}{2}=28{,}8\,\text{W}.</annotation></semantics></math></p>
+<p>A csúcsáram a bekapcsolt pillanatokban:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>=</mo><mfrac><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mi>R</mi></mfrac><mo>=</mo><mfrac><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>2</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I_{\text{csúcs}}=\frac{U_\text{táp}}{R}=\frac{12\,\text{V}}{2\,\Omega}=6\,\text{A}.</annotation></semantics></math></p>
+<p>A MOSFET átlagos vezetési vesztesége, mivel az csak a bekapcsolt
+időszakban disszipál:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">DS(átlag)</mtext></msub><mo>=</mo><mi>D</mi><mspace width="0.167em"></mspace><msubsup><mi>I</mi><mtext mathvariant="normal">csúcs</mtext><mn>2</mn></msubsup><mspace width="0.167em"></mspace><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>025</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn><mo>⋅</mo><mn>36</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>025</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>36</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{DS(átlag)}}=D\,I_{\text{csúcs}}^2\,R_{DS(\text{on})}=0{,}4\cdot (6\,\text{A})^2\cdot 0{,}025\,\Omega=0{,}4\cdot 36\cdot 0{,}025=0{,}36\,\text{W}.</annotation></semantics></math></p>
+<p>A kapcsolási veszteségek ezt még megnövelik, ezért nagyobb áramnál
+hűtőbordát vagy hűtőfelületet alakítanak ki. ∎</p>
+<p><strong>Hibás példa.</strong> Gyakori hiba, hogy valaki az
+átlagfeszültséggel számolja az ohmos terhelés teljesítményét:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">hányzó</mtext></msub><mo>=</mo><msubsup><mi>U</mi><mtext mathvariant="normal">átlag</mtext><mn>2</mn></msubsup><mi>/</mi><mi>R</mi><mo>=</mo><mn>4</mn><mo>,</mo><msup><mn>8</mn><mn>2</mn></msup><mi>/</mi><mn>2</mn><mo>=</mo><mn>11</mn><mo>,</mo><mn>52</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_\text{hányzó}=U_{\text{átlag}}^2/R=4{,}8^2/2=11{,}52\,\text{W}</annotation></semantics></math>.
+Ez <strong>téves</strong>, mert a teljesítmény a pillanatnyi feszültség
+négyzetének átlaga, nem az átlagfeszültség négyzete. A helyes eredmény
+ebben a példában 28,8 W.</p>
+<h3 data-number="14.2.6" id="minőségellenőrzés"><span
+class="header-section-number">14.2.6</span> Minőségellenőrzés</h3>
+<p>A félvezető kapcsolóelemeket leggyakrabban multiméter
+<strong>diódateszt</strong> üzemmódjában, kikapcsolt áramkörben, a
+csatlakozókat leválasztva vizsgáljuk. A mért értékek katalógusfüggők,
+ezért minden mérés előtt nézzük meg a gyártói adatlapot.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Vizsgált elem</th>
+<th>Mérés multiméterrel</th>
+<th>Jó esetben várható eredmény</th>
+<th>Tipikus hiba</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NPN tranzisztor</td>
+<td>B–E és B–C nyitóirányban diódateszt</td>
+<td>körülbelül 0,6–0,7 V</td>
+<td>mindkét irányban OL vagy 0 V</td>
+</tr>
+<tr>
+<td>NPN tranzisztor</td>
+<td>C–E mindkét irányban</td>
+<td>OL mindkét irányban (nincs zárlat)</td>
+<td>rövidre zárt C–E</td>
+</tr>
+<tr>
+<td>N-csatornás MOSFET</td>
+<td>D–S testdióda irányban</td>
+<td>körülbelül 0,4–0,6 V</td>
+<td>szakadt testdióda</td>
+</tr>
+<tr>
+<td>MOSFET gate</td>
+<td>G–S ellenállás</td>
+<td>nagyon nagy, OL</td>
+<td>kis ellenállás, zárlatos oxid</td>
+</tr>
+<tr>
+<td>LED</td>
+<td>nyitóirányú diódateszt</td>
+<td>2–3,5 V között a LED színétől függően</td>
+<td>OL nyitóirányban</td>
+</tr>
+<tr>
+<td>Optocsatoló</td>
+<td>bemeneti LED és kimeneti tranzisztor</td>
+<td>LED diódaként; C–E OL</td>
+<td>LED szakadt, fototranzisztor zárlatos</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek tanulási példák (ellenőrizendő: az adott alkatrész gyártói
+adatlapja).</p>
+<h3 data-number="14.2.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">14.2.7</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Tünet.</strong> Egy személyautónál a hűtőventilátor nem
+forog, álló járműnél, alapjáraton a hűtőfolyadék hőmérséklete túl
+magasra emelkedik. A szerelő ellenőrzi a biztosítékot, a ventilátor
+csatlakozóját és magát a motort: ezek rendben vannak. A
+hűtővíz-hőfokérzékelő és a motorvezérlő élő adata is megfelelő.</p>
+<p><strong>Hibakeresés.</strong> A kapcsolási rajz szerint a ventilátort
+egy PWM-vezérelt MOSFET kapcsolja. A diagnosztikai műszerrel a
+vezérlőegység parancsát nézve látszik, hogy az ECU 30%-os PWM jelet ad.
+A ventilátorcsatlakozón azonban nincs feszültség. Ezután a szerelő
+megkeresi a ventilátor-vezérlő modult, és oszcilloszkóppal méri a MOSFET
+gate-jelét: a jel él, tehát a vezérlőoldal rendben van. A modul kimeneti
+oldalán viszont nincs feszültség. A MOSFET csatornája nem nyit (például
+szakadt drain–source út vagy kiégett bondhuzal). A modul belső hibája
+miatt a gyártói javítási utasítás szerint a teljes ventilátor-vezérlő
+modult cserélik. A javítás után a ventilátor a PWM jel arányában
+felpörög, a hőmérséklet stabil marad.</p>
+<p><strong>Tanulság.</strong> A hibát nem a vezérlésben, hanem a
+félvezető kapcsolóban kellett keresni. A modern járművekben a „relé nem
+húz” helyett gyakran „a MOSFET nem nyit”.</p>
+<h3 data-number="14.2.8"
+id="gyakorlati-útmutató-félvezető-kapcsolóelemek-gyors-vizsgálata"><span
+class="header-section-number">14.2.8</span> Gyakorlati útmutató:
+félvezető kapcsolóelemek gyors vizsgálata</h3>
+<p><strong>Cél.</strong> Egy tranzisztor, MOSFET vagy LED
+működőképességének gyors, áramkörön kívüli vizsgálata multiméterrel.</p>
+<p><strong>Szükséges eszközök.</strong> Digitális multiméter dióda- és
+ellenállásmérő funkcióval, gyártói kapcsolási rajz,
+csatlakozó-visszabontó célszerszám, ESD-védő csuklópánt és vezetőképes
+munkalap.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák. Mérés előtt a jármű
+gyújtását ki kell kapcsolni, az akkumulátort a gyártói utasítás szerint
+le kell kötni; hibrid vagy elektromos járműben a narancssárga
+nagyfeszültségű kábelek közelében csak arra jogosult személy
+dolgozhat.</p>
+<p><strong>Munkalépések.</strong></p>
+<ol type="1">
+<li>Azonosítsa a gyártói kapcsolási rajzból a mérendő alkatrészt és a
+kivezetéseit.</li>
+<li>Kösse le az akkumulátort a gyártói sorrend szerint (először a
+negatív pólust), és várja meg a gyártói várakozási időt, ha a járműben
+aktív rendszerek vannak.</li>
+<li>Használjon ESD-védő eszközt, különösen MOSFET- és
+IGBT-mérésnél.</li>
+<li>Multiméter diódatest üzemmódjában mérje a BJT bázis–emitter és
+bázis–kollektor átmeneteit oda-vissza irányban.</li>
+<li>MOSFET-nél mérje a drain–source testdiódát és a gate–source közötti
+ellenállást; a gate-nek minden más kivezetéstől szigeteltnek kell
+lennie.</li>
+<li>LED-nél mérje a nyitóirányú feszültségesést és a záróirányú
+szivárgást.</li>
+<li>Hasonlítsa össze a mért értékeket a gyártói adatlappal; a kétes
+alkatrészt cserélni kell, nem „megpörgetni”, és nem szabad a
+kivezetéseket összeforrasztani a járműben mérés közben.</li>
+</ol>
+<h3 data-number="14.2.9" id="tipikus-hibák"><span
+class="header-section-number">14.2.9</span> Tipikus hibák</h3>
+<p><strong>Hiba 1.</strong> A szerelő a MOSFET gate-jét csupasz kézzel
+fogja, majd a félvezető rejtélyesen tönkremegy. <strong>Helyes
+gyakorlat:</strong> a gate szigetelt oxidrétege ESD-sérülést szenvedhet,
+ezért mindig ESD-védő eszközöket és földelt munkafelületet kell
+használni.</p>
+<p><strong>Hiba 2.</strong> A relés kapcsolásból kihagyják a védődiódát,
+ezért a tranzisztor a lekapcsolási feszültségcsúcs miatt hetekkel később
+meghibásodik. <strong>Helyes gyakorlat:</strong> relétekercs vagy más
+induktív terhelés kapcsolásakor a védődiódát mindig a tekercs sarkaira,
+helyes polaritással kell kötni.</p>
+<p><strong>Hiba 3.</strong> A LED-et előtétellenállás nélkül kötik 12
+V-ra, arra hivatkozva, hogy „a LED csak 20 mA-t vesz fel”.
+<strong>Helyes gyakorlat:</strong> a LED nyitófeszültsége jellemzően
+2–3,5 V, így a 12 V fennmaradó része ellenállás nélkül határtalan áramot
+hajt át rajta, és kiég.</p>
+<p><strong>Hiba 4.</strong> A tirisztort úgy akarják lezárni, hogy a
+gate feszültségét nullára veszik. <strong>Helyes gyakorlat:</strong> a
+bekapcsolt tirisztor csak akkor olt le, ha az anódáram a tartóáram alá
+csökken; egyenáramú körben meg kell szakítani az áramkört, vagy
+váltóirányú feszültségre kapcsolni.</p>
+<h3 data-number="14.2.10" id="önellenőrzés"><span
+class="header-section-number">14.2.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? „A MOSFET gate-je szigetelt, ezért nem érzékeny az
+elektrosztatikus kisülésre.”</li>
+<li>Igaz vagy hamis? „A telített NPN tranzisztor kollektor–emitter
+feszültsége kisebb, mint 1 V.”</li>
+<li>Számítsa ki:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{táp}}=12\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>20</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">D=20\%</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R=4\,\Omega</annotation></semantics></math>.
+Mennyi az átlagfeszültség és a bekapcsolt állapot csúcsárama?</li>
+<li>Nézze meg a kapcsolási rajzot: mi a D1 dióda szerepe?</li>
+<li>Mi a hiba ebben az állításban: „A LED-et 12 V-ra kötjük
+előtétellenállás nélkül, mert a LED úgyis csak 20 mA-t vesz fel.”</li>
+</ol>
+<h3 data-number="14.2.11" id="feladatok"><span
+class="header-section-number">14.2.11</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Határozza meg, mi a különbség a BJT,
+a MOSFET és a tirisztor vezérlési módja és kikapcsolási lehetősége
+között.</p>
+<p><strong>2. feladat (A).</strong> Határozza meg a szükséges
+bázisellenállást: NPN BJT,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>C</mi></msub><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I_C=120\,\text{mA}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mi>min</mi></msub><mo>=</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">\beta_{\min}=100</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">vez</mtext></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{vez}}=5\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>B</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{BE(\text{sat})}=0{,}7\,\text{V}</annotation></semantics></math>,
+kétszeres túlvezérlés.</p>
+<p><strong>3. feladat (B).</strong> Magyarázza el a kapcsolási rajz
+alapján, miért kell a D1 védődióda katódjának a relétekercs pozitív,
+85-ös oldalára esnie.</p>
+<p><strong>4. feladat (B).</strong> PWM-vezérelt fűtőszál:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{táp}}=12\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>60</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">D=60\%</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>3</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R=3\,\Omega</annotation></semantics></math>.
+Számítsa ki az átlagfeszültséget, az effektív feszültséget, a
+csúcsáramot, az átlagos teljesítményt és a MOSFET átlagos veszteségét,
+ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>30</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{DS(\text{on})}=30\,\text{m}\Omega</annotation></semantics></math>.
+Ez a feladat előkészíti a PWM-jelek használatát a(z) <a
+href="au051.html">Impulzustechnika: RC-tagok, vágók, billenőkörök,
+Schmitt-trigger</a> alfejezethez.</p>
+<p><strong>5. feladat (C).</strong> Egy szerelő egyenáramú
+hűtőventilátort PWM-es fordulatszám-szabályozással akar tirisztorral
+vezérelni. Magyarázza el, miért okoz gondot a tirisztor lekapcsolása, és
+milyen félvezető lenne alkalmasabb.</p>
+<p><strong>6. feladat (D).</strong> Egy LED-es hátsó lámpa halványan
+világít. A multiméter a LED-soron 2,8 V-ot, a soros ellenálláson 9,2
+V-ot mér, az ellenállás értéke 470 Ω. Számolja ki az áramot, és döntse
+el, hogy az áram értéke önmagában normális-e. Mi lehet a halvány fény
+oka?</p>
+<h3 data-number="14.2.12" id="megoldások"><span
+class="header-section-number">14.2.12</span> Megoldások</h3>
+<h4 data-number="14.2.12.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">14.2.12.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li>Hamis. A gate szigetelése éppen hogy ESD-érzékennyé teszi a
+MOSFET-et, mert a vékony oxidréteget már néhány tíz voltos sztatikus
+töltés is átütheti.</li>
+<li>Igaz. A telített NPN tranzisztor kollektor–emitter feszültsége
+jellemzően 0,1–0,3 V, tehát 1 V alatt van.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><mn>12</mn><mo>=</mo><mn>2</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=0{,}2\cdot 12=2{,}4\,\text{V}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>/</mi><mn>4</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{csúcs}}=12\,\text{V}/4\,\Omega=3\,\text{A}</annotation></semantics></math>.</li>
+<li>A D1 védődióda a relétekercs lekapcsolásakor keletkező önindukciós
+feszültségcsúcsot zárja rövidre, és megvédi a T1 tranzisztort.</li>
+<li>A LED nyitófeszültsége csak 2–3,5 V. A 12 V fennmaradó része
+ellenállás nélkül az áramot a LED dinamikus ellenállása korlátozza, ami
+rendkívül kis ellenállás, ezért a LED azonnal tönkremegy.</li>
+</ol>
+<h4 data-number="14.2.12.2" id="feladatok-megoldása"><span
+class="header-section-number">14.2.12.2</span> Feladatok megoldása</h4>
+<p><strong>1. feladat (A).</strong> A BJT-t bázisárammal vezéreljük, és
+a bázisáram megszüntetésével le tud zárni. A MOSFET-et
+gate-feszültséggel vezéreljük, a gate gyakorlatilag nem vesz fel
+egyenáramot, és a gate-feszültség megszüntetése lezárja. A tirisztor
+gyújtóimpulzussal bekapcsol, de a gate nem oltja le; csak az anódáram
+tartóáram alá csökkenése szünteti meg a vezetést.</p>
+<p><strong>2. feladat (A).</strong> Minimális bázisáram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>B</mi><mo>,</mo><mi>min</mi></mrow></msub><mo>=</mo><msub><mi>I</mi><mi>C</mi></msub><mi>/</mi><msub><mi>β</mi><mi>min</mi></msub><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mi>/</mi><mn>100</mn><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I_{B,\min}=I_C/\beta_{\min}=120\,\text{mA}/100=1{,}2\,\text{mA}</annotation></semantics></math>.
+Kétszeres túlvezérléssel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>B</mi></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I_B=2{,}4\,\text{mA}</annotation></semantics></math>.
+Az ellenállásra jutó feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">vez</mtext></msub><mo>−</mo><msub><mi>U</mi><mrow><mi>B</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>5</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>7</mn><mo>=</mo><mn>4</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{vez}}-U_{BE(\text{sat})}=5-0{,}7=4{,}3\,\text{V}</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>B</mi></msub><mo>=</mo><mn>4</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>/</mi><mn>0</mn><mo>,</mo><mn>0024</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>1792</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_B=4{,}3\,\text{V}/0{,}0024\,\text{A}=1792\,\Omega</annotation></semantics></math>.
+Az E12 sorból válasszunk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">1{,}8\,\text{k}\Omega</annotation></semantics></math>-ot.</p>
+<p><strong>3. feladat (B).</strong> A relétekercs 85-ös kapcsa a 15-ös,
+tehát pozitív oldal. A lekapcsolt tranzisztoros oldalon (86-os kapocs)
+negatív feszültségcsúcs alakul ki. A diódának úgy kell vezetnie, hogy az
+anódja a negatívabb, katódja a pozitívabb oldalon legyen. Ha fordítva
+kötjük, a dióda rövidre zárja a relétekercset, és elszáll a biztosíték
+vagy a tranzisztor.</p>
+<p><strong>4. feladat (B).</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">D=0{,}6</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>6</mn><mo>⋅</mo><mn>12</mn><mo>=</mo><mn>7</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=0{,}6\cdot 12=7{,}2\,\text{V}</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><mn>12</mn><msqrt><mrow><mn>0</mn><mo>,</mo><mn>6</mn></mrow></msqrt><mo>=</mo><mn>12</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>7746</mn><mo>=</mo><mn>9</mn><mo>,</mo><mn>295</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{eff}}=12\sqrt{0{,}6}=12\cdot 0{,}7746=9{,}295\,\text{V}</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>/</mi><mn>3</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{csúcs}}=12\,\text{V}/3\,\Omega=4\,\text{A}</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><msubsup><mi>U</mi><mtext mathvariant="normal">eff</mtext><mn>2</mn></msubsup><mi>/</mi><mi>R</mi><mo>=</mo><mn>86</mn><mo>,</mo><mn>4</mn><mi>/</mi><mn>3</mn><mo>=</mo><mn>28</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{átlag}}=U_{\text{eff}}^2/R=86{,}4/3=28{,}8\,\text{W}</annotation></semantics></math>.
+MOSFET-veszteség:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mrow><mi>D</mi><mi>S</mi></mrow></msub><mo>=</mo><mi>D</mi><mspace width="0.167em"></mspace><msubsup><mi>I</mi><mtext mathvariant="normal">csúcs</mtext><mn>2</mn></msubsup><mspace width="0.167em"></mspace><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>6</mn><mo>⋅</mo><mn>16</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>03</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>288</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{DS}=D\,I_{\text{csúcs}}^2\,R_{DS(\text{on})}=0{,}6\cdot 16\cdot 0{,}03=0{,}288\,\text{W}</annotation></semantics></math>.</p>
+<p><strong>5. feladat (C).</strong> Egyenáramú körben a tirisztor
+begyújtása után az áram folyamatosan folyik, és a gate nem tudja
+lezárni. A PWM akkor működne, ha a terhelőáram minden periódusban
+nullára csökkenne, de egyenáramú motoros körben ez nem következik be
+külső árammegszakítás nélkül. A megoldás MOSFET vagy IGBT, mert azok a
+gate-jel megszüntetésével lezárnak.</p>
+<p><strong>6. feladat (D).</strong> A soros ellenállás árama:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><msub><mi>U</mi><mi>R</mi></msub><mi>/</mi><mi>R</mi><mo>=</mo><mn>9</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>/</mi><mn>470</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>0196</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>19</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I=U_R/R=9{,}2\,\text{V}/470\,\Omega=0{,}0196\,\text{A}=19{,}6\,\text{mA}</annotation></semantics></math>.
+Ez a LED-sorra jellemző névleges áramtartomány közelében van, tehát az
+áramkör nem szakadt, és az ellenállás körülbelül helyes. Ha a lámpa
+mégis halvány, a hiba valószínűleg a LED-modulban van: a LED-sor
+öregedett, fényhasznosítása csökkent, vagy egy belső LED-rövidzár miatt
+megváltozott a soros szerkezet. Ki kell olvasni a lámpavezérlő
+hibakódját, és a gyártói diagnosztika szerint megmérni a LED-modult;
+rossz modulnál a gyártói előírás szerint cserélni kell.</p>
+<h3 data-number="14.2.13" id="rövid-összefoglaló"><span
+class="header-section-number">14.2.13</span> Rövid összefoglaló</h3>
+<p>A tranzisztor a modern járműelektronika vezérelt kapcsolója. A
+bipoláris NPN/PNP tranzisztort kis bázisáram vezérli:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>C</mi></msub><mo>≈</mo><mi>β</mi><msub><mi>I</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">I_C \approx \beta I_B</annotation></semantics></math>.
+Kapcsolóüzemben lezárva nincs áram, telítésben
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>C</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">U_{CE(\text{sat})}</annotation></semantics></math>
+kicsi, ezért a disszipáció alacsony. Relék hajtásakor a tekercs
+lekapcsolási feszültségcsúcsa ellen védődióda kell. A MOSFET feszültség
+vezérelt, szigetelt kapuval, kis
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">R_{DS(\text{on})}</annotation></semantics></math>
+ellenállással, ezért PWM-teljesítménykapcsolásra kiváló. A PWM
+átlagfeszültsége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">átlag</mtext></msub><mo>=</mo><mi>D</mi><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{átlag}}=D U_{\text{táp}}</annotation></semantics></math>,
+az effektív feszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">eff</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">táp</mtext></msub><msqrt><mi>D</mi></msqrt></mrow><annotation encoding="application/x-tex">U_{\text{eff}}=U_{\text{táp}}\sqrt{D}</annotation></semantics></math>.
+A tirisztor reteszelő kapcsoló, egyenáramú körben csak
+árammegszakítással olt; HKZ-gyújtásokban kondenzátorkisütést vezérel. A
+fotoellenállás, fotodióda, LED és optocsatoló a fény és villamos jel
+átalakításában, járműipari érzékelésben és galvanikus leválasztásban
+használatos. <strong>Továbbvitt eredmény.</strong> A tranzisztoros
+kapcsolóüzem és a PWM feszültségátlag-számítás a(z) <a
+href="au051.html">Impulzustechnika: RC-tagok, vágók, billenőkörök,
+Schmitt-trigger</a>, a(z) <a href="au100.html">Elektronikai elemek a
+gépjármű villamos hálózatában</a> és a(z) <a
+href="au105.html">Gyújtóberendezések: a hagyományostól a teljesen
+elektronikus gyújtásig</a> alfejezetben kerül újra elő.</p>
+<h3 data-number="14.2.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">14.2.14</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: félvezető-gyártói katalóguslapok (BJT
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>C</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">sat</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">U_{CE(\text{sat})}</annotation></semantics></math>,
+MOSFET
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>G</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">th</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">U_{GS(\text{th})}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mrow><mi>D</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">on</mtext><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">R_{DS(\text{on})}</annotation></semantics></math>,
+LED nyitófeszültség), járműgyártói kapcsolási rajzok és javítási
+utasítások, gyártói ESD-előírások. A megadott számértékek – mint 0,1–0,3
+V telítési feszültség, 1,2–1,4 V Darlington-telítés, 100 Hz–néhány kHz
+PWM-frekvencia, a LED 2–3,5 V nyitófeszültsége – tanulási példák,
+amelyeket a konkrét alkatrész és jármű adatlapja szerint ellenőrizni
+kell (ellenőrizendő). A relés kapcsolási rajz kapocsjelölései a gyártói
+rajz szerint ellenőrizendők.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au049.html">← 14.1 Félvezetők, diódák, Zener-dióda és egyenirányítók</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au051.html">14.3 Impulzustechnika: RC-tagok, vágók, billenőkörök, Schmitt-trigger →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

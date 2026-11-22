@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fogasszíjas DOHC vezérműhajtás jelölései</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"><label><input type="checkbox" id="off" onchange="show(k)"> hibás változat: a szíj egy foggal eltolva a vezérműkeréken</label></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Főtengely- és két vezérműtengely-fogaskerék fogasszíjjal, feszítő- és vezetőgörgővel, vízszivattyúval, a beállítójelekkel és rögzítőpontokkal."></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">Szemléltető vázlat a fejezet 1. példájának fogszámaival (19/38). A nyomvonal, a jelek és a rögzítőszerszámok motortípusonként eltérnek: mindig a gyártói javítási utasítás szerint (ellenőrizendő).</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "3. lépés – rögzítés: a főtengely az 1. henger FHP-ján áll, a főtengely-rögzítőcsap és a vezérműtengely-rögzítő lemez a helyén; minden kerék jele a ház jelével szemben áll.", "th": 0, "pins": 1, "belt": 0}, {"msg": "7. lépés – szíj fel: az új fogasszíjat a gyártói nyomvonal és forgásirány szerint helyezzük fel (a húzott ág feszes legyen), majd az automatikus feszítő mutatóját az ablakba állítjuk.", "th": 0, "pins": 1, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 45°, vezérműtengely 22.5°. Ütközésnél azonnal megállni!", "th": 45, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 90°, vezérműtengely 45°. Ütközésnél azonnal megállni!", "th": 90, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 135°, vezérműtengely 67.5°. Ütközésnél azonnal megállni!", "th": 135, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 180°, vezérműtengely 90°. Ütközésnél azonnal megállni!", "th": 180, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 225°, vezérműtengely 112.5°. Ütközésnél azonnal megállni!", "th": 225, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 270°, vezérműtengely 135°. Ütközésnél azonnal megállni!", "th": 270, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 315°, vezérműtengely 157.5°. Ütközésnél azonnal megállni!", "th": 315, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 360°, vezérműtengely 180°. Ütközésnél azonnal megállni!", "th": 360, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 405°, vezérműtengely 202.5°. Ütközésnél azonnal megállni!", "th": 405, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 450°, vezérműtengely 225°. Ütközésnél azonnal megállni!", "th": 450, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 495°, vezérműtengely 247.5°. Ütközésnél azonnal megállni!", "th": 495, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 540°, vezérműtengely 270°. Ütközésnél azonnal megállni!", "th": 540, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 585°, vezérműtengely 292.5°. Ütközésnél azonnal megállni!", "th": 585, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 630°, vezérműtengely 315°. Ütközésnél azonnal megállni!", "th": 630, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 675°, vezérműtengely 337.5°. Ütközésnél azonnal megállni!", "th": 675, "pins": 0, "belt": 1}, {"msg": "8. lépés – ellenőrző forgatás kézzel, a rögzítők kivéve: főtengely 720°, vezérműtengely 360°. Ütközésnél azonnal megállni!", "th": 720, "pins": 0, "belt": 1}, {"msg": "9. lépés – visszaellenőrzés két fordulat után: a rögzítőcsapnak és a rögzítő lemeznek ismét pontosan illeszkednie kell. Ha nem illeszkedik, a vezérlés nem áll jól: a beállítást meg kell ismételni.", "th": 720, "pins": 1, "belt": 1}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+
+const G = {"crank": [236.8, 339.2, 32.0], "cam_l": [153.6, 108.8, 64.0], "cam_r": [320.0, 108.8, 64.0], "idler": [236.8, 49.6, 16.0], "pump": [342.4, 240.0, 28.8], "tens": [148.8, 243.2, 19.2]}, BELT = "M85.8 108.8 L85.9 112.4 L86.1 115.9 L86.6 119.4 L87.2 122.9 L88.1 126.4 L126.9 250.3 L127.3 251.5 L127.8 252.6 L128.3 253.7 L128.8 254.7 L129.5 255.7 L130.2 256.7 L208.6 361.3 L209.8 362.7 L211.0 364.1 L212.4 365.4 L213.8 366.7 L215.2 367.8 L216.8 368.9 L218.3 369.9 L220.0 370.8 L221.7 371.7 L223.4 372.4 L225.1 373.1 L226.9 373.7 L228.7 374.1 L230.6 374.5 L232.4 374.8 L234.3 375.0 L236.2 375.0 L238.1 375.0 L239.9 374.9 L241.8 374.7 L243.6 374.4 L245.5 374.0 L247.3 373.5 L249.1 372.9 L250.8 372.2 L252.5 371.4 L254.2 370.5 L255.8 369.6 L257.4 368.6 L258.9 367.4 L260.3 366.2 L261.7 365.0 L365.5 263.1 L366.7 261.8 L367.8 260.5 L368.8 259.2 L369.8 257.8 L370.7 256.3 L371.5 254.8 L372.2 253.3 L372.9 251.7 L373.4 250.1 L373.9 248.4 L374.3 246.8 L374.6 245.1 L374.9 243.4 L387.7 113.5 L387.8 110.0 L387.8 106.4 L387.6 102.9 L387.2 99.4 L386.6 95.9 L385.8 92.4 L384.9 89.0 L383.7 85.6 L382.4 82.3 L381.0 79.1 L379.3 75.9 L377.5 72.9 L375.6 69.9 L373.5 67.0 L371.2 64.3 L368.8 61.7 L366.3 59.2 L363.6 56.8 L360.8 54.6 L357.9 52.6 L354.9 50.6 L351.8 48.9 L348.7 47.3 L345.4 45.9 L342.1 44.7 L338.7 43.6 L335.3 42.7 L331.8 42.0 L328.3 41.5 L238.5 29.8 L237.5 29.8 L236.5 29.8 L235.4 29.8 L234.4 29.9 L143.0 41.8 L139.5 42.4 L136.0 43.3 L132.6 44.3 L129.3 45.5 L126.0 46.8 L122.8 48.4 L119.7 50.0 L116.7 51.9 L113.7 53.9 L110.9 56.1 L108.2 58.4 L105.6 60.8 L103.2 63.4 L100.9 66.1 L98.7 68.9 L96.7 71.9 L94.8 74.9 L93.2 78.0 L91.6 81.2 L90.3 84.5 L89.1 87.8 L88.1 91.2 L87.2 94.7 L86.6 98.2 L86.1 101.7 L85.9 105.2 Z", ERR = 18.95;
+function gearC(c, ang, z, tag){
+  el("circle", {cx: c[0], cy: c[1], r: c[2], fill: "#ddd", stroke: "#000", "stroke-width": 2});
+  for (let i = 0; i < z; i++){ const a = (ang + i * 360 / z) * Math.PI / 180;
+    el("line", {x1: c[0] + (c[2] - 4) * Math.sin(a), y1: c[1] - (c[2] - 4) * Math.cos(a), x2: c[0] + (c[2] + 3) * Math.sin(a), y2: c[1] - (c[2] + 3) * Math.cos(a), stroke: "#000", "stroke-width": 2}); }
+  const a = ang * Math.PI / 180;
+  el("line", {x1: c[0], y1: c[1], x2: c[0] + (c[2] - 6) * Math.sin(a), y2: c[1] - (c[2] - 6) * Math.cos(a), stroke: "#000", "stroke-width": 4});
+  el("circle", {cx: c[0] + (c[2] - 6) * Math.sin(a), cy: c[1] - (c[2] - 6) * Math.cos(a), r: 5, fill: "#000"});
+  el("polygon", {points: (c[0] - 6) + "," + (c[1] - c[2] - 17) + " " + (c[0] + 6) + "," + (c[1] - c[2] - 17) + " " + c[0] + "," + (c[1] - c[2] - 7), fill: "#000"});
+  el("text", {x: c[0], y: c[1] + c[2] + 16, "text-anchor": "middle", "font-size": 12, fill: "#000"}, tag);
+}
+function render(s){
+  svg.setAttribute("viewBox", "0 0 480 425"); svg.innerHTML = "";
+  el("rect", {x: 0, y: 0, width: 480, height: 425, fill: "#fff"});
+  const off = document.getElementById("off") && document.getElementById("off").checked ? ERR : 0;
+  if (s.belt) el("path", {d: BELT, fill: "none", stroke: "#000", "stroke-width": 7, "stroke-linejoin": "round"});
+  gearC(G.crank, s.th, 19, "z = 19");
+  gearC(G.cam_l, (s.th + off) / 2, 38, "z = 38");
+  gearC(G.cam_r, (s.th + off) / 2, 38, "z = 38");
+  [["idler", "#fff"], ["pump", "#bbb"], ["tens", "#fff"]].forEach(([k, f]) => el("circle", {cx: G[k][0], cy: G[k][1], r: G[k][2], fill: f, stroke: "#000", "stroke-width": 2}));
+  if (s.pins){
+    const bad = off > 0 && s.th > 0;
+    el("rect", {x: G.cam_l[0] - 13, y: G.cam_l[1] - 10, width: G.cam_r[0] - G.cam_l[0] + 26, height: 20, fill: "none", stroke: bad ? "#b71c1c" : "#000", "stroke-width": 3, "stroke-dasharray": "8 5"});
+    if (bad) el("text", {x: 240, y: 200, "text-anchor": "middle", "font-size": 15, "font-weight": "bold", fill: "#b71c1c"}, "✘ a rögzítő lemez nem illeszkedik");
+    else if (s.th === 720) el("text", {x: 240, y: 200, "text-anchor": "middle", "font-size": 15, "font-weight": "bold", fill: "#2e7d32"}, "✔ a jelek ismét egybeesnek");
+  }
+  el("text", {x: 10, y: 418, "font-size": 12, fill: "#000"}, "főtengely: " + s.th + "°   vezérműtengely: " + (s.th / 2) + "°" + (off ? "   hibás beállítás: +1 fog = " + ERR.toFixed(1).replace(".", ",") + "° főtengelyszög" : ""));
+}
+
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.innerHTML = s.msg || "";   // a lépésszöveg saját, megbízható HTML-t (<b>, <i>) tartalmazhat
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 700);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

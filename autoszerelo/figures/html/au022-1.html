@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vas–szén diagram: lehűlési út és szövet</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="w">Széntartalom</label><input id="w" type="range" min="0" max="6.67" step="0.01" value="0.4" aria-label="Széntartalom"><output id="w_o" for="w"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 370" role="img" aria-label="Egyszerűsített Fe–Fe₃C diagram összetétel-csúszkával: a kiválasztott széntartalom lehűlési útja, szobahőmérsékleti szövete és arányai."></svg>
+<p class="small">Egyszerűsített, kerekített tanulási ábra (a δ-mező és a peritektikum elhagyva); az emelőszabály a fejezet közelítő alakja. Próbálja ki a fejezet példáit: 0,4 % → 50 % perlit; 1,2 % → 6,8 % szekunder cementit; 1,5 % → 11,9 %. A pontos vonalak anyagvizsgálati diagramból ellenőrizendők.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"w":"% C"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const LIQ=[[0, 1538], [0.5, 1510], [1.0, 1480], [2.06, 1380], [3.0, 1280], [4.3, 1147], [5.0, 1200], [6.67, 1250]],SOL=[[0, 1538], [0.5, 1490], [1.0, 1420], [2.06, 1147]],A3=[[0, 912], [0.2, 850], [0.4, 800], [0.6, 760], [0.8, 727]],ACM=[[0.8, 727], [1.0, 800], [1.2, 860], [1.6, 970], [2.06, 1147]];
+function ip(L,x){for(let i=1;i<L.length;i++){if(x<=L[i][0]){const a=L[i-1],b=L[i];return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);}}return L[L.length-1][1];}
+const w=v.w, X0=60,X1=540,Y0=330,Y1=20, X=x=>X0+(X1-X0)*x/6.67, Y=t=>Y0-(Y0-Y1)*t/1600;
+const fg=css("--fg"), ln=css("--line");
+el("line",{x1:X0,y1:Y0,x2:X1,y2:Y0,stroke:ln});el("line",{x1:X0,y1:Y0,x2:X0,y2:Y1,stroke:ln});
+[0,0.8,2.06,4.3,6.67].forEach(t=>{el("line",{x1:X(t),y1:Y0,x2:X(t),y2:Y0+4,stroke:ln});el("text",{x:X(t),y:Y0+16,"font-size":11,"text-anchor":"middle"},String(t).replace(".",","));});
+[0,400,727,912,1147,1538].forEach(t=>{el("line",{x1:X0-4,y1:Y(t),x2:X0,y2:Y(t),stroke:ln});el("text",{x:X0-7,y:Y(t)+4,"font-size":10,"text-anchor":"end"},String(t));});
+el("text",{x:(X0+X1)/2,y:Y0+32,"font-size":12,"text-anchor":"middle"},"széntartalom (tömeg% C)");
+const path=(L,da,sw)=>el("path",{d:L.map((p,i)=>(i?"L":"M")+X(p[0])+" "+Y(p[1])).join(""),fill:"none",stroke:fg,"stroke-width":sw||2,"stroke-dasharray":da||""});
+path(LIQ);path(SOL.concat([[6.67,1147]]),"7 4");path(A3,"8 3 2 3",1.5);path(ACM,"2 3",1.8);path([[0.022,727],[6.67,727]],"",1.2);path([[0,912],[0.022,727]],"",1);
+[["olvadék (L)",3.6,1470],["ausztenit (γ)",0.95,1060],["L + γ",2.6,1230],["γ + Fe₃C + ledeburit",3.3,940],["Fe₃C + ledeburit",5.5,940],
+ ["ferrit + perlit",0.4,200],["perlit + Fe₃C",1.45,200],["öntöttvas (Fe–Fe₃C)",4.4,300]].forEach(q=>el("text",{x:X(q[1]),y:Y(q[2]),"font-size":10,"text-anchor":"middle",fill:css("--muted")},q[0]));
+const tl=ip(LIQ,w), ts=w<=2.06?ip(SOL,w):1147;
+let tu=null,lab="";
+if(w>0.022&&w<0.8){tu=ip(A3,w);lab="A3";} else if(w>0.8&&w<=2.06){tu=ip(ACM,w);lab="Acm";}
+el("line",{x1:X(w),y1:Y(1600),x2:X(w),y2:Y0,stroke:css("--hl2"),"stroke-width":3});
+let ly=-99;const mk=(t,n)=>{el("circle",{cx:X(w),cy:Y(t),r:5,fill:css("--hl"),stroke:fg});let yy=Y(t)-6;if(yy<ly+15)yy=ly+15;ly=yy;el("text",{x:X(w)+(w>5?-8:8),y:yy,"font-size":11,"text-anchor":w>5?"end":"start","font-weight":"bold","paint-order":"stroke",stroke:css("--bg"),"stroke-width":4},n+" "+Math.round(t)+" °C");};
+mk(tl,"likvidusz");if(ts<tl-1)mk(ts,"szolidusz");else if(w>4.25&&w<4.35){}
+if(tu!==null)mk(tu,lab);if(w>0.022)mk(727,"A1");
+const s=[];s.push("olvadék → "+Math.round(tl)+" °C alatt "+(w<4.3?"ausztenit":"primer cementit")+" kristályosodik");
+if(w<=2.06)s.push(Math.round(ts)+" °C alatt teljesen ausztenites");else s.push("1147 °C-on a maradék olvadék ledeburittá dermed");
+if(lab==="A3")s.push(Math.round(tu)+" °C alatt ferrit válik ki");if(lab==="Acm")s.push(Math.round(tu)+" °C alatt szekunder cementit válik ki");
+if(w>0.022)s.push("727 °C-on a 0,8 %-os maradék ausztenit perlitté alakul");
+const R=function(w){if(w<=0.022)return["ferrit",{}];if(w<0.795)return["ferrit + perlit (hipoeutektoidos acél)",{"perlit ≈ w/0,8":w/0.8}];
+if(w<=0.805)return["perlit (eutektoidos acél)",{"perlit":1}];if(w<=2.06){const f=(w-0.8)/5.87;return["perlit + szekunder cementit (hipereutektoidos acél)",{"szekunder cementit":f,"perlit":1-f}];}
+if(w<4.295)return["perlit + szekunder cementit + átalakult ledeburit (hipoeutektikus öntöttvas)",{"ledeburit 1147 °C-on":(w-2.06)/2.24}];
+if(w<=4.305)return["átalakult ledeburit (eutektikus öntöttvas)",{"ledeburit":1}];return["primer cementit + átalakult ledeburit (hipereutektikus öntöttvas)",{"primer cementit":(w-4.3)/2.37}];};
+const r=R(w);let fr="";for(const k in r[1])fr+=k+": <b>"+fmt(r[1][k]*100,1)+" %</b>; ";
+status("<b>"+fmt(w,2)+" % C – "+(w<=2.06?"acél":"öntöttvas (Fe–Fe₃C)")+"</b><br>Lehűlési út: "+s.join(" → ")+".<br>Szobahőmérsékleten: <b>"+r[0]+"</b>"+(fr?"<br>Emelőszabály (közelítés): "+fr:""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

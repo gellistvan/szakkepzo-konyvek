@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fejlődés- és áttételkalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="z1">Első lánckerék z_első</label><input id="z1" type="range" min="20" max="56" step="1" value="44" aria-label="Első lánckerék z_első"><output id="z1_o" for="z1"></output></div>
+<div class="row"><label for="z2">Hátsó fogaskerék z_hátsó</label><input id="z2" type="range" min="10" max="36" step="1" value="16" aria-label="Hátsó fogaskerék z_hátsó"><output id="z2_o" for="z2"></output></div>
+<div class="row"><label for="dd">Kerék külső átmérője D</label><input id="dd" type="range" min="0.4" max="0.75" step="0.01" value="0.7" aria-label="Kerék külső átmérője D"><output id="dd_o" for="dd"></output></div>
+<div class="row"><label for="ph">Hajtókar elfordulása</label><input id="ph" type="range" min="0" max="360" step="5" value="360" aria-label="Hajtókar elfordulása"><output id="ph_o" for="ph"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Kerékpár-hajtás sémája: az első lánckerék és a hátsó fogaskerék fogszámából és a kerékátmérőből számolt áttétel és fejlődés, a kerék gördülése egy hajtókar-fordulat alatt."></svg>
+<p class="small">A képletek a fejezetéi; a fogaskerék-sugarak a rajzon a fogszámmal arányosak (nem méretarányos rajz). A kerékpáros szaknyelv a z_első/z_hátsó hányadost is „áttételnek” mondja – a gépészeti i ennek reciproka.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"z1":"fog", "z2":"fog", "dd":"m", "ph":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const Lm=Math.PI*v.dd*v.z1/v.z2, ig=v.z2/v.z1, frac=v.ph/360, sx=Math.min(55,440/Lm);
+const R=v.dd/2*sx*1.0, gy=250, x0=40, xw=x0+R+Lm*frac*sx;
+el("line",{x1:20,x2:545,y1:gy,y2:gy,stroke:css("--fg"),"stroke-width":1});
+const st=Lm>9?2:1;for(let k=0;k*sx<=470;k+=st){el("line",{x1:x0+R+k*sx,x2:x0+R+k*sx,y1:gy,y2:gy+6,stroke:css("--fg")});
+  el("text",{x:x0+R+k*sx,y:gy+20,"font-size":11,"text-anchor":"middle"},k+" m");}
+el("line",{x1:x0+R,x2:xw,y1:gy-4,y2:gy-4,stroke:css("--accent")||"#c0392b","stroke-width":4});
+el("circle",{cx:xw,cy:gy-R,r:R,fill:"none",stroke:css("--fg"),"stroke-width":3});
+const rot=-(Lm*frac*sx)/R;
+for(let k=0;k<8;k++){const a=rot+k*Math.PI/4;el("line",{x1:xw,y1:gy-R,x2:xw+R*Math.cos(a),y2:gy-R+R*Math.sin(a),stroke:css("--fg"),"stroke-width":0.8});}
+// fogaskerekek: az első lánckerék és a hátsó fogaskerék a fogszámmal arányos sugárral
+const r1=v.z1*1.1, r2=v.z2*1.1, cx2=330, cx1=470, cy=80, a1=frac*2*Math.PI;
+el("circle",{cx:cx1,cy:cy,r:r1,fill:"none",stroke:css("--fg"),"stroke-width":2});
+el("circle",{cx:cx2,cy:cy,r:r2,fill:"none",stroke:css("--fg"),"stroke-width":2});
+el("line",{x1:cx2,y1:cy-r2,x2:cx1,y2:cy-r1,stroke:css("--fg"),"stroke-dasharray":"4 2"});
+el("line",{x1:cx2,y1:cy+r2,x2:cx1,y2:cy+r1,stroke:css("--fg"),"stroke-dasharray":"4 2"});
+el("line",{x1:cx1,y1:cy,x2:cx1+(r1+14)*Math.cos(a1-Math.PI/2),y2:cy+(r1+14)*Math.sin(a1-Math.PI/2),stroke:css("--fg"),"stroke-width":5});
+const a2=a1*v.z1/v.z2;
+el("line",{x1:cx2,y1:cy,x2:cx2+r2*Math.cos(a2-Math.PI/2),y2:cy+r2*Math.sin(a2-Math.PI/2),stroke:css("--fg"),"stroke-width":2});
+el("text",{x:cx1,y:cy+r1+16,"font-size":12,"text-anchor":"middle"},"z_első = "+v.z1);
+el("text",{x:cx2,y:cy+Math.max(r2,20)+30,"font-size":12,"text-anchor":"middle"},"z_hátsó = "+v.z2);
+el("text",{x:30,y:30,"font-size":13},"i = z_hátsó/z_első = "+fmt(ig,4));
+el("text",{x:30,y:50,"font-size":13},"z_első/z_hátsó (szaknyelvi „áttétel”) = "+fmt(1/ig,3));
+el("text",{x:30,y:70,"font-size":13,"font-weight":"bold"},"L = π·D·z_első/z_hátsó = "+fmt(Lm,2)+" m");
+status("Egy teljes hajtókar-fordulat alatt a hátsó kerék <b>"+fmt(v.z1/v.z2,3)+"</b> fordulatot tesz, a kerékpár <b>"+fmt(Lm,2)+" m</b>-t halad (a csúszkán "+v.ph+"°: "+fmt(Lm*frac,2)+" m). "+
+ "Ellenőrzés: 44/16, D = 0,70 m → 6,04 m; 36/11 és 22/32, D = 0,7 m → 7,19 m és 1,51 m.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

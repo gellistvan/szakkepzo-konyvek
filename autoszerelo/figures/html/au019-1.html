@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menetellenállás-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="m">Tömeg m</label><input id="m" type="range" min="800" max="2500" step="10" value="1500" aria-label="Tömeg m"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="f">Gördülési tényező f</label><input id="f" type="range" min="0.008" max="0.05" step="0.001" value="0.012" aria-label="Gördülési tényező f"><output id="f_o" for="f"></output></div>
+<div class="row"><label for="cw">Légellenállási tényező c_W</label><input id="cw" type="range" min="0.2" max="0.45" step="0.01" value="0.3" aria-label="Légellenállási tényező c_W"><output id="cw_o" for="cw"></output></div>
+<div class="row"><label for="A">Homlokfelület A</label><input id="A" type="range" min="1.6" max="3.0" step="0.1" value="2.2" aria-label="Homlokfelület A"><output id="A_o" for="A"></output></div>
+<div class="row"><label for="q">Emelkedő q</label><input id="q" type="range" min="-10" max="15" step="0.5" value="0" aria-label="Emelkedő q"><output id="q_o" for="q"></output></div>
+<div class="row"><label for="acc">Gyorsulás a</label><input id="acc" type="range" min="0" max="4" step="0.1" value="0" aria-label="Gyorsulás a"><output id="acc_o" for="acc"></output></div>
+<div class="row"><label for="lam">Forgótömeg-tényező λ</label><input id="lam" type="range" min="1.0" max="1.4" step="0.01" value="1.1" aria-label="Forgótömeg-tényező λ"><output id="lam_o" for="lam"></output></div>
+<div class="row"><label for="eta">Hajtáslánc-hatásfok η</label><input id="eta" type="range" min="0.8" max="0.95" step="0.01" value="0.9" aria-label="Hajtáslánc-hatásfok η"><output id="eta_o" for="eta"></output></div>
+<div class="row"><label for="vk">Sebesség v</label><input id="vk" type="range" min="0" max="200" step="1" value="90" aria-label="Sebesség v"><output id="vk_o" for="vk"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 330" role="img" aria-label="Sík úton 90 km/h-nál a gördülési és a légellenállás közel azonos, 8%-os emelkedőn az emelkedési, gyorsításkor a gyorsítási ellenállás dominál."></svg>
+<p class="small">Alapérték: a fejezet 1. példája (sík út, 90 km/h: 176,6 + 247,5 = 424,1 N, P_kerék ≈ 10,6 kW). 3. példa: q = 8 %; 4. példa: v = 50 km/h, a = 2 m/s². Szemléltető tanulási adatok.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m":"kg", "f":"", "cw":"", "A":"m²", "q":"%", "acc":"m/s²", "lam":"", "eta":"", "vk":"km/h"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const g = 9.81, rho = 1.2, al = Math.atan(v.q / 100);
+const F = (vk, acc) => { const s = vk / 3.6; return [v.f * v.m * g * Math.cos(al), 0.5 * rho * v.cw * v.A * s * s, v.m * g * Math.sin(al), v.lam * v.m * acc]; };
+const cur = F(v.vk, v.acc), sum = cur.reduce((p, c) => p + c, 0), Pk = sum * v.vk / 3.6 / 1000, Pm = Pk / v.eta;
+// oszlop
+const names = ["gördülési", "lég-", "emelkedési", "gyorsítási"], cols = [css("--grid"), css("--hl"), css("--hl2"), css("--muted")];
+const bx = 70, by = 300, bh = 260, top = Math.max(1000, sum * 1.1);
+let y = by;
+cur.forEach((c, i) => { const h = Math.max(0, c) / top * bh; if (h > 0) { el("rect", {x: bx, y: y - h, width: 80, height: h, fill: cols[i], "fill-opacity": 0.7, stroke: css("--line")});
+  if (h > 16) el("text", {x: bx + 88, y: y - h / 2 + 4, "font-size": 11}, names[i] + ": " + fmt(c, 0) + " N"); y -= h; } });
+if (cur[2] < 0) el("text", {x: bx, y: by + 34, "font-size": 11}, "lejtő: F_e = " + fmt(cur[2], 0) + " N (hajt)");
+el("line", {x1: bx - 10, y1: by, x2: bx + 90, y2: by, stroke: css("--line")});
+el("text", {x: bx + 40, y: y - 8, "font-size": 12, "text-anchor": "middle", "font-weight": "bold"}, "Σ " + fmt(sum, 0) + " N");
+el("text", {x: bx - 40, y: 24, "font-size": 13, "font-weight": "bold"}, "Erők a munkapontban");
+// P(v) görbe
+const X0 = 330, Y0 = 300, W = 280, H = 250, vmax = 200;
+const pts = []; let pmax = 0;
+for (let vk = 0; vk <= vmax; vk += 4) { const s = F(vk, v.acc).reduce((p, c) => p + c, 0), p = Math.max(0, s * vk / 3.6 / 1000); pts.push([vk, p]); pmax = Math.max(pmax, p / v.eta); }
+pmax = Math.max(20, Math.ceil(pmax / 20) * 20);
+const X = u => X0 + W * u / vmax, Y = p => Y0 - H * p / pmax;
+el("line", {x1: X0, y1: Y0, x2: X0 + W, y2: Y0, stroke: css("--line")}); el("line", {x1: X0, y1: Y0, x2: X0, y2: Y0 - H, stroke: css("--line")});
+for (let u = 0; u <= vmax; u += 50) el("text", {x: X(u), y: Y0 + 15, "font-size": 11, "text-anchor": "middle"}, String(u));
+for (let p = 0; p <= pmax; p += pmax / 4) el("text", {x: X0 - 5, y: Y(p) + 4, "font-size": 11, "text-anchor": "end"}, fmt(p, 0));
+el("path", {d: pts.map((q, i) => (i ? "L" : "M") + X(q[0]) + " " + Y(q[1])).join(" "), fill: "none", stroke: css("--hl"), "stroke-width": 2.5});
+el("path", {d: pts.map((q, i) => (i ? "L" : "M") + X(q[0]) + " " + Y(q[1] / v.eta)).join(" "), fill: "none", stroke: css("--hl2"), "stroke-width": 2.5, "stroke-dasharray": "7 4"});
+el("circle", {cx: X(v.vk), cy: Y(Math.max(0, Pk)), r: 5, fill: css("--fg")});
+el("text", {x: X0 + W, y: Y0 + 30, "font-size": 11, "text-anchor": "end"}, "v (km/h)");
+el("text", {x: X0, y: Y0 - H - 10, "font-size": 11}, "P (kW): folytonos kerék, szaggatott motor");
+status(`F<sub>g</sub> = ${fmt(cur[0], 1)} N, F<sub>l</sub> = ${fmt(cur[1], 1)} N, F<sub>e</sub> = ${fmt(cur[2], 1)} N, F<sub>a</sub> = ${fmt(cur[3], 1)} N → <b>Σ ${fmt(sum, 1)} N</b>.<br>` +
+       `P<sub>kerék</sub> = F·v = <b>${fmt(Pk, 1)} kW</b>, P<sub>motor</sub> = P<sub>kerék</sub>/η = <b>${fmt(Pm, 1)} kW</b>.`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

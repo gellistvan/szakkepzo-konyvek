@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>14.4 Digitális alapok: számrendszerek, logikai függvények,
+hálózatok, regiszterek – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz4">IV. RÉSZ – Elektrotechnika, elektronika és villamos mérések</a> › <a href="index.html#auch13">14 Elektronika</a></p>
+<div class="links"><a class="prev" rel="prev" href="au051.html">← 14.3 Impulzustechnika: RC-tagok, vágók, billenőkörök, Schmitt-trigger</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au053.html">15.1 Méréstechnikai alapok: műszerek, mérési hibák, multiméter és lakatfogó →</a></div>
+</nav>
+<h2 data-number="14.4" id="au052"><span
+class="header-section-number">14.4</span> Digitális alapok:
+számrendszerek, logikai függvények, hálózatok, regiszterek</h2>
+<h3 data-number="14.4.1" id="motiváció"><span
+class="header-section-number">14.4.1</span> Motiváció</h3>
+<p>A diagnosztikai műszer élő adat nézete közben gyakran találkozol
+ilyen értékekkel: a motorfordulatszám <code>0x0FA0</code>, a
+hűtőfolyadék-hőmérséklet nyers regiszterértéke <code>0x4B</code>, a
+CAN-üzenet azonosítója <code>0x1A5</code>. A hibakódokat pedig
+<code>P0300</code> vagy <code>C1201</code> alakban látod. Ahhoz, hogy
+megértsd, mit „mond” a vezérlőegység, miért éppen 4000 1/min lesz a
+<code>0x0FA0</code> értékből, vagy miért gyanakszol szakadásra, ha a
+hőmérséklet-nyersérték <code>0xFF</code>, szükséged van a digitális
+technika alapjaira: számrendszerekre, logikai függvényekre és tároló
+áramkörökre. Ez az alfejezet ezt az alapot építi fel, hogy a későbbi
+motorirányítási és adatbuszos fejezetekben ne idegen nyelvként találkozz
+a kettes és tizenhatos számrendszerrel, amikor a munkahelyen hibakódot
+fejtesz vagy CAN-üzenetet elemezel.</p>
+<h3 data-number="14.4.2" id="szemléletes-kép"><span
+class="header-section-number">14.4.2</span> Szemléletes kép</h3>
+<p>Képzelj el egy 8 bites regisztert a vezérlőegységben: nyolc apró
+tárolócella egymás mellett, mindegyikben vagy <code>0</code>, vagy
+<code>1</code> áll. A cellák fölé írjuk a helyiértékeket jobbról balra:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>0</mn></msup><annotation encoding="application/x-tex">2^0</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>1</mn></msup><annotation encoding="application/x-tex">2^1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>2</mn></msup><annotation encoding="application/x-tex">2^2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>3</mn></msup><annotation encoding="application/x-tex">2^3</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>4</mn></msup><annotation encoding="application/x-tex">2^4</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>5</mn></msup><annotation encoding="application/x-tex">2^5</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>6</mn></msup><annotation encoding="application/x-tex">2^6</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>7</mn></msup><annotation encoding="application/x-tex">2^7</annotation></semantics></math>.
+Ha a cellák tartalma <code>0000 1010</code>, az emberi szemnek nehézkes,
+de a vezérlő számára egyértelmű: a motorvezérlő egyetlen utasítással
+tudja összeadni, eltolni vagy egy memóriacímhez rendelni. A
+diagnosztikai műszer ezt az értéket rövidítve, <code>0x0A</code> alakban
+jeleníti meg. Ugyanez a gondolat vezet a logikai hálózatokig: a
+digitális áramkörök nem feszültségértékekkel, hanem <code>0</code> és
+<code>1</code> állapotokkal dolgoznak; a vezérlőegység bemenetei,
+kimenetei, belső regiszterei és kommunikációs üzenetei is ilyen
+állapotokra vezethetők vissza.</p>
+<h3 data-number="14.4.3"
+id="analóg-és-digitális-mennyiség-számrendszerek"><span
+class="header-section-number">14.4.3</span> Analóg és digitális
+mennyiség, számrendszerek</h3>
+<p><strong>Definíció.</strong> <strong>Analóg mennyiség</strong> olyan
+jel vagy fizikai mennyiség, amely adott tartományon belül folytonosan,
+elvileg tetszőleges közbenső értéket felvehet. Ilyen például a
+feszültség, a hőmérséklet, a nyomás vagy a fordulatszám mint fizikai
+folyamat.</p>
+<p><strong>Definíció.</strong> <strong>Digitális mennyiség</strong>
+olyan jel, amely csak véges számú, jól elkülönített értéket vehet fel. A
+járműelektronikában leggyakrabban két értéket használunk: <code>0</code>
+(logikai alacsony, low) és <code>1</code> (logikai magas, high). A
+kettős logikát <strong>binárisnak</strong> nevezzük.</p>
+<p><strong>Definíció.</strong> A <strong>bit</strong> (binary digit) a
+legkisebb információegység, értéke <code>0</code> vagy <code>1</code>.
+Nyolc bit alkot egy <strong>bájtot</strong> (byte), négy bit egy
+<strong>nibble-t</strong> („félbájt”). A vezérlőegységek gyakran 8, 16
+vagy 32 bites szavakban dolgoznak; egy 8 bites regiszter értékkészlete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>8</mn></msup><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">2^8 = 256</annotation></semantics></math>
+különböző állapot, <code>0</code>-tól <code>255</code>-ig.</p>
+<p>A hétköznapi életben a tízes (decimális) számrendszert használjuk: az
+alapszám 10, a helyiértékek
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>10</mn><mn>0</mn></msup><mo>,</mo><msup><mn>10</mn><mn>1</mn></msup><mo>,</mo><msup><mn>10</mn><mn>2</mn></msup><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">10^0, 10^1, 10^2, \ldots</annotation></semantics></math>.
+A digitális rendszerekben a kettes (bináris) számrendszer az alap: az
+alapszám 2, az egyes helyiértékek
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>0</mn></msup><mo>,</mo><msup><mn>2</mn><mn>1</mn></msup><mo>,</mo><msup><mn>2</mn><mn>2</mn></msup><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">2^0, 2^1, 2^2, \ldots</annotation></semantics></math>
+Tehát például</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>1011</mn><mn>2</mn></msub><mo>=</mo><mn>1</mn><mo>⋅</mo><msup><mn>2</mn><mn>3</mn></msup><mo>+</mo><mn>0</mn><mo>⋅</mo><msup><mn>2</mn><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>⋅</mo><msup><mn>2</mn><mn>1</mn></msup><mo>+</mo><mn>1</mn><mo>⋅</mo><msup><mn>2</mn><mn>0</mn></msup><mo>=</mo><mn>8</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>1</mn><mo>=</mo><msub><mn>11</mn><mn>10</mn></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">1011_2 = 1 \cdot 2^3 + 0 \cdot 2^2 + 1 \cdot 2^1 + 1 \cdot 2^0 = 8 + 0 + 2 + 1 = 11_{10}.</annotation></semantics></math></p>
+<p>A hosszú bináris számok áttekinthetetlenek, ezért a
+járműdiagnosztikában és a programozásban gyakran
+<strong>hexadecimális</strong> (16-os alapú) számrendszert használunk.
+Az alapszám 16, a számjegyek:
+<code>0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F</code>, ahol
+<code>A = 10</code>, <code>B = 11</code>, …, <code>F = 15</code>. A
+járműdiagnosztikai eszközök gyakran <code>0x</code> előtaggal jelölik a
+hexadecimális értéket, például <code>0x2F</code>; a számjegyeket pedig
+úgy írjuk, hogy <code>2F_{16}</code>.</p>
+<p><strong>Szabály.</strong> Binárisból hexadecimálisra úgy váltunk,
+hogy a bináris számot jobbról indulva négyes csoportokra osztjuk, és
+minden csoportot egyetlen hexadecimális számjeggyé alakítunk. Hiányzó
+bal oldali bitek helyére <code>0</code>-t írunk.</p>
+<p><strong>Szabály.</strong> Decimálisból binárisba úgy váltunk, hogy a
+decimális számot ismételten kettővel osztjuk, a maradékokat
+feljegyezzük, majd a maradékokat az utolsótól az elsőig olvassuk.
+Decimálisból hexadecimálisba hasonlóan, 16-tal osztva járunk el.</p>
+<p>Az alábbi táblázat a leggyakrabban használt 0–15 közötti értékeket
+mutatja.</p>
+<table>
+<thead>
+<tr>
+<th>Decimális</th>
+<th style="text-align: right;">Hexadecimális</th>
+<th>Bináris</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td style="text-align: right;">0</td>
+<td>0000</td>
+</tr>
+<tr>
+<td>1</td>
+<td style="text-align: right;">1</td>
+<td>0001</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">2</td>
+<td>0010</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">3</td>
+<td>0011</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align: right;">4</td>
+<td>0100</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align: right;">5</td>
+<td>0101</td>
+</tr>
+<tr>
+<td>6</td>
+<td style="text-align: right;">6</td>
+<td>0110</td>
+</tr>
+<tr>
+<td>7</td>
+<td style="text-align: right;">7</td>
+<td>0111</td>
+</tr>
+<tr>
+<td>8</td>
+<td style="text-align: right;">8</td>
+<td>1000</td>
+</tr>
+<tr>
+<td>9</td>
+<td style="text-align: right;">9</td>
+<td>1001</td>
+</tr>
+<tr>
+<td>10</td>
+<td style="text-align: right;">A</td>
+<td>1010</td>
+</tr>
+<tr>
+<td>11</td>
+<td style="text-align: right;">B</td>
+<td>1011</td>
+</tr>
+<tr>
+<td>12</td>
+<td style="text-align: right;">C</td>
+<td>1100</td>
+</tr>
+<tr>
+<td>13</td>
+<td style="text-align: right;">D</td>
+<td>1101</td>
+</tr>
+<tr>
+<td>14</td>
+<td style="text-align: right;">E</td>
+<td>1110</td>
+</tr>
+<tr>
+<td>15</td>
+<td style="text-align: right;">F</td>
+<td>1111</td>
+</tr>
+</tbody>
+</table>
+<p>Az értékek bináris és hexadecimális megfeleltetése matematikailag
+egyértelmű; ez nem igényel ellenőrzést.</p>
+<p><strong>Példa.</strong> Alakítsuk át a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mn>234</mn><mn>10</mn></msub><annotation encoding="application/x-tex">234_{10}</annotation></semantics></math>
+értéket binárisba és hexadecimálisba.</p>
+<p><strong>1. lépés – decimálisból binárisba osztással.</strong> A
+234-et osztjuk 2-vel, és feljegyezzük a maradékokat:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>234</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>117</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">234 : 2 = 117, \quad \text{maradék } 0;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>117</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>58</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">117 : 2 = 58, \quad \text{maradék } 1;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>58</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>29</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">58 : 2 = 29, \quad \text{maradék } 0;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>29</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>14</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">29 : 2 = 14, \quad \text{maradék } 1;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>7</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">14 : 2 = 7, \quad \text{maradék } 0;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>7</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>3</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">7 : 2 = 3, \quad \text{maradék } 1;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">3 : 2 = 1, \quad \text{maradék } 1;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">1 : 2 = 0, \quad \text{maradék } 1.</annotation></semantics></math></p>
+<p>A maradékokat alulról felfelé olvasva:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>234</mn><mn>10</mn></msub><mo>=</mo><mn>1110</mn><mspace width="0.167em"></mspace><msub><mn>1010</mn><mn>2</mn></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">234_{10} = 1110\,1010_2.</annotation></semantics></math></p>
+<p><strong>2. lépés – binárisból hexadecimálisba.</strong> A bináris
+számot jobbról négyes csoportokra bontjuk:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1110</mn><mspace width="0.167em"></mspace><msub><mn>1010</mn><mn>2</mn></msub><mo>⇒</mo><msub><mn>1110</mn><mn>2</mn></msub><mo>=</mo><msub><mi>E</mi><mn>16</mn></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mn>1010</mn><mn>2</mn></msub><mo>=</mo><msub><mi>A</mi><mn>16</mn></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">1110\,1010_2 \Rightarrow 1110_2 = E_{16}, \quad 1010_2 = A_{16}.</annotation></semantics></math></p>
+<p>Tehát</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>234</mn><mn>10</mn></msub><mo>=</mo><mi>E</mi><msub><mi>A</mi><mn>16</mn></msub><mo>=</mo><mn>0</mn><mtext mathvariant="normal">x</mtext><mi>E</mi><mi>A</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">234_{10} = EA_{16} = 0\text{x}EA.</annotation></semantics></math></p>
+<p>Ellenőrzésként:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mn>16</mn></msub><mo>=</mo><mn>14</mn></mrow><annotation encoding="application/x-tex">E_{16} = 14</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mn>16</mn></msub><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">A_{16} = 10</annotation></semantics></math>,
+így</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>⋅</mo><msup><mn>16</mn><mn>1</mn></msup><mo>+</mo><mn>10</mn><mo>⋅</mo><msup><mn>16</mn><mn>0</mn></msup><mo>=</mo><mn>224</mn><mo>+</mo><mn>10</mn><mo>=</mo><mn>234</mn><mi>.</mi><mspace width="1.0em"></mspace><mi>◼</mi></mrow><annotation encoding="application/x-tex">14 \cdot 16^1 + 10 \cdot 16^0 = 224 + 10 = 234. \quad \blacksquare</annotation></semantics></math></p>
+<p><strong>Példa.</strong> Alakítsuk át a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><msub><mi>F</mi><mn>16</mn></msub></mrow><annotation encoding="application/x-tex">2F_{16}</annotation></semantics></math>
+értéket decimálisba, majd binárisba.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><msub><mi>F</mi><mn>16</mn></msub><mo>=</mo><mn>2</mn><mo>⋅</mo><msup><mn>16</mn><mn>1</mn></msup><mo>+</mo><mn>15</mn><mo>⋅</mo><msup><mn>16</mn><mn>0</mn></msup><mo>=</mo><mn>32</mn><mo>+</mo><mn>15</mn><mo>=</mo><msub><mn>47</mn><mn>10</mn></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">2F_{16} = 2 \cdot 16^1 + 15 \cdot 16^0 = 32 + 15 = 47_{10}.</annotation></semantics></math></p>
+<p>A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>
+hexadecimális jegy binárisan <code>0010</code>, az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+pedig <code>1111</code>, ezért</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><msub><mi>F</mi><mn>16</mn></msub><mo>=</mo><mn>0010</mn><mspace width="0.167em"></mspace><msub><mn>1111</mn><mn>2</mn></msub><mo>=</mo><msub><mn>101111</mn><mn>2</mn></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">2F_{16} = 0010\,1111_2 = 101111_2.</annotation></semantics></math></p>
+<p>A binárisból történő visszaellenőrzés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>101111</mn><mn>2</mn></msub><mo>=</mo><mn>32</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>8</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>47</mn></mrow><annotation encoding="application/x-tex">101111_2 = 32 + 0 + 8 + 4 + 2 + 1 = 47</annotation></semantics></math>.
+A két eredmény egyezik.</p>
+<figure id="fig-au052-1">
+<div class="fig-interactive"><iframe src="figures/html/au052-1.html" title="8 bites regiszter 1110 1010 tartalommal, decimálisan 234, hexadecimálisan 0xEA." loading="lazy" style="width:100%;border:0;height:600px"></iframe><noscript><img src="figures/img/au052-1.png" style="width:90.0%"
+alt="8 bites regiszter 1110 1010 tartalommal, decimálisan 234, hexadecimálisan 0xEA." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au052-1.png" style="width:90.0%"
+alt="8 bites regiszter 1110 1010 tartalommal, decimálisan 234, hexadecimálisan 0xEA." /></details></div>
+<figcaption>8 bites regiszter a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>234</mn><mo>=</mo><mn>0</mn><mtext mathvariant="normal">x</mtext><mi>E</mi><mi>A</mi><mo>=</mo><mn>1110</mn><mspace width="0.167em"></mspace><msub><mn>1010</mn><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">234 = 0\text{x}EA = 1110\,1010_2</annotation></semantics></math>
+példával, helyiértékekkel és nibble-határral</figcaption>
+</figure>
+<p>Az ábrán a kitöltött cellák az 1-es bitek: a helyiértékek összege
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>128</mn><mo>+</mo><mn>64</mn><mo>+</mo><mn>32</mn><mo>+</mo><mn>8</mn><mo>+</mo><mn>2</mn><mo>=</mo><mn>234</mn></mrow><annotation encoding="application/x-tex">128 + 64 + 32 + 8 + 2 = 234</annotation></semantics></math>.
+A vastag vonal a nibble-határ: a felső négy bit
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1110</mn><mo>=</mo><mi>E</mi></mrow><annotation encoding="application/x-tex">1110 = E</annotation></semantics></math>,
+az alsó négy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1010</mn><mo>=</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">1010 = A</annotation></semantics></math>,
+így az érték
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mtext mathvariant="normal">x</mtext><mi>E</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">0\text{x}EA</annotation></semantics></math>.
+Az interaktív változatban a bitekre kattintva vagy értéket beírva
+gyakorolható az átváltás, és a nyers érték skálázása is kipróbálható (a
+6. feladat adataival
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mtext mathvariant="normal">x</mtext><mn>56</mn><mo>=</mo><mn>86</mn><mo>→</mo><mn>86</mn><mo>⋅</mo><mn>1</mn><mo>−</mo><mn>40</mn><mo>=</mo><mn>46</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">0\text{x}56 = 86 \to 86 \cdot 1 - 40 = 46\,{}^{\circ}\text{C}</annotation></semantics></math>).</p>
+<h3 data-number="14.4.4" id="logikai-függvények-és-boole-algebra"><span
+class="header-section-number">14.4.4</span> Logikai függvények és
+Boole-algebra</h3>
+<p><strong>Definíció.</strong> <strong>Logikai függvény</strong> olyan
+leképezés, amelynek bemenetei és kimenete is logikai értékeket,
+<code>0</code>-t vagy <code>1</code>-t vehetnek fel. Például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo>,</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Y = f(A, B, C)</annotation></semantics></math>
+azt jelenti, hogy az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>
+kimenet a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
+bemenetek minden kombinációjához hozzárendeli a <code>0</code> vagy
+<code>1</code> értéket.</p>
+<p>A három alapművelet:</p>
+<ul>
+<li><strong>ÉS (AND):</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = A \cdot B</annotation></semantics></math>.
+A kimenet csak akkor <code>1</code>, ha minden bemenet
+<code>1</code>.</li>
+<li><strong>VAGY (OR):</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>+</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = A + B</annotation></semantics></math>.
+A kimenet <code>1</code>, ha legalább egy bemenet <code>1</code>.</li>
+<li><strong>NEM (NOT):</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">Y = \overline{A}</annotation></semantics></math>.
+A kimenet a bemenet ellentettje.</li>
+</ul>
+<p>Ezekből épül fel a <strong>NAND</strong>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mrow><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">Y = \overline{A \cdot B}</annotation></semantics></math>),
+a <strong>NOR</strong>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mrow><mi>A</mi><mo>+</mo><mi>B</mi></mrow><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">Y = \overline{A + B}</annotation></semantics></math>),
+a <strong>kizáró VAGY (XOR, exclusive OR)</strong> és a
+<strong>XNOR</strong>. Az XOR akkor <code>1</code>, ha a két bemenet
+különböző:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>⊕</mo><mi>B</mi><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mo>+</mo><mi>A</mi><mover><mi>B</mi><mo accent="true">¯</mo></mover><mi>.</mi></mrow><annotation encoding="application/x-tex">Y = A \oplus B = \overline{A}B + A\overline{B}.</annotation></semantics></math></p>
+<p>Az alapkapuk igazságtáblája:</p>
+<table>
+<thead>
+<tr>
+<th>A</th>
+<th>B</th>
+<th>AND
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">A \cdot B</annotation></semantics></math>)</th>
+<th style="text-align: right;">OR
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>+</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">A + B</annotation></semantics></math>)</th>
+<th style="text-align: right;">XOR</th>
+<th style="text-align: right;">NAND</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>A logikai függvények egyszerűsítéséhez a Boole-algebra szabályait
+használjuk. A legfontosabb azonosságok:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>+</mo><mn>0</mn><mo>=</mo><mi>A</mi><mo>,</mo><mspace width="1.0em"></mspace><mi>A</mi><mo>⋅</mo><mn>1</mn><mo>=</mo><mi>A</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">A + 0 = A, \quad A \cdot 1 = A,</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>+</mo><mn>1</mn><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1.0em"></mspace><mi>A</mi><mo>⋅</mo><mn>0</mn><mo>=</mo><mn>0</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">A + 1 = 1, \quad A \cdot 0 = 0,</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>+</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1.0em"></mspace><mi>A</mi><mo>⋅</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mo>=</mo><mn>0</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">A + \overline{A} = 1, \quad A \cdot \overline{A} = 0,</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>+</mo><mi>A</mi><mo>=</mo><mi>A</mi><mo>,</mo><mspace width="1.0em"></mspace><mi>A</mi><mo>⋅</mo><mi>A</mi><mo>=</mo><mi>A</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">A + A = A, \quad A \cdot A = A,</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>+</mo><mi>A</mi><mi>B</mi><mo>=</mo><mi>A</mi><mo>,</mo><mspace width="1.0em"></mspace><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>+</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>A</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">A + AB = A, \quad A(A + B) = A,</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mrow><mi>A</mi><mo>+</mo><mi>B</mi></mrow><mo accent="true">¯</mo></mover><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mo>⋅</mo><mover><mi>B</mi><mo accent="true">¯</mo></mover><mo>,</mo><mspace width="1.0em"></mspace><mover><mrow><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><mo accent="true">¯</mo></mover><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mo>+</mo><mover><mi>B</mi><mo accent="true">¯</mo></mover><mi>.</mi></mrow><annotation encoding="application/x-tex">\overline{A + B} = \overline{A} \cdot \overline{B}, \quad \overline{A \cdot B} = \overline{A} + \overline{B}.</annotation></semantics></math></p>
+<p>Az utolsó két azonosságot De Morgan-törvényeknek nevezzük. A
+gyakorlatban a legegyszerűbb egyszerűsítési módszer a
+<strong>szorzatösszeg-alak</strong> (sum of products, SOP) felírása,
+majd a közös tényezők kiemelése. Ha a függvény bonyolult,
+<strong>Karnaugh-táblát</strong> használunk.</p>
+<p><strong>Példa.</strong> Legyen</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mover><mi>C</mi><mo accent="true">¯</mo></mover><mo>+</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mi>C</mi><mo>+</mo><mi>A</mi><mi>B</mi><mover><mi>C</mi><mo accent="true">¯</mo></mover><mo>+</mo><mi>A</mi><mi>B</mi><mi>C</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">Y = \overline{A}B\overline{C} + \overline{A}BC + AB\overline{C} + ABC.</annotation></semantics></math></p>
+<p>Kiemeljük
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi></mrow><annotation encoding="application/x-tex">\overline{A}B</annotation></semantics></math>-t
+az első két tagból, illetve
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>B</mi></mrow><annotation encoding="application/x-tex">AB</annotation></semantics></math>-t
+az utolsó kettőből:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>C</mi><mo accent="true">¯</mo></mover><mo>+</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>A</mi><mi>B</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>C</mi><mo accent="true">¯</mo></mover><mo>+</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">Y = \overline{A}B(\overline{C} + C) + AB(\overline{C} + C).</annotation></semantics></math></p>
+<p>Mivel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>C</mi><mo accent="true">¯</mo></mover><mo>+</mo><mi>C</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\overline{C}+C = 1</annotation></semantics></math>
+és bármely logikai kifejezés szorozva 1-gyel önmaga,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mo>+</mo><mi>A</mi><mi>B</mi><mo>=</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mo>+</mo><mi>A</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>B</mi><mo>⋅</mo><mn>1</mn><mo>=</mo><mi>B</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">Y = \overline{A}B + AB = B(\overline{A}+A) = B \cdot 1 = B.</annotation></semantics></math></p>
+<p>A négytagú kifejezés tehát egyetlen bemenetre redukálódott. A
+Karnaugh-tábla ugyanezt grafikusan mutatja: ha az összes olyan cella,
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">B = 1</annotation></semantics></math>,
+1-es értéket tartalmaz, a függvény
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = B</annotation></semantics></math>.</p>
+<p>A Karnaugh-tábla lényege röviden: a bemeneti változókat úgy rendezzük
+el a táblázat sor- és oszlopcímeiben, hogy a szomszédos cellák mindig
+csak egyetlen változóban különbözzenek. A táblában kettes, négyes,
+nyolcas stb. élével érintkező <code>1</code>-es csoportokat keresünk, és
+minden csoportból elhagyhatjuk azt a változót, amely a csoporton belül
+<code>0</code> és <code>1</code> értéket is felvesz. A
+járműdiagnosztikában ritkán kell papíron Karnaugh-táblát rajzolnod, de a
+módszer logikáját érdemes ismerned, mert a vezérlőegységek belső
+feltételrendszerei ugyanígy egyszerűsödnek.</p>
+<h3 data-number="14.4.5"
+id="kombinációs-és-szekvenciális-hálózatok"><span
+class="header-section-number">14.4.5</span> Kombinációs és szekvenciális
+hálózatok</h3>
+<p><strong>Definíció.</strong> <strong>Kombinációs hálózat</strong>
+olyan logikai áramkör, amelynek kimenete csak a bemenetek aktuális
+értékétől függ. Nincs benne tárolóelem; ha a bemenet megváltozik, a
+kimenet a kapuk késleltetése után követi a változást.</p>
+<p>A kombinációs hálózatok fontos autóipari példái:</p>
+<ul>
+<li><strong>Multiplexer (adatválasztó):</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+vezérlőbemenettel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mi>n</mi></msup><annotation encoding="application/x-tex">2^n</annotation></semantics></math>
+adatbemenet közül választ egyet, és azt vezeti a kimenetre. Például egy
+2 bites vezérlővel kiválaszthatjuk, hogy a négy bemeneti jel közül
+melyik jusson a mikrovezérlő egyetlen analóg bemenetére. Ezzel
+bekötéseket és vezérlőegység-lábakat lehet megtakarítani.</li>
+<li><strong>Demultiplexer:</strong> egy bemenő jelet oszt szét több
+kimenetre a vezérlőbemenetek szerint. A mikrovezérlő így ugyanarról a
+lábról vezérelheti több teljesítményfokozat engedélyezését.</li>
+<li><strong>Aritmetikai áramkörök:</strong> félösszeadó, teljes
+összeadó, kivonó és összehasonlító áramkörök. Egy
+<strong>félösszeadó</strong> két bitet ad össze:</li>
+</ul>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mi>A</mi><mo>⊕</mo><mi>B</mi><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>C</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mi>A</mi><mo>⋅</mo><mi>B</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">S = A \oplus B, \qquad C_{\text{ki}} = A \cdot B.</annotation></semantics></math></p>
+<p>A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+az összeg, a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mtext mathvariant="normal">ki</mtext></msub><annotation encoding="application/x-tex">C_{\text{ki}}</annotation></semantics></math>
+az átvitel. Teljes összeadó már a bejövő átvitelt is figyelembe veszi,
+és ezekből építhető fel a mikrovezérlő aritmetikai-logikai egysége
+(ALU).</p>
+<p><strong>Definíció.</strong> <strong>Szekvenciális hálózat</strong>
+olyan logikai áramkör, amelynek kimenete nemcsak a bemenetek aktuális
+értékétől, hanem a korábbi állapotoktól is függ. Ehhez tárolóelemeket,
+leggyakrabban <strong>flip-flopokat</strong> használ. A szekvenciális
+hálózatok képesek állapotot megjegyezni.</p>
+<p>A járműelektronikában a legfontosabb szekvenciális elemek:</p>
+<ul>
+<li><strong>Regiszter:</strong> több flip-flopból álló tároló, amely egy
+meghatározott órajel ütemére eltárolja az adatbiteket. Például egy 8
+bites regiszter egy bájtot tárol. Ha a regiszter tartalmát órajelenként
+jobbra vagy balra léptetjük, <strong>shift regisztert</strong> kapunk;
+ez soros adatbevitelre és -kivitelre alkalmas.</li>
+<li><strong>Számláló:</strong> olyan regiszter, amelynek tartalma minden
+órajelre meghatározott sorrend szerint nő vagy csökken. Egy 3 bites
+bináris számláló így számol: <code>000</code>, <code>001</code>,
+<code>010</code>, <code>011</code>, <code>100</code>, <code>101</code>,
+<code>110</code>, <code>111</code>, majd újraindul. A számláló
+frekvenciaosztásra, időzítésre és eseményszámlálásra is alkalmas.</li>
+<li><strong>Állapotgép:</strong> a vezérlőegységek működési logikája
+gyakran állapotgép, amely bizonyos bemenetek hatására egyik belső
+állapotból a másikba lép. Például az indításgátló, az
+alapjárat-szabályozó vagy az automata váltó kapcsolási logikája ilyen
+módon írható le.</li>
+</ul>
+<p>A soros adatátvitelben, például a CAN- vagy LIN-üzeneteknél, a bitek
+időben egymás után érkeznek. A vevő egy shift regiszterben gyűjti a
+biteket, majd amikor a teljes üzenet összeállt, a tartalmat egy
+párhuzamos regiszterbe másolja. Ez a soros-párhuzamos átalakítás a
+digitális járműhálózatok egyik alapművelete.</p>
+<h3 data-number="14.4.6"
+id="a-mikrovezérlő-mint-programozható-logika"><span
+class="header-section-number">14.4.6</span> A mikrovezérlő mint
+programozható logika</h3>
+<p>A mai motorvezérlő (ECU) lényegében egy beágyazott mikrovezérlő,
+amely kombinációs logikát, regisztereket, számlálókat, időzítőket,
+memóriát és analóg-digitális átalakítókat (ADC) tartalmaz. A
+mikrovezérlő nem rögzített kapukból, hanem programozható logikai
+egységekből épül, így ugyanaz a hardver különböző szoftverekkel más-más
+járműtípus feladatát is elláthatja.</p>
+<figure>
+<img src="assets/au052-diagram-1.png"
+alt="Egy mikrovezérlő belső logikai rétegei (elvi) - Szemléltető vázlat; a jel útja Bemenetek → CPU → Kimenetek, a memóriát (program, változók, tanult értékek) a CPU olvassa és írja, a jel nem a memórián át jut a kimenetre. A tényleges ECU-felépítés típusonként eltér." />
+<figcaption aria-hidden="true">Egy mikrovezérlő belső logikai rétegei
+(elvi) - Szemléltető vázlat; a jel útja Bemenetek → CPU → Kimenetek, a
+memóriát (program, változók, tanult értékek) a CPU olvassa és írja, a
+jel nem a memórián át jut a kimenetre. A tényleges ECU-felépítés
+típusonként eltér.</figcaption>
+</figure>
+<p>A rétegábra azt mutatja, hogy a bemeneti jelek az ADC-n vagy a
+digitális bemeneteken keresztül jutnak a CPU-ba, ahol az ALU aritmetikai
+és logikai műveleteket végez, a regiszterek átmeneti adatokat tárolnak,
+a flash memória a programot, a RAM a változókat, az EEPROM pedig a
+tanult értékeket és hibakódokat őrzi. A kimeneti fokozatok ezután a
+beavatkozókat, például injektorokat, gyújtótekercset vagy CAN-adót
+vezérlik.</p>
+<p>Ez a felépítés azért fontos, mert a későbbi motorirányítási
+alfejezetben már adottnak vesszük, hogy az ECU „elolvassa” a
+fordulatszám-jeladót, regiszterben tárolja a motorhőmérsékletet, és
+logikai feltételekkel dönt például arról, hogy az alapjárat-szabályozó
+melyik állásba lépjen. A bináris és hexadecimális ábrázolást pedig
+közvetlenül használjuk majd a(z) <a href="au111.html">A motorirányítás
+alapjai: vezérlőegység, szabályozási kör, üzemállapotok és
+rendszerek</a> és az <a href="au114.html">Adatbusz-hálózatok: CAN, LIN,
+FlexRay, MOST és Ethernet</a> alfejezetben.</p>
+<p><strong>Továbbvitt eredmény.</strong> A bináris, decimális és
+hexadecimális átváltás, a bit/bájt fogalom, valamint a regiszterben
+tárolt adatok olvasása és léptetése szükséges a motorvezérlő belső
+működésének (<a href="au111.html">A motorirányítás alapjai:
+vezérlőegység, szabályozási kör, üzemállapotok és rendszerek</a>) és a
+CAN/LIN-üzenetek értelmezésének (<a
+href="au114.html">Adatbusz-hálózatok: CAN, LIN, FlexRay, MOST és
+Ethernet</a>) megértéséhez. Aki itt megtanulja, hogy <code>0x0F</code> =
+15, <code>0x10</code> = 16, <code>0xFF</code> = 255, az a diagnosztikai
+műszer nyers adatainál már pontosan tudja, milyen tartományba esik a
+mért érték.</p>
+<h3 data-number="14.4.7" id="minőségellenőrzés"><span
+class="header-section-number">14.4.7</span> Minőségellenőrzés</h3>
+<p>A számrendszeres átváltásokat mindig ellenőrizzük vissza egy másik
+irányból. Ha például <code>0x3C</code>-t decimálissá alakítunk,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>⋅</mo><mn>16</mn><mo>+</mo><mn>12</mn><mo>=</mo><mn>60</mn></mrow><annotation encoding="application/x-tex">3 \cdot 16 + 12 = 60</annotation></semantics></math>.
+A bináris érték <code>0011 1100</code>, amiből a helyiértékekkel
+számolva szintén
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>32</mn><mo>+</mo><mn>16</mn><mo>+</mo><mn>8</mn><mo>+</mo><mn>4</mn><mo>=</mo><mn>60</mn></mrow><annotation encoding="application/x-tex">32 + 16 + 8 + 4 = 60</annotation></semantics></math>
+adódik. Ha a két út nem egyezik, hibát vétettünk a csoportosításban vagy
+a helyiértékekben.</p>
+<p>A logikai egyszerűsítést úgy ellenőrizzük, hogy az eredeti kifejezést
+és az egyszerűsített kifejezést minden bemeneti kombinációra
+kiértékeljük. Például az előző
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = B</annotation></semantics></math>
+egyszerűsítésnél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">B=0</annotation></semantics></math>
+esetén az eredeti kifejezés minden tagja <code>0</code>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">B=1</annotation></semantics></math>
+esetén pedig minden lehetséges
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
+kombinációra az egyik tag <code>1</code>-et ad. Ha bármelyik sor eltér,
+az egyszerűsítés hibás.</p>
+<p>Az ECU-ban tárolt nyers regiszterértékek minőségét is ellenőrizni
+kell. A gyártói diagnosztikai adat megadja, hogy egy adott jel hány
+bites, milyen skálázású, és van-e hozzá hibahatár. A mért nyersértéket
+ezzel összevetve dönthető el, hogy az érték életszerű-e, vagy
+jeladóhibára, szakadásra, rövidzárlatra utal. Az ilyen értékek mindig
+tanulási példák, a konkrét járműhöz a gyártói javítási adat az
+irányadó.</p>
+<h3 data-number="14.4.8" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">14.4.8</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy ügyfél azzal hozza a járművét, hogy a
+hűtőfolyadék-hőmérséklet-mutató időnként a maximumra ugrik, majd
+visszaáll, és a motorellenőrző lámpa is kigyulladt. A szerelő
+csatlakoztatja a diagnosztikai műszert, és kiolvassa az élő adatokat. A
+hűtőfolyadék-hőmérséklet nyers regiszterértéke a műszeren
+<code>0xFF</code>-ként jelenik meg.</p>
+<p>A szerelő tudja, hogy az adott vezérlő 8 bites regiszterben tárolja
+az érzékelő értékét, és a példaként vett skálázás szerint 1 bit = 1 °C,
+az érték pedig -40 °C eltolással értendő <strong>(ellenőrizendő: gyártói
+diagnosztikai adat)</strong>. Kiszámolja:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mtext mathvariant="normal">x</mtext><mi>F</mi><mi>F</mi><mo>=</mo><msub><mn>255</mn><mn>10</mn></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">0\text{x}FF = 255_{10},</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">hőmérséklet</mtext><mo>=</mo><mn>255</mn><mo>−</mo><mn>40</mn><mo>=</mo><mn>215</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">\text{hőmérséklet} = 255 - 40 = 215\,{}^{\circ}\text{C}.</annotation></semantics></math></p>
+<p>Ez fizikailag irreális hűtőfolyadék-hőmérséklet (a <code>0xFF</code>
+a 8 bites tartomány teteje), ezért az érték nem valós mérést, hanem
+hibát jelez: a vezérlő az ilyen tartományon kívüli értéket hibajelként
+kezeli. A hibát az érzékelőkör zárlata vagy szakadása okozhatja, ezért a
+gyártói hibakód és az érzékelő ellenállásának mérése dönt
+(ellenőrizendő: gyártói adat). A szerelő ellenőrzi a
+hőmérséklet-érzékelő csatlakozóját, ahol oxidációt talál. A csatlakozó
+tisztítása és a hiba törlése után a nyersérték visszaáll
+<code>0x7D</code>-re, ami
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>125</mn><mo>−</mo><mn>40</mn><mo>=</mo><mn>85</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">125 - 40 = 85\,{}^{\circ}\text{C}</annotation></semantics></math>-ot
+mutat, és üzemmeleg motornál reális. A tanulság: a nyers digitális
+értékekből azonnal látható, ha a jel a mérési tartomány szélére ragadt.
+(A nyers kód és a skálázott hőmérséklet két külön mennyiség: a szenzor
+az NTC-termisztor feszültségét méri, amely nem lineáris a
+hőmérséklettel, a vezérlő pedig ebből számítja a regiszterbe kerülő,
+skálázott értéket.)</p>
+<h3 data-number="14.4.9" id="tipikus-hibák"><span
+class="header-section-number">14.4.9</span> Tipikus hibák</h3>
+<p><strong>1. A hexadecimális számot decimálisnak nézik.</strong> A
+<code>0x10</code> nem 10, hanem
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>⋅</mo><mn>16</mn><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">1 \cdot 16 = 16</annotation></semantics></math>.
+A műszerfalon vagy a CAN-naplóban szereplő <code>0x10</code> tehát nem
+azt jelenti, hogy a készülék tízes értéket mért. Ezt a hibát
+legkönnyebben úgy kerülheted el, hogy a <code>0x</code> előtagot mindig
+„hexadecimális” figyelmeztetésként olvasod.</p>
+<p><strong>2. A bit súlyozását balról kezdik.</strong> A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mn>1001</mn><mn>2</mn></msub><annotation encoding="application/x-tex">1001_2</annotation></semantics></math>
+értéket néha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1 + 0 + 0 + 1 = 2</annotation></semantics></math>-nek
+számolják, ami hibás. A helyiértékek jobbról balra nőnek:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>⋅</mo><msup><mn>2</mn><mn>3</mn></msup><mo>+</mo><mn>0</mn><mo>⋅</mo><msup><mn>2</mn><mn>2</mn></msup><mo>+</mo><mn>0</mn><mo>⋅</mo><msup><mn>2</mn><mn>1</mn></msup><mo>+</mo><mn>1</mn><mo>⋅</mo><msup><mn>2</mn><mn>0</mn></msup><mo>=</mo><mn>8</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">1 \cdot 2^3 + 0 \cdot 2^2 + 0 \cdot 2^1 + 1 \cdot 2^0 = 8 + 1 = 9</annotation></semantics></math>.
+A hiba gyakran abból adódik, hogy a számot szövegként, nem
+helyiérték-rendszerként kezelik.</p>
+<p><strong>3. A Karnaugh-csoportosításnál nem szomszédos cellákat vonnak
+össze.</strong> Csak olyan cellák vonhatók össze, amelyek élével
+érintkeznek, vagy a tábla szélei a ciklikus elrendezés miatt összeérnek.
+Ha nem szomszédos cellákat foglalnak csoportba, az egyszerűsített
+kifejezés hibás lesz.</p>
+<p><strong>4. A logikai állapotot összekeverik a
+feszültségszinttel.</strong> A digitális <code>0</code> és
+<code>1</code> nem feltétlenül 0 V és 12 V. A vezérlőegységekben
+jellemzően 5 V, 3,3 V vagy más logikai szintek vannak. A gyakorlatban
+mindig a gyártói kapcsolási rajz és a javítási útmutató adja meg, milyen
+feszültség tartozik az adott logikai szinthez.</p>
+<h3 data-number="14.4.10" id="önellenőrzés"><span
+class="header-section-number">14.4.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e, hogy <code>0x1A</code> decimális értéke 26? Indokold.</li>
+<li>Mennyi a <code>200</code> decimális érték hexadecimálisan? Számítsd
+ki.</li>
+<li>Valaki azt állítja, hogy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mo>+</mo><mi>A</mi><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = \overline{A}B + AB</annotation></semantics></math>
+egyszerűsítése
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>.
+Mi a hiba?</li>
+<li>Igaz-e, hogy a NAND kapu kimenete akkor <code>1</code>, ha mindkét
+bemenete <code>1</code>?</li>
+<li>Milyen hálózat a multiplexer: kombinációs vagy szekvenciális?
+Indokold.</li>
+<li>Miért lehet gyanús, ha egy 8 bites hőmérséklet-nyersérték
+<code>0xFF</code>, ha a skála 1 bit = 1 °C, az eltolás pedig -40
+°C?</li>
+</ol>
+<h3 data-number="14.4.11" id="feladatok"><span
+class="header-section-number">14.4.11</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Alakítsd át a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mn>101</mn><mn>10</mn></msub><annotation encoding="application/x-tex">101_{10}</annotation></semantics></math>
+értéket bináris és hexadecimális számrendszerbe. Ellenőrizd is az
+eredményt.</p>
+<p><strong>2. feladat (A)</strong> Írd fel a NAND kapu igazságtábláját,
+és fejezd ki a függvényt
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+logikai változókkal.</p>
+<p><strong>3. feladat (B)</strong> Tervezz olyan 3 bemenetű logikai
+függvényt, amelynek kimenete akkor <code>1</code>, ha a bemenetek közül
+legalább kettő <code>1</code> (többségi döntés). Írd fel a
+szorzatösszeg-alakot, és egyszerűsítsd Boole-algebrai lépésekkel.</p>
+<p><strong>4. feladat (B)</strong> Rajzold fel egy félösszeadó
+kapcsolási vázlatát <code>XOR</code> és <code>AND</code> kapukból, és
+írd fel az igazságtábláját. Milyen autóipari feladatnál hasznos az ilyen
+aritmetikai logika?</p>
+<p><strong>5. feladat (C)</strong> Hasonlítsd össze a multiplexer és a
+demultiplexer feladatát. Hol használhatná egy ECU a multiplexert a
+bemeneti jelek számának csökkentésére? Gondolj például több kapcsoló
+vagy több hőmérsékletjel egyetlen vezérlőegység-lábra való
+bekötésére.</p>
+<p><strong>6. feladat (D)</strong> A diagnosztikai műszer a
+hűtőfolyadék-hőmérséklet 8 bites nyers regiszterében <code>0x56</code>
+értéket mutat. A gyártói skálázás példaként: 1 bit = 1 °C, eltolás -40
+°C <strong>(ellenőrizendő: gyártói adat)</strong>. Számítsd ki a
+hőmérsékletet. Miért gyanús, ha a nyersérték <code>0xFF</code>?</p>
+<h3 data-number="14.4.12" id="megoldások"><span
+class="header-section-number">14.4.12</span> Megoldások</h3>
+<h4 data-number="14.4.12.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">14.4.12.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li>Igaz.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>⋅</mo><msup><mn>16</mn><mn>1</mn></msup><mo>+</mo><mn>10</mn><mo>⋅</mo><msup><mn>16</mn><mn>0</mn></msup><mo>=</mo><mn>16</mn><mo>+</mo><mn>10</mn><mo>=</mo><mn>26</mn></mrow><annotation encoding="application/x-tex">1 \cdot 16^1 + 10 \cdot 16^0 = 16 + 10 = 26</annotation></semantics></math>.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>200</mn><mo>:</mo><mn>16</mn><mo>=</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">200 : 16 = 12</annotation></semantics></math>,
+maradék
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>8</mn><annotation encoding="application/x-tex">8</annotation></semantics></math>,
+tehát <code>C8</code>. Ellenőrzés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>⋅</mo><mn>16</mn><mo>+</mo><mn>8</mn><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">12 \cdot 16 + 8 = 200</annotation></semantics></math>.</li>
+<li>A hiba az, hogy az egyszerűsítés nem
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>,
+hanem
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mo>+</mo><mi>A</mi><mi>B</mi><mo>=</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mo>+</mo><mi>A</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">\overline{A}B + AB = B(\overline{A} + A) = B</annotation></semantics></math>.</li>
+<li>Hamis. A NAND kapu kimenete ilyenkor éppen <code>0</code>, mert az
+ÉS kimenetének negáltját adja.</li>
+<li>Kombinációs, mert nincs tárolóeleme; a kimenete csak az aktuális
+bemenetektől és a vezérlőbemenetektől függ.</li>
+<li>Mert <code>0xFF</code> = 255, az átszámítva
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>255</mn><mo>−</mo><mn>40</mn><mo>=</mo><mn>215</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">255 - 40 = 215\,{}^{\circ}\text{C}</annotation></semantics></math>
+lenne, ami hűtőfolyadék esetén irreális. Az ilyen szélső érték általában
+szakadásra vagy rövidzárlatra utal.</li>
+</ol>
+<h4 data-number="14.4.12.2" id="feladatok-megoldások"><span
+class="header-section-number">14.4.12.2</span> Feladatok –
+megoldások</h4>
+<p><strong>1. feladat (A)</strong> A 101-et osztjuk 2-vel:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>101</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>50</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">101 : 2 = 50, \quad \text{maradék } 1;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>25</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">50 : 2 = 25, \quad \text{maradék } 0;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>25</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>12</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">25 : 2 = 12, \quad \text{maradék } 1;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>6</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">12 : 2 = 6, \quad \text{maradék } 0;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>3</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">6 : 2 = 3, \quad \text{maradék } 0;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mo>;</mo></mrow><annotation encoding="application/x-tex">3 : 2 = 1, \quad \text{maradék } 1;</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">maradék </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">1 : 2 = 0, \quad \text{maradék } 1.</annotation></semantics></math></p>
+<p>A maradékokat visszafelé olvasva: <code>110 0101</code>.
+Hexadecimálisan négyes csoportokban: <code>0110 0101</code> =
+<code>65</code>. Ellenőrzés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>⋅</mo><mn>16</mn><mo>+</mo><mn>5</mn><mo>=</mo><mn>96</mn><mo>+</mo><mn>5</mn><mo>=</mo><mn>101</mn></mrow><annotation encoding="application/x-tex">6 \cdot 16 + 5 = 96 + 5 = 101</annotation></semantics></math>.</p>
+<p><strong>2. feladat (A)</strong> A NAND kapu igazságtáblája:</p>
+<table>
+<thead>
+<tr>
+<th>A</th>
+<th>B</th>
+<th style="text-align: right;">NAND</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>A függvény:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mrow><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">Y = \overline{A \cdot B}</annotation></semantics></math>.</p>
+<p><strong>3. feladat (B)</strong> A háromból legalább kettő szabály
+miatt a kimenet <code>1</code>, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>,
+vagy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>,
+vagy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
+egyidejűleg <code>1</code>. A szorzatösszeg-alak:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mi>B</mi><mi>C</mi><mo>+</mo><mi>A</mi><mi>B</mi><mover><mi>C</mi><mo accent="true">¯</mo></mover><mo>+</mo><mi>A</mi><mover><mi>B</mi><mo accent="true">¯</mo></mover><mi>C</mi><mo>+</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mi>C</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">Y = ABC + AB\overline{C} + A\overline{B}C + \overline{A}BC.</annotation></semantics></math></p>
+<p>Egyszerűsítés:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mi>B</mi><mo stretchy="false" form="prefix">(</mo><mi>C</mi><mo>+</mo><mover><mi>C</mi><mo accent="true">¯</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>A</mi><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>B</mi><mo>+</mo><mover><mi>B</mi><mo accent="true">¯</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>B</mi><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>+</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">Y = AB(C + \overline{C}) + AC(B + \overline{B}) + BC(A + \overline{A}).</annotation></semantics></math></p>
+<p>Mivel mindegyik zárójeles összeg <code>1</code>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mi>B</mi><mo>+</mo><mi>A</mi><mi>C</mi><mo>+</mo><mi>B</mi><mi>C</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">Y = AB + AC + BC.</annotation></semantics></math></p>
+<p>Ellenőrzésként: ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">A=1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">B=1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">C=0</annotation></semantics></math>,
+akkor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>B</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">AB=1</annotation></semantics></math>,
+tehát a kimenet <code>1</code>, és az eredeti tagok közül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>B</mi><mover><mi>C</mi><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">AB\overline{C}</annotation></semantics></math>
+szintén <code>1</code>. A többi bemeneti kombinációra is egyezik.</p>
+<p><strong>4. feladat (B)</strong> A félösszeadó vázlata: az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+bemenet egyaránt egy XOR kapura és egy AND kapura megy. Az XOR kimenete
+az összeg,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mi>A</mi><mo>⊕</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">S = A \oplus B</annotation></semantics></math>;
+az AND kimenete az átvitel,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">C_{\text{ki}} = A \cdot B</annotation></semantics></math>.
+Igazságtáblája:</p>
+<table>
+<thead>
+<tr>
+<th>A</th>
+<th>B</th>
+<th>S</th>
+<th style="text-align: right;">C_ki</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>Az autóiparban az ilyen aritmetikai logika az ECU ALU-jában fut,
+amikor összeadja a befecskendezési idő korrekcióit, vagy számolja a
+kerékfordulatszám-jeladó impulzusainak futó összegét.</p>
+<p><strong>5. feladat (C)</strong> A multiplexer sok bemenő jelből
+választ egyet, és azt vezeti a kimenetre; a demultiplexer egyetlen
+bemenő jelet oszt szét több kimenetre. Egy ECU például több kapcsoló
+állapotát egyetlen többbemenetű multiplexerre kötheti. A mikrovezérlő a
+vezérlőbemenetekkel végigméri a kapcsolókat, így kevesebb bemeneti lábat
+használ. Ez egyszerűbb bekötést és kevesebb vezetéket eredményez.</p>
+<p><strong>6. feladat (D)</strong> A <code>0x56</code> hexadecimális
+érték decimálisan:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>⋅</mo><mn>16</mn><mo>+</mo><mn>6</mn><mo>=</mo><mn>80</mn><mo>+</mo><mn>6</mn><mo>=</mo><mn>86</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">5 \cdot 16 + 6 = 80 + 6 = 86.</annotation></semantics></math></p>
+<p>A hőmérséklet:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>86</mn><mo>−</mo><mn>40</mn><mo>=</mo><mn>46</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">86 - 40 = 46\,{}^{\circ}\text{C}.</annotation></semantics></math></p>
+<p>Ha a nyersérték <code>0xFF</code> = 255 lenne, akkor a hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>255</mn><mo>−</mo><mn>40</mn><mo>=</mo><mn>215</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">255 - 40 = 215\,{}^{\circ}\text{C}</annotation></semantics></math>
+lenne, ami fizikailag lehetetlen hűtőfolyadéknál. Ez szakadásra vagy
+rövidzárlatra utal, ezért a műszeres mérést az érzékelő csatlakozóján és
+bekötésén kell folytatni.</p>
+<h3 data-number="14.4.13" id="rövid-összefoglaló"><span
+class="header-section-number">14.4.13</span> Rövid összefoglaló</h3>
+<p>A digitális rendszerekben az analóg, folytonos jeleket véges
+állapotú, bináris értékekkel ábrázoljuk. A bit a legkisebb
+információegység, nyolc bit egy bájt. A bináris, decimális és
+hexadecimális számrendszer között helyiértékekkel váltunk; binárisból
+hexadecimálisra jobbról négyes csoportokra bontva, decimálisból
+binárisba ismételt osztással. A logikai függvények a <code>0</code> és
+<code>1</code> értékeken működnek; az ÉS, VAGY, NEM, NAND, XOR műveletek
+segítségével egyszerűsíthetők, például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>A</mi><mo accent="true">¯</mo></mover><mi>B</mi><mo>+</mo><mi>A</mi><mi>B</mi><mo>=</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">\overline{A}B + AB = B</annotation></semantics></math>.
+A kombinációs hálózatok csak az aktuális bemenetektől függenek, a
+szekvenciális hálózatok tárolóelemekkel rendelkeznek. A regiszterek,
+shift regiszterek és számlálók a vezérlőegységek belső adatkezelésének
+alapjai. A mikrovezérlő programozható logikája fogadja a digitális és
+analóg jeleket, regiszterekben tárolja az értékeket, és a beavatkozókat
+vezérli. <strong>Továbbvitt eredmény:</strong> a bináris és
+hexadecimális ábrázolás, valamint a regiszterfogalom közvetlenül
+szükséges a motorirányítás és az adatbusz-hálózatok tárgyalásához, mert
+ott a CAN-üzenetek és a diagnosztikai nyersértékek ugyanilyen formában
+jelennek meg.</p>
+<h3 data-number="14.4.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">14.4.14</span> Források és ellenőrzési
+hiányok</h3>
+<p>A számrendszerek, a Boole-algebra, a kapuk és a regiszterek leírása a
+digitális elektronika stabil tankönyvi alapanyaga, nem igényel külön
+forrásellenőrzést. A járműipari diagnosztikai gyakorlatban használt
+konkrét skálázások, nyersérték-tartományok és OBD- vagy CAN-jellemzők
+gyártói, illetve szabványos adatok, ezért ellenőrizendők. A szövegben
+használt hőmérséklet-skálázás (<code>1 bit = 1 °C</code>, eltolás
+<code>-40 °C</code>) tanulási példa, a tényleges értéket a gyártói
+diagnosztikai adat határozza meg. Az OBD-hibakódok és a CAN-azonosítók
+részletes rendszerét a későbbi, fedélzeti diagnosztikát és
+adatbusz-hálózatokat tárgyaló alfejezetek mutatják be; az ott megadott
+szabvány- és előírásszámok a kiadás előtt ellenőrizendők.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au051.html">← 14.3 Impulzustechnika: RC-tagok, vágók, billenőkörök, Schmitt-trigger</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au053.html">15.1 Méréstechnikai alapok: műszerek, mérési hibák, multiméter és lakatfogó →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

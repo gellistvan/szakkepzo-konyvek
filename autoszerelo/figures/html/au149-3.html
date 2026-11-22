@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kézi váltó olajszintje</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="vol">Töltött olaj</label><input id="vol" type="range" min="0.5" max="2.4" step="0.05" value="1.5" aria-label="Töltött olaj"><output id="vol_o" for="vol"></output></div>
+<div class="row"><label for="viz">A jármű vízszintes</label><input id="viz" type="checkbox" checked aria-label="A jármű vízszintes"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 290" role="img" aria-label="Kézi váltó olajszintje a töltőnyílás alsó éléig; a mágneses leeresztőcsavaron finom fémpor normális, nagy forgács hibára utal."></svg>
+<p class="small">Szemléltető térfogat: a szint 1,9 l-nél éri el a nyílás alsó élét (nem gyártói adat). A töltetmennyiség és a szintellenőrzés módja gyártói előírás (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"vol":"l"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const line=css("--line"), hl=css("--hl"), bad=css("--bad");
+const VE=1.9, X0=60, Y0=40, W=300, H=200, yb=Y0+H, yEdge=Y0+H*0.4;
+const tilt=v.viz?0:6;   // fok – nem vízszintes jármű
+const lvl=Math.min(v.vol/VE,1.15)*(yb-yEdge);
+const g=el("g",{transform:"rotate("+(-tilt)+" "+(X0+W/2)+" "+(Y0+H/2)+")"});
+function add(tag,a){const e=el(tag,a);g.appendChild(e);return e;}
+const yl=Math.max(yb-lvl, yEdge);
+add("rect",{x:X0,y:yl,width:W,height:yb-yl,fill:hl,opacity:0.35});
+add("rect",{x:X0,y:Y0,width:W,height:H,fill:"none",stroke:line,"stroke-width":3});
+add("rect",{x:X0+W,y:yEdge-14,width:30,height:14,fill:"none",stroke:line,"stroke-width":2});
+add("line",{x1:X0,x2:X0+W+30,y1:yEdge,y2:yEdge,stroke:line,"stroke-dasharray":"5 4"});
+el("text",{x:X0+W+40,y:yEdge-2,"font-size":12},"töltőnyílás alsó éle");
+if(v.vol>VE*1.02) el("text",{x:X0+W+40,y:yEdge+30,"font-size":12,fill:bad},"a többlet kifolyik");
+let m="Töltött mennyiség: "+fmt(v.vol,2)+" l. ";
+if(!v.viz) m+='<span class="bad">A jármű nem vízszintes: a szint a nyílásnál nem a valódi szintet mutatja – előbb vízszintesre állítani!</span>';
+else if(v.vol<VE*0.97) m+='<span class="bad">Alultöltött: az ujj nem éri el az olajat a töltőnyílás alsó élénél.</span>';
+else if(v.vol<=VE*1.02) m+='<span class="ok">Helyes: a szint a töltőnyílás alsó éléig ér.</span>';
+else m+='<span class="bad">Túltöltés: a többlet a töltőnyíláson kifolyik – a nyílás alsó éle a szint.</span>';
+status(m);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Negyed járműmodell és lecsengő lengés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="m">Rugózott tömeg m</label><input id="m" type="range" min="200" max="800" step="10" value="400" aria-label="Rugózott tömeg m"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="C">Rugómerevség C</label><input id="C" type="range" min="15" max="60" step="1" value="35" aria-label="Rugómerevség C"><output id="C_o" for="C"></output></div>
+<div class="row"><label for="d">Csillapítási tényező d</label><input id="d" type="range" min="200" max="10000" step="50" value="2250" aria-label="Csillapítási tényező d"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="worn">Kopott csillapító (d felére)</label><input id="worn" type="checkbox" aria-label="Kopott csillapító (d felére)"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 320" role="img" aria-label="Negyed járműmodell; a rugózott tömeg, a rugómerevség és a csillapítás csúszkával állítható, animált tömegek és kitérés–idő görbe, kijelzett sajátfrekvencia és csillapítási fok."></svg>
+<p class="small">A fejezet példája: m = 400 kg, C = 35 N/mm → f₀ ≈ 1,49 Hz. Egytömeges közelítés (a rugózatlan tömeg és az abroncs rugalmassága elhanyagolva), 30 mm-es útlépcső; számolt, szemléltető görbe, nem mérés.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m":"kg", "C":"N/mm", "d":"N·s/m"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(!window.__t0){window.__t0=performance.now();}
+if(!window.__an){window.__an=setInterval(draw,50);}
+const m=v.m, C=v.C*1000, d=v.d*(v.worn?0.5:1), u=30;
+const wn=Math.sqrt(C/m), f0=wn/(2*Math.PI), z=d/(2*Math.sqrt(C*m));
+function X(t){const y0=-u;let y;if(z<1){const wd=wn*Math.sqrt(1-z*z);y=Math.exp(-z*wn*t)*(y0*Math.cos(wd*t)+(z*wn*y0/wd)*Math.sin(wd*t));}
+ else{const s=Math.sqrt(z*z-1)+1e-9,r1=-wn*(z-s),r2=-wn*(z+s),A=y0*r2/(r2-r1),B=y0-A;y=A*Math.exp(r1*t)+B*Math.exp(r2*t);}return u+y;}
+const T=((performance.now()-window.__t0)/1000)%4, x=X(Math.min(T,3));
+el("rect",{x:0,y:0,width:640,height:320,fill:"#fff"});
+// modell
+const k=1.6, yb=150-x*k, yu=235;
+el("line",{x1:20,y1:300,x2:110,y2:300,stroke:"#000","stroke-width":2});el("line",{x1:110,y1:300-u*k*0+0,x2:110,y2:300-30*k*0.5,stroke:"#000","stroke-width":2});
+el("line",{x1:110,y1:300-15,x2:200,y2:300-15,stroke:"#000","stroke-width":2});
+el("rect",{x:50,y:yu-8,width:100,height:30,fill:"#aaa",stroke:"#000"});
+let sp="";const n=10;for(let i=0;i<=n;i++){const yy=yb+50+(yu-8-(yb+50))*i/n;sp+=(i?"L":"M")+(75+(i%2?10:-10)*(i>0&&i<n?1:0))+" "+yy;}
+el("path",{d:sp,fill:"none",stroke:"#000","stroke-width":2});
+el("line",{x1:125,y1:yb+50,x2:125,y2:(yb+50+yu-8)/2,stroke:"#000","stroke-width":2});
+el("rect",{x:115,y:(yb+50+yu-8)/2-4,width:20,height:Math.max(10,(yu-8-(yb+50))/2),fill:"#fff",stroke:"#000","stroke-width":2});
+el("line",{x1:125,y1:(yb+50+yu-8)/2+6,x2:125,y2:yu-8,stroke:"#000","stroke-width":2});
+el("rect",{x:30,y:yb,width:140,height:50,fill:"#ddd",stroke:"#000","stroke-width":2});
+el("text",{x:100,y:yb+30,"text-anchor":"middle","font-size":13,fill:"#000"},"m = "+fmt(m,0)+" kg");
+// grafikon
+const G0=230,G1=620,H0=290,H1=30, gx=t=>G0+(G1-G0)*t/3, gy=v2=>H0-(H0-H1)*(v2+5)/70;
+el("line",{x1:G0,y1:H0,x2:G1,y2:H0,stroke:"#000"});el("line",{x1:G0,y1:H0,x2:G0,y2:H1,stroke:"#000"});
+for(let tt=0;tt<=3;tt+=0.5){el("text",{x:gx(tt),y:H0+15,"text-anchor":"middle","font-size":11,fill:"#000"},fmt(tt,1));}
+for(let vv=0;vv<=60;vv+=15){el("text",{x:G0-5,y:gy(vv)+4,"text-anchor":"end","font-size":11,fill:"#000"},vv);el("line",{x1:G0,y1:gy(vv),x2:G1,y2:gy(vv),stroke:"#e5e5e5"});}
+el("line",{x1:G0,y1:gy(30),x2:G1,y2:gy(30),stroke:"#888","stroke-dasharray":"5 4"});
+let p="";for(let i=0;i<=300;i++){const tt=3*i/300;p+=(i?"L":"M")+gx(tt)+" "+gy(Math.max(-5,Math.min(65,X(tt))));}
+el("path",{d:p,fill:"none",stroke:"#000","stroke-width":2.5});
+el("circle",{cx:gx(Math.min(T,3)),cy:gy(Math.max(-5,Math.min(65,x))),r:6,fill:"#000"});
+el("text",{x:(G0+G1)/2,y:H0+28,"text-anchor":"middle","font-size":12,fill:"#000"},"idő t (s) – karosszéria kitérése x (mm)");
+let mx=0;for(let i=0;i<=600;i++){mx=Math.max(mx,X(3*i/600));}
+status("f<sub>0</sub> = (1/2π)·√(C/m) = <b>"+fmt(f0,2)+" Hz</b> · csillapítási fok ζ = d/(2√(C·m)) = <b>"+fmt(z,2)+"</b>"+(v.worn?" (kopott: d felére csökkent)":"")+" · legnagyobb kitérés "+fmt(mx,0)+" mm (30 mm-es lépcső). "+
+ (z<0.15?"Gyenge csillapítás: sokáig leng.":(z<0.6?"Jó tartomány: egy-két lengés után lecseng.":"Túl erős: lassan, rázósan követi az utat.")));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

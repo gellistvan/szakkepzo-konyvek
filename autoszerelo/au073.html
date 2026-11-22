@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>20.2 Közös nyomásterű (common rail) dízelbefecskendezés –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz5">V. RÉSZ – Belső égésű motorok</a> › <a href="index.html#auch19">20 Dízelmotorok tüzelőanyag-ellátása</a></p>
+<div class="links"><a class="prev" rel="prev" href="au072.html">← 20.1 A dízel tüzelőanyag-rendszer kisnyomású oldala és a hagyományos adagolók</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au074.html">21.1 A kipufogógáz összetétele, motoroldali kibocsátáscsökkentés és kipufogógáz-visszavezetés →</a></div>
+</nav>
+<h2 data-number="20.2" id="au073"><span
+class="header-section-number">20.2</span> Közös nyomásterű (common rail)
+dízelbefecskendezés</h2>
+<h3 data-number="20.2.1"
+id="miért-kell-ezt-megtanulnod-a-műhelyben"><span
+class="header-section-number">20.2.1</span> Miért kell ezt megtanulnod a
+műhelyben?</h3>
+<p>Egy modern dízel autó ügyfele azzal érkezik, hogy a motorja nehezen
+indul, hidegen hangosan kopog, és a műszerfalon világít a motorellenőrző
+lámpa. A rendszertesztert csatlakoztatod, és azt látod: a rail-nyomás
+forgatás közben alig éri el a 150 bar értéket, miközben a vezérlőegység
+300 bar fölötti nyomást vár (ellenőrizendő: gyártói érték). Ez a kép azt
+mondja, hogy a <strong>közös nyomásterű, más néven common rail</strong>
+befecskendező rendszerben a nyomás nem épül fel. Ha ezt
+félrediagnosztizálod, könnyen cserélhetsz drága alkatrészt úgy, hogy a
+hiba valójában egy eldugult üzemanyagszűrő, egy levegős kisnyomású kör
+vagy éppen egy belső szivárgásos injektor.</p>
+<h3 data-number="20.2.2"
+id="szemléletes-kép-a-rendszer-mint-közös-nagynyomású-vízhálózat"><span
+class="header-section-number">20.2.2</span> Szemléletes kép: a rendszer,
+mint közös nagynyomású vízhálózat</h3>
+<p>Képzeld el a common rail rendszert úgy, mint egy ház magasnyomású
+locsolóhálózatát. A szivattyú állandó, magas nyomást tart egy közös
+csőben, és minden locsolófej elektromos szeleppel pontosan akkor és
+annyi ideig nyit, amikor azt a vezérlő mondja. A common rail rendszer
+lényege éppen ez: a nyomás előállítása és az egyes hengerekbe történő
+adagolás <strong>elválik egymástól</strong>. A nagynyomású szivattyú a
+nyomást, a hengerenkénti injektorok szelepe pedig a befecskendezés
+pillanatát és hosszát szabja meg.</p>
+<figure id="fig-au073-1">
+<img src="figures/img/au073-1.png" style="width:90.0%"
+alt="Tartály előtápszivattyúval, szűrő, mennyiségszabályozó szelep, nagynyomású szivattyú, rail nyomásérzékelővel és nyomásszabályozó szeleppel, négy injektor; szaggatott visszafolyó ág az injektorokból és a nyomásszabályozóból a tartályba; pontozott jelvonalak a vezérlőegységtől." />
+<figcaption>A common rail rendszer hidraulikus vázlata: folytonos vonal
+a nyomóág, szaggatott a visszafolyó ág az injektorokból és a
+nyomásszabályozóból, pontozott a vezérlőegység jelútja (szemléltető; a
+nyomásértékek ellenőrizendők)</figcaption>
+</figure>
+<p>A fenti vázlat a fő hidraulikus és elektronikus egységek kapcsolatát
+mutatja: a nyilak a tüzelőanyag útját, a pontozott vonalak a
+vezérlőegység jeleit jelzik. A vezérlőegység a szenzorok jeleit dolgozza
+fel, és a kisnyomású oldal mennyiségszabályozójával, a nagynyomású oldal
+szabályzószelepével, valamint az injektorokkal avatkozik be. A
+tüzelőanyag útja nagyjából így halad: tartály → előtápszivattyú → szűrő
+→ nagynyomású szivattyú → rail → injektorok, a veszteségáramok pedig a
+visszafolyó vezetékeken keresztül térnek vissza a tartályba.</p>
+<h3 data-number="20.2.3" id="definíciók-és-alapvető-összefüggések"><span
+class="header-section-number">20.2.3</span> Definíciók és alapvető
+összefüggések</h3>
+<p><strong>Definíció.</strong> A <strong>közös nyomásterű (common rail)
+dízelbefecskendező rendszer</strong> olyan elektronikus
+dízelbefecskendező rendszer, amelyben egyetlen közös nagynyomású
+elosztócsőben, a <strong>railben</strong> az elektronikus vezérlőegység
+üzemi ponttól függő, nagy nyomást tart fenn, és az egyes hengerekbe a
+befecskendezést a hengerenkénti, villamos vezérlésű
+<strong>injektorok</strong> nyitási idejével adagolja.</p>
+<p><strong>Összefüggés.</strong> A hidraulikai teljesítmény egy
+nagynyomású szivattyúnál a térfogatáram és a nyomáskülönbség
+szorzata:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">h</mtext></msub><mo>=</mo><mi>Q</mi><mo>⋅</mo><mi mathvariant="normal">Δ</mi><mi>p</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{h}} = Q \cdot \Delta p.</annotation></semantics></math></p>
+<p>A common rail szivattyú hajtási teljesítményigénye ennél nagyobb a
+mechanikai és hidraulikus veszteségek miatt:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">mech</mtext></msub><mo>=</mo><mfrac><mrow><mi>Q</mi><mo>⋅</mo><mi mathvariant="normal">Δ</mi><mi>p</mi></mrow><mi>η</mi></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{mech}} = \frac{Q \cdot \Delta p}{\eta}.</annotation></semantics></math></p>
+<p><strong>Szabály.</strong> A common rail rendszert jellemzően az
+elektronikus dízel-szabályozó (EDC, <em>Electronic Diesel Control</em>)
+vezérli, amely a vezető terhelési igényéből, a fordulatszámból, a
+hőmérsékletekből, a légtömeg- és lambda-jelekből, valamint a
+rail-nyomásból számítja ki a szükséges befecskendezési nyomást, adagot
+és a befecskendezési időpontokat.</p>
+<h3 data-number="20.2.4" id="felépítés-és-működés"><span
+class="header-section-number">20.2.4</span> Felépítés és működés</h3>
+<h4 data-number="20.2.4.1" id="a-kisnyomású-oldal"><span
+class="header-section-number">20.2.4.1</span> A kisnyomású oldal</h4>
+<p>A kisnyomású oldal feladata, hogy tiszta, levegőmentes gázolajat
+juttasson a nagynyomású szivattyúhoz.</p>
+<p>Az egységek:</p>
+<ul>
+<li><strong>Üzemanyagtartály</strong> tartalékkal, szellőzéssel és
+szűrőkosárral.</li>
+<li><strong>Előtápszivattyú</strong>, amely gyakran mechanikus
+fogaskerék-szivattyú a nagynyomású szivattyúban, vagy elektromos
+tartályszivattyú.</li>
+<li><strong>Üzemanyagszűrő</strong> vízleválasztóval, adott esetben
+fűtéssel és vízérzékelővel.</li>
+<li><strong>Mennyiségszabályozó szelep</strong> (a műhelynyelvben
+gyakran SCV/MPROP), amely azt szabályozza, hogy a nagynyomású szivattyú
+mennyi üzemanyagot szívhat.</li>
+</ul>
+<p>A kisnyomású kör jellemző nyomása általában 0,5–6 bar között van,
+típus függvényében (ellenőrizendő: gyártói adat). A levegő vagy a víz
+ebben a körben káros, mert a nagynyomású szivattyú kenését és hűtését is
+az üzemanyag végzi.</p>
+<h4 data-number="20.2.4.2" id="a-nagynyomású-szivattyú"><span
+class="header-section-number">20.2.4.2</span> A nagynyomású
+szivattyú</h4>
+<p>A common rail <strong>nagynyomású szivattyú</strong> nem hengerenként
+adagol, mint a hagyományos soros vagy elosztós adagoló. Feladata csupán
+az, hogy a railbe állandó nagynyomást állítson elő. A szivattyú lehet
+egy-, két- vagy többdugattyús radiáldugattyús kialakítású. A dugattyúkat
+bütyök vagy excentertárcsa mozgatja, és a kimenőnyílások a közös railbe
+csatlakoznak.</p>
+<p>A beépített mennyiségszabályozó szeleppel a szivattyú szívóoldali
+térfogatáramát úgy csökkentik, hogy a motor éppen csak a szükséges
+üzemanyagot nyomja a railbe. Ez az úgynevezett <strong>szívóoldali
+szabályozás</strong>, amely energiát takarít meg és csökkenti a
+visszafolyási hőveszteséget.</p>
+<p><strong>Megjegyzés.</strong> A common rail szivattyú sérülése gyakran
+fémforgácsot juttat a railbe és az injektorokba, ezért a szivattyú
+cseréjekor a teljes nagynyomású rendszert tisztítani vagy a gyártó
+szerinti alkatrészeket kell cserélni.</p>
+<h4 data-number="20.2.4.3"
+id="a-rail-a-nyomásérzékelő-és-a-nyomásszabályozás"><span
+class="header-section-number">20.2.4.3</span> A rail, a nyomásérzékelő
+és a nyomásszabályozás</h4>
+<p>A <strong>rail</strong> acél elosztócső, amely nyomástárolóként
+tartja az üzemanyagot, csillapítja a szivattyú és az injektorok okozta
+nyomáslüktetést, és egyenletesen látja el az injektorokat. A railen van
+a <strong>nyomásérzékelő</strong>, amely a pillanatnyi nyomást villamos
+jellé alakítja.</p>
+<p>A nyomás érzékelése általában piezo-rezisztív elemű érzékelővel
+történik. A jellalak tipikusan 0,5 V közelében kezdődik 0 bar nyomás
+mellett, és nagyjából 4,5 V közelében éri el a maximális mérési
+tartományt (ellenőrizendő: gyártói jelleggörbe). A vezérlőegység ezt a
+jelet hasonlítja össze a kívánt nyomással, és szabályozó beavatkozással
+tartja a rendszert a kívánt ponton.</p>
+<p>A common rail rendszerekben kétféle nyomásszabályozási hely
+létezik.</p>
+<ol type="1">
+<li><p><strong>Szívóoldali mennyiségszabályozás.</strong> A
+mennyiségszabályozó szelep a nagynyomású szivattyúhoz kerülő üzemanyag
+mennyiségét fojtja. Ha kevesebb üzemanyagot enged be, akkor a szivattyú
+kevesebbet pumpál, a rail-nyomás csökken. Ez a gazdaságos, hőtermelést
+elkerülő alapbeállítás.</p></li>
+<li><p><strong>Nyomásoldali szabályozás.</strong> A railen elhelyezett
+<strong>nyomásszabályozó szelep</strong> a felesleges üzemanyagot a
+visszafolyó körbe engedi, ha a nyomás túl nagy. Ez gyors beavatkozást
+tesz lehetővé, például alapjáratra váltás vagy hirtelen
+terhelés-visszavétel esetén. Modern rendszerekben ez a szelep gyakran
+biztonsági lefúvó funkciót is ellát.</p></li>
+</ol>
+<p><strong>Összefüggés.</strong> A gyakorlatban a két szabályozást
+együtt használják: a mennyiségszabályozó szelep az alap nyomásszintet
+tartja, a nyomásszabályozó szelep pedig a gyors, finom korrekciót és a
+túlfúvás elleni védelmet végzi.</p>
+<h4 data-number="20.2.4.4" id="az-injektorok"><span
+class="header-section-number">20.2.4.4</span> Az injektorok</h4>
+<p>A common rail injektor egy elektromosan vezérelt, közvetlen
+befecskendező fúvóka. A fúvóka nyitását és zárását a vezérlőtér
+nyomásesése, valamint a fúvókatűre ható nyomás eredője szabályozza.</p>
+<h5 data-number="20.2.4.4.1" id="mágnesszelepes-injektor"><span
+class="header-section-number">20.2.4.4.1</span> Mágnesszelepes
+injektor</h5>
+<p>A mágnesszelepes injektorban az üzemanyag egy beömlő fojtáson
+keresztül a tű feletti <strong>vezérlőkamrába</strong> jut, ahonnan egy
+kimenő fojtón át távozhat a visszafolyó körbe. Nyugalmi állapotban a
+mágnesszelep zár, a vezérlőkamra nyomása azonos a rail nyomásával, és a
+tűt a rugóerő is zárva tartja.</p>
+<p>Amikor az EDC a szelepet nyitja, a kimenő fojtás szabaddá válik, a
+vezérlőkamra nyomása leesik. A tű csúcsára alulról ható rail-nyomás
+felülkerekedik, a tű megemelkedik, és a fúvókafuratokon keresztül
+porlaszt az üzemanyag. Amikor a vezérlőegység lezárja a szelepet, a
+vezérlőkamra nyomása újra felépül, és a tű gyorsan lezár.</p>
+<figure id="fig-au073-2">
+<div class="fig-interactive"><iframe src="figures/html/au073-2.html" title="Mágnesszelepes common rail injektor metszete zárt, nyitó és záró állapotban, a vezérlőkamra nyomásával." loading="lazy" style="width:100%;border:0;height:620px"></iframe><noscript><img src="figures/img/au073-2.png" style="width:95.0%"
+alt="Mágnesszelepes common rail injektor metszete zárt, nyitó és záró állapotban, a vezérlőkamra nyomásával." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au073-2.png" style="width:95.0%"
+alt="Mágnesszelepes common rail injektor metszete zárt, nyitó és záró állapotban, a vezérlőkamra nyomásával." /></details></div>
+<figcaption>A mágnesszelepes common rail injektor zárt, nyitó és záró
+állapotban, alul a vezérlőáram, a vezérlőkamra-nyomás és a tűlöket
+minőségi idősávja (sematikus; sötét = railnyomás)</figcaption>
+</figure>
+<p>Az ábrán látszik a „paradoxon” feloldása: zárt állapotban a
+vezérlőkamrában is railnyomás van, és mivel a vezérlődugattyú felülete
+nagyobb, mint a tűváll felülete, a lefelé ható erő (a rugóval együtt)
+zárva tartja a tűt. Nyitáskor a kiömlő fojtón (A) több távozik, mint
+amennyi a szűkebb beömlő fojtón (Z) pótlódik, ezért a kamra nyomása
+leesik, és a tűvállra ható railnyomás felemeli a tűt; a kamrából távozó
+tüzelőanyag a visszafolyó ágba jut.</p>
+<h5 data-number="20.2.4.4.2" id="piezo-inline-injektor"><span
+class="header-section-number">20.2.4.4.2</span> Piezo inline
+injektor</h5>
+<p>A <strong>piezo inline injektor</strong> alapelve, hogy a
+vezérlőkamra helyett vagy mellett egy piezo-kerámia elem közvetlenül,
+nagyon kis mozgási tömeggel mozgatja a hidraulikus kapcsolóelemet vagy a
+fúvókatűt. A piezo elem a feszültség hatására rendkívül gyorsan, néhány
+mikrométert rövidül vagy nyúlik.</p>
+<p><strong>Példa.</strong> Míg egy mágnesszelepes injektornál a villamos
+jelet a szelep induktív tekercse, majd a hidraulikus nyomásváltozás is
+késlelteti, a piezo inline injektor nyitása lényegesen gyorsabb lehet.
+Ezért a piezo injektor több, egymáshoz nagyon közeli befecskendezést tud
+megvalósítani.</p>
+<h3 data-number="20.2.5" id="többszörös-befecskendezés"><span
+class="header-section-number">20.2.5</span> Többszörös
+befecskendezés</h3>
+<p>A common rail rendszer nagy előnye az, hogy a befecskendezési
+cikluson belül több kisebb adagot is ki tud adni.</p>
+<figure>
+<img src="assets/au073-diagram-1.png"
+alt="Többszörös befecskendezés időrendje (szemléltető) - Szemléltető relatív befecskendezési ráta; a FHP (0°) a függőleges vonal. A görbék alatti terület aránya: előbefecskendezés ≈ 7 %, utóbefecskendezés ≈ 9 % a fő adaghoz képest. A valós jelalak, nyomás és tűlöket gyártói diagnosztikai adat (ellenőrizendő)." />
+<figcaption aria-hidden="true">Többszörös befecskendezés időrendje
+(szemléltető) - Szemléltető relatív befecskendezési ráta; a FHP (0°) a
+függőleges vonal. A görbék alatti terület aránya: előbefecskendezés ≈ 7
+%, utóbefecskendezés ≈ 9 % a fő adaghoz képest. A valós jelalak, nyomás
+és tűlöket gyártói diagnosztikai adat (ellenőrizendő).</figcaption>
+</figure>
+<p>A fenti szemléltető diagram a felső holtpont (FHP) körül három
+csúcsot mutat: a kis <strong>előbefecskendezést</strong>, a nagy
+<strong>főbefecskendezést</strong> és a kisebb
+<strong>utóbefecskendezést</strong>.</p>
+<ul>
+<li><strong>Előbefecskendezés.</strong> Kis adag, jellemzően 1–3 mg a fő
+befecskendezés előtt. Feladata, hogy meggyújtsa az égéstérben a
+keveréket vagy előhangolja az égést, ezzel csökkenti a gyulladási
+késedelmet, a kopogó égési zajt és a nitrogén-oxid-kibocsátást.</li>
+<li><strong>Főbefecskendezés.</strong> A nyomatékot adó fő adag. A
+nyomás és az időtartam az üzemi terhelés szerint változik.</li>
+<li><strong>Utóbefecskendezés.</strong> A kipufogógáz-hőmérsékletet
+emelheti a részecskeszűrő regenerálásához, vagy a korom utánégését
+segítheti.</li>
+</ul>
+<p>A mágnesszelepes injektor esetében a befecskendezések közötti
+minimális szünet nagyobb, mint a gyorsabb piezo injektornál, ezért a
+piezo rendszer finomabb, akár 5–7 befecskendezési eseményt is képes egy
+ciklusba illeszteni (ellenőrizendő: gyártói rendszer jellemzője).</p>
+<h3 data-number="20.2.6" id="a-visszafolyás"><span
+class="header-section-number">20.2.6</span> A visszafolyás</h3>
+<p>Az injektorokból folyamatosan kis mennyiségű üzemanyag távozik a
+visszafolyó ágon. Ez részben a fúvókatű vezetésének kenését szolgálja,
+részben a vezérlőkamra kiürítéséből származik. A gyártó megadja a normál
+visszafolyás mértékét. Ha egy injektor visszafolyása hirtelen megnő, az
+általában belső tömítetlenségre, kopott ülésekre vagy sérült
+vezérlőelemre utal, és a rail-nyomás felépítését is akadályozza.</p>
+<p><strong>Továbbvitt eredmény.</strong> A common rail rendszer
+nyomásszabályozása, a mágnesszelepes és piezo injektor működése,
+valamint a többszörös befecskendezés emissziós hatása alapvető a <a
+href="au076.html">Dízel-utókezelés: oxidációs katalizátor, NOx-tároló,
+SCR és AdBlue, részecskeszűrő</a>, a <a
+href="au136.html">Dízeldiagnosztika: adagolás, common rail, PDE és
+EDC</a>, valamint a(z) <a href="au148.html">A kenő-, hűtő- és
+tüzelőanyag-rendszer javítása</a> alfejezetekben.</p>
+<h3 data-number="20.2.7" id="kidolgozott-példák"><span
+class="header-section-number">20.2.7</span> Kidolgozott példák</h3>
+<p><strong>Számítás.</strong> Mennyi hidraulikus teljesítmény szükséges
+a nagynyomású szivattyúnál, ha a rendszer 1500 bar nyomáson percenként
+0,8 liter gázolajat szállít, és a hajtási hatásfok 85%?</p>
+<p>Adott:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">l</mtext><mtext mathvariant="normal">min</mtext></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>8</mn></mrow><mrow><mn>60</mn><mo>⋅</mo><mn>1000</mn></mrow></mfrac><mspace width="0.167em"></mspace><mfrac><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup><mtext mathvariant="normal">s</mtext></mfrac><mo>=</mo><mn>1</mn><mo>,</mo><mn>33</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><mspace width="0.167em"></mspace><mfrac><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup><mtext mathvariant="normal">s</mtext></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">Q = 0{,}8\,\frac{\text{l}}{\text{min}} = \frac{0{,}8}{60\cdot1000}\,\frac{\text{m}^3}{\text{s}} = 1{,}33\cdot10^{-5}\,\frac{\text{m}^3}{\text{s}},</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>p</mi><mo>=</mo><mn>1500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">bar</mtext><mo>=</mo><mn>1500</mn><mo>⋅</mo><msup><mn>10</mn><mn>5</mn></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">Pa</mtext><mo>=</mo><mn>1</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><msup><mn>10</mn><mn>8</mn></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">Pa</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">\Delta p = 1500\,\text{bar} = 1500\cdot10^5\,\text{Pa} = 1{,}5\cdot10^8\,\text{Pa}.</annotation></semantics></math></p>
+<p>Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">h</mtext></msub><annotation encoding="application/x-tex">P_{\text{h}}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">mech</mtext></msub><annotation encoding="application/x-tex">P_{\text{mech}}</annotation></semantics></math>.</p>
+<p>A hidraulikus teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">h</mtext></msub><mo>=</mo><mi>Q</mi><mo>⋅</mo><mi mathvariant="normal">Δ</mi><mi>p</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>33</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><mspace width="0.167em"></mspace><mfrac><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup><mtext mathvariant="normal">s</mtext></mfrac><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><msup><mn>10</mn><mn>8</mn></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">Pa</mtext><mo>≈</mo><mn>2000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{h}} = Q\cdot \Delta p = 1{,}33\cdot10^{-5}\,\frac{\text{m}^3}{\text{s}} \cdot 1{,}5\cdot10^8\,\text{Pa} \approx 2000\,\text{W} = 2{,}0\,\text{kW}.</annotation></semantics></math></p>
+<p>A szivattyú hajtásához szükséges tengelyteljesítmény 85%
+hatásfokkal:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">mech</mtext></msub><mo>=</mo><mfrac><msub><mi>P</mi><mtext mathvariant="normal">h</mtext></msub><mi>η</mi></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext></mrow><mrow><mn>0</mn><mo>,</mo><mn>85</mn></mrow></mfrac><mo>≈</mo><mn>2</mn><mo>,</mo><mn>35</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{mech}} = \frac{P_{\text{h}}}{\eta} = \frac{2{,}0\,\text{kW}}{0{,}85} \approx 2{,}35\,\text{kW}.</annotation></semantics></math></p>
+<p><strong>Ellenőrzés.</strong> Az eredmény nagyságrendje reális: egy
+középkategóriás személygépkocsi common rail szivattyújának hajtási
+igénye néhány kW nagyságú, mert a szivattyú csak a szükséges
+üzemanyag-mennyiséget szállítja.</p>
+<p><strong>Számítás.</strong> Egy négyhengeres, négyütemű dízelmotor
+1800 1/min fordulatszámon dolgozik, a befecskendezési adag hengerenként
+és ciklusonként 22 mg. Mennyi a becsült óránkénti fogyasztás
+kilogrammban és literben?</p>
+<p>Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+kg/h és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>B</mi><mtext mathvariant="normal">V</mtext></msub><annotation encoding="application/x-tex">B_{\text{V}}</annotation></semantics></math>
+l/h.</p>
+<p>Négyütemű motornál egy henger két fordulatonként fecskendezik, ezért
+a percenkénti befecskendezések száma:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">bef</mtext></msub><mo>=</mo><mfrac><mrow><mi>i</mi><mo>⋅</mo><mi>n</mi></mrow><mn>2</mn></mfrac><mo>=</mo><mfrac><mrow><mn>4</mn><mo>⋅</mo><mn>1800</mn></mrow><mn>2</mn></mfrac><mo>=</mo><mn>3600</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">bef</mtext><mtext mathvariant="normal">min</mtext></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">n_{\text{bef}} = \frac{i \cdot n}{2} = \frac{4 \cdot 1800}{2} = 3600\,\frac{\text{bef}}{\text{min}}.</annotation></semantics></math></p>
+<p>A percenkénti tömegáram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>m</mi><mo accent="true">̇</mo></mover><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">bef</mtext></msub><mo>⋅</mo><msub><mi>m</mi><mtext mathvariant="normal">adag</mtext></msub><mo>=</mo><mn>3600</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>022</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">g</mtext><mo>=</mo><mn>79</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">g</mtext><mtext mathvariant="normal">min</mtext></mfrac><mo>=</mo><mn>4</mn><mo>,</mo><mn>75</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">kg</mtext><mtext mathvariant="normal">h</mtext></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">\dot m = n_{\text{bef}}\cdot m_{\text{adag}} = 3600\cdot0{,}022\,\text{g} = 79{,}2\,\frac{\text{g}}{\text{min}} = 4{,}75\,\frac{\text{kg}}{\text{h}}.</annotation></semantics></math></p>
+<p>Ha a gázolaj sűrűsége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>840</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">kg/m</mtext><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">840\,\text{kg/m}^3</annotation></semantics></math>,
+akkor:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>B</mi><mtext mathvariant="normal">V</mtext></msub><mo>=</mo><mfrac><mrow><mn>4</mn><mo>,</mo><mn>75</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">kg</mtext><mtext mathvariant="normal">h</mtext></mfrac></mrow><mrow><mn>840</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">kg</mtext><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup></mfrac></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>00565</mn><mspace width="0.167em"></mspace><mfrac><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup><mtext mathvariant="normal">h</mtext></mfrac><mo>=</mo><mn>5</mn><mo>,</mo><mn>65</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">l</mtext><mtext mathvariant="normal">h</mtext></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">B_{\text{V}} = \frac{4{,}75\,\frac{\text{kg}}{\text{h}}}{840\,\frac{\text{kg}}{\text{m}^3}} \approx 0{,}00565\,\frac{\text{m}^3}{\text{h}} = 5{,}65\,\frac{\text{l}}{\text{h}}.</annotation></semantics></math></p>
+<p><strong>Ellenőrzés.</strong> Ez egy 2 literes dízelmotor közepes
+részterhelésének felel meg (kb. 23 kW, ha a fajlagos fogyasztás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>e</mi></msub><mo>≈</mo><mn>210</mn></mrow><annotation encoding="application/x-tex">b_e \approx 210</annotation></semantics></math>
+g/kWh); teljes terhelésen az adag kb. kétszeres (ellenőrizendő: gyártói
+adat).</p>
+<h3 data-number="20.2.8" id="minőségellenőrzés"><span
+class="header-section-number">20.2.8</span> Minőségellenőrzés</h3>
+<p>A common rail rendszer ellenőrzésekor a következőket kell
+végigjárni.</p>
+<ol type="1">
+<li><strong>Vizuális ellenőrzés:</strong> szivárgás, repedés, sérült
+cső, égésnyom a visszafolyó csöveken.</li>
+<li><strong>Diagnosztikai ellenőrzés:</strong> kiolvasni a hibakódokat,
+rögzíteni a rail-nyomás, feszültség, hűtővíz-hőmérséklet, légtömeg és
+injektor-mennyiségkiegyenlítés értékeit.</li>
+<li><strong>Nyomás ellenőrzése:</strong> a diagnosztikai műszer élő
+adatában megnézni, hogy a rail nyomás eléri-e a gyártói
+alapjárat-teljes-terhelés jelleggörbét (ellenőrizendő: gyártói
+adat).</li>
+<li><strong>Visszafolyás-mérés:</strong> mérőedényekkel hengerenként
+ellenőrizni az injektorok visszafolyását, és összehasonlítani a gyártói
+határértékkel.</li>
+<li><strong>Kisnyomású oldal ellenőrzése:</strong> szűrő nyomásesése,
+levegőbuborék-mentesség, vízjelenlét.</li>
+</ol>
+<p>Az értékek mindig gyártói adatok, a műszeres mérés nem
+megkerülhető.</p>
+<h3 data-number="20.2.9" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">20.2.9</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Diagnosztikai eset.</strong> Egy 2,0 literes common rail
+dízelmotor nem indul, csak hosszú indítózás után. A hibakód: alacsony
+rail-nyomás. A diagnosztikai műszer alapján forgatás közben a
+rail-nyomás 140 bar, a kívánt minimum 250 bar (ellenőrizendő: gyártói
+érték). A kisnyomású oldal nyomása 3 bar körül van, a szűrő viszont
+sötét, elöregedett.</p>
+<p>A hibakereső lánc:</p>
+<ol type="1">
+<li><strong>Tünet:</strong> hosszú indítási idő, alacsony rail-nyomás
+forgatás közben.</li>
+<li><strong>Gyanú:</strong> kisnyomású oldal levegőssége, eldugult
+szűrő, kopott nagynyomású szivattyú, injektor visszafolyás
+megnövekedése.</li>
+<li><strong>Mérés:</strong> kisnyomású nyomás ellenőrzése; injektor
+visszafolyás mérése; szűrő vizsgálata; szivárgás ellenőrzése.</li>
+<li><strong>Ok:</strong> a visszafolyás-mérésnél a 3. henger
+injektorának visszafolyása négyszerese a többi injektorénak. A belső
+tömítetlenség miatt a szivattyú képtelen felépíteni a szükséges
+rail-nyomást.</li>
+<li><strong>Javítás:</strong> a hibás injektor cseréje a gyártói eljárás
+szerint, új tömítések és a vezérlőegységben az új
+injektor-kód/mennyiségkiegyenlítés tárolása (ellenőrizendő: típus
+szerinti adaptáció).</li>
+<li><strong>Ellenőrzés:</strong> indítási próba, rail-nyomás követése,
+visszafolyás újra mérése, hibakódok törlése és próbaút.</li>
+<li><strong>Megelőzés:</strong> az üzemanyagszűrő gyártói intervallum
+szerinti cseréje, megfelelő minőségű gázolaj használata.</li>
+</ol>
+<p>A tanulság: a nagynyomású szivattyút nem cseréljük addig, amíg a
+visszafolyást és a kisnyomású kört nem ellenőriztük.</p>
+<h3 data-number="20.2.10"
+id="gyakorlati-útmutató-injektor-visszafolyás-mérése"><span
+class="header-section-number">20.2.10</span> Gyakorlati útmutató:
+injektor visszafolyás-mérése</h3>
+<p><strong>Cél:</strong> az injektorok belső szivárgásának
+összehasonlító vizsgálata.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> rendszám, alvázszám,
+motorkód, gyártó típusa, alkalmazott befecskendező rendszer (pl. Bosch
+CP3/CR, Delphi, Denso – ellenőrizendő).</p>
+<p><strong>Szükséges szerszámok:</strong> visszafolyásmérő készlet,
+mérőedények, kipufogógáz-elszívó, felitató anyag, motorburkolat-kiszedő,
+védőszemüveg, vegyszerálló kesztyű, tiszta rongy, gyártói diagnosztikai
+műszer.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Figyelem.</strong> A common rail rendszer nyomása akár
+1600–2700 bar is lehet (ellenőrizendő: típus szerint). A nagy nyomás
+alatt kilépő üzemanyagsugár bőrbe hatolva súlyos, gyakran amputációval
+járó sérülést okoz. A nagynyomású rendszert soha nem bontjuk a gyártói
+nyomásmentesítés nélkül, és a sugár útjába nem nyúlunk.</p>
+<p><strong>Tilos.</strong> A befecskendezés alatt álló motornál a
+nagynyomású csatlakozót, injektort vagy railcsövet lazítani. A hibás
+rendszeren a nyomásmentesítés előtt elektromos csatlakozót sem húzunk
+ki, mert a maradéknyomás váratlan kiáramlást okozhat.</p>
+<p><strong>Lépések:</strong></p>
+<ol type="1">
+<li>Gyújtás kikapcsolása, kulcs eltávolítása; a motor legyen hideg.</li>
+<li>Motorburkolat, hangszigetelés eltávolítása.</li>
+<li>A visszafolyó csövek leválasztása az injektorokról (ez a kisnyomású
+oldal; a nagynyomású rendszert nem bontjuk), a mérőedények
+csatlakoztatása és rögzítése, hogy a járó motor fölött ne mozdulhassanak
+el.</li>
+<li>Kipufogógáz-elszívó csatlakoztatása (a CO színtelen, szagtalan,
+halálos gáz); laza ruhát, kezet tartsunk távol a szíjhajtástól és a
+hűtőventilátortól.</li>
+<li>A gyártó szerinti vizsgálati mód végrehajtása (indítómotorral
+forgatás vagy rövid alapjárat, a gyártó által megadott ideig;
+ellenőrizendő), a hosszú járatást kerüljük.</li>
+<li>Motor le, leolvasás és összehasonlítás a gyártói határértékkel.
+Példa: egy injektorból 60 s alatt legfeljebb 20–30 ml visszafolyás
+(ellenőrizendő: gyártói vizsgálati mód és határérték; a hengerek közti
+arány is döntő).</li>
+<li>A készletek és a mérőedények szakszerű eltávolítása, a visszafolyó
+csövek visszacsatlakoztatása, szükség esetén új tömítések; a kifolyt
+gázolaj felitatása.</li>
+<li>Indítási próba, hibakódok kiolvasása és szükség szerint törlése,
+rendszerellenőrzés.</li>
+<li>Az akkumulátor lekötése és a nyomásmentesítés csak injektorcseréhez
+vagy a nagynyomású rendszer bontásához kell, ott külön, a gyártói
+utasítás szerinti munkalap szerint.</li>
+<li>Dokumentálás: munkalap, mértértékek, elvégzett adaptáció,
+megjegyzések.</li>
+</ol>
+<figure id="fig-au073-3">
+<div class="fig-interactive"><iframe src="figures/html/au073-3.html" title="Visszafolyásmérő edények az injektorokon; a rail és a nagynyomású csövek tiltott zónaként jelölve." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au073-3.png" style="width:90.0%"
+alt="Visszafolyásmérő edények az injektorokon; a rail és a nagynyomású csövek tiltott zónaként jelölve." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au073-3.png" style="width:90.0%"
+alt="Visszafolyásmérő edények az injektorokon; a rail és a nagynyomású csövek tiltott zónaként jelölve." /></details></div>
+<figcaption>Visszafolyásmérés összeállítása: mérőcső minden injektoron,
+a rail, a nagynyomású csövek és az injektorcsatlakozók sraffozva – járó
+motornál tilos bontani (sematikus; a ml-értékek
+szemléltetők)</figcaption>
+</figure>
+<p>A rajzon a visszafolyó csöveket leválasztották, és minden injektorhoz
+számozott mérőcső tartozik; a 3. injektor visszafolyása a többi
+négyszerese, ezért kiugró, akkor is, ha a példahatár alatt marad. A
+sraffozott elemeket (rail, nagynyomású csövek, injektorcsatlakozók) járó
+motornál tilos bontani. A HTML-változatban a mért értékek és a gyártói
+határ megadható; a határ feletti és a kiugró injektor vastag kerettel
+jelenik meg.</p>
+<p><strong>Környezetvédelem.</strong> A gázolajat és a szennyezett
+törlőrongyot veszélyes hulladékként kell gyűjteni és kezelni. A kifolyt
+üzemanyagot nem szabad csatornába vagy talajra engedni.</p>
+<h3 data-number="20.2.11" id="tipikus-hibák"><span
+class="header-section-number">20.2.11</span> Tipikus hibák</h3>
+<p><strong>Hiba.</strong> A tanuló azt gondolja, hogy a common rail
+injektor a gázpedálállás alapján mechanikusan adagol, mint egy
+hagyományos adagoló. <strong>Helyes gyakorlat:</strong> a gázpedálállás
+csak egy bemenő jel az EDC-nek; a nyomást és az adagot a vezérlőegység
+határozza meg.</p>
+<p><strong>Hiba.</strong> A railen lévő nyomást a fúvóka nyitónyomásával
+keverik össze. <strong>Helyes gyakorlat:</strong> a rail-nyomás a közös
+elosztócső üzemi nyomása, a fúvóka nyitását az injektor szelepe vezérli;
+a hagyományos nyitónyomás fogalma itt más értelmet kap.</p>
+<p><strong>Hiba.</strong> A nagynyomású rendszeren a gyártói
+nyomásmentesítés nélkül csavart ki egy csatlakozót, mert a motor
+leállítása után „úgyis megszűnt a nyomás”. <strong>Helyes
+gyakorlat:</strong> mindig a gyártó szerinti nyomásmentesítés,
+védőkesztyű, arcvédő és a sugár útjának elkerülése.</p>
+<p><strong>Hiba.</strong> Az alacsony rail-nyomás miatt azonnal
+nagynyomású szivattyút cserél, miközben egy injektor visszafolyása vagy
+a kisnyomású oldal ellenőrzése nem történt meg. <strong>Helyes
+gyakorlat:</strong> először a kisnyomású kör, az üzemanyagszűrő és az
+injektor visszafolyás mérése.</p>
+<h3 data-number="20.2.12" id="önellenőrzés"><span
+class="header-section-number">20.2.12</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A common rail rendszerben a nagynyomású szivattyú a
+hengerenkénti adagot is pontosan adagolja.</li>
+<li>Mi a szerepe a szívóoldali mennyiségszabályozónak?</li>
+<li>Mi történik a mágnesszelepes injektorban a vezérlőkamra
+nyomásesésekor?</li>
+<li>Miért csökkenti az előbefecskendezés az égési zajt?</li>
+<li>Mi a legfontosabb biztonsági szabály a nagynyomású rendszer bontása
+előtt?</li>
+</ol>
+<h3 data-number="20.2.13" id="feladatok"><span
+class="header-section-number">20.2.13</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Sorold fel a common rail rendszer fő
+egységeit, és nevezd meg a két nyomásszabályozási beavatkozási
+helyet.</p>
+<p><strong>2. feladat (A).</strong> Egy nagynyomású szivattyú 800 ml/min
+gázolajat szállít 1200 bar nyomásra. Mekkora a hidraulikus teljesítmény?
+A hatásfok 0,8, mekkora a hajtási teljesítmény?</p>
+<p><strong>3. feladat (B).</strong> Egy hathengeres, négyütemű common
+rail motornál 2000 1/min fordulatszámon a befecskendezett mennyiség 35
+mg ciklusonként. Becsüld meg az óránkénti fogyasztást kg/h-ban és
+l/h-ban, ha a gázolaj sűrűsége 830 kg/m³!</p>
+<p><strong>4. feladat (B).</strong> Rajzolj fel vagy írj le egy egyszerű
+common rail hidraulikus vázlatot: tartály, előtápszivattyú, szűrő,
+mennyiségszabályozó, nagynyomású szivattyú, rail, nyomásérzékelő,
+nyomásszabályozó, négy injektor. Jelöld a nyomásoldali és a visszafolyó
+ágat!</p>
+<p><strong>5. feladat (C).</strong> Magyarázd el, miért lehet a piezo
+inline injektorral finomabb többszörös befecskendezést megvalósítani,
+mint a hagyományos mágnesszelepes injektorral. Milyen emissziós előnye
+van az elő- és utóbefecskendezésnek?</p>
+<p><strong>6. feladat (D).</strong> Egy common rail dízelautó nem indul.
+A diagnosztikai műszer forgatás közben 110 bar rail-nyomást mutat, a
+kívánt érték 280 bar (ellenőrizendő). Sorold fel a lehetséges okokat, és
+írd le, milyen sorrendben mérnél!</p>
+<h3 data-number="20.2.14" id="megoldások"><span
+class="header-section-number">20.2.14</span> Megoldások</h3>
+<h4 data-number="20.2.14.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">20.2.14.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li><strong>Hamis.</strong> A common rail nagynyomású szivattyú a
+nyomást állítja elő, a hengerenkénti adagolást az injektorok szelepei
+végzik.</li>
+<li>A mennyiségszabályozó a nagynyomású szivattyúhoz kerülő üzemanyag
+mennyiségét fojtja, ezzel a rail-nyomást szívóoldalról szabályozza.</li>
+<li>A vezérlőkamra nyomásesésekor a fúvókatűre alulról ható nyomóerő
+felülkerekedik, a tű megemelkedik, és megkezdődik a befecskendezés.</li>
+<li>Az előbefecskendezés lerövidíti a gyulladási késedelmet, ezért a fő
+adag nem robban be egyszerre, így kisebb az égési nyomáscsúcs és a
+zaj.</li>
+<li>A gyártó szerinti nyomásmentesítés, védőeszköz, a sugár útjának
+kerülve; a nagynyomású csövet nem bontjuk feszültség alatt/maradéknyomás
+mellett.</li>
+</ol>
+<h4 data-number="20.2.14.2" id="feladatok-megoldások"><span
+class="header-section-number">20.2.14.2</span> Feladatok –
+megoldások</h4>
+<p><strong>1. feladat.</strong> Fő egységek: kisnyomású kör (tartály,
+előtápszivattyú, szűrő, mennyiségszabályozó), nagynyomású szivattyú,
+rail, nyomásérzékelő, nyomásszabályozó szelep, injektorok; a szabályozás
+helye szívóoldali mennyiségszabályozás és nyomásoldali
+rail-szabályozás.</p>
+<p><strong>2. feladat.</strong> Adott:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mn>800</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">ml</mtext><mtext mathvariant="normal">min</mtext></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">l</mtext><mtext mathvariant="normal">min</mtext></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>8</mn></mrow><mrow><mn>60</mn><mo>⋅</mo><mn>1000</mn></mrow></mfrac><mspace width="0.167em"></mspace><mfrac><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup><mtext mathvariant="normal">s</mtext></mfrac><mo>=</mo><mn>1</mn><mo>,</mo><mn>33</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><mspace width="0.167em"></mspace><mfrac><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup><mtext mathvariant="normal">s</mtext></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">Q = 800\,\frac{\text{ml}}{\text{min}} = 0{,}8\,\frac{\text{l}}{\text{min}} = \frac{0{,}8}{60\cdot1000}\,\frac{\text{m}^3}{\text{s}} = 1{,}33\cdot10^{-5}\,\frac{\text{m}^3}{\text{s}},</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>1200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">bar</mtext><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><msup><mn>10</mn><mn>8</mn></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">Pa</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">p = 1200\,\text{bar} = 1{,}2\cdot10^8\,\text{Pa}.</annotation></semantics></math></p>
+<p>Hidraulikus teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">h</mtext></msub><mo>=</mo><mi>Q</mi><mo>⋅</mo><mi>p</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>33</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><msup><mn>10</mn><mn>8</mn></msup><mo>≈</mo><mn>1600</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>=</mo><mn>1</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{h}} = Q\cdot p = 1{,}33\cdot10^{-5}\cdot1{,}2\cdot10^8 \approx 1600\,\text{W} = 1{,}6\,\text{kW}.</annotation></semantics></math></p>
+<p>Hajtási teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">mech</mtext></msub><mo>=</mo><mfrac><mrow><mn>1</mn><mo>,</mo><mn>6</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>8</mn></mrow></mfrac><mo>=</mo><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{mech}} = \frac{1{,}6}{0{,}8} = 2{,}0\,\text{kW}.</annotation></semantics></math></p>
+<p><strong>3. feladat.</strong> Négyütemű hathengeres motor
+befecskendezései percenként:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">bef</mtext></msub><mo>=</mo><mfrac><mrow><mn>6</mn><mo>⋅</mo><mn>2000</mn></mrow><mn>2</mn></mfrac><mo>=</mo><mn>6000</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">bef</mtext><mtext mathvariant="normal">min</mtext></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">n_{\text{bef}} = \frac{6\cdot2000}{2} = 6000\,\frac{\text{bef}}{\text{min}}.</annotation></semantics></math></p>
+<p>Percenkénti tömeg:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>m</mi><mo accent="true">̇</mo></mover><mo>=</mo><mn>6000</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>035</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">g</mtext><mo>=</mo><mn>210</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">g</mtext><mtext mathvariant="normal">min</mtext></mfrac><mo>=</mo><mn>12</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">kg</mtext><mtext mathvariant="normal">h</mtext></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">\dot m = 6000\cdot0{,}035\,\text{g} = 210\,\frac{\text{g}}{\text{min}} = 12{,}6\,\frac{\text{kg}}{\text{h}}.</annotation></semantics></math></p>
+<p>Térfogatáram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>B</mi><mtext mathvariant="normal">V</mtext></msub><mo>=</mo><mfrac><mrow><mn>12</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">kg</mtext><mtext mathvariant="normal">h</mtext></mfrac></mrow><mrow><mn>830</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">kg</mtext><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup></mfrac></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>0152</mn><mspace width="0.167em"></mspace><mfrac><msup><mtext mathvariant="normal">m</mtext><mn>3</mn></msup><mtext mathvariant="normal">h</mtext></mfrac><mo>=</mo><mn>15</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mfrac><mtext mathvariant="normal">l</mtext><mtext mathvariant="normal">h</mtext></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">B_{\text{V}} = \frac{12{,}6\,\frac{\text{kg}}{\text{h}}}{830\,\frac{\text{kg}}{\text{m}^3}} \approx 0{,}0152\,\frac{\text{m}^3}{\text{h}} = 15{,}2\,\frac{\text{l}}{\text{h}}.</annotation></semantics></math></p>
+<p><strong>4. feladat.</strong> Az elvi vázlat sorrendben: tartály →
+előtápszivattyú → szűrő → mennyiségszabályozó → nagynyomású szivattyú →
+rail (elosztócső) → négy injektor. A railen nyomásérzékelő és
+nyomásszabályozó van; a visszafolyó ág az injektorból és a
+nyomásszabályozóból a tartályba vezet. A szívóoldali szabályozás a
+szivattyú előtt, a nyomásoldali szabályozás a railen történik.</p>
+<p><strong>5. feladat.</strong> A piezo elem a feszültség hatására
+nagyon gyorsan, kis tömeggel mozdul el, ezért az injektor nyitási és
+zárási ideje rövidebb, mint az induktív mágnesszelepnél. Így az elő-,
+fő- és utóbefecskendezés egymáshoz közelebb kerülhet, az adagok
+pontosabbak. Az előbefecskendezés csökkenti az égési zajt és a
+NOx-képződést, az utóbefecskendezés emeli a kipufogógáz-hőmérsékletet a
+részecskeszűrő regenerálásához és csökkentheti a koromkibocsátást.</p>
+<p><strong>6. feladat.</strong> Lehetséges okok: levegős vagy eldugult
+kisnyomású oldal, hibás előtápszivattyú, eltömődött szűrő, ragadt vagy
+hibás mennyiségszabályozó, kopott nagynyomású szivattyú, megnövekedett
+injektor-visszafolyás, hibás nyomásérzékelő. Mérési sorrend: először
+hibakódok és élő adatok ellenőrzése, majd kisnyomású nyomás mérése,
+szűrő ellenőrzése, levegőmentesség; ezután injektor visszafolyás mérés;
+végül nagynyomású szivattyú nyomásteljesítményének vizsgálata a gyártói
+eljárás szerint.</p>
+<h3 data-number="20.2.15" id="rövid-összefoglaló"><span
+class="header-section-number">20.2.15</span> Rövid összefoglaló</h3>
+<p>A common rail rendszerben a nagynyomású szivattyú egy közös
+elosztócsőben, a railben tartja az üzemi nyomást, a hengerenkénti
+adagolást pedig elektromos vezérlésű injektorok végzik. A nyomást
+szívóoldali mennyiségszabályozó és nyomásoldali rail-szabályozó állítja
+be; a railen nyomásérzékelő szolgáltatja a visszacsatoló jelet. A
+mágnesszelepes injektor vezérlőkamrás nyomáseséssel emeli a fúvókatűt, a
+piezo inline injektor gyors piezoelemmel finomabb többszörös
+befecskendezést ér el. Az előbefecskendezés a zajt és a NOx-ot, az
+utóbefecskendezés a DPF-regenerálást segíti. A rendszert csak a gyártói
+nyomásmentesítés után szabad bontani; a nagynyomású üzemanyagsugár bőrbe
+hatolva súlyos sérülést okoz. A diagnosztikában a rail-nyomás, a
+visszafolyás és a kisnyomású oldal ellenőrzése az elsődleges lépés.
+∎</p>
+<h3 data-number="20.2.16" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">20.2.16</span> Források és ellenőrzési
+hiányok</h3>
+<ul>
+<li>Forrástípusok: gyártói javítási adatok és diagnosztikai kézikönyvek;
+a common rail rendszerek működését bemutató szakkönyvi alapok (pl.
+Bosch-oktatóanyagok); a hatályos kipufogógáz-emissziós és diagnosztikai
+előírások (EOBD, Euro) – ezeket a könyv emissziós és diagnosztikai
+alfejezetei részletezik.</li>
+<li>Ellenőrizendő: a konkrét rail-nyomásértékek (alapjárat, teljes
+terhelés, indításnál), a rendszerek max. nyomása, a visszafolyási
+határértékek, a nyomásérzékelő pontos jelleggörbéje, a
+mennyiségszabályozó és nyomásszabályozó jelölése, az injektor-adaptáció
+lépései, a szűrőcsere-intervallum, a nyomásmentesítés módja és
+időtartama.</li>
+<li>A gázolaj sűrűsége példaérték, a számítások gyártói adatokkal
+ellenőrizendők.</li>
+</ul>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au072.html">← 20.1 A dízel tüzelőanyag-rendszer kisnyomású oldala és a hagyományos adagolók</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au074.html">21.1 A kipufogógáz összetétele, motoroldali kibocsátáscsökkentés és kipufogógáz-visszavezetés →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

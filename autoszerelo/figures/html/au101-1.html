@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segédindítás: bekötés és lekötés</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Segédindítás: 1. piros a lemerült +-ra, 2. piros a segítő +-ra, 3. fekete a segítő −-ra, 4. fekete a lemerült jármű motortestére, távol az akkumulátortól."></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">Tanulási példa; a gyártói kezelési utasítás (pl. kijelölt segédindító pont, start-stop rendszer) az irányadó. Védőszemüveg, saválló kesztyű; nyílt láng és szikra tilos.</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"c": [], "msg": "Kiinduló helyzet: a segítő jármű motorja áll, a két jármű nem ér össze, a kábelfogók nem érnek egymáshoz."}, {"c": [1], "k": 1, "msg": "1. Piros kábel a lemerült akkumulátor pozitív pólusára (30)."}, {"c": [1, 2], "k": 2, "msg": "2. Piros kábel a segítő akkumulátor pozitív pólusára – a + ág kész."}, {"c": [1, 2, 3], "k": 3, "msg": "3. Fekete kábel a segítő akkumulátor negatív pólusára (31)."}, {"c": [1, 2, 3, 4], "k": 4, "msg": "4. Fekete kábel a lemerült jármű motortestére, távol az akkumulátortól – NEM a negatív pólusra: az utolsó csatlakozás szikrája így nem a durranógáz közelében keletkezik."}, {"c": [1, 2, 3, 4], "run": 1, "msg": "Indítás: a segítő jármű motorja jár, majd a lemerült jármű indul (a gyártói előírás szerint)."}, {"c": [1, 2, 3], "k": 4, "off": 1, "msg": "Lekötés 1.: először a fekete kábel a motortestről – az esetleges szikra itt is távol van az akkumulátortól."}, {"c": [1, 2], "k": 3, "off": 1, "msg": "Lekötés 2.: fekete kábel le a segítő akkumulátor negatív pólusáról."}, {"c": [1], "k": 2, "off": 1, "msg": "Lekötés 3.: piros kábel le a segítő akkumulátor pozitív pólusáról."}, {"c": [], "k": 1, "off": 1, "msg": "Lekötés 4.: végül a piros kábel le a lemerült akkumulátor pozitív pólusáról. A kábelfogók ne érjenek össze."}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+
+const P={"hp": [1.3, 2.6], "hm": [3.3, 2.6], "dp": [9.1, 2.6], "dm": [11.1, 2.6], "eng": [6.1, 3.4]}, ENDS={1:"dp",2:"hp",3:"hm",4:"eng"};
+function X(x){return 20+x*50;} function Y(y){return 300-y*50;}
+function render(s){
+  svg.setAttribute("viewBox","0 0 700 380"); svg.innerHTML="";
+  const line=css("--line")||"#000", fg=css("--fg")||"#000";
+  const box=(x,y,w,h,f,t)=>{el("rect",{x:X(x),y:Y(y+h),width:w*50,height:h*50,rx:8,fill:f,stroke:line,"stroke-width":2});
+     if(t)el("text",{x:X(x+w/2),y:Y(y)+18,"text-anchor":"middle","font-size":13},t);};
+  box(0.6,0.6,3.4,2.0,"#ececec","segítő akkumulátor"); box(8.4,0.6,3.4,2.0,"#ececec","lemerült akkumulátor");
+  box(5.0,0.0,2.2,3.4,"#f6f6f6","motorblokk (test)");
+  for(const k in P){const [x,y]=P[k];el("rect",{x:X(x)-12,y:Y(y)-17,width:24,height:17,fill:"#999",stroke:line});
+    if(k!=="eng")el("text",{x:X(x),y:Y(y)+22,"text-anchor":"middle","font-size":14,"font-weight":"bold"},k.endsWith("p")?"+ (30)":"− (31)");}
+  const on=new Set(s.c);
+  function cable(a,b,yy,red,ka,kb){const A=P[a],B=P[b];const ca=on.has(ka),cb=on.has(kb);
+    const st={fill:"none",stroke:red?"#c62828":"#111","stroke-width":red?8:5,"stroke-dasharray":red?"":"10 6","stroke-linecap":"round"};
+    if(ca&&cb){el("polyline",Object.assign({points:[X(A[0]),Y(A[1]+0.35),X(A[0]),Y(yy),X(B[0]),Y(yy),X(B[0]),Y(B[1]+0.35)].join(" ")},st));}
+    else if(ca||cb){const E=ca?A:B;const lx=E[0]+(ca?1.3:-1.3);
+      el("polyline",Object.assign({points:[X(E[0]),Y(E[1]+0.35),X(E[0]),Y(yy),X(lx),Y(yy),X(lx),Y(yy-0.9)].join(" ")},st));
+      el("rect",{x:X(lx)-9,y:Y(yy-0.9),width:18,height:22,fill:red?"#c62828":"#111",stroke:line});}}
+  cable("dp","hp",4.6,true,1,2); cable("hm","eng",3.9,false,3,4);
+  // tilos kapcsolat jele
+  const [mx,my]=P["dm"]; el("text",{x:X(mx),y:Y(my+1.0),"text-anchor":"middle","font-size":26,fill:css("--bad")||"#b71c1c","font-weight":"bold"},"✗");
+  el("text",{x:X(mx),y:Y(my+1.6),"text-anchor":"middle","font-size":12},"ide NEM (szikra!)");
+  if(s.k){const [x,y]=P[ENDS[s.k]];el("circle",{cx:X(x)+(s.k===4?38:26),cy:Y(y)-(s.k===4?24:52),r:16,fill:s.off?"#fff":"#ffd54f",stroke:line,"stroke-width":2.5});
+    el("text",{x:X(x)+(s.k===4?38:26),y:Y(y)-(s.k===4?19:47),"text-anchor":"middle","font-size":15,"font-weight":"bold",fill:"#111"},String(s.k));}
+  if(s.run){el("text",{x:X(2.3),y:Y(5.6),"text-anchor":"middle","font-size":15,"font-weight":"bold"},"motor jár ↻");}
+  el("text",{x:X(6.5),y:Y(-1.1),"text-anchor":"middle","font-size":13},"piros: folytonos vastag (+)   fekete: szaggatott (−)");
+}
+
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.innerHTML = s.msg || "";   // a lépésszöveg saját, megbízható HTML-t (<b>, <i>) tartalmazhat
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 2600);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

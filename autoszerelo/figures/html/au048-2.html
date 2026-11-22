@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aszinkron motor munkapontja</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ml">Terhelőnyomaték M_t/M_n</label><input id="ml" type="range" min="0" max="3" step="0.05" value="1" aria-label="Terhelőnyomaték M_t/M_n"><output id="ml_o" for="ml"></output></div>
+<div class="row"><label for="sb">Billenő szlip s_b</label><input id="sb" type="range" min="0.08" max="0.4" step="0.01" value="0.2" aria-label="Billenő szlip s_b"><output id="sb_o" for="sb"></output></div>
+<div class="row"><label for="p">Póluspárok p (50 Hz)</label><select id="p" aria-label="Póluspárok p (50 Hz)"><option value="1">1 (n_s = 3000)</option><option value="2" selected>2 (n_s = 1500)</option><option value="3">3 (n_s = 1000)</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Aszinkron motor nyomaték–fordulatszám görbéje billenőnyomatékkal és a terhelés által kijelölt munkaponttal"></svg>
+<p class="small">Szemléltető Kloss-közelítés: a görbe úgy skálázott, hogy s = 4 %-nál M = M_n (a fejezet 1. példája). A valós görbét a gyártói adatlap adja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"ml":"", "sb":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const ns=3000/v.p,sb=v.sb,s1=0.04,MB=(s1/sb+sb/s1)/2,M=s=>2*MB/(s/sb+sb/s);
+const X0=60,X1=540,Y0=20,Y1=270,Mmax=Math.max(3.2,MB*1.1),X=n=>X0+(X1-X0)*n/ns,Y=m=>Y1-(Y1-Y0)*m/Mmax;
+el("rect",{x:X0,y:Y0,width:X1-X0,height:Y1-Y0,fill:"none",stroke:css("--line")});
+let d="",fl="M"+X(ns)+" "+Y(0);for(let i=0;i<=400;i++){const s=0.001+0.999*i/400,n=ns*(1-s);d+=(i?"L":"M")+X(n).toFixed(1)+" "+Y(M(s)).toFixed(1);if(s<=sb)fl+="L"+X(n).toFixed(1)+" "+Y(M(s)).toFixed(1);}
+fl+="L"+X(ns*(1-sb))+" "+Y(0)+"Z";el("path",{d:fl,fill:css("--grid"),opacity:0.6});
+el("path",{d:d,fill:"none",stroke:css("--hl"),"stroke-width":2.4});
+el("line",{x1:X0,x2:X1,y1:Y(v.ml),y2:Y(v.ml),stroke:css("--hl2"),"stroke-width":2,"stroke-dasharray":"6 4"});
+[0,1,2,3].forEach(m=>el("text",{x:X0-6,y:Y(m)+4,"font-size":11,"text-anchor":"end"},m));
+[0,0.25,0.5,0.75,1].forEach(f=>el("text",{x:X(f*ns),y:Y1+16,"font-size":11,"text-anchor":"middle"},fmt(f*ns,0)));
+el("text",{x:(X0+X1)/2,y:Y1+34,"font-size":12,"text-anchor":"middle"},"fordulatszám n (1/min); a szürke sáv a stabil tartomány (s < s_b)");
+el("text",{x:X0+6,y:Y0+16,"font-size":12},"M/M_n");
+let msg;
+if(v.ml>MB){msg="<span class='bad'>A terhelés ("+fmt(v.ml,2)+"·M_n) nagyobb a billenőnyomatéknál ("+fmt(MB,2)+"·M_n): a motor megáll (kibillen).</span>";}
+else{ // munkapont a stabil ágon: M(s)=ml, s<sb  ->  s = sb*(MB - sqrt(MB^2-ml^2))/ml
+  const s=v.ml>0?sb*(MB-Math.sqrt(MB*MB-v.ml*v.ml))/v.ml:0,n=ns*(1-s);
+  el("circle",{cx:X(n),cy:Y(v.ml),r:6,fill:"none",stroke:css("--bad"),"stroke-width":2.5});
+  msg="Munkapont: <b>n = "+fmt(n,0)+" 1/min</b>, szlip <b>s = "+fmt(s*100,1)+" %</b> (n_s = "+fmt(ns,0)+" 1/min). Billenőnyomaték ≈ "+fmt(MB,2)+"·M_n; indítónyomaték ≈ "+fmt(M(1),2)+"·M_n.";}
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

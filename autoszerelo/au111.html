@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>31.1 A motorirányítás alapjai: vezérlőegység, szabályozási kör,
+üzemállapotok és rendszerek – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Gépjármű-villamosság és -elektronika</a> › <a href="index.html#auch30">31 Elektronikus motorirányítás</a></p>
+<div class="links"><a class="prev" rel="prev" href="au110.html">← 30.4 Passzív biztonsági elektronika: légzsák és övfeszítő</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au112.html">31.2 Érzékelők és jeladók →</a></div>
+</nav>
+<h2 data-number="31.1" id="au111"><span
+class="header-section-number">31.1</span> A motorirányítás alapjai:
+vezérlőegység, szabályozási kör, üzemállapotok és rendszerek</h2>
+<h3 data-number="31.1.1"
+id="motiváció-mikor-kell-motorirányítási-ismeret-a-műhelyben"><span
+class="header-section-number">31.1.1</span> Motiváció: mikor kell
+motorirányítási ismeret a műhelyben?</h3>
+<p>Ügyfél panasza: „reggel nehezen indul, alapjáraton remeg, a
+motorhiba-lámpa világít, és mintha többet fogyasztana”. A
+rendszerteszter P0171-es, P0300-as vagy P0118-as hibakódot mutat.
+Ilyenkor haszontalan csak a kódot törölni, vagy találomra alkatrészt
+cserélni. Meg kell értenünk, hogyan dolgozza fel a motorirányító egység
+(ECU, Engine Control Unit) az érzékelők jeleit, hogyan ismeri fel az
+üzemállapotot, és hogyan vezérli a befecskendezést, gyújtást és a
+járulékos rendszereket. E nélkül a diagnosztikai élő adatokat sem tudjuk
+értelmezni, és a javítás vaktában történő alkatrészcsere lesz.</p>
+<h3 data-number="31.1.2"
+id="szemléletes-kép-a-motorirányítás-jelfolyama"><span
+class="header-section-number">31.1.2</span> Szemléletes kép: a
+motorirányítás jelfolyama</h3>
+<p>A motorirányítás lelke a <strong>jelfolyam</strong>: az érzékelők
+mérik a motor pillanatnyi állapotát, az ECU a jeleket feldolgozza, és a
+beavatkozókat úgy vezérli, hogy az üzemállapotnak megfelelő keverék és
+gyújtás jöjjön létre. Az alábbi rétegábra a jellemző felosztást
+mutatja:</p>
+<figure>
+<img src="assets/au111-diagram-1.png"
+alt="Motorirányítás jelfolyama és szabályozási köre (egyszerűsített) - Szemléltető ábra; a konkrét érzékelők és beavatkozók gyártó- és típusfüggőek. A motor állapotát ismét az érzékelők mérik – ez zárja a szabályozási kört." />
+<figcaption aria-hidden="true">Motorirányítás jelfolyama és szabályozási
+köre (egyszerűsített) - Szemléltető ábra; a konkrét érzékelők és
+beavatkozók gyártó- és típusfüggőek. A motor állapotát ismét az
+érzékelők mérik – ez zárja a szabályozási kört.</figcaption>
+</figure>
+<p>Az ábra felső rétege az <strong>érzékelőket</strong> mutatja: ezek
+szolgáltatják a nyers jeleket. A középső réteg az <strong>ECU</strong>,
+ahol a jelek feldolgozása és a döntések megszületnek. A harmadik réteg a
+<strong>beavatkozókat</strong> tartalmazza: ezek hajtják végre a
+parancsokat. A legalsó réteg maga a <strong>motor</strong>, a
+szabályozott szakasz: itt alakul ki a keverék, az égés és a
+fordulatszám. A nyilak a jelfolyam irányát jelzik: a beavatkozók felől
+nincs közvetlen visszacsatolás, a motor állapotát ismét az érzékelők
+mérik – ez zárja a szabályozási kört.</p>
+<h3 data-number="31.1.3" id="alapfogalmak-és-definíciók"><span
+class="header-section-number">31.1.3</span> Alapfogalmak és
+definíciók</h3>
+<p>A motorirányítás megértéséhez először két alapvető irányítási módot
+kell megkülönböztetnünk.</p>
+<p><strong>Definíció. Vezérlés (nyílt hurok, open loop).</strong> Olyan
+irányítási folyamat, amelyben a kimenetet közvetlenül a bemeneti jelek
+alapján, előre meghatározott jelleggörbék vagy program szerint állítják
+be, anélkül hogy a kimeneti jellemzőt mérnék és hasonlítanák össze a
+kívánt értékkel. Példa: hidegindításkor az ECU a
+hűtőfolyadék-hőmérséklet alapján dús keveréket állít be, de nem méri
+közvetlenül az égés λ-ját.</p>
+<p><strong>Definíció. Szabályozás (zárt hurok, closed loop).</strong>
+Olyan irányítás, amelyben a kimenő jellemzőt (például a kipufogógáz
+oxigéntartalmát, a fordulatszámot, a kopogást) mérik, és ezt a mért
+értéket összehasonlítják a kívánt alapértékkel. Az eltérés (hibajel)
+alapján a vezérlő módosítja a beavatkozó jelet. Példa: a
+lambdaszabályozás, amelyben az elő-katalizátor lambdaszonda jeléből az
+ECU folyamatosan korrigálja a befecskendezési mennyiséget.</p>
+<figure id="fig-au111-1">
+<div class="fig-interactive"><iframe src="figures/html/au111-1.html" title="Nyílt hurkú vezérlés és zárt hurkú lambdaszabályozás hatásvázlata." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au111-1.png" style="width:90.0%"
+alt="Nyílt hurkú vezérlés és zárt hurkú lambdaszabályozás hatásvázlata." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au111-1.png" style="width:90.0%"
+alt="Nyílt hurkú vezérlés és zárt hurkú lambdaszabályozás hatásvázlata." /></details></div>
+<figcaption>Nyílt hurkú vezérlés (hidegindítási dúsítás) és zárt hurkú
+lambdaszabályozás hatásvázlata</figcaption>
+</figure>
+<p>A felső sávban a jel csak előre halad: a hőmérséklet alapján számolt
+befecskendezés eredményét senki nem méri. Az alsó sávban az összegző a λ
+= 1 alapjelből és a lambdaszonda által mért értékből képzi az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>=</mo><msub><mi>λ</mi><mtext mathvariant="normal">alap</mtext></msub><mo>−</mo><msub><mi>λ</mi><mtext mathvariant="normal">mért</mtext></msub></mrow><annotation encoding="application/x-tex">e = \lambda_{\text{alap}} - \lambda_{\text{mért}}</annotation></semantics></math>
+hibajelet, a szabályozó ebből módosítja a befecskendezési időt, a
+szaggatott visszacsatoló ág pedig bezárja a kört. A zavaró jellemző
+(hamislevegő, üzemanyagnyomás) a szakaszra hat. A HTML-változat
+lépésenként végigvezet a jelúton, az utolsó lépés pedig megmutatja, hogy
+hamislevegőnél a szabályozás növeli a befecskendezési időt, a vezérlés
+nem korrigál.</p>
+<p><strong>Definíció. Motorirányító egység (ECU).</strong> Elektronikus
+vezérlőegység, amely a motorérzékelők jeleit fogadja, azokat
+feldolgozza, és a motor beavatkozóit (befecskendezők, gyújtótekercsek,
+fojtószelep-állító, relék, szelepek) vezérli.</p>
+<p>A motorirányítás <strong>jelfolyama</strong> tehát három lépésből
+áll: <code>érzékelők → ECU → beavatkozók</code>. A zárt szabályozási
+körökben ezt kiegészíti a motor (szabályozott szakasz) és a visszavezető
+érzékelő. A vezérlési ág nyitott, a szabályozási ág zárt hurkot
+alkot.</p>
+<p><strong>Továbbvitt eredmény.</strong> Ez a jelfolyam a kiindulópontja
+a <a href="au112.html">Érzékelők és jeladók</a> alfejezetnek, ahol az
+egyes jelek típusait és karakterisztikáit elemezzük, és a <a
+href="au133.html">Fedélzeti diagnosztika: OBD és EOBD</a> alfejezetnek,
+ahol a hibakódok, élő adatok és a fagyott keret (freeze frame)
+értelmezése éppen ezen a jelfolyamon alapul.</p>
+<h3 data-number="31.1.4"
+id="a-keverékképzés-feltételei-és-a-motorirányítás-feladatai"><span
+class="header-section-number">31.1.4</span> A keverékképzés feltételei
+és a motorirányítás feladatai</h3>
+<p>A belső égésű motorban a keverékképzésnek több, egymásnak részben
+ellentmondó követelményt kell teljesítenie:</p>
+<ul>
+<li><strong>Indíthatóság:</strong> hideg motoron a benzin rosszul
+párolog, ezért dús keverék és nagyobb befecskendezési idő
+szükséges.</li>
+<li><strong>Károsanyag-kibocsátás:</strong> a háromutas katalizátor csak
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\lambda \approx 1</annotation></semantics></math>
+körül működik hatékonyan, ezért a fő üzemi tartományban az ECU
+lambdaszabályozással tartja a keveréket (lásd <a
+href="au075.html">Otto-motorok utókezelése: háromutas katalizátor és
+lambdaszabályozás</a>).</li>
+<li><strong>Teljesítmény és égésvédelem:</strong> teljes terhelésen
+dúsabb keverékre van szükség
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>0</mn><mo>,</mo><mn>85</mn><mi>…</mi><mn>0</mn><mo>,</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">\lambda \approx 0{,}85\ldots0{,}9</annotation></semantics></math>)
+a maximális teljesítmény és az égéstér hűtése érdekében.</li>
+<li><strong>Gazdaságosság:</strong> részterhelésen a legjobb fogyasztást
+a lehető legkisebb tüzelőanyag-többlettel, de még biztonságos égés
+mellett érjük el.</li>
+<li><strong>Tranziens viselkedés:</strong> gyorsításkor a szívócsőben
+lerakódott tüzelőanyag-film kompenzálása miatt átmeneti dúsítás
+szükséges.</li>
+</ul>
+<p>Az ECU tehát nem egyszerűen „több vagy kevesebb benzint” adagol,
+hanem minden pillanatban azonosítja az üzemállapotot, kiszámítja a
+szükséges levegő–tüzelőanyag arányt és gyújtási szöget, majd a
+beavatkozókat ennek megfelelően vezérli. A befecskendezési idő
+alapegyenlete:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mfrac><msub><mi>m</mi><mi>B</mi></msub><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>B</mi></msub></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">t_i = \frac{m_B}{\dot{m}_B},</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>i</mi></msub><annotation encoding="application/x-tex">t_i</annotation></semantics></math>
+a befecskendezési idő (ms),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mi>B</mi></msub><annotation encoding="application/x-tex">m_B</annotation></semantics></math>
+a szükséges tüzelőanyag-tömeg (g),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>B</mi></msub><annotation encoding="application/x-tex">\dot{m}_B</annotation></semantics></math>
+az injektor tényleges tömegárama (g/s). A szükséges tüzelőanyag-tömeg a
+hengertöltésből és a megcélzott légviszonyból adódik:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>B</mi></msub><mo>=</mo><mfrac><msub><mi>m</mi><mi>L</mi></msub><mrow><mi>λ</mi><mo>⋅</mo><msub><mi>L</mi><mrow><mi>s</mi><mi>t</mi></mrow></msub></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">m_B = \frac{m_L}{\lambda \cdot L_{st}},</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mi>L</mi></msub><annotation encoding="application/x-tex">m_L</annotation></semantics></math>
+a hengerbe jutó levegő tömege (g),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+a légviszony,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mrow><mi>s</mi><mi>t</mi></mrow></msub><mo>≈</mo><mn>14</mn><mo>,</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">L_{st} \approx 14{,}7</annotation></semantics></math>
+a benzin sztöchiometrikus levegőigénye (kg levegő / kg tüzelőanyag). Ezt
+a számítást az <a href="au070.html">Szívócső-befecskendezés</a>
+alfejezetben alapoztuk meg.</p>
+<h3 data-number="31.1.5" id="a-vezérlőegység-felépítése"><span
+class="header-section-number">31.1.5</span> A vezérlőegység
+felépítése</h3>
+<p>A motorvezérlő ECU felépítése funkcionálisan négy fő egységre
+bontható.</p>
+<p><strong>1. Bemeneti szakasz – jelkondicionálás.</strong> A bejövő
+jelek három nagy csoportba sorolhatók:</p>
+<ul>
+<li><strong>Analóg jelek:</strong> hőmérséklet-érzékelők (NTC),
+légtömegmérő, szívócsőnyomás, lambda-szonda. Ezeket az ECU
+analóg–digitális átalakítója (A/D) digitalizálja, gyakran előerősítés és
+szűrés után.</li>
+<li><strong>Digitális jelek:</strong> kapcsolók,
+fojtószelep-alapálláskapcsoló, Hall-jeladó jele, indítási engedély. E
+jelek logikai 0/1 szintűek.</li>
+<li><strong>Frekvencia- vagy impulzusjelek:</strong> induktív
+fordulatszám-jeladó, kerékfordulatszám-jeladó, kopogásérzékelő
+(rezgésjel). Az ECU a jelfrekvenciát vagy a jel időbeli lefutását
+értékeli.</li>
+</ul>
+<p>A bemeneti szakasznak védelmet kell nyújtania a túlfeszültség, a
+fordított polaritás és az elektromágneses zavarok ellen.</p>
+<p><strong>2. Mikrovezérlő és memória.</strong> A digitalizált jeleket a
+mikrovezérlő dolgozza fel. A memória szerepe:</p>
+<ul>
+<li><strong>ROM vagy Flash:</strong> a program és az alapjelleggörbék
+(lookup table-ek) tárolása.</li>
+<li><strong>RAM:</strong> a futó számítások és az aktuális mért értékek
+ideiglenes tárolása.</li>
+<li><strong>EEPROM:</strong> az adaptációs értékek, tanult jellemzők,
+hibakódok és a járműspecifikus adatok tartós tárolása.</li>
+</ul>
+<p>A <strong>jelleggörbe</strong> (térkép, map) lényege: a vezérlő nem
+minden egyes pontot számol ki analitikusan, hanem előre betárolt
+táblázatokból interpolál. Például a befecskendezési alapmennyiséget a
+légtömeg és a fordulatszám kétdimenziós táblázatából, a gyújtási szöget
+a fordulatszám és a terhelés függvényében tárolt gyújtási térképből
+veszi.</p>
+<p><strong>3. Kimeneti fokozatok.</strong> Az ECU a beavatkozókat
+teljesítményfokozatokon keresztül vezérli:</p>
+<ul>
+<li><strong>Földelő kapcsolás:</strong> befecskendezők és
+gyújtótekercsek esetén az ECU a test felé kapcsolja az áramkört (a plusz
+a gyújtáskapcsolás után, kapocs <code>15</code> feszültségén van).</li>
+<li><strong>H-híd:</strong> elektronikus fojtószelep-állító, EGR-szelep,
+turbógeometria-mozgató esetén mindkét irányú mozgatást tesz
+lehetővé.</li>
+<li><strong>PWM (impulzusszélesség-moduláció):</strong> arányos
+beavatkozók, például alapjárati levegőszelep, ventilátor-fordulatszám
+vagy fojtószelep-rásegítés vezérlésére.</li>
+</ul>
+<p><strong>4. Kommunikációs interfész.</strong> Az ECU a jármű többi
+vezérlőjével adatbuszon (például CAN) kommunikál, a diagnosztikai
+műszerrel pedig a diagnosztikai csatlakozón keresztül tart
+kapcsolatot.</p>
+<p><strong>Vészüzem (limp home).</strong> Ha az ECU a kritikus bemeneti
+jelekben hibát észlel, vagy a rendszerben olyan állapot lép fel, amely a
+motor károsodását okozhatná, a motorirányítás <strong>vészüzemi
+programra</strong> vált. Ilyenkor a vezérlő rögzített alapértékekkel
+dolgozik, gyakran letiltja a szabályozási funkciókat, csökkenti a
+teljesítményt és a fordulatszámot, hogy a járművel biztonságosan el
+lehessen jutni a szervizbe. A vészüzem célja a további károsodás
+megelőzése, nem a teljesítmény fenntartása.</p>
+<p><strong>Előírás.</strong> A motorirányító rendszereknek teljesíteniük
+kell a mindenkori uniós típusjóváhagyási és fedélzeti diagnosztikai
+(EOBD) követelményeket, beleértve a károsanyag-kibocsátás és a hibakódok
+elérhetőségének előírásait is (ellenőrizendő: az aktuális EU-rendelet és
+ECE-előírások). A kibocsátáscsökkentő rendszerek (katalizátor,
+lambda-szabályozás, EVAP) eltávolítása vagy manipulálása tilos.</p>
+<h3 data-number="31.1.6"
+id="üzemállapotok-vezérlése-és-szabályozása"><span
+class="header-section-number">31.1.6</span> Üzemállapotok vezérlése és
+szabályozása</h3>
+<p>Az ECU a motor <strong>üzemállapotát</strong> a mért jelekből
+azonosítja. A leggyakoribb üzemállapotok és azok kezelési stratégiája a
+következő.</p>
+<p><strong>Hidegindítás.</strong> A hűtőfolyadék-hőmérséklet alacsony, a
+fordulatszám akár 300–500 1/min az indítás pillanatában. Az ECU dús
+keveréket
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\lambda &lt; 1</annotation></semantics></math>),
+nagyobb befecskendezési időt és emelt alapjárati fordulatszámot állít
+be. A gyújtási szöget gyakran késlelteti, hogy a katalizátor gyorsabban
+elérje az üzemi hőmérsékletet. Ez tipikus <strong>vezérlés</strong>,
+mert a lambdaszonda még hideg, és a katalizátor sem tudja ellátni
+feladatát.</p>
+<p><strong>Bemelegedés.</strong> A hőmérséklet növekedésével a dúsítás
+fokozatosan csökken, majd amint a lambdaszonda és a katalizátor eléri az
+üzemi feltételeket, az ECU átvált <strong>lambdaszabályozásra</strong>
+(zárt hurok). A bemelegedés tehát átmenet a nyílt hurokról a zárt
+hurokra.</p>
+<p><strong>Alapjárat.</strong> A fojtószelep alaphelyzetben van, a
+fordulatszámot az ECU <strong>alapjárat-szabályozással</strong> tartja.
+A zárt hurkú szabályozás a kívánt alapjárati fordulatszámot a
+hűtőfolyadék-hőmérséklet, a klíma, a villamos fogyasztók és a sebesség
+függvényében határozza meg, a tényleges fordulatszámot a
+főtengely-jeladóból méri. Eltérés esetén a levegő- vagy gyújtásoldali
+beavatkozással korrigál.</p>
+<p><strong>Részterhelés.</strong> Ez a legnagyobb üzemidőtartam. A
+motorvezérlő λ=1 szerinti keveréket és gazdaságos gyújtási szöget állít
+be. A lambdaszabályozás zárt hurokban működik, a katalizátor maximális
+konverziós hatásfokot biztosít. A befecskendezési mennyiséget a légtömeg
+vagy a szívócsőnyomás alapján számított hengertöltés és a λ=1 kívánt
+érték határozza meg.</p>
+<p><strong>Teljes terhelés.</strong> A fojtószelep teljesen nyitott, a
+fordulatszám és a terhelés magas. A maximális teljesítmény eléréséhez az
+ECU dús keverékre vált
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>0</mn><mo>,</mo><mn>85</mn><mi>…</mi><mn>0</mn><mo>,</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">\lambda \approx 0{,}85\ldots0{,}9</annotation></semantics></math>),
+és a gyújtási szöget a maximális nyomatékhoz, illetve a kopogáshatárhoz
+igazítja. A lambda-szabályozás ilyenkor felfüggesztődik, mert a kívánt λ
+nem 1, és a szonda jelét nem lehet közvetlenül a keverékhez
+felhasználni.</p>
+<p><strong>Gyorsítás (tranziens üzemállapot).</strong> A fojtószelep
+hirtelen nyitásakor a levegő tömege azonnal megnő, de a szívócső falán
+lerakódott benzinfilm lassabban követi a változást. Emiatt átmeneti
+<strong>dúsítást</strong> alkalmaz az ECU, hogy a hengerbe érkező
+keverék ne legyen szegény. A kompenzáció mértéke hőmérséklet-,
+fordulatszám- és terhelésfüggő.</p>
+<p><strong>Motorfék.</strong> A vezető felengedi a gázpedált, a
+fojtószelep zár. Az ECU leállítja a befecskendezést (deceleration fuel
+cut-off), így csökken a fogyasztás és a károsanyag-kibocsátás. Újabb
+gázadáskor vagy a fordulatszám alapjárat közelébe esésekor a
+befecskendezés zökkenőmentesen visszakapcsol.</p>
+<p><strong>Kopogásszabályozás.</strong> A kopogásérzékelő rezgésjeléből
+az ECU felismeri a kopogást. Ez <strong>zárt szabályozási
+hurok</strong>, amely kopogáskor a gyújtási szöget fokozatosan
+késlelteti, amíg a kopogás megszűnik, majd lassan visszatér az optimális
+szög felé. Ezzel a motor a lehető legjobb hatásfokkal üzemel a
+kopogáshatáron, anélkül hogy károsodna.</p>
+<h3 data-number="31.1.7"
+id="történeti-pillantás-elektronikus-vezérlésű-karburátor"><span
+class="header-section-number">31.1.7</span> Történeti pillantás:
+elektronikus vezérlésű karburátor</h3>
+<p>A mai motorirányítás megértéséhez érdemes megemlíteni a múltbeli
+átmeneti rendszert. Az <strong>elektronikus vezérlésű
+karburátor</strong> (például az 1980-as évek bizonyos Bosch Ecotronic
+rendszerei; ellenőrizendő: pontos elnevezés és évjárat) a karburátoros
+alapadagolást megtartotta, de a hidegindítást, az alapjárati levegőt és
+a gázpedál-állás szerinti korrekciót már elektronikusan vezérelte. A fő
+adagolás azonban továbbra is mechanikus volt, így a pontossága messze
+elmaradt a későbbi befecskendező rendszerektől. A rendszer ma már ritka,
+de régi járművön a működés elve hasonló: elektronikus korrekció egy
+mechanikus alaprendszeren.</p>
+<h3 data-number="31.1.8"
+id="integrált-motorirányító-rendszerek-motronic-és-edc"><span
+class="header-section-number">31.1.8</span> Integrált motorirányító
+rendszerek: Motronic és EDC</h3>
+<p>A modern motorirányításban a befecskendezést és a gyújtást közös
+vezérlőegység, illetve koordinált rendszer irányítja.</p>
+<p><strong>Motronic típusú benzinrendszerek.</strong> A Bosch Motronic
+(rendszermegnevezés) a szívócső-befecskendezést és a gyújtást egyetlen
+ECU-ban egyesíti. A közös vezérlés előnye, hogy a befecskendezési idő és
+a gyújtási szög ugyanabban a jelleggörberendszerben, ugyanazon mért
+jelek alapján határozható meg. A Motronic rendszerekben a befecskendezés
+lehet hengerenkénti (MPi), később közvetlen befecskendezés (MED), a
+gyújtás pedig teljesen elektronikus. Az ECU a lambda-szabályozást, az
+alapjárat-szabályozást, a kopogásszabályozást, a EVAP-vezérlést és az
+indításgátlóval való kommunikációt is kezeli. A mai benzinmotoros
+rendszerek az ebből az elvből fejlődtek tovább.</p>
+<p><strong>EDC típusú dízelrendszerek.</strong> Az EDC (Electronic
+Diesel Control) gyűjtőfogalom a dízelmotorok elektronikus irányítására.
+A történeti fejlődésben több generációt különböztetünk meg:</p>
+<ul>
+<li><strong>Soros adagolószivattyú elektronikus szabályozás:</strong> a
+szivattyú mechanikus alapadagolását elektronikus állítómotorok
+szabályozták a jelleggörbék szerint.</li>
+<li><strong>Elosztós befecskendezőszivattyú:</strong> az elektronika a
+szivattyú belső adagoló elemét és az injektálási időzítést vezérelte,
+pontosabb légszámítással.</li>
+<li><strong>PDE (pumpa–fúvóka, Pumpe-Düse,
+egységbefecskendező):</strong> hengerenként egy-egy, a bütyök által
+működtetett befecskendezőegység, amelyet az EDC elektronikusan váltott
+mágnesszeleppel vezérel.</li>
+<li><strong>Common Rail EDC:</strong> a ma leggyakoribb rendszer. A
+nagynyomású szivattyú a közös nyomócsőbe (rail) szállít, a nyomást az
+ECU szabályozza (nyomásszabályzó vagy nyomáskorlátozó szeleppel), az
+injektorok pedig elektronikusan, nagy sebességgel nyitják a
+befecskendezést. Az EDC itt a légtömeg, a boostnyomás, az EGR, a
+turbógeometria és a részecskeszűrő-regeneráció vezérlését is
+koordinálja.</li>
+</ul>
+<p>A dízelmotorokban nincs gyújtás, ezért az EDC fő feladata a
+befecskendezési mennyiség, a befecskendezési időpont, a többszöri elő-
+és utóbefecskendezés, a nyomás és a levegőellátás vezérlése. A common
+rail rendszerben a mágnesszelepes befecskendezőket az ECU emelt (boost)
+feszültséggel, jellemzően több tíz volttal és több tíz amperes
+csúcsárammal nyitja, majd kisebb tartóárammal tartja nyitva; a
+piezoinjektorokat 100–200 V körüli feszültséggel működteti
+(ellenőrizendő: gyártói adat). Ezért az ECU kimeneti fokozatai nagy
+áram- és feszültségtűrésűek, és járó motornál az injektorcsatlakozót nem
+bontjuk, nem érintjük. (A „HV” jelölés a könyvben az elektromos hajtás
+nagyfeszültségű rendszerét jelenti, nem ezt.)</p>
+<p><strong>Figyelem.</strong> A common rail dízelrendszer nagynyomású
+oldalán üzemi nyomás akár 1600–2500 bar is lehet (ellenőrizendő: gyártói
+adat). A nagynyomású csöveket és befecskendezőket járó motor mellett,
+illetve nyomás alatt <strong>tilos</strong> megbontani. A sugár bőrbe
+hatolva súlyos, akár végleges sérülést okoz. Bármilyen szerelés előtt a
+rendszer nyomásmentesítése a gyártói javítási utasítás szerint
+kötelező.</p>
+<h3 data-number="31.1.9" id="kidolgozott-példák"><span
+class="header-section-number">31.1.9</span> Kidolgozott példák</h3>
+<p><strong>1. példa – Üzemállapot-felismerés mérési adatokból.</strong>
+Az ECU a következő jeleket méri:</p>
+<ul>
+<li>Hűtőfolyadék-hőmérséklet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">20\,{}^{\circ}\text{C}</annotation></semantics></math>;</li>
+<li>főtengely-fordulatszám:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1200</mn><mspace width="0.222em"></mspace><mn>1</mn><mi>/</mi><mtext mathvariant="normal">min</mtext></mrow><annotation encoding="application/x-tex">1200\ 1/\text{min}</annotation></semantics></math>;</li>
+<li>fojtószelepállás: 0% (alapállás);</li>
+<li>gázpedál: nincs lenyomva;</li>
+<li>járműsebesség: 0 km/h;</li>
+<li>a lambda-szonda jele még nem aktív.</li>
+</ul>
+<p>Melyik üzemállapotban van a motor?<br />
+A fojtószelep zárt, a fordulatszám az alapjáratinál kissé magasabb, a
+jármű áll, a szonda hideg. Ez a <strong>hidegindítás utáni emelt
+alapjárat</strong> (bemelegedési szakasz). Az ECU dús keveréket és emelt
+alapjárati fordulatszámot alkalmaz; ez még nyílt hurkú vezérlés. A
+hőmérséklet emelkedésével a fordulatszám csökken, a lambdaszabályozás
+bekapcsol.</p>
+<p><strong>2. példa – Befecskendezési idő durva becslése.</strong> Adott
+egy 4 hengeres, szívócső-befecskendezéses Otto-motor. Alapjáraton az ECU
+által számított hengerenkénti levegőtöltés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>L</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>12</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext></mrow><annotation encoding="application/x-tex">m_L = 0{,}12\ \text{g}</annotation></semantics></math>
+ciklusonként. A cél légviszony
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda = 1{,}0</annotation></semantics></math>,
+a benzin sztöchiometrikus levegőigénye
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mrow><mi>s</mi><mi>t</mi></mrow></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">L_{st} = 14{,}7</annotation></semantics></math>.
+Az injektor statikus tömegárama
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>B</mi></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>4</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">\dot{m}_B = 2{,}4\ \text{g/s}</annotation></semantics></math>.
+Mennyi a szükséges befecskendezési idő?</p>
+<p><strong>Megoldás.</strong> A szükséges tüzelőanyag-tömeg:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>B</mi></msub><mo>=</mo><mfrac><msub><mi>m</mi><mi>L</mi></msub><mrow><mi>λ</mi><mo>⋅</mo><msub><mi>L</mi><mrow><mi>s</mi><mi>t</mi></mrow></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>12</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext></mrow><mrow><mn>1</mn><mo>,</mo><mn>0</mn><mo>⋅</mo><mn>14</mn><mo>,</mo><mn>7</mn></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>00816</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">m_B = \frac{m_L}{\lambda \cdot L_{st}} = \frac{0{,}12\ \text{g}}{1{,}0 \cdot 14{,}7} \approx 0{,}00816\ \text{g}.</annotation></semantics></math></p>
+<p>A befecskendezési idő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mfrac><msub><mi>m</mi><mi>B</mi></msub><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>B</mi></msub></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>00816</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext></mrow><mrow><mn>2</mn><mo>,</mo><mn>4</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>0034</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">s</mtext><mo>=</mo><mn>3</mn><mo>,</mo><mn>4</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t_i = \frac{m_B}{\dot{m}_B} = \frac{0{,}00816\ \text{g}}{2{,}4\ \text{g/s}} \approx 0{,}0034\ \text{s} = 3{,}4\ \text{ms}.</annotation></semantics></math></p>
+<p>A kapott 3,4 ms nagyságrendileg reális alapjárati befecskendezési idő
+(szívócső-befecskendezésnél jellemzően 2–4 ms; ellenőrizendő: gyártói
+adat). Alapjáraton a szívócső nyomása kicsi, ezért egy 0,5 l-es hengerbe
+csak kb. 0,1–0,15 g levegő jut; teljes töltésnél kb. 0,55–0,6 g, és ott
+a befecskendezési idő is többszöröse. A pontos érték minden motornál
+gyártói adat. A példa tanulási célú; az injektor átfolyása
+nyomásfüggő.</p>
+<h3 data-number="31.1.10" id="minőségellenőrzés-a-műhelyben"><span
+class="header-section-number">31.1.10</span> Minőségellenőrzés a
+műhelyben</h3>
+<p>A motorirányítás ellenőrzésekor a <strong>rendszerteszter</strong> a
+legfontosabb eszköz. A vizsgálati sorrend:</p>
+<ol type="1">
+<li><strong>Hibakód-tároló kiolvasása:</strong> az ECU által tárolt
+hibakódok, valamint a fagyott keret (freeze frame) adatok megadják,
+melyik jelfolyam szakaszon észlelt hibát a rendszer.</li>
+<li><strong>Élő adatok megtekintése:</strong> hűtőfolyadék-hőmérséklet,
+légtömeg vagy szívócsőnyomás, fordulatszám, fojtószelepállás,
+lambda-jel, befecskendezési idő, gyújtási szög, alapjárati szabályozó
+állás. A mért értékeket a gyártói ésszerű tartományokhoz hasonlítjuk
+(például hideg motornál a hűtőfolyadék-hőmérséklet megközelíti a
+környezeti hőmérsékletet, alapjáraton a lambda-szabályozási faktor
+0,9–1,1 körül ingadozik; ellenőrizendő: gyártói adat).</li>
+<li><strong>Beavatkozó tesztek:</strong> a diagnosztikai műszerrel
+aktiválhatjuk a befecskendezőket, a gyújtótekercseket, az EVAP-szelepet,
+az alapjárat-szabályozót, és hallható/látható visszaigazolást
+kapunk.</li>
+<li><strong>Vészüzem ellenőrzése:</strong> ha az ECU vészüzembe váltott,
+a hibakódot meg kell szüntetni, majd az adaptációs értékek
+visszaállítása után próbaúttal ellenőrizni a rendszert.</li>
+</ol>
+<h3 data-number="31.1.11" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">31.1.11</span> Valós életbeli
+alkalmazás</h3>
+<p><strong>Valós eset.</strong> Egy benzinüzemű autó reggelente nehezen
+indul, alapjáraton remeg, és a kipufogóból enyhe benzinszag érződik. A
+rendszerteszter P0118 hibakódot mutat: „hűtőfolyadék-hőmérséklet szenzor
+jel áramkör – magas bemenet”. Az élő adatoknál a mért
+hűtőfolyadék-hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>40</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">-40\,{}^{\circ}\text{C}</annotation></semantics></math>,
+miközben a motorház és a környezet hőmérséklete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>20</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">+20\,{}^{\circ}\text{C}</annotation></semantics></math>.
+A műszer szerint a szonda hideg.</p>
+<p><strong>Hibakeresési lánc.</strong> A tünet és a kód alapján a
+lehetséges okok: szakadt vezeték a szenzor és az ECU között, rossz
+csatlakozó, vagy maga a szenzor belső szakadása. Az ECU a hibás jelet
+rendkívül hidegnek értelmezi, ezért <strong>hidegindítási
+dúsítást</strong> alkalmaz, ami magas fogyasztást és rossz égést okoz. A
+hibakeresés során a szenzor csatlakozójánál a referenciafeszültség
+(jellemzően 5 V) és a jelvezeték folytonosságát mérjük, majd a szenzor
+ellenállását hőmérsékletfüggően. A mért ellenállás végtelen, ami belső
+szakadást jelez. A szenzort cseréljük, a hibakódot töröljük, a readiness
+teszteket lefuttatjuk, és próbaúttal ellenőrizzük, hogy a
+hőmérséklet-jel követi a motorhőmérsékletet. A tanulság: a
+motorirányítás egyszerű NTC-hibája is teljesen felboríthatja a
+keverékképzést, mert az ECU a hidegindítási stratégiát alkalmazza a
+valós meleg motornál.</p>
+<h3 data-number="31.1.12" id="tipikus-hibák"><span
+class="header-section-number">31.1.12</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>Vezérlés és szabályozás összekeverése.</strong> Gyakori
+hiba, hogy a szerelő minden elektronikus beavatkozást „szabályozásnak”
+nevez. A hidegindítási dúsítás például <strong>nyílt hurkú
+vezérlés</strong>, mert nincs mérési visszacsatolás az égés λ-jára. Az
+ECU itt a hőmérséklet-jel alapján, jelleggörbéből adja a többlet
+benzint. A lambdaszabályozás ezzel szemben zárt hurok, mert a szonda
+jele alapján folyamatosan korrigál.</li>
+<li><strong>Csak a hibakódra hagyatkozás.</strong> A hibakód nem azonos
+a hibás alkatrésszel; csak a hibás áramkörre vagy rendszerre utal. P0171
+(keverék szegény) esetén sokan azonnal lambdaszondát cserélnek, pedig a
+hiba lehet szívóoldali hamislevegő, alacsony üzemanyagnyomás vagy hibás
+légtömegmérő is. Mindig kell élő adat és célzott mérés.</li>
+<li><strong>A tápellátás és a test ellenőrzésének kihagyása.</strong>
+Mielőtt az ECU-t cserélnénk, mindig mérni kell a <code>30</code>
+(állandó plusz), <code>15</code> (gyújtás utáni plusz) és
+<code>31</code> (test) kapcsok feszültségét, illetve a földelési pontok
+átmeneti ellenállását. A rossz test sok furcsa, kódszerűen nehezen
+értelmezhető hibát okoz.</li>
+<li><strong>Nyomás alatt megbontott üzemanyagrendszer.</strong>
+Benzinbefecskendezésnél a rendszerben maradéknyomás lehet, a common rail
+dízel nagynyomású oldalán pedig életveszélyes nyomás. A rendszer
+nyomásmentesítése a gyártói utasítás szerint kötelező; a befecskendező
+csövek megbontása nyomás alatt tilos.</li>
+<li><strong>Vészüzem feloldása hibakód-törléssel.</strong> Ha az ECU
+vészüzembe váltott, a hibakód törlése önmagában nem oldja meg az okot,
+és ha a hiba továbbra is fennáll, a vészüzem visszatér. Mindig a kiváltó
+hibát kell javítani, majd az adaptációkat újra tanítani.</li>
+</ol>
+<h3 data-number="31.1.13" id="önellenőrzés"><span
+class="header-section-number">31.1.13</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A motorirányítás minden üzemállapotban zárt hurkú
+szabályozást alkalmaz. Indokold röviden.</li>
+<li>Sorold fel az ECU jelbeviteli típusait, mindegyikre egy
+példával.</li>
+<li>Mi a különbség a Motronic és az EDC között?</li>
+<li>Mit jelent a <strong>limp home</strong> üzemmód?</li>
+<li>Hidegindításkor dús vagy szegény keveréket állít be az ECU, és ez
+vezérlés vagy szabályozás?</li>
+<li>Miért alkalmaz az ECU teljes terhelésnél dúsítást?</li>
+</ol>
+<h3 data-number="31.1.14" id="feladatok"><span
+class="header-section-number">31.1.14</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong><br />
+Definiáld a <strong>vezérlést</strong> és a
+<strong>szabályozást</strong>, és adj mindegyikre egy példát a
+motorirányításból.</p>
+<p><strong>2. feladat (A)</strong><br />
+Sorold fel az ECU négy fő funkcionális egységét, és írd le mindegyiknek
+egy jellemző alkatrészét vagy feladatát.</p>
+<p><strong>3. feladat (B)</strong><br />
+Egy motor hidegindításakor a hűtőfolyadék-hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>10</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">-10\,{}^{\circ}\text{C}</annotation></semantics></math>.
+Az alap befecskendezési idő 8,0 ms, a hidegindítási korrekciós tényező a
+jelleggörbéből +40%. Mennyi a korrigált befecskendezési idő? (A számítás
+egyszerű, de a korrekció értéke tanulási példa, a valóságban a pontos
+jelleggörbe gyártói adat.)</p>
+<p><strong>4. feladat (B)</strong><br />
+Egy 4 hengeres Otto-motor alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>800</mn><mspace width="0.222em"></mspace><mn>1</mn><mi>/</mi><mtext mathvariant="normal">min</mtext></mrow><annotation encoding="application/x-tex">800\ 1/\text{min}</annotation></semantics></math>
+fordulatszámon jár. Az ECU által számított hengerenkénti levegőtöltés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>12</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext></mrow><annotation encoding="application/x-tex">0{,}12\ \text{g}</annotation></semantics></math>,
+a cél légviszony
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda = 1{,}0</annotation></semantics></math>,
+a benzin sztöchiometrikus levegőigénye
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">14{,}7</annotation></semantics></math>.
+Az injektor statikus tömegárama
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">2{,}0\ \text{g/s}</annotation></semantics></math>.
+Számítsd ki a befecskendezési időt ms-ban.</p>
+<p><strong>5. feladat (C)</strong><br />
+Magyarázd el, miért alkalmaz az ECU teljes terhelésnél dúsítást
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>0</mn><mo>,</mo><mn>85</mn><mi>…</mi><mn>0</mn><mo>,</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">\lambda \approx 0{,}85\ldots0{,}9</annotation></semantics></math>),
+és mi történik akkor, ha ez a dúsítás hibásan elmarad. Milyen műszerrel
+lehet a valós λ-t ellenőrizni ebben az üzemállapotban?</p>
+<p><strong>6. feladat (D)</strong><br />
+Egy autó hidegindítás után állandóan magas alapjárati fordulatszámon
+jár, a kipufogóból fekete füst áramlik. A diagnosztikai műszer P0118
+hibakódot mutat, az élő adatokban a hűtőfolyadék-hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>40</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">-40\,{}^{\circ}\text{C}</annotation></semantics></math>
+(környezeti hőmérséklet
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>25</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">+25\,{}^{\circ}\text{C}</annotation></semantics></math>).
+Határozd meg a hibakeresési láncot: tünet, hipotézis, mérés, ok,
+javítás, ellenőrzés, megelőzés.</p>
+<h3 data-number="31.1.15" id="megoldások"><span
+class="header-section-number">31.1.15</span> Megoldások</h3>
+<h4 data-number="31.1.15.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">31.1.15.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li><strong>Hamis.</strong> A hidegindítás és a bemelegedés egy része
+nyílt hurkú <strong>vezérlés</strong>, mert a lambdaszonda hideg, és
+nincs visszacsatolás. A lambda-szabályozás, az alapjárat-szabályozás és
+a kopogásszabályozás viszont zárt hurkú.</li>
+<li><strong>Analóg jelek:</strong> hűtőfolyadék-hőmérséklet (NTC),
+légtömeg. <strong>Digitális jelek:</strong>
+fojtószelep-alapálláskapcsoló, gyújtáskapcsolás.
+<strong>Frekvencia/impulzusjelek:</strong> főtengely-fordulatszám,
+kopogásérzékelő.</li>
+<li>A <strong>Motronic</strong> a benzinmotorok integrált
+befecskendezés- és gyújtásirányítása; az <strong>EDC</strong> a
+dízelmotorok elektronikus befecskendezés-irányítása (soros, elosztós,
+PDE, common rail). A fő különbség a gyújtás megléte, illetve a dízelnél
+a nagynyomású befecskendezési stratégia.</li>
+<li>A <strong>limp home</strong> (vészüzem) rögzített alapértékekkel
+dolgozó, csökkentett teljesítményű üzemmód, amely a jármű biztonságos
+szervizbe juttatását és a motor további károsodásának megelőzését
+szolgálja.</li>
+<li>Hidegindításkor <strong>dús</strong> keveréket állít be, és ez
+<strong>vezérlés</strong> (nyílt hurok), mert a lambdaszonda még nem
+működik.</li>
+<li>Teljes terhelésen a maximális teljesítmény, az égés biztonsághoz és
+az égéstér hűtéséhez dúsabb keverékre van szükség; a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\lambda &lt; 1</annotation></semantics></math>
+csökkenti az égés hőmérsékletét és megelőzi a kopogást.</li>
+</ol>
+<h4 data-number="31.1.15.2" id="feladatok-megoldása"><span
+class="header-section-number">31.1.15.2</span> Feladatok megoldása</h4>
+<p><strong>1. feladat (A)</strong><br />
+<strong>Vezérlés:</strong> a kimenetet a bemeneti jelek alapján,
+visszacsatolás nélkül állítja be. Példa: hidegindítási dúsítás a
+hőmérséklet függvényében.<br />
+<strong>Szabályozás:</strong> a kimenetet mérik, összehasonlítják az
+alapértékkel, és az eltérés alapján korrigálnak. Példa:
+lambdaszabályozás, ahol az elő-katalizátor szonda jeléből az ECU a
+befecskendezési időt módosítja.</p>
+<p><strong>2. feladat (A)</strong><br />
+1. <strong>Bemeneti szakasz:</strong> jelkondicionálás, A/D átalakítás,
+zavarvédelem.<br />
+2. <strong>Mikrovezérlő és memória:</strong> jelleggörbék, program,
+adaptációk, hibakódok tárolása (ROM/Flash, RAM, EEPROM).<br />
+3. <strong>Kimeneti fokozatok:</strong> tranzisztoros kapcsolók,
+H-hidak, PWM-meghajtók a beavatkozókhoz.<br />
+4. <strong>Kommunikációs interfész:</strong> diagnosztikai és
+adatbusz-kapcsolatok (CAN, LIN, diagnosztikai vonal).</p>
+<p><strong>3. feladat (B)</strong><br />
+Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mtext mathvariant="normal">alap</mtext></mrow></msub><mo>=</mo><mn>8</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">t_{i,\text{alap}} = 8{,}0\ \text{ms}</annotation></semantics></math>,
+korrekció
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>40</mn><mi>%</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>40</mn></mrow><annotation encoding="application/x-tex">+40\% = 1{,}40</annotation></semantics></math>.<br />
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mtext mathvariant="normal">korrigált</mtext></mrow></msub><annotation encoding="application/x-tex">t_{i,\text{korrigált}}</annotation></semantics></math>.<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mtext mathvariant="normal">korrigált</mtext></mrow></msub><mo>=</mo><msub><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mtext mathvariant="normal">alap</mtext></mrow></msub><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><mn>0</mn><mo>,</mo><mn>40</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>8</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>40</mn><mo>=</mo><mn>11</mn><mo>,</mo><mn>2</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t_{i,\text{korrigált}} = t_{i,\text{alap}} \cdot (1 + 0{,}40) = 8{,}0\ \text{ms} \cdot 1{,}40 = 11{,}2\ \text{ms}.</annotation></semantics></math><br />
+Ellenőrzés: a korrigált idő nagyobb, mint az alap, ami hidegindításkor
+dúsítást jelent. Az érték tanulási példa; a pontos korrekció gyártói
+jelleggörbéből származik.</p>
+<p><strong>4. feladat (B)</strong><br />
+Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>L</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>12</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext></mrow><annotation encoding="application/x-tex">m_L = 0{,}12\ \text{g}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda = 1{,}0</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mrow><mi>s</mi><mi>t</mi></mrow></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">L_{st} = 14{,}7</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>B</mi></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow><annotation encoding="application/x-tex">\dot{m}_B = 2{,}0\ \text{g/s}</annotation></semantics></math>.<br />
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>i</mi></msub><annotation encoding="application/x-tex">t_i</annotation></semantics></math>.<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>B</mi></msub><mo>=</mo><mfrac><msub><mi>m</mi><mi>L</mi></msub><mrow><mi>λ</mi><mo>⋅</mo><msub><mi>L</mi><mrow><mi>s</mi><mi>t</mi></mrow></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>12</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext></mrow><mrow><mn>1</mn><mo>,</mo><mn>0</mn><mo>⋅</mo><mn>14</mn><mo>,</mo><mn>7</mn></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>00816</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">m_B = \frac{m_L}{\lambda \cdot L_{st}} = \frac{0{,}12\ \text{g}}{1{,}0 \cdot 14{,}7} \approx 0{,}00816\ \text{g}.</annotation></semantics></math><br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mfrac><msub><mi>m</mi><mi>B</mi></msub><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>B</mi></msub></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>00816</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g</mtext></mrow><mrow><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">g/s</mtext></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>0041</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">s</mtext><mo>=</mo><mn>4</mn><mo>,</mo><mn>1</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">ms</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t_i = \frac{m_B}{\dot{m}_B} = \frac{0{,}00816\ \text{g}}{2{,}0\ \text{g/s}} \approx 0{,}0041\ \text{s} = 4{,}1\ \text{ms}.</annotation></semantics></math><br />
+Ellenőrzés: az eredmény nagyságrendileg reális alapjárati
+befecskendezési idő (jellemzően 2–4 ms, ellenőrizendő: gyártói adat); a
+pontos érték gyártói adat.</p>
+<p><strong>5. feladat (C)</strong><br />
+Teljes terhelésen a motor maximális teljesítményét akarjuk elérni. A dús
+keverék
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\lambda &lt; 1</annotation></semantics></math>)
+javítja a lángterjedést, hűti az égéstér belső felületeit (a párolgó
+benzin hőt von el), és csökkenti a kopogás esélyét. Ha a dúsítás hibásan
+elmarad, a motor kopoghat, a keverék szegénnyé válik, az égés
+hőmérséklete és a NOx-kibocsátás nő, a teljesítmény csökken, és súlyos
+esetben dugattyú- vagy gyújtógyertya-károsodás léphet fel. A valós λ-t
+<strong>szélessávú lambdaszondával</strong>, illetve a kipufogógáz
+elemzőjével mérhetjük; a diagnosztikai műszer élő adataiban a
+befecskendezési időt és a λ-értéket követhetjük.</p>
+<p><strong>6. feladat (D)</strong><br />
+<strong>Tünet:</strong> hidegindítás után magas alapjárat, fekete füst,
+P0118 kód, a mért hűtőfolyadék-hőmérséklet irreálisan alacsony
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>40</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">-40\,{}^{\circ}\text{C}</annotation></semantics></math>).<br />
+<strong>Hipotézis:</strong> a hűtőfolyadék-hőmérséklet szenzor áramköre
+szakadt, vagy a szenzor belső szakadása miatt az ECU hideg motort
+feltételez, és folyamatos hidegindítási dúsítást alkalmaz.<br />
+<strong>Mérés:</strong> a szenzor csatlakozójánál ellenőrizzük az 5 V
+referenciafeszültséget és a testfolytonosságot. A szenzor ellenállását
+multiméterrel mérjük: ha végtelen, belső szakadás van.<br />
+Ok: szakadt NTC szenzor.<br />
+<strong>Javítás:</strong> hűtőfolyadék-hőmérséklet-szenzor cseréje, a
+csatlakozó és a vezetékek ellenőrzése, majd a hibakód törlése és az
+adaptációk visszaállítása.<br />
+<strong>Ellenőrzés:</strong> a motort bemelegítjük, és az élő adatban
+figyeljük, hogy a hőmérséklet jel közelíti a valós hőfokot; próbaúttal
+meggyőződünk az alapjárat normalizálódásáról.<br />
+<strong>Megelőzés:</strong> a szenzor csatlakozóját tiszta,
+korróziómentes állapotban tartjuk; a hűtőfolyadékcserénél ügyelünk a
+megfelelő légtelenítésre.</p>
+<h3 data-number="31.1.16" id="rövid-összefoglaló"><span
+class="header-section-number">31.1.16</span> Rövid összefoglaló</h3>
+<p>A motorirányítás a <code>érzékelők → ECU → beavatkozók</code>
+jelfolyamra épül. A <strong>vezérlés</strong> nyílt hurkú, a
+<strong>szabályozás</strong> zárt hurkú, mérési visszacsatolással. Az
+ECU bemeneti szakasza fogadja az analóg, digitális és frekvenciajeleket;
+a mikrovezérlő a tárolt jelleggörbékből interpolál, a kimeneti fokozatok
+kapcsolják a befecskendezőket, gyújtótekercseket, reléket. Az
+üzemállapotok (hidegindítás, bemelegedés, alapjárat, részterhelés,
+teljes terhelés, gyorsítás, motorfék) eltérő stratégiát igényelnek; a
+lambdaszabályozás, az alapjárat- és kopogásszabályozás zárt hurkok.
+Vészüzem esetén az ECU rögzített alapértékekkel, csökkentett
+teljesítménnyel üzemel. A Motronic típusú rendszerek a benzinmotor
+befecskendezését és gyújtását egyesítik, az EDC a dízelbefecskendezést
+vezérli a soros/elosztós, PDE és common rail változatokban.</p>
+<p><strong>Továbbvitt eredmény.</strong> Az itt bemutatott
+motorirányítási jelfolyam, a vezérlés/szabályozás megkülönböztetése és
+az üzemállapot-kezelés alapozza meg az <a href="au112.html">Érzékelők és
+jeladók</a> részletes tárgyalását, valamint a <a
+href="au133.html">Fedélzeti diagnosztika: OBD és EOBD</a> hibakód-, élő
+adat- és fagyott keret elemzését. A befecskendezési idő számításánál az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>B</mi></msub><mo>=</mo><msub><mi>m</mi><mi>L</mi></msub><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><msub><mi>L</mi><mrow><mi>s</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">m_B = m_L / (\lambda L_{st})</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><msub><mi>m</mi><mi>B</mi></msub><mi>/</mi><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">t_i = m_B/\dot{m}_B</annotation></semantics></math>
+összefüggéseket használjuk; a pontos értékek mindig gyártói
+jelleggörbéből származnak. A nagynyomású dízelrendszereken csak
+nyomásmentesítés után, gyártói utasítás szerint szabad dolgozni.</p>
+<h3 data-number="31.1.17" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">31.1.17</span> Források és ellenőrzési
+hiányok</h3>
+<ul>
+<li>Gyártói javítási utasítások: befecskendezési idő,
+jelleggörbe-tartományok, hőmérsékleti korrekciók, kopogásszabályozási
+paraméterek, vészüzemi viselkedés – ellenőrizendő.</li>
+<li>Az említett rendszernevek (Motronic, MED, EDC, PDE, Ecotronic) csak
+rendszertípusként szerepelnek; a pontos generáció, évjárat és kivitel
+gyártói dokumentációból ellenőrizendő.</li>
+<li>A common rail nyomástartomány (1600–2500 bar) tájékoztató jellegű, a
+pontos érték típusfüggő (ellenőrizendő: gyártói adat).</li>
+<li>A sztöchiometrikus levegőigény benzinre
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mrow><mi>s</mi><mi>t</mi></mrow></msub><mo>≈</mo><mn>14</mn><mo>,</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">L_{st} \approx 14{,}7</annotation></semantics></math>
+kg levegő/kg tüzelőanyag (tömegarány), közelítő érték; etanoltartalmú
+benzinnél kisebb (ellenőrizendő).</li>
+<li>Az EOBD és a típusjóváhagyás jogi követelményei az Európai Unióban a
+mindenkori rendeletek szerint változnak (ellenőrizendő: aktuális
+EU-szabályozás).</li>
+<li>A hűtőfolyadék-hőmérséklet-szenzor karakterisztikája, az 5 V
+referenciafeszültség és a hidegindítási dúsítás jelleggörbéje
+gyártófüggő, a műhelyben a gyártói adat az irányadó.</li>
+</ul>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au110.html">← 30.4 Passzív biztonsági elektronika: légzsák és övfeszítő</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au112.html">31.2 Érzékelők és jeladók →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

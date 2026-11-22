@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>28.3 Feszültségszabályozás és energiamenedzsment –
+Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Gépjármű-villamosság és -elektronika</a> › <a href="index.html#auch27">28 Villamosenergia-ellátás</a></p>
+<div class="links"><a class="prev" rel="prev" href="au102.html">← 28.2 A generátor</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au104.html">29.1 Indítómotorok →</a></div>
+</nav>
+<h2 data-number="28.3" id="au103"><span
+class="header-section-number">28.3</span> Feszültségszabályozás és
+energiamenedzsment</h2>
+<h3 data-number="28.3.1" id="motiváció"><span
+class="header-section-number">28.3.1</span> Motiváció</h3>
+<p>Egy korszerű autón egyre ritkábban látunk állandó
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">14{,}4\,\text{V}</annotation></semantics></math>-os
+töltőfeszültséget a multiméteren. Hol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12{,}8\,\text{V}</annotation></semantics></math>-ot,
+hol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">15\,\text{V}</annotation></semantics></math>-ot,
+gyorsításkor pedig akár
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12{,}4\,\text{V}</annotation></semantics></math>-ot
+is mérhetünk. Az ügyfél gyakran „nem töltő generátorral” érkezik, mert a
+műszerfalon mozog a feszültség, vagy a fedélzeti rendszer lekapcsolja a
+rádiót, az ülésfűtést. Ebben az alfejezetben megértjük, hogyan
+szabályozza a generátor a feszültséget, és miért ad a mai jármű
+elektronikája tudatosan változó töltőfeszültség-parancsot a
+generátornak.</p>
+<h3 data-number="28.3.2" id="szemléletes-kép"><span
+class="header-section-number">28.3.2</span> Szemléletes kép</h3>
+<p>Képzeljük el a generátort egy nagy teljesítményű vízszivattyúnak, a
+gerjesztőáramot pedig a szivattyú fordulatszámát szabályozó csapnak. Ha
+a csapot teljesen kinyitjuk (nagy gerjesztőáram), a szivattyú maximális
+nyomást ad. Ha a motor fordulatszáma emelkedik (a szivattyút forgató
+külső hajtás gyorsul), a nyomás veszélyesen megnőne, ezért a csapot
+részben el kell zárni, hogy a nyomás a célértéken maradjon. A
+feszültségszabályozó pontosan ezt teszi: a fordulatszám és a terhelés
+függvényében változtatja a gerjesztőáramot.</p>
+<p>A szabályozókör vázlatán az a lényeg: az akkumulátor kémiai állapota,
+a hőmérséklete, a terhelés (villamos fogyasztók) és a motor
+fordulatszáma határozza meg, mekkora gerjesztőáramot engedjen a
+szabályozó a forgórész tekercsébe.</p>
+<figure>
+<img src="assets/au103-diagram-1.png"
+alt="A generátor feszültségszabályozásának elvi kapcsolási rajza - Egyszerűsített áramút a szabályozó szerepének megértéséhez (gyújtás be, motor áll: S1 zárva). B+ főkör: 30 → F1 → B+; előgerjesztés: 15 → F2 → H1 → D+ → gerjesztőtekercs → DF → szabályozó → 31. Kapocsjelölés a DIN 72552 gyakorlata szerint (ellenőrizendő: gyártói rajz)." />
+<figcaption aria-hidden="true">A generátor feszültségszabályozásának
+elvi kapcsolási rajza - Egyszerűsített áramút a szabályozó szerepének
+megértéséhez (gyújtás be, motor áll: S1 zárva). B+ főkör: 30 → F1 → B+;
+előgerjesztés: 15 → F2 → H1 → D+ → gerjesztőtekercs → DF → szabályozó →
+31. Kapocsjelölés a DIN 72552 gyakorlata szerint (ellenőrizendő: gyártói
+rajz).</figcaption>
+</figure>
+<p><strong>Az ábra olvasata.</strong> Az akkumulátor <code>30</code>-as
+(plusz) és <code>31</code>-es (test) kapcsa adja a
+referenciafeszültséget. A <code>G2</code> generátor a <code>B+</code>
+kapcsán, az <code>F1</code> főbiztosítón át ad áramot a hálózatnak. A
+gerjesztőtekercs árama
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>g</mi></msub><annotation encoding="application/x-tex">I_g</annotation></semantics></math>
+a <code>D+</code> kapocstól a tekercsen, a <code>DF</code> kapcson és a
+szabályozó kapcsolóján keresztül záródik a test felé; álló motornál a
+<code>D+</code> a töltésjelző lámpán át, járó motornál a gerjesztődiódán
+át a generátortól kapja az áramot. A töltés visszajelző lámpa a gyújtás
+(<code>15</code>) és a generátor <code>D+</code> kapcsa közötti
+feszültségkülönbséget mutatja. Ha a generátor nem tölt, a lámpa a
+<code>15</code> felől test felé kap áramot, és világít; ha tölt, a
+<code>D+</code> és a <code>15</code> közel azonos potenciálon van, a
+lámpa kialszik.</p>
+<h3 data-number="28.3.3" id="definíciók-és-összefüggések"><span
+class="header-section-number">28.3.3</span> Definíciók és
+összefüggések</h3>
+<p><strong>Definíció.</strong> A <strong>feszültségszabályozó (voltage
+regulator)</strong> a generátor forgórészének gerjesztőáramát
+változtatja úgy, hogy a jármű villamos hálózatának feszültsége a kívánt
+tartományban maradjon a fordulatszámtól, a terheléstől és a
+hőmérséklettől függetlenül.</p>
+<p><strong>Összefüggés.</strong> A generátor üresjárási feszültsége
+közelítőleg
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>0</mn></msub><mo>≈</mo><mi>k</mi><mo>⋅</mo><mi mathvariant="normal">Φ</mi><mo>⋅</mo><mi>n</mi></mrow><annotation encoding="application/x-tex">U_0 \approx k \cdot \Phi \cdot n</annotation></semantics></math>,
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+a gerjesztőáram által létrehozott mágneses fluxus,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+a fordulatszám,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+pedig a generátor szerkezeti állandója. Mivel a fluxus
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+közelítőleg arányos a gerjesztőárammal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>g</mi></msub><annotation encoding="application/x-tex">I_g</annotation></semantics></math>-vel,
+a szabályozó a fordulatszám növekedésekor csökkenti
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>g</mi></msub><annotation encoding="application/x-tex">I_g</annotation></semantics></math>-t,
+hogy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mn>0</mn></msub><annotation encoding="application/x-tex">U_0</annotation></semantics></math>
+a kívánt értéken maradjon. Túl nagy terhelésnél a szabályozó növeli
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>g</mi></msub><annotation encoding="application/x-tex">I_g</annotation></semantics></math>-t,
+hogy a fluxus és ezzel a leadható teljesítmény növekedjen.</p>
+<p><strong>Szabály.</strong> A hagyományos, nem intelligens szabályozású
+rendszerekben a töltőfeszültség hőmérsékletfüggő célértéke jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">14{,}0</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">14{,}8\,\text{V}</annotation></semantics></math>
+között van; hideg akkumulátornál magasabb, melegnél alacsonyabb
+(ellenőrizendő: gyártói adat). A belső égésű motorral szerelt
+járművekben a töltőfeszültség soha nem haladhatja meg tartósan azt az
+értéket, amely az elektronikát és az akkumulátort károsítaná.</p>
+<p><strong>Definíció.</strong> Az <strong>energiamenedzsment (energy
+management)</strong> a fedélzeti hálózat töltési és fogyasztási
+folyamatainak felügyelete. A motorvezérlő vagy egy külön
+akkumulátor-felügyeleti modul az akkumulátor állapota, a hőmérséklet, a
+terhelés és a menethelyzet alapján parancsot ad a szabályozónak, és
+szükség esetén korlátozza a komfortfogyasztókat.</p>
+<p><strong>Definíció.</strong> Az <strong>akkumulátor-szenzor
+(intelligent battery sensor, IBS)</strong> az akkumulátor negatív
+pólusára szerelt mérőegység, amely folyamatosan méri az akkumulátor
+áramát, a pólusfeszültséget és a hőmérsékletet, majd ebből becsüli a
+töltöttségi szintet (SoC) és az öregedési állapotot (SoH).</p>
+<h3 data-number="28.3.4" id="felépítés-és-működés"><span
+class="header-section-number">28.3.4</span> Felépítés és működés</h3>
+<h4 data-number="28.3.4.1"
+id="a-szabályozás-elve-és-a-régi-megoldás"><span
+class="header-section-number">28.3.4.1</span> A szabályozás elve és a
+régi megoldás</h4>
+<p>A mai szabályozók alapelve ugyanaz, mint a régi, mechanikus
+érintkezős változaté: ha a feszültség a célérték alá esik, engedjük a
+gerjesztőáramot; ha fölé emelkedik, csökkentjük vagy megszakítjuk.</p>
+<p><strong>Történeti rendszer.</strong> A régi járművön található
+<strong>mechanikus érintkezős szabályozó</strong> egy elektromágnesből,
+egy nyitóérintkezőből és egy soros ellenállásból áll. Az elektromágnes
+tekercse a generátorfeszültséget figyeli. Ha a feszültség meghaladja a
+beállított értéket, az elektromágnes meghúzza az érintkezőt, az nyit, és
+a gerjesztőkörbe egy nagy értékű ellenállás kerül sorba. A gerjesztőáram
+lecsökken, a generátorfeszültség esik, az elektromágnes elenged, az
+érintkező újra zár. Ez a „berezgés” másodpercenként sokszor ismétlődik,
+és az átlagos gerjesztőáramot tartja a kívánt értéken. Hátránya a kopás,
+a rádiózavar és a pontatlan szabályozás.</p>
+<h4 data-number="28.3.4.2"
+id="elektronikus-hibrid-és-monolit-szabályozó"><span
+class="header-section-number">28.3.4.2</span> Elektronikus, hibrid és
+monolit szabályozó</h4>
+<p>A mai generátorokban az érintkezők helyét teljesítmény-félvezető
+(tranzisztor vagy MOSFET) vette át. A kapcsolás nagy frekvencián
+(jellemzően több száz Hz-től kHz-ig) kapcsolgatja a gerjesztőáramot. A
+bekapcsolt és kikapcsolt állapot arányának változtatásával – ez a
+<strong>PWM, impulzusszélesség-moduláció</strong> – lehet az átlagos
+gerjesztőáramot fokozatmentesen állítani.</p>
+<ul>
+<li>A <strong>monolit szabályozó</strong> egyetlen félvezető tokozásban
+tartalmazza a referenciafeszültség-forrást, a hőmérséklet-kompenzációt,
+az összehasonlító áramkört és a teljesítménykapcsolót. A kivezetései
+jellemzően a <code>B+</code>, <code>DF</code>/<code>FL</code>,
+<code>GND</code> és a <code>D+</code>.</li>
+<li>A <strong>hibrid szabályozó</strong> most már ritkábban használt
+kifejezés; lényege, hogy a félvezető elemeket vastagréteg-technikával
+egy kerámiahordozóra integrálják, és külső alkatrészekkel egészítik ki.
+A javítás során a mai szerelő ezt a panelt általában egyben cseréli, nem
+javítja elemenként.</li>
+<li>A <strong>multifunkciós szabályozó</strong> a
+feszültségszabályozáson kívül kommunikációs jelet is ad. A
+<strong>DFM-jel</strong> (Digital Field Monitor) egy négyszögjel,
+amelynek kitöltési tényezője a gerjesztőárammal vagy a generátor
+terhelésével arányos. A motorvezérlő ebből tudja, mennyire van terhelve
+a generátor; például alapjárat-emeléssel reagál, ha a terhelés
+nagy.</li>
+</ul>
+<h4 data-number="28.3.4.3"
+id="lin-vezérelt-szabályozó-és-intelligens-töltés"><span
+class="header-section-number">28.3.4.3</span> LIN-vezérelt szabályozó és
+intelligens töltés</h4>
+<p>A korszerű járművekben a szabályozó nem önállóan dönt. A generátor
+szabályozója egy <strong>LIN (Local Interconnect Network)</strong>
+adatbuszon keresztül kap parancsot a fedélzeti energiagazdálkodó
+rendszertől. A vezérlőegység küldhet: - célfeszültséget
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>s</mi><mi>o</mi><mi>l</mi><mi>l</mi></mrow></msub><annotation encoding="application/x-tex">U_{soll}</annotation></semantics></math>),
+- dinamikus terhelésválasz-korlátot (pl. lassan emelje a terhelést, hogy
+az alapjárat stabil maradjon), - diagnosztikai kérést (hibakód,
+terhelés, hőmérséklet).</p>
+<p>Az <strong>intelligens töltés</strong> így a menethelyzethez
+igazodik: - <strong>Gyorsításkor</strong> a rendszer csökkenti a
+generátor terhelését (a gerjesztőáramot leveszi), hogy a motor
+teljesítménye a kerekekre jusson; a feszültség akár
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">12{,}3</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12{,}9\,\text{V}</annotation></semantics></math>-ra
+is leeshet. - <strong>Motorfékezéskor és lassításkor</strong> a rendszer
+megnöveli a generátor terhelését, így <strong>rekuperálja</strong> a
+mozgási energia egy részét; a feszültség rövid időre
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">15\,\text{V}</annotation></semantics></math>
+fölé is emelkedhet. Ezért nem szabad a mai autón abból, hogy „nem
+stimmel a töltőfeszültség”, azonnal hibás generátorra következtetni. -
+<strong>Hideg akkumulátornál</strong> a célfeszültség magasabb,
+<strong>forró nyáron</strong> alacsonyabb, hogy az akkumulátor ne
+gázosodjon és ne öregedjen.</p>
+<figure id="fig-au103-1">
+<div class="fig-interactive"><iframe src="figures/html/au103-1.html" title="Az intelligens töltés célfeszültsége gyorsításkor csökken, lassításkor 15 V fölé emelkedik." loading="lazy" style="width:100%;border:0;height:480px"></iframe><noscript><img src="figures/img/au103-1.png" style="width:90.0%"
+alt="Az intelligens töltés célfeszültsége gyorsításkor csökken, lassításkor 15 V fölé emelkedik." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au103-1.png" style="width:90.0%"
+alt="Az intelligens töltés célfeszültsége gyorsításkor csökken, lassításkor 15 V fölé emelkedik." /></details></div>
+<figcaption>Az intelligens töltés célfeszültsége menethelyzetenként
+(szemléltető)</figcaption>
+</figure>
+<p>A szemléltető idődiagram egy városi menetszakaszt mutat: álló
+motornál az akkumulátor feszültsége (kb. 12,6 V), gyorsításkor 12,3–12,9
+V, egyenletes haladásnál a hőmérséklettől függő 14,0–14,8 V-os célérték,
+lassításkor rövid ideig kb. 15 V. A szakaszok időtartama kitalált; a
+változó feszültség az energiamenedzsment működése, nem
+generátorhiba.</p>
+<h4 data-number="28.3.4.4"
+id="akkumulátor-szenzor-fogyasztó-lekapcsolás-és-start-stop"><span
+class="header-section-number">28.3.4.4</span> Akkumulátor-szenzor,
+fogyasztó-lekapcsolás és start-stop</h4>
+<p>Az energiamenedzsment központi eleme az <strong>IBS</strong> az
+akkumulátor negatív pólusán. A mért áram előjeléből tudja, hogy éppen
+töltés vagy kisütés történik, az integrált áramból pedig az akkumulátor
+töltöttségi szintjét becsüli. A feszültségből és a hőmérsékletből a
+hidegindító képességre és az öregedésre következtet.</p>
+<figure id="fig-au103-2">
+<div class="fig-interactive"><iframe src="figures/html/au103-2.html" title="Az akkumulátorszenzor a negatív pólussaruban ül; a lakatfogót a testkábelre az érzékelő után tesszük, a töltőt a karosszéria testpontjára kötjük, nem közvetlenül a negatív pólusra." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au103-2.png" style="width:90.0%"
+alt="Az akkumulátorszenzor a negatív pólussaruban ül; a lakatfogót a testkábelre az érzékelő után tesszük, a töltőt a karosszéria testpontjára kötjük, nem közvetlenül a negatív pólusra." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au103-2.png" style="width:90.0%"
+alt="Az akkumulátorszenzor a negatív pólussaruban ül; a lakatfogót a testkábelre az érzékelő után tesszük, a töltőt a karosszéria testpontjára kötjük, nem közvetlenül a negatív pólusra." /></details></div>
+<figcaption>Az akkumulátorszenzor (IBS) a negatív póluson és a helyes
+bekötési pont</figcaption>
+</figure>
+<p>Az ábra szerint az IBS a negatív pólussaruban ül, és csak az rajta
+átfolyó áramot látja: a lakatfogót a testkábelre, a töltő negatívját a
+karosszéria testpontjára kötjük (b); a pólusra kötött töltő megkerüli a
+szenzort, és téves töltöttséget tanít be (c). A bekötési pontot a
+gyártói előírás adja meg (ellenőrizendő).</p>
+<p>Ha az energia-mérleg romlik, a vezérlő fogyasztói lekapcsolásokkal
+avatkozik be. A lekapcsolások fokozatosak: 1. komfortfogyasztók
+(ülésfűtés, szélvédőfűtés, tolatóradar), 2. nagyobb fogyasztók (pl. a
+kiegészítő fűtés, a hangrendszer teljesítménye), 3. korlátozott üzemmód,
+hibaüzenet a műszerfalon.</p>
+<p>A <strong>start-stop rendszer</strong> szintén az energiamenedzsment
+része. A motor csak akkor áll le, ha a feltételek teljesülnek: az
+akkumulátor töltöttsége elég nagy, a motor hőmérséklete elérte a
+tartományt, a biztonsági feltételek adottak (biztonsági öv, motorháztető
+zárva), és a beltéri hőmérséklet-szabályozás nem követeli a
+kompresszort. A start-stop járművek akkumulátora jellemzően
+<strong>AGM</strong> (Absorbent Glass Mat, üvegszálas itatólemezes) vagy
+<strong>EFB</strong> (enhanced flooded battery) típusú, mert a normál
+indítóakkumulátor nem bírná a gyakori indítást és ciklizálást. A
+motormegállás alatt is stabil fedélzeti feszültség biztosítására sok
+rendszer <strong>DC/DC-átalakítót</strong> épít be, amely a 12 V-os
+fogyasztókat táplálja.</p>
+<h4 data-number="28.3.4.5" id="nyugalmi-áramfelvétel"><span
+class="header-section-number">28.3.4.5</span> Nyugalmi áramfelvétel</h4>
+<p><strong>Definíció.</strong> A <strong>nyugalmi áramfelvétel</strong>
+az az áram, amelyet a jármű a gyújtás kikapcsolása és a vezérlőegységek
+„elalvása” után is felvesz. A mai járművekben ez a riasztó, a központi
+zár vevője és az adatbusz-vezérlők felébredésre kész áramköre miatt
+jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>20</mn><annotation encoding="application/x-tex">20</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">50\,\text{mA}</annotation></semantics></math>
+(ellenőrizendő: típusadatok). Ha egy vezérlőegység nem alszik el, vagy
+egy utólagos fogyasztó rosszul van bekötve, a nyugalmi áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>100</mn><annotation encoding="application/x-tex">100</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">500\,\text{mA}</annotation></semantics></math>
+fölé emelkedhet, és az akkumulátor napok alatt lemerül.</p>
+<h3 data-number="28.3.5" id="kidolgozott-példa"><span
+class="header-section-number">28.3.5</span> Kidolgozott példa</h3>
+<p><strong>Számítás.</strong> Egy jármű nyugalmi áramfelvétele a gyártó
+által megadott maximális
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">40\,\text{mA}</annotation></semantics></math>.
+Az akkumulátor tényleges kapacitása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">60\,\text{Ah}</annotation></semantics></math>.
+Hány napig állhat a jármű, ha az indíthatósághoz legalább a kapacitás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>70</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">70\%</annotation></semantics></math>-át
+meg kell tartani?</p>
+<p><strong>Adott:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>=</mo><mn>0</mn><mo>,</mo><mn>04</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 40\,\text{mA} = 0{,}04\,\text{A}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">C = 60\,\text{Ah}</annotation></semantics></math>,
+felhasználható töltés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>3</mn><mo>⋅</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext><mo>=</mo><mn>18</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">Q = 0{,}3 \cdot 60\,\text{Ah} = 18\,\text{Ah}</annotation></semantics></math>.</p>
+<p><strong>Keresett:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+idő.</p>
+<p><strong>Képlet:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mi>Q</mi><mi>/</mi><mi>I</mi></mrow><annotation encoding="application/x-tex">t = Q / I</annotation></semantics></math>.</p>
+<p><strong>Behelyettesítés:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>18</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext><mi>/</mi><mn>0</mn><mo>,</mo><mn>04</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>450</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext></mrow><annotation encoding="application/x-tex">t = 18\,\text{Ah} / 0{,}04\,\text{A} = 450\,\text{h}</annotation></semantics></math>.</p>
+<p><strong>Eredmény:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>450</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mi>/</mi><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h/nap</mtext><mo>=</mo><mn>18</mn><mo>,</mo><mn>75</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">nap</mtext><mo>≈</mo><mn>18</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">nap</mtext></mrow><annotation encoding="application/x-tex">450\,\text{h} / 24\,\text{h/nap} = 18{,}75\,\text{nap} \approx 18\,\text{nap}</annotation></semantics></math>
+(lefelé kerekítve, a biztonság javára). ∎</p>
+<p><strong>Ellenőrzés.</strong> Ha a mért nyugalmi áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">150\,\text{mA}</annotation></semantics></math>
+lenne, akkor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>18</mn><mi>/</mi><mn>0</mn><mo>,</mo><mn>15</mn><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">nap</mtext></mrow><annotation encoding="application/x-tex">t = 18 / 0{,}15 = 120\,\text{h} = 5\,\text{nap}</annotation></semantics></math>.
+Ezért egy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">150\,\text{mA}</annotation></semantics></math>-es
+„kis” áramfelvétel már egy hétnyi parkolás alatt indítási problémát
+okozhat (egy hétvége, kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext></mrow><annotation encoding="application/x-tex">60\,\text{h}</annotation></semantics></math>
+alatt is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">9\,\text{Ah}</annotation></semantics></math>-t,
+a kapacitás kb. 15%-át viszi el, ami egy már részben lemerült
+akkumulátornál elég a bajhoz).</p>
+<h3 data-number="28.3.6" id="minőségellenőrzés"><span
+class="header-section-number">28.3.6</span> Minőségellenőrzés</h3>
+<p>A vizsgálatot mindig a gyártói diagnosztikai eljárás szerint
+végezzük, mert a korszerű rendszerben a feszültség nem állandó.</p>
+<ol type="1">
+<li><strong>Csatlakoztatás.</strong> Rendszerteszter az
+OBD-csatlakozóra, multiméter az akkumulátor pólusaira, áramlakatfogó az
+akkumulátor negatív kábelére (a gyári IBS-érzékelő sértetlenségét ne
+bontsuk meg).</li>
+<li><strong>Célzott menetpróba.</strong> Üzemmeleg motornál,
+meghatározott fordulatszámon és bekapcsolt fogyasztókkal a fedélzeti
+diagnosztika élőadat-mezőjében ellenőrizzük a célfeszültséget, a
+aktuális feszültséget, a gerjesztőáramot vagy kitöltési tényezőt,
+valamint az IBS által jelentett áramot és töltöttségi szintet.</li>
+<li><strong>Kiindulási referenciaérték.</strong> A hagyományos, nem
+intelligens szabályozású járműnél az alapjárati és 2500 1/min-es
+feszültség közötti különbség kicsi, a feszültség a célérték környékén
+stabil. A mai, intelligens rendszernél a feszültség a menethelyzettől
+függ, így egyetlen multiméteres értékből tilos hibás generátort
+megállapítani.</li>
+<li><strong>Írásbeli rögzítés.</strong> Munkalapon rögzítsük a műszer
+azonosítóját, a mérés feltételeit, a mért értékeket és a
+kiértékelést.</li>
+</ol>
+<h3 data-number="28.3.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">28.3.7</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy start-stopos városi autónál az ügyfél arra panaszkodik, hogy a
+start-stop már nem állítja le a motort. A rendszerteszterrel kiolvasva a
+rendszer nem jelez hibakódot, de az IBS adatblokkja azt mutatja, hogy az
+akkumulátor öregedési állapota alacsony, a töltöttségi szint pedig
+délutánra sem éri el a start-stophoz szükséges küszöböt. A feszültség
+normál üzemben csak lassan emelkedik, és a vezérlő az
+„energiamenedzsment korlátozás” miatt nem engedi a motorleállítást. Az
+ok nem a start-stop gomb, hanem a cserére érett, öreg akkumulátor. Az új
+AGM-akkumulátor beszerelése után a diagnosztikai rendszerben
+regisztrálni kell az akkumulátor cseréjét (akkumulátor-regisztráció),
+hogy az energiamenedzsment friss paraméterekkel számoljon, különben a
+rendszer továbbra is rosszabbat feltételezne a valósnál.</p>
+<h3 data-number="28.3.8" id="gyakorlati-útmutató"><span
+class="header-section-number">28.3.8</span> Gyakorlati útmutató</h3>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Munkalap: intelligens töltőrendszer ellenőrzése</strong></p>
+<ol type="1">
+<li><strong>Előkészítés.</strong> Győződjünk meg a jármű azonosító
+adatairól. Csatlakoztassuk a rendszertesztert, és rögzítsük a kiinduló
+hibakódokat. Ellenőrizzük az akkumulátor állapotát (pólusok, feszültség
+nyugalomban).</li>
+<li><strong>Érzékelő-adatok ellenőrzése.</strong> Olvassuk ki az IBS
+által jelentett áramot, feszültséget, hőmérsékletet és SoC-t. A gyártói
+adatblokkban hasonlítsuk össze a célfeszültséget a tényleges
+feszültséggel.</li>
+<li><strong>Működési ellenőrzés.</strong> Járó motornál kapcsoljuk be a
+nagy fogyasztókat (fényszóró, szélvédőfűtés). A rendszerteszter élő
+adatában a gerjesztőáram vagy annak kitöltési tényezője nőjön, a
+feszültség pedig a célfeladatnak megfelelően változzon.</li>
+<li><strong>Töltéshatékonysági próba.</strong> Motorfékezési üzemben
+(pl. zárt pályán vagy tanműhelyi görgőn, az oktató engedélyével)
+figyeljük meg, hogy a feszültség rövid időre emelkedik-e a rekuperációs
+tartományba.</li>
+<li><strong>Nyugalmi áram mérése.</strong> A jármű lezárása és a gyári
+elalvási idő kivárása után mérjük az akkumulátorból felvett áramot.
+Hasonlítsuk össze a gyártói határértékkel. Ha túl nagy, kezdjük meg az
+áramkörök szakszerű lekapcsolását a tettes vezérlő vagy fogyasztó
+azonosítására.</li>
+<li><strong>Dokumentálás.</strong> Töltsük ki a munkalapot, töröljük a
+próbaütem alatt keletkezett hibakódokat, és rögzítsük a végső
+rendszerállapotot.</li>
+</ol>
+<h3 data-number="28.3.9" id="tipikus-hibák"><span
+class="header-section-number">28.3.9</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>A feszültségmérés túlértelmezése.</strong> A szerelő a
+multiméterrel alapjáraton
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">12{,}6\,\text{V}</annotation></semantics></math>-ot
+mér, és hibás generátort cserél, pedig a jármű éppen rekuperációs
+szünetet tart, vagy az akkumulátor tele van. <strong>Helyes
+gyakorlat:</strong> először a fedélzeti energiamenedzsment élőadatait
+kell ellenőrizni, és a gyártó által megadott beavatkozó tesztet
+végrehajtani.</li>
+<li><strong>Akkumulátorcsere regisztráció nélkül.</strong> Egy új,
+eltérő típusú akkumulátort beszerelnek, de a fedélzeti rendszerben nem
+rögzítik az új adatokat. A rendszer a régi, öreg akkumulátor
+paramétereivel számol, és nem engedi a start-stopot vagy túltölti az
+újat. <strong>Helyes gyakorlat:</strong> az akkumulátorcserét a
+diagnosztikai műszerrel regisztrálni kell, ha a gyártó előírja.</li>
+<li><strong>Az IBS megbontása.</strong> A szerelő az akkumulátor negatív
+sarujáról levett érzékelőt nem megfelelően szereli vissza, vagy a töltő
+negatív csipeszét közvetlenül az akkumulátor negatív pólusára köti,
+megkerülve az IBS-t. Az energiamenedzsment hamis áramértékeket kap.
+<strong>Helyes gyakorlat:</strong> a töltő negatív csipeszét ne az
+akkumulátor negatív pólusára, hanem a gyártó által kijelölt
+karosszéria-testpontra kösd, így a töltőáram az IBS-en át folyik, és az
+energiamenedzsment látja (ellenőrizendő: kezelési/javítási
+utasítás).</li>
+</ol>
+<h3 data-number="28.3.10" id="önellenőrzés"><span
+class="header-section-number">28.3.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A modern start-stopos járműnél a töltőfeszültség
+mindig pontosan
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">14{,}4\,\text{V}</annotation></semantics></math>.
+Indokold!</li>
+<li>Mi történik a gerjesztőárammal, ha a generátor fordulatszáma
+hirtelen megnő, és a feszültség a célérték fölé emelkedik?</li>
+<li>Mi az IBS feladata, és hol helyezkedik el?</li>
+<li>Miért ír elő a gyártó fogyasztó-lekapcsolást
+energiamenedzsmentben?</li>
+<li>Egy jármű nyugalmi áramfelvétele
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>80</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">80\,\text{mA}</annotation></semantics></math>.
+Az akkumulátor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>70</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">70\,\text{Ah}</annotation></semantics></math>,
+és legalább
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">50\%</annotation></semantics></math>
+töltöttség kell az indításhoz. Kiindulva a teljesen feltöltött
+állapotból, hány napig állhat a jármű?
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mn>70</mn><mo>=</mo><mn>35</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext></mrow><annotation encoding="application/x-tex">Q = 0{,}5 \cdot 70 = 35\,\text{Ah}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>08</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 0{,}08\,\text{A}</annotation></semantics></math>.)</li>
+</ol>
+<h3 data-number="28.3.11" id="feladatok"><span
+class="header-section-number">28.3.11</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Sorold fel, milyen bemenő adatok
+alapján dönt az energiamenedzsment a töltőfeszültség célértékéről.</p>
+<p><strong>2. feladat (A).</strong> Hasonlítsd össze a mechanikus
+érintkezős és a mai MOSFET-es szabályozó működését.</p>
+<p><strong>3. feladat (B).</strong> Egy intelligens töltési rendszerben
+a fedélzeti diagnosztika azt mutatja, hogy a generátor terhelési
+kitöltési tényezője (DFM)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>85</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">85\%</annotation></semantics></math>,
+a célfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">14{,}8\,\text{V}</annotation></semantics></math>,
+a tényleges feszültség viszont
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>13</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">13{,}2\,\text{V}</annotation></semantics></math>.
+Mit jelez ez a kombináció? Fogalmazz meg egy diagnosztikai
+hipotézist!</p>
+<p><strong>4. feladat (B).</strong> Írd le a LIN-vezérelt szabályozó és
+a hagyományos, csak belső referenciafeszültséget használó szabályozó
+közötti különbséget az áramútrajz szintjén. Milyen új kivezetésre van
+szükség?</p>
+<p><strong>5. feladat (C).</strong> Miért kell a modern
+akkumulátor-töltő negatív csipeszét a gyártó által kijelölt
+karosszéria-testpontra kötni, ha a járművet az akkumulátor beszerelése
+után feltöltjük? Mi történik, ha a töltő negatív kábelét közvetlenül a
+negatív pólusra kötjük, és a szenzor a mért áramot nem látja?</p>
+<p><strong>6. feladat (D).</strong> Egy start-stopos autó nem állítja le
+a motort, pedig az ügyfél szerint az akkumulátor új. A rendszerteszter
+élőadatában a SoC
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>65</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">65\%</annotation></semantics></math>,
+a generátor feszültségparancsa
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>13</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">13{,}0\,\text{V}</annotation></semantics></math>,
+a motor hőmérséklete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>88</mn><msup><mspace width="0.167em"></mspace><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">88\,^{\circ}\text{C}</annotation></semantics></math>,
+a biztonsági öv becsatolva. Mi a legvalószínűbb ok?</p>
+<h3 data-number="28.3.12" id="megoldások"><span
+class="header-section-number">28.3.12</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Hamis. Az energiamenedzsment a menethelyzettől és az akkumulátor
+állapotától függően változtatja a célfeszültséget: gyorsításkor
+csökkentheti, lassításkor rekuperációs céllal növelheti.</li>
+<li>A szabályozó csökkenti a gerjesztőáram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>g</mi></msub><annotation encoding="application/x-tex">I_g</annotation></semantics></math>
+értékét, így a fluxus és ezzel az indukált feszültség visszaesik a
+célértékre.</li>
+<li>Az IBS az akkumulátor negatív pólusán méri az áramot, a feszültséget
+és a hőmérsékletet, majd ebből SoC-t és SoH-t becsül.</li>
+<li>Azért, hogy az akkumulátor ne merüljön le mélyen, és mindig maradjon
+elegendő energia az indításhoz, ugyanakkor a komfortszolgáltatások is
+minél tovább működjenek.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>35</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext><mi>/</mi><mn>0</mn><mo>,</mo><mn>08</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>437</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>18</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">t = 35\,\text{Ah} / 0{,}08\,\text{A} = 437{,}5\,\text{h} \approx 18{,}2</annotation></semantics></math>
+nap.</li>
+</ol>
+<p><strong>1. feladat megoldása.</strong> Az energiamenedzsment
+figyelembe veszi az akkumulátor töltöttségi szintjét és öregedési
+állapotát, az akkumulátor hőmérsékletét, a pillanatnyi villamos
+terhelést, a motor fordulatszámát, a menetdinamikai állapotot
+(gyorsítás, motorfékezés), valamint a komfortrendszerek (klíma, fűtés)
+igényeit.</p>
+<p><strong>2. feladat megoldása.</strong> A mechanikus szabályozó
+elektromágnessel és nyitóérintkezővel kapcsolgatja a gerjesztőkört. A
+MOSFET-es szabályozóban félvezető kapcsoló végzi a kapcsolgatást nagy
+frekvencián, kopás nélkül, az impulzusok kitöltési tényezőjével
+pontosabban és gyorsabban szabályozva az átlagos gerjesztőáramot.</p>
+<p><strong>3. feladat megoldása.</strong> A nagy kitöltési tényező arra
+utal, hogy a szabályozó maximálisan próbálja hajtani a generátort, de a
+tényleges feszültség nem éri el a célértéket. Ez nagy valószínűséggel a
+generátor teljesítményhiányát jelenti a terheléshez képest: kimerült
+vagy hibás forgórész, kopott csúszógyűrű, gyenge diódahíd, vagy a
+szabályozó teljesítménykapcsolójának meghibásodása.</p>
+<p><strong>4. feladat megoldása.</strong> A hagyományos szabályozó csak
+belső referenciafeszültséget és belső érzékelőket használ, önállóan
+tartja a feszültséget. A LIN-vezérelt szabályozónak van egy
+<code>LIN</code> adatbuszcsatlakozója is; a vezérlőegység
+célfeszültséget, terhelésválasz-korlátokat küld, és diagnosztikai
+adatokat kérdez le. Az áramútrajzon ezért egyetlen adatvezeték fut a
+szabályozó és a fedélzeti hálózati modul között (a LIN egyvezetékes
+soros busz, a jel a testhez képest értelmezett).</p>
+<p><strong>5. feladat megoldása.</strong> Az IBS a negatív póluson át
+folyó teljes áramot méri. Ha a töltő negatív kábelét közvetlenül a
+pólusra kötjük, a töltőáram a szenzort megkerülve folyik be, tehát az
+IBS nem látja a betáplált töltést. Az energiamenedzsment úgy érzékeli,
+mintha az akkumulátor felé nem történt volna töltés, és hibás
+SoC-értékkel dolgozik tovább. A töltő negatív csipeszét a gyártó által
+kijelölt karosszéria-testpontra kell kötni, hogy a töltőáram az IBS-en
+át folyjon, és a mért áram a tényleges fizikai árammal egyezzen.</p>
+<p><strong>6. feladat megoldása.</strong> A motor hőmérséklete és a
+biztonsági öv feltétele rendben van. A SoC
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>65</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">65\%</annotation></semantics></math>
+értéke viszont a legtöbb start-stop rendszerben nem éri el a működéshez
+szükséges küszöböt (jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>70</mn><annotation encoding="application/x-tex">70</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>80</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">80\%</annotation></semantics></math>
+fölött). A legvalószínűbb ok, hogy az új akkumulátor nincs regisztrálva
+a rendszerben, vagy az IBS kalibrációja hibás maradt, így az
+energiamenedzsment a régi, öreg akkumulátor becsült paramétereivel
+számol.</p>
+<h3 data-number="28.3.13" id="rövid-összefoglaló"><span
+class="header-section-number">28.3.13</span> Rövid összefoglaló</h3>
+<p>A feszültségszabályozó a generátor gerjesztőáramát szabályozza:
+nagyobb fordulatszámon csökkenti, nagyobb terhelésnél növeli, így tartja
+a feszültséget a kívánt tartományban. A régi mechanikus érintkezős
+szabályozót a mai járművekben félvezetős kapcsolóval működő, PWM-jelű
+szabályozó váltotta fel, amely multifunkciós kivitelben DFM-monitorjelet
+ad. A korszerű generátorok LIN-vezéreltek, és az energiamenedzsment – az
+IBS akkumulátor-szenzor és a motorvezérlő adatai alapján – tudatosan
+változtatja a töltőfeszültséget: gyorsításkor csökkenti, fékezéskor
+rekuperációval emeli. A fogyasztó-lekapcsolás, a start-stop
+feltételrendszere és a nyugalmi áramfelvétel mind ugyanennek az
+energiagazdálkodásnak a részei. A mai autón a töltőfeszültség nem
+egyetlen állandó érték, hanem a rendszerállapotot jellemző jel.</p>
+<p><strong>Továbbvitt eredmény.</strong> A töltőfeszültség-szabályozás
+és az energiamenedzsment ismeretét használjuk az <a
+href="au104.html">Indítómotorok</a> alfejezetben a start-stopos indítás
+elemzéséhez, a <a href="au117.html">Hibrid és elektromos hajtások
+áttekintése</a> alfejezetben a 12 V-os és HV-hálózat együttműködéséhez,
+valamint a(z) <a href="au142.html">Az áramellátó és indítórendszer
+diagnosztikája</a> alfejezetben a töltés- és nyugalmi áram
+hibakereséséhez.</p>
+<h3 data-number="28.3.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">28.3.14</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: járműgyártói javítási utasítások és szervizinformációk
+(áramút- és potenciáltervek, energiamenedzsment-élőadatok,
+akkumulátor-regisztrációs eljárások), a DIN 72552 kapocsjelölés, az MSZ
+EN IEC 60617 szabvány a rajzjelekre, valamint az akkumulátor- és
+töltőrendszerre vonatkozó gyártói és nemzetközi szabványi előírások.</p>
+<p>Ellenőrizendő állítások: a DIN 72552 kapocsjelölések pontos
+alkalmazása (<code>B+</code>, <code>D+</code>, <code>DF</code>,
+<code>15</code>, <code>31</code>) a típusfüggő gyártói rajz szerint; a
+célfeszültség-értékek hőmérsékletfüggő tartományai
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">14{,}0</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>14</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">14{,}8\,\text{V}</annotation></semantics></math>);
+a LIN-vezérlésű szabályozó funkcióblokkjai; az IBS által becsült SoC/SoH
+start-stop küszöbértékek; a nyugalmi áramfelvétel jellemző határértékei
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>20</mn><annotation encoding="application/x-tex">20</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">50\,\text{mA}</annotation></semantics></math>);
+a start-stop rendszer konkrét működési feltételei. Minden javítási
+beavatkozás előtt a gyártói javítási útmutatót és jármű-specifikus
+adatbázist kell ellenőrizni.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au102.html">← 28.2 A generátor</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au104.html">29.1 Indítómotorok →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

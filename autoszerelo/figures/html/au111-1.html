@@ -1,0 +1,3008 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vezérlés és szabályozás</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#c55a11;--btn:#f0f0f0;--btnon:#1f4e79;--btnonfg:#fff}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#f0a060;--btn:#2a2a2a;--btnon:#8fb8e8;--btnonfg:#111}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer;background:var(--btn);color:var(--fg);border:1px solid var(--muted);border-radius:4px}
+button.on{background:var(--btnon);color:var(--btnonfg);border-color:var(--btnon)}
+input[type=range]{flex:1;min-width:140px}
+#status{margin:4px 0 6px;min-height:2.9em}
+.fr{display:none;background:#fff;border-radius:4px;padding:4px}
+.fr.on{display:block}
+.fr svg{display:block;width:100%;height:auto;max-height:440px}
+.fr text{fill:#111}
+g.part{cursor:pointer}
+g.hl path,g.hl use{stroke:#c55a11 !important;stroke-width:3px !important}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Vezérlők"><button id="first" title="Első lépés">⏮</button><button id="prev">◀ Lépés</button><button id="play">▶ Lejátszás</button><button id="next">Lépés ▶</button><input id="pos" type="range" min="0" max="7" value="0" aria-label="Lépés"><span id="cnt" class="small"></span></div>
+<div id="status" aria-live="polite"></div>
+<div role="img" aria-label="Nyílt hurkú vezérlés és zárt hurkú lambdaszabályozás hatásvázlata.">
+<div class="fr"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 490.436384 296.928" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="f0_figure_1">
+  <g id="f0_patch_1">
+   <path d="M 0 296.928 
+L 490.436384 296.928 
+L 490.436384 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="f0_axes_1">
+   <g id="f0_patch_2">
+    <path d="M 87.252164 61.582685 
+Q 97.125041 61.582685 104.314636 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 100.314636 59.582685 
+L 104.314636 61.582685 
+L 100.314636 63.582685 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_3">
+    <path d="M 182.031781 61.582685 
+Q 191.904658 61.582685 199.094253 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 195.094253 59.582685 
+L 199.094253 61.582685 
+L 195.094253 63.582685 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_4">
+    <path d="M 276.811397 61.582685 
+Q 286.684274 61.582685 293.873869 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 289.873869 59.582685 
+L 293.873869 61.582685 
+L 289.873869 63.582685 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_5">
+    <path d="M 371.591014 61.582685 
+Q 381.46389 61.582685 388.653486 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 384.653486 59.582685 
+L 388.653486 61.582685 
+L 384.653486 63.582685 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_6">
+    <path d="M 71.455562 191.904658 
+Q 85.672504 191.904658 98.547806 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 94.547806 189.904658 
+L 98.547806 191.904658 
+L 94.547806 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_7">
+    <path d="M 129.902992 191.904658 
+Q 144.119934 191.904658 156.995236 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 152.995236 189.904658 
+L 156.995236 191.904658 
+L 152.995236 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_8">
+    <path d="M 233.37074 191.904658 
+Q 245.218192 191.904658 255.724003 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 251.724003 189.904658 
+L 255.724003 191.904658 
+L 251.724003 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_9">
+    <path d="M 320.252055 191.904658 
+Q 332.099507 191.904658 342.605318 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 338.605318 189.904658 
+L 342.605318 191.904658 
+L 338.605318 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f0_line2d_1">
+    <path d="M 418.980822 191.904658 
+L 442.675726 191.904658 
+" clip-path="url(#f0_pacff6c8526)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="f0_patch_10">
+    <path d="M 442.675726 191.904658 
+Q 442.675726 216.586849 442.675726 239.9274 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 444.675726 235.9274 
+L 442.675726 239.9274 
+L 440.675726 235.9274 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_11">
+    <path d="M 415.031671 259.040219 
+L 114.896219 259.040219 
+L 114.896219 208.253071 
+" style="fill: none; stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 112.896219 212.253071 
+L 114.896219 208.253071 
+L 116.896219 212.253071 
+z
+" style="stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f0_patch_12">
+    <path d="M 381.46389 144.514849 
+Q 381.46389 159.324164 381.46389 172.791839 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 383.46389 168.791839 
+L 381.46389 172.791839 
+L 379.46389 168.791839 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f0_text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="26.040329" transform="rotate(-0 12.218301 26.040329)">Vezérlés (nyílt hurok) – pl. hidegindítási dúsítás</text>
+   </g>
+   <g id="f0_patch_13">
+    <path d="M 14.587792 80.143693 
+L 84.882674 80.143693 
+Q 88.041995 80.143693 88.041995 76.984373 
+L 88.041995 46.180997 
+Q 88.041995 43.021677 84.882674 43.021677 
+L 14.587792 43.021677 
+Q 11.428471 43.021677 11.428471 46.180997 
+L 11.428471 76.984373 
+Q 11.428471 80.143693 14.587792 80.143693 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_patch_14">
+    <path d="M 109.367408 80.143693 
+L 179.66229 80.143693 
+Q 182.821611 80.143693 182.821611 76.984373 
+L 182.821611 46.180997 
+Q 182.821611 43.021677 179.66229 43.021677 
+L 109.367408 43.021677 
+Q 106.208088 43.021677 106.208088 46.180997 
+L 106.208088 76.984373 
+Q 106.208088 80.143693 109.367408 80.143693 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_patch_15">
+    <path d="M 204.147025 80.143693 
+L 274.441907 80.143693 
+Q 277.601227 80.143693 277.601227 76.984373 
+L 277.601227 46.180997 
+Q 277.601227 43.021677 274.441907 43.021677 
+L 204.147025 43.021677 
+Q 200.987704 43.021677 200.987704 46.180997 
+L 200.987704 76.984373 
+Q 200.987704 80.143693 204.147025 80.143693 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_patch_16">
+    <path d="M 298.926641 80.143693 
+L 369.221523 80.143693 
+Q 372.380844 80.143693 372.380844 76.984373 
+L 372.380844 46.180997 
+Q 372.380844 43.021677 369.221523 43.021677 
+L 298.926641 43.021677 
+Q 295.767321 43.021677 295.767321 46.180997 
+L 295.767321 76.984373 
+Q 295.767321 80.143693 298.926641 80.143693 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_patch_17">
+    <path d="M 393.706258 80.143693 
+L 464.00114 80.143693 
+Q 467.16046 80.143693 467.16046 76.984373 
+L 467.16046 46.180997 
+Q 467.16046 43.021677 464.00114 43.021677 
+L 393.706258 43.021677 
+Q 390.546937 43.021677 390.546937 46.180997 
+L 390.546937 76.984373 
+Q 390.546937 80.143693 393.706258 80.143693 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_text_2">
+    <text style="font-style: italic; font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: end" x="466.37063" y="93.17589" transform="rotate(-0 466.37063 93.17589)">nincs visszacsatolás: a λ-t senki nem méri</text>
+   </g>
+   <g id="f0_text_3">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="144.514849" transform="rotate(-0 12.218301 144.514849)">Szabályozás (zárt hurok) – lambdaszabályozás</text>
+   </g>
+   <g id="f0_patch_18">
+    <path d="M 14.587792 210.465666 
+L 69.086071 210.465666 
+Q 72.245392 210.465666 72.245392 207.306345 
+L 72.245392 176.50297 
+Q 72.245392 173.343649 69.086071 173.343649 
+L 14.587792 173.343649 
+Q 11.428471 173.343649 11.428471 176.50297 
+L 11.428471 207.306345 
+Q 11.428471 210.465666 14.587792 210.465666 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_patch_19">
+    <path d="M 114.896219 206.91143 
+C 118.876062 206.91143 122.693436 205.330222 125.50761 202.516048 
+C 128.321784 199.701875 129.902992 195.8845 129.902992 191.904658 
+C 129.902992 187.924815 128.321784 184.107441 125.50761 181.293267 
+C 122.693436 178.479093 118.876062 176.897885 114.896219 176.897885 
+C 110.916377 176.897885 107.099002 178.479093 104.284829 181.293267 
+C 101.470655 184.107441 99.889447 187.924815 99.889447 191.904658 
+C 99.889447 195.8845 101.470655 199.701875 104.284829 202.516048 
+C 107.099002 205.330222 110.916377 206.91143 114.896219 206.91143 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_text_4">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="90.411485" y="187.165677" transform="rotate(-0 90.411485 187.165677)">+</text>
+   </g>
+   <g id="f0_text_5">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start" x="119.6352" y="220.338542" transform="rotate(-0 119.6352 220.338542)">−</text>
+   </g>
+   <g id="f0_patch_20">
+    <path d="M 160.706367 210.465666 
+L 231.001249 210.465666 
+Q 234.16057 210.465666 234.16057 207.306345 
+L 234.16057 176.50297 
+Q 234.16057 173.343649 231.001249 173.343649 
+L 160.706367 173.343649 
+Q 157.547047 173.343649 157.547047 176.50297 
+L 157.547047 207.306345 
+Q 157.547047 210.465666 160.706367 210.465666 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_text_6">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="144.119934" y="186.333351" transform="rotate(-0 144.119934 186.333351)">e</text>
+   </g>
+   <g id="f0_patch_21">
+    <path d="M 259.435134 210.465666 
+L 317.882564 210.465666 
+Q 321.041885 210.465666 321.041885 207.306345 
+L 321.041885 176.50297 
+Q 321.041885 173.343649 317.882564 173.343649 
+L 259.435134 173.343649 
+Q 256.275814 173.343649 256.275814 176.50297 
+L 256.275814 207.306345 
+Q 256.275814 210.465666 259.435134 210.465666 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_patch_22">
+    <path d="M 346.316449 210.465666 
+L 416.611332 210.465666 
+Q 419.770652 210.465666 419.770652 207.306345 
+L 419.770652 176.50297 
+Q 419.770652 173.343649 416.611332 173.343649 
+L 346.316449 173.343649 
+Q 343.157129 173.343649 343.157129 176.50297 
+L 343.157129 207.306345 
+Q 343.157129 210.465666 346.316449 210.465666 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_patch_23">
+    <path d="M 417.401162 277.601227 
+L 467.95029 277.601227 
+Q 471.109611 277.601227 471.109611 274.441907 
+L 471.109611 243.638532 
+Q 471.109611 240.479211 467.95029 240.479211 
+L 417.401162 240.479211 
+Q 414.241841 240.479211 414.241841 243.638532 
+L 414.241841 274.441907 
+Q 414.241841 277.601227 417.401162 277.601227 
+z
+" clip-path="url(#f0_pacff6c8526)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f0_text_7">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="264.963945" y="253.251975" transform="rotate(-0 264.963945 253.251975)">visszacsatolás: λ_mért</text>
+   </g>
+   <g id="f0_text_8">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(350.408984 132.084574)">zavaró jellemző:</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(317.694547 140.959711)">hamislevegő, üzemanyagnyomás</text>
+   </g>
+   <g id="f0_text_9">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="67.506411" y="239.609521" transform="rotate(-0 67.506411 239.609521)">e = λ_alap − λ_mért</text>
+   </g>
+   <g id="f0_text_10">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(20.72242 54.662397)">hűtőfolyadék-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.49967 64.06856)">hőmérséklet</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(38.064483 73.474722)">(NTC)</text>
+   </g>
+   <g id="f0_text_11">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(120.965974 59.197479)">jelleggörbe</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(132.577006 68.603641)">(ECU)</text>
+   </g>
+   <g id="f0_text_12">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="239.294466" y="63.90056" transform="rotate(-0 239.294466 63.90056)">injektor</text>
+   </g>
+   <g id="f0_text_13">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="334.074082" y="63.90056" transform="rotate(-0 334.074082 63.90056)">motor</text>
+   </g>
+   <g id="f0_text_14">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="428.853699" y="64.06856" transform="rotate(-0 428.853699 64.06856)">kipufogógáz</text>
+   </g>
+   <g id="f0_text_15">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.937057 189.519451)">λ-alapjel</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(34.3104 198.925614)">= 1</text>
+   </g>
+   <g id="f0_line2d_2">
+    <path d="M 104.233512 202.567364 
+L 125.558926 181.241951 
+" clip-path="url(#f0_pacff6c8526)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f0_line2d_3">
+    <path d="M 104.233512 181.241951 
+L 125.558926 202.567364 
+" clip-path="url(#f0_pacff6c8526)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f0_text_16">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(172.650777 189.687451)">szabályozó</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(183.915964 199.093614)">(ECU)</text>
+   </g>
+   <g id="f0_text_17">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(272.704099 189.519451)">injektor</text>
+    <!-- ($t_i$) -->
+    <g transform="translate(282.778849 198.925614)">
+     <text>
+      <tspan x="0" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+      <tspan x="8.424866" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+      <tspan x="3.273483" y="-0.640625" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">t</tspan>
+      <tspan x="6.563354" y="0.7375" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">i</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="f0_text_18">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(354.752547 189.687451)">motor / égés</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(361.895828 199.093614)">(szakasz)</text>
+   </g>
+   <g id="f0_text_19">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(425.422257 256.655013)">lambda-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(427.811664 266.061175)">szonda</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="f0_pacff6c8526">
+   <rect x="4.32" y="4.32" width="481.796384" height="288.288"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+<div class="fr"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 490.436384 296.928" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="f1_figure_1">
+  <g id="f1_patch_1">
+   <path d="M 0 296.928 
+L 490.436384 296.928 
+L 490.436384 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="f1_axes_1">
+   <g id="f1_patch_2">
+    <path d="M 87.252164 61.582685 
+Q 97.125041 61.582685 105.656277 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 101.656277 59.582685 
+L 105.656277 61.582685 
+L 101.656277 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_3">
+    <path d="M 182.031781 61.582685 
+Q 191.904658 61.582685 200.435893 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 196.435893 59.582685 
+L 200.435893 61.582685 
+L 196.435893 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_4">
+    <path d="M 276.811397 61.582685 
+Q 286.684274 61.582685 295.21551 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 291.21551 59.582685 
+L 295.21551 61.582685 
+L 291.21551 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_5">
+    <path d="M 371.591014 61.582685 
+Q 381.46389 61.582685 389.995126 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 385.995126 59.582685 
+L 389.995126 61.582685 
+L 385.995126 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_6">
+    <path d="M 71.455562 191.904658 
+Q 85.672504 191.904658 98.547806 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 94.547806 189.904658 
+L 98.547806 191.904658 
+L 94.547806 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_7">
+    <path d="M 129.902992 191.904658 
+Q 144.119934 191.904658 156.995236 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 152.995236 189.904658 
+L 156.995236 191.904658 
+L 152.995236 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_8">
+    <path d="M 233.37074 191.904658 
+Q 245.218192 191.904658 255.724003 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 251.724003 189.904658 
+L 255.724003 191.904658 
+L 251.724003 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_9">
+    <path d="M 320.252055 191.904658 
+Q 332.099507 191.904658 342.605318 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 338.605318 189.904658 
+L 342.605318 191.904658 
+L 338.605318 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_line2d_1">
+    <path d="M 418.980822 191.904658 
+L 442.675726 191.904658 
+" clip-path="url(#f1_pef0068c4d2)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="f1_patch_10">
+    <path d="M 442.675726 191.904658 
+Q 442.675726 216.586849 442.675726 239.9274 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 444.675726 235.9274 
+L 442.675726 239.9274 
+L 440.675726 235.9274 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_11">
+    <path d="M 415.031671 259.040219 
+L 114.896219 259.040219 
+L 114.896219 208.253071 
+" style="fill: none; stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 112.896219 212.253071 
+L 114.896219 208.253071 
+L 116.896219 212.253071 
+z
+" style="stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_patch_12">
+    <path d="M 381.46389 144.514849 
+Q 381.46389 159.324164 381.46389 172.791839 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 383.46389 168.791839 
+L 381.46389 172.791839 
+L 379.46389 168.791839 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f1_text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="26.040329" transform="rotate(-0 12.218301 26.040329)">Vezérlés (nyílt hurok) – pl. hidegindítási dúsítás</text>
+   </g>
+   <g id="f1_patch_13">
+    <path d="M 14.587792 80.143693 
+L 84.882674 80.143693 
+Q 88.041995 80.143693 88.041995 76.984373 
+L 88.041995 46.180997 
+Q 88.041995 43.021677 84.882674 43.021677 
+L 14.587792 43.021677 
+Q 11.428471 43.021677 11.428471 46.180997 
+L 11.428471 76.984373 
+Q 11.428471 80.143693 14.587792 80.143693 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_patch_14">
+    <path d="M 109.367408 80.143693 
+L 179.66229 80.143693 
+Q 182.821611 80.143693 182.821611 76.984373 
+L 182.821611 46.180997 
+Q 182.821611 43.021677 179.66229 43.021677 
+L 109.367408 43.021677 
+Q 106.208088 43.021677 106.208088 46.180997 
+L 106.208088 76.984373 
+Q 106.208088 80.143693 109.367408 80.143693 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_patch_15">
+    <path d="M 204.147025 80.143693 
+L 274.441907 80.143693 
+Q 277.601227 80.143693 277.601227 76.984373 
+L 277.601227 46.180997 
+Q 277.601227 43.021677 274.441907 43.021677 
+L 204.147025 43.021677 
+Q 200.987704 43.021677 200.987704 46.180997 
+L 200.987704 76.984373 
+Q 200.987704 80.143693 204.147025 80.143693 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_patch_16">
+    <path d="M 298.926641 80.143693 
+L 369.221523 80.143693 
+Q 372.380844 80.143693 372.380844 76.984373 
+L 372.380844 46.180997 
+Q 372.380844 43.021677 369.221523 43.021677 
+L 298.926641 43.021677 
+Q 295.767321 43.021677 295.767321 46.180997 
+L 295.767321 76.984373 
+Q 295.767321 80.143693 298.926641 80.143693 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_patch_17">
+    <path d="M 393.706258 80.143693 
+L 464.00114 80.143693 
+Q 467.16046 80.143693 467.16046 76.984373 
+L 467.16046 46.180997 
+Q 467.16046 43.021677 464.00114 43.021677 
+L 393.706258 43.021677 
+Q 390.546937 43.021677 390.546937 46.180997 
+L 390.546937 76.984373 
+Q 390.546937 80.143693 393.706258 80.143693 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_text_2">
+    <text style="font-style: italic; font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: end" x="466.37063" y="93.17589" transform="rotate(-0 466.37063 93.17589)">nincs visszacsatolás: a λ-t senki nem méri</text>
+   </g>
+   <g id="f1_text_3">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="144.514849" transform="rotate(-0 12.218301 144.514849)">Szabályozás (zárt hurok) – lambdaszabályozás</text>
+   </g>
+   <g id="f1_patch_18">
+    <path d="M 14.587792 210.465666 
+L 69.086071 210.465666 
+Q 72.245392 210.465666 72.245392 207.306345 
+L 72.245392 176.50297 
+Q 72.245392 173.343649 69.086071 173.343649 
+L 14.587792 173.343649 
+Q 11.428471 173.343649 11.428471 176.50297 
+L 11.428471 207.306345 
+Q 11.428471 210.465666 14.587792 210.465666 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_patch_19">
+    <path d="M 114.896219 206.91143 
+C 118.876062 206.91143 122.693436 205.330222 125.50761 202.516048 
+C 128.321784 199.701875 129.902992 195.8845 129.902992 191.904658 
+C 129.902992 187.924815 128.321784 184.107441 125.50761 181.293267 
+C 122.693436 178.479093 118.876062 176.897885 114.896219 176.897885 
+C 110.916377 176.897885 107.099002 178.479093 104.284829 181.293267 
+C 101.470655 184.107441 99.889447 187.924815 99.889447 191.904658 
+C 99.889447 195.8845 101.470655 199.701875 104.284829 202.516048 
+C 107.099002 205.330222 110.916377 206.91143 114.896219 206.91143 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_text_4">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="90.411485" y="187.165677" transform="rotate(-0 90.411485 187.165677)">+</text>
+   </g>
+   <g id="f1_text_5">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start" x="119.6352" y="220.338542" transform="rotate(-0 119.6352 220.338542)">−</text>
+   </g>
+   <g id="f1_patch_20">
+    <path d="M 160.706367 210.465666 
+L 231.001249 210.465666 
+Q 234.16057 210.465666 234.16057 207.306345 
+L 234.16057 176.50297 
+Q 234.16057 173.343649 231.001249 173.343649 
+L 160.706367 173.343649 
+Q 157.547047 173.343649 157.547047 176.50297 
+L 157.547047 207.306345 
+Q 157.547047 210.465666 160.706367 210.465666 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_text_6">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="144.119934" y="186.333351" transform="rotate(-0 144.119934 186.333351)">e</text>
+   </g>
+   <g id="f1_patch_21">
+    <path d="M 259.435134 210.465666 
+L 317.882564 210.465666 
+Q 321.041885 210.465666 321.041885 207.306345 
+L 321.041885 176.50297 
+Q 321.041885 173.343649 317.882564 173.343649 
+L 259.435134 173.343649 
+Q 256.275814 173.343649 256.275814 176.50297 
+L 256.275814 207.306345 
+Q 256.275814 210.465666 259.435134 210.465666 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_patch_22">
+    <path d="M 346.316449 210.465666 
+L 416.611332 210.465666 
+Q 419.770652 210.465666 419.770652 207.306345 
+L 419.770652 176.50297 
+Q 419.770652 173.343649 416.611332 173.343649 
+L 346.316449 173.343649 
+Q 343.157129 173.343649 343.157129 176.50297 
+L 343.157129 207.306345 
+Q 343.157129 210.465666 346.316449 210.465666 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_patch_23">
+    <path d="M 417.401162 277.601227 
+L 467.95029 277.601227 
+Q 471.109611 277.601227 471.109611 274.441907 
+L 471.109611 243.638532 
+Q 471.109611 240.479211 467.95029 240.479211 
+L 417.401162 240.479211 
+Q 414.241841 240.479211 414.241841 243.638532 
+L 414.241841 274.441907 
+Q 414.241841 277.601227 417.401162 277.601227 
+z
+" clip-path="url(#f1_pef0068c4d2)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f1_text_7">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="264.963945" y="253.251975" transform="rotate(-0 264.963945 253.251975)">visszacsatolás: λ_mért</text>
+   </g>
+   <g id="f1_text_8">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(350.408984 132.084574)">zavaró jellemző:</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(317.694547 140.959711)">hamislevegő, üzemanyagnyomás</text>
+   </g>
+   <g id="f1_text_9">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="67.506411" y="239.609521" transform="rotate(-0 67.506411 239.609521)">e = λ_alap − λ_mért</text>
+   </g>
+   <g id="f1_text_10">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(20.72242 54.662397)">hűtőfolyadék-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.49967 64.06856)">hőmérséklet</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(38.064483 73.474722)">(NTC)</text>
+   </g>
+   <g id="f1_text_11">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(120.965974 59.197479)">jelleggörbe</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(132.577006 68.603641)">(ECU)</text>
+   </g>
+   <g id="f1_text_12">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="239.294466" y="63.90056" transform="rotate(-0 239.294466 63.90056)">injektor</text>
+   </g>
+   <g id="f1_text_13">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="334.074082" y="63.90056" transform="rotate(-0 334.074082 63.90056)">motor</text>
+   </g>
+   <g id="f1_text_14">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="428.853699" y="64.06856" transform="rotate(-0 428.853699 64.06856)">kipufogógáz</text>
+   </g>
+   <g id="f1_text_15">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.937057 189.519451)">λ-alapjel</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(34.3104 198.925614)">= 1</text>
+   </g>
+   <g id="f1_line2d_2">
+    <path d="M 104.233512 202.567364 
+L 125.558926 181.241951 
+" clip-path="url(#f1_pef0068c4d2)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f1_line2d_3">
+    <path d="M 104.233512 181.241951 
+L 125.558926 202.567364 
+" clip-path="url(#f1_pef0068c4d2)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f1_text_16">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(172.650777 189.687451)">szabályozó</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(183.915964 199.093614)">(ECU)</text>
+   </g>
+   <g id="f1_text_17">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(272.704099 189.519451)">injektor</text>
+    <!-- ($t_i$) -->
+    <g transform="translate(282.778849 198.925614)">
+     <text>
+      <tspan x="0" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+      <tspan x="8.424866" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+      <tspan x="3.273483" y="-0.640625" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">t</tspan>
+      <tspan x="6.563354" y="0.7375" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">i</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="f1_text_18">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(354.752547 189.687451)">motor / égés</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(361.895828 199.093614)">(szakasz)</text>
+   </g>
+   <g id="f1_text_19">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(425.422257 256.655013)">lambda-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(427.811664 266.061175)">szonda</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="f1_pef0068c4d2">
+   <rect x="4.32" y="4.32" width="481.796384" height="288.288"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+<div class="fr"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 490.436384 296.928" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="f2_figure_1">
+  <g id="f2_patch_1">
+   <path d="M 0 296.928 
+L 490.436384 296.928 
+L 490.436384 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="f2_axes_1">
+   <g id="f2_patch_2">
+    <path d="M 87.252164 61.582685 
+Q 97.125041 61.582685 105.656277 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 101.656277 59.582685 
+L 105.656277 61.582685 
+L 101.656277 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_3">
+    <path d="M 182.031781 61.582685 
+Q 191.904658 61.582685 200.435893 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 196.435893 59.582685 
+L 200.435893 61.582685 
+L 196.435893 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_4">
+    <path d="M 276.811397 61.582685 
+Q 286.684274 61.582685 295.21551 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 291.21551 59.582685 
+L 295.21551 61.582685 
+L 291.21551 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_5">
+    <path d="M 371.591014 61.582685 
+Q 381.46389 61.582685 389.995126 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 385.995126 59.582685 
+L 389.995126 61.582685 
+L 385.995126 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_6">
+    <path d="M 71.455562 191.904658 
+Q 85.672504 191.904658 97.206165 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 93.206165 189.904658 
+L 97.206165 191.904658 
+L 93.206165 193.904658 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_7">
+    <path d="M 129.902992 191.904658 
+Q 144.119934 191.904658 156.995236 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 152.995236 189.904658 
+L 156.995236 191.904658 
+L 152.995236 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_8">
+    <path d="M 233.37074 191.904658 
+Q 245.218192 191.904658 255.724003 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 251.724003 189.904658 
+L 255.724003 191.904658 
+L 251.724003 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_9">
+    <path d="M 320.252055 191.904658 
+Q 332.099507 191.904658 342.605318 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 338.605318 189.904658 
+L 342.605318 191.904658 
+L 338.605318 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_line2d_1">
+    <path d="M 418.980822 191.904658 
+L 442.675726 191.904658 
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="f2_patch_10">
+    <path d="M 442.675726 191.904658 
+Q 442.675726 216.586849 442.675726 239.9274 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 444.675726 235.9274 
+L 442.675726 239.9274 
+L 440.675726 235.9274 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_11">
+    <path d="M 415.031671 259.040219 
+L 114.896219 259.040219 
+L 114.896219 208.253071 
+" style="fill: none; stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 112.896219 212.253071 
+L 114.896219 208.253071 
+L 116.896219 212.253071 
+z
+" style="stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_patch_12">
+    <path d="M 381.46389 144.514849 
+Q 381.46389 159.324164 381.46389 172.791839 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 383.46389 168.791839 
+L 381.46389 172.791839 
+L 379.46389 168.791839 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f2_text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="26.040329" transform="rotate(-0 12.218301 26.040329)">Vezérlés (nyílt hurok) – pl. hidegindítási dúsítás</text>
+   </g>
+   <g id="f2_patch_13">
+    <path d="M 14.587792 80.143693 
+L 84.882674 80.143693 
+Q 88.041995 80.143693 88.041995 76.984373 
+L 88.041995 46.180997 
+Q 88.041995 43.021677 84.882674 43.021677 
+L 14.587792 43.021677 
+Q 11.428471 43.021677 11.428471 46.180997 
+L 11.428471 76.984373 
+Q 11.428471 80.143693 14.587792 80.143693 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_patch_14">
+    <path d="M 109.367408 80.143693 
+L 179.66229 80.143693 
+Q 182.821611 80.143693 182.821611 76.984373 
+L 182.821611 46.180997 
+Q 182.821611 43.021677 179.66229 43.021677 
+L 109.367408 43.021677 
+Q 106.208088 43.021677 106.208088 46.180997 
+L 106.208088 76.984373 
+Q 106.208088 80.143693 109.367408 80.143693 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_patch_15">
+    <path d="M 204.147025 80.143693 
+L 274.441907 80.143693 
+Q 277.601227 80.143693 277.601227 76.984373 
+L 277.601227 46.180997 
+Q 277.601227 43.021677 274.441907 43.021677 
+L 204.147025 43.021677 
+Q 200.987704 43.021677 200.987704 46.180997 
+L 200.987704 76.984373 
+Q 200.987704 80.143693 204.147025 80.143693 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_patch_16">
+    <path d="M 298.926641 80.143693 
+L 369.221523 80.143693 
+Q 372.380844 80.143693 372.380844 76.984373 
+L 372.380844 46.180997 
+Q 372.380844 43.021677 369.221523 43.021677 
+L 298.926641 43.021677 
+Q 295.767321 43.021677 295.767321 46.180997 
+L 295.767321 76.984373 
+Q 295.767321 80.143693 298.926641 80.143693 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_patch_17">
+    <path d="M 393.706258 80.143693 
+L 464.00114 80.143693 
+Q 467.16046 80.143693 467.16046 76.984373 
+L 467.16046 46.180997 
+Q 467.16046 43.021677 464.00114 43.021677 
+L 393.706258 43.021677 
+Q 390.546937 43.021677 390.546937 46.180997 
+L 390.546937 76.984373 
+Q 390.546937 80.143693 393.706258 80.143693 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_text_2">
+    <text style="font-style: italic; font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: end" x="466.37063" y="93.17589" transform="rotate(-0 466.37063 93.17589)">nincs visszacsatolás: a λ-t senki nem méri</text>
+   </g>
+   <g id="f2_text_3">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="144.514849" transform="rotate(-0 12.218301 144.514849)">Szabályozás (zárt hurok) – lambdaszabályozás</text>
+   </g>
+   <g id="f2_patch_18">
+    <path d="M 14.587792 210.465666 
+L 69.086071 210.465666 
+Q 72.245392 210.465666 72.245392 207.306345 
+L 72.245392 176.50297 
+Q 72.245392 173.343649 69.086071 173.343649 
+L 14.587792 173.343649 
+Q 11.428471 173.343649 11.428471 176.50297 
+L 11.428471 207.306345 
+Q 11.428471 210.465666 14.587792 210.465666 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_patch_19">
+    <path d="M 114.896219 206.91143 
+C 118.876062 206.91143 122.693436 205.330222 125.50761 202.516048 
+C 128.321784 199.701875 129.902992 195.8845 129.902992 191.904658 
+C 129.902992 187.924815 128.321784 184.107441 125.50761 181.293267 
+C 122.693436 178.479093 118.876062 176.897885 114.896219 176.897885 
+C 110.916377 176.897885 107.099002 178.479093 104.284829 181.293267 
+C 101.470655 184.107441 99.889447 187.924815 99.889447 191.904658 
+C 99.889447 195.8845 101.470655 199.701875 104.284829 202.516048 
+C 107.099002 205.330222 110.916377 206.91143 114.896219 206.91143 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_text_4">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="90.411485" y="187.165677" transform="rotate(-0 90.411485 187.165677)">+</text>
+   </g>
+   <g id="f2_text_5">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start" x="119.6352" y="220.338542" transform="rotate(-0 119.6352 220.338542)">−</text>
+   </g>
+   <g id="f2_patch_20">
+    <path d="M 160.706367 210.465666 
+L 231.001249 210.465666 
+Q 234.16057 210.465666 234.16057 207.306345 
+L 234.16057 176.50297 
+Q 234.16057 173.343649 231.001249 173.343649 
+L 160.706367 173.343649 
+Q 157.547047 173.343649 157.547047 176.50297 
+L 157.547047 207.306345 
+Q 157.547047 210.465666 160.706367 210.465666 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_text_6">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="144.119934" y="186.333351" transform="rotate(-0 144.119934 186.333351)">e</text>
+   </g>
+   <g id="f2_patch_21">
+    <path d="M 259.435134 210.465666 
+L 317.882564 210.465666 
+Q 321.041885 210.465666 321.041885 207.306345 
+L 321.041885 176.50297 
+Q 321.041885 173.343649 317.882564 173.343649 
+L 259.435134 173.343649 
+Q 256.275814 173.343649 256.275814 176.50297 
+L 256.275814 207.306345 
+Q 256.275814 210.465666 259.435134 210.465666 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_patch_22">
+    <path d="M 346.316449 210.465666 
+L 416.611332 210.465666 
+Q 419.770652 210.465666 419.770652 207.306345 
+L 419.770652 176.50297 
+Q 419.770652 173.343649 416.611332 173.343649 
+L 346.316449 173.343649 
+Q 343.157129 173.343649 343.157129 176.50297 
+L 343.157129 207.306345 
+Q 343.157129 210.465666 346.316449 210.465666 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_patch_23">
+    <path d="M 417.401162 277.601227 
+L 467.95029 277.601227 
+Q 471.109611 277.601227 471.109611 274.441907 
+L 471.109611 243.638532 
+Q 471.109611 240.479211 467.95029 240.479211 
+L 417.401162 240.479211 
+Q 414.241841 240.479211 414.241841 243.638532 
+L 414.241841 274.441907 
+Q 414.241841 277.601227 417.401162 277.601227 
+z
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f2_text_7">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="264.963945" y="253.251975" transform="rotate(-0 264.963945 253.251975)">visszacsatolás: λ_mért</text>
+   </g>
+   <g id="f2_text_8">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(350.408984 132.084574)">zavaró jellemző:</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(317.694547 140.959711)">hamislevegő, üzemanyagnyomás</text>
+   </g>
+   <g id="f2_text_9">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="67.506411" y="239.609521" transform="rotate(-0 67.506411 239.609521)">e = λ_alap − λ_mért</text>
+   </g>
+   <g id="f2_text_10">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(20.72242 54.662397)">hűtőfolyadék-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.49967 64.06856)">hőmérséklet</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(38.064483 73.474722)">(NTC)</text>
+   </g>
+   <g id="f2_text_11">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(120.965974 59.197479)">jelleggörbe</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(132.577006 68.603641)">(ECU)</text>
+   </g>
+   <g id="f2_text_12">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="239.294466" y="63.90056" transform="rotate(-0 239.294466 63.90056)">injektor</text>
+   </g>
+   <g id="f2_text_13">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="334.074082" y="63.90056" transform="rotate(-0 334.074082 63.90056)">motor</text>
+   </g>
+   <g id="f2_text_14">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="428.853699" y="64.06856" transform="rotate(-0 428.853699 64.06856)">kipufogógáz</text>
+   </g>
+   <g id="f2_text_15">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.937057 189.519451)">λ-alapjel</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(34.3104 198.925614)">= 1</text>
+   </g>
+   <g id="f2_line2d_2">
+    <path d="M 104.233512 202.567364 
+L 125.558926 181.241951 
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f2_line2d_3">
+    <path d="M 104.233512 181.241951 
+L 125.558926 202.567364 
+" clip-path="url(#f2_pdfe4ae27fd)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f2_text_16">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(172.650777 189.687451)">szabályozó</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(183.915964 199.093614)">(ECU)</text>
+   </g>
+   <g id="f2_text_17">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(272.704099 189.519451)">injektor</text>
+    <!-- ($t_i$) -->
+    <g transform="translate(282.778849 198.925614)">
+     <text>
+      <tspan x="0" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+      <tspan x="8.424866" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+      <tspan x="3.273483" y="-0.640625" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">t</tspan>
+      <tspan x="6.563354" y="0.7375" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">i</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="f2_text_18">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(354.752547 189.687451)">motor / égés</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(361.895828 199.093614)">(szakasz)</text>
+   </g>
+   <g id="f2_text_19">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(425.422257 256.655013)">lambda-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(427.811664 266.061175)">szonda</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="f2_pdfe4ae27fd">
+   <rect x="4.32" y="4.32" width="481.796384" height="288.288"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+<div class="fr"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 490.436384 296.928" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="f3_figure_1">
+  <g id="f3_patch_1">
+   <path d="M 0 296.928 
+L 490.436384 296.928 
+L 490.436384 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="f3_axes_1">
+   <g id="f3_patch_2">
+    <path d="M 87.252164 61.582685 
+Q 97.125041 61.582685 105.656277 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 101.656277 59.582685 
+L 105.656277 61.582685 
+L 101.656277 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_3">
+    <path d="M 182.031781 61.582685 
+Q 191.904658 61.582685 200.435893 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 196.435893 59.582685 
+L 200.435893 61.582685 
+L 196.435893 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_4">
+    <path d="M 276.811397 61.582685 
+Q 286.684274 61.582685 295.21551 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 291.21551 59.582685 
+L 295.21551 61.582685 
+L 291.21551 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_5">
+    <path d="M 371.591014 61.582685 
+Q 381.46389 61.582685 389.995126 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 385.995126 59.582685 
+L 389.995126 61.582685 
+L 385.995126 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_6">
+    <path d="M 71.455562 191.904658 
+Q 85.672504 191.904658 98.547806 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 94.547806 189.904658 
+L 98.547806 191.904658 
+L 94.547806 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_7">
+    <path d="M 129.902992 191.904658 
+Q 144.119934 191.904658 155.653595 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 151.653595 189.904658 
+L 155.653595 191.904658 
+L 151.653595 193.904658 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_8">
+    <path d="M 233.37074 191.904658 
+Q 245.218192 191.904658 255.724003 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 251.724003 189.904658 
+L 255.724003 191.904658 
+L 251.724003 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_9">
+    <path d="M 320.252055 191.904658 
+Q 332.099507 191.904658 342.605318 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 338.605318 189.904658 
+L 342.605318 191.904658 
+L 338.605318 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_line2d_1">
+    <path d="M 418.980822 191.904658 
+L 442.675726 191.904658 
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="f3_patch_10">
+    <path d="M 442.675726 191.904658 
+Q 442.675726 216.586849 442.675726 239.9274 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 444.675726 235.9274 
+L 442.675726 239.9274 
+L 440.675726 235.9274 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_11">
+    <path d="M 415.031671 259.040219 
+L 114.896219 259.040219 
+L 114.896219 208.253071 
+" style="fill: none; stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 112.896219 212.253071 
+L 114.896219 208.253071 
+L 116.896219 212.253071 
+z
+" style="stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_patch_12">
+    <path d="M 381.46389 144.514849 
+Q 381.46389 159.324164 381.46389 172.791839 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 383.46389 168.791839 
+L 381.46389 172.791839 
+L 379.46389 168.791839 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f3_text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="26.040329" transform="rotate(-0 12.218301 26.040329)">Vezérlés (nyílt hurok) – pl. hidegindítási dúsítás</text>
+   </g>
+   <g id="f3_patch_13">
+    <path d="M 14.587792 80.143693 
+L 84.882674 80.143693 
+Q 88.041995 80.143693 88.041995 76.984373 
+L 88.041995 46.180997 
+Q 88.041995 43.021677 84.882674 43.021677 
+L 14.587792 43.021677 
+Q 11.428471 43.021677 11.428471 46.180997 
+L 11.428471 76.984373 
+Q 11.428471 80.143693 14.587792 80.143693 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_patch_14">
+    <path d="M 109.367408 80.143693 
+L 179.66229 80.143693 
+Q 182.821611 80.143693 182.821611 76.984373 
+L 182.821611 46.180997 
+Q 182.821611 43.021677 179.66229 43.021677 
+L 109.367408 43.021677 
+Q 106.208088 43.021677 106.208088 46.180997 
+L 106.208088 76.984373 
+Q 106.208088 80.143693 109.367408 80.143693 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_patch_15">
+    <path d="M 204.147025 80.143693 
+L 274.441907 80.143693 
+Q 277.601227 80.143693 277.601227 76.984373 
+L 277.601227 46.180997 
+Q 277.601227 43.021677 274.441907 43.021677 
+L 204.147025 43.021677 
+Q 200.987704 43.021677 200.987704 46.180997 
+L 200.987704 76.984373 
+Q 200.987704 80.143693 204.147025 80.143693 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_patch_16">
+    <path d="M 298.926641 80.143693 
+L 369.221523 80.143693 
+Q 372.380844 80.143693 372.380844 76.984373 
+L 372.380844 46.180997 
+Q 372.380844 43.021677 369.221523 43.021677 
+L 298.926641 43.021677 
+Q 295.767321 43.021677 295.767321 46.180997 
+L 295.767321 76.984373 
+Q 295.767321 80.143693 298.926641 80.143693 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_patch_17">
+    <path d="M 393.706258 80.143693 
+L 464.00114 80.143693 
+Q 467.16046 80.143693 467.16046 76.984373 
+L 467.16046 46.180997 
+Q 467.16046 43.021677 464.00114 43.021677 
+L 393.706258 43.021677 
+Q 390.546937 43.021677 390.546937 46.180997 
+L 390.546937 76.984373 
+Q 390.546937 80.143693 393.706258 80.143693 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_text_2">
+    <text style="font-style: italic; font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: end" x="466.37063" y="93.17589" transform="rotate(-0 466.37063 93.17589)">nincs visszacsatolás: a λ-t senki nem méri</text>
+   </g>
+   <g id="f3_text_3">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="144.514849" transform="rotate(-0 12.218301 144.514849)">Szabályozás (zárt hurok) – lambdaszabályozás</text>
+   </g>
+   <g id="f3_patch_18">
+    <path d="M 14.587792 210.465666 
+L 69.086071 210.465666 
+Q 72.245392 210.465666 72.245392 207.306345 
+L 72.245392 176.50297 
+Q 72.245392 173.343649 69.086071 173.343649 
+L 14.587792 173.343649 
+Q 11.428471 173.343649 11.428471 176.50297 
+L 11.428471 207.306345 
+Q 11.428471 210.465666 14.587792 210.465666 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_patch_19">
+    <path d="M 114.896219 206.91143 
+C 118.876062 206.91143 122.693436 205.330222 125.50761 202.516048 
+C 128.321784 199.701875 129.902992 195.8845 129.902992 191.904658 
+C 129.902992 187.924815 128.321784 184.107441 125.50761 181.293267 
+C 122.693436 178.479093 118.876062 176.897885 114.896219 176.897885 
+C 110.916377 176.897885 107.099002 178.479093 104.284829 181.293267 
+C 101.470655 184.107441 99.889447 187.924815 99.889447 191.904658 
+C 99.889447 195.8845 101.470655 199.701875 104.284829 202.516048 
+C 107.099002 205.330222 110.916377 206.91143 114.896219 206.91143 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_text_4">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="90.411485" y="187.165677" transform="rotate(-0 90.411485 187.165677)">+</text>
+   </g>
+   <g id="f3_text_5">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start" x="119.6352" y="220.338542" transform="rotate(-0 119.6352 220.338542)">−</text>
+   </g>
+   <g id="f3_patch_20">
+    <path d="M 160.706367 210.465666 
+L 231.001249 210.465666 
+Q 234.16057 210.465666 234.16057 207.306345 
+L 234.16057 176.50297 
+Q 234.16057 173.343649 231.001249 173.343649 
+L 160.706367 173.343649 
+Q 157.547047 173.343649 157.547047 176.50297 
+L 157.547047 207.306345 
+Q 157.547047 210.465666 160.706367 210.465666 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_text_6">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="144.119934" y="186.333351" transform="rotate(-0 144.119934 186.333351)">e</text>
+   </g>
+   <g id="f3_patch_21">
+    <path d="M 259.435134 210.465666 
+L 317.882564 210.465666 
+Q 321.041885 210.465666 321.041885 207.306345 
+L 321.041885 176.50297 
+Q 321.041885 173.343649 317.882564 173.343649 
+L 259.435134 173.343649 
+Q 256.275814 173.343649 256.275814 176.50297 
+L 256.275814 207.306345 
+Q 256.275814 210.465666 259.435134 210.465666 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_patch_22">
+    <path d="M 346.316449 210.465666 
+L 416.611332 210.465666 
+Q 419.770652 210.465666 419.770652 207.306345 
+L 419.770652 176.50297 
+Q 419.770652 173.343649 416.611332 173.343649 
+L 346.316449 173.343649 
+Q 343.157129 173.343649 343.157129 176.50297 
+L 343.157129 207.306345 
+Q 343.157129 210.465666 346.316449 210.465666 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_patch_23">
+    <path d="M 417.401162 277.601227 
+L 467.95029 277.601227 
+Q 471.109611 277.601227 471.109611 274.441907 
+L 471.109611 243.638532 
+Q 471.109611 240.479211 467.95029 240.479211 
+L 417.401162 240.479211 
+Q 414.241841 240.479211 414.241841 243.638532 
+L 414.241841 274.441907 
+Q 414.241841 277.601227 417.401162 277.601227 
+z
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f3_text_7">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="264.963945" y="253.251975" transform="rotate(-0 264.963945 253.251975)">visszacsatolás: λ_mért</text>
+   </g>
+   <g id="f3_text_8">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(350.408984 132.084574)">zavaró jellemző:</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(317.694547 140.959711)">hamislevegő, üzemanyagnyomás</text>
+   </g>
+   <g id="f3_text_9">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="67.506411" y="239.609521" transform="rotate(-0 67.506411 239.609521)">e = λ_alap − λ_mért</text>
+   </g>
+   <g id="f3_text_10">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(20.72242 54.662397)">hűtőfolyadék-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.49967 64.06856)">hőmérséklet</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(38.064483 73.474722)">(NTC)</text>
+   </g>
+   <g id="f3_text_11">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(120.965974 59.197479)">jelleggörbe</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(132.577006 68.603641)">(ECU)</text>
+   </g>
+   <g id="f3_text_12">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="239.294466" y="63.90056" transform="rotate(-0 239.294466 63.90056)">injektor</text>
+   </g>
+   <g id="f3_text_13">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="334.074082" y="63.90056" transform="rotate(-0 334.074082 63.90056)">motor</text>
+   </g>
+   <g id="f3_text_14">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="428.853699" y="64.06856" transform="rotate(-0 428.853699 64.06856)">kipufogógáz</text>
+   </g>
+   <g id="f3_text_15">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.937057 189.519451)">λ-alapjel</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(34.3104 198.925614)">= 1</text>
+   </g>
+   <g id="f3_line2d_2">
+    <path d="M 104.233512 202.567364 
+L 125.558926 181.241951 
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f3_line2d_3">
+    <path d="M 104.233512 181.241951 
+L 125.558926 202.567364 
+" clip-path="url(#f3_p92e5e6b7c7)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f3_text_16">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(172.650777 189.687451)">szabályozó</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(183.915964 199.093614)">(ECU)</text>
+   </g>
+   <g id="f3_text_17">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(272.704099 189.519451)">injektor</text>
+    <!-- ($t_i$) -->
+    <g transform="translate(282.778849 198.925614)">
+     <text>
+      <tspan x="0" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+      <tspan x="8.424866" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+      <tspan x="3.273483" y="-0.640625" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">t</tspan>
+      <tspan x="6.563354" y="0.7375" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">i</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="f3_text_18">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(354.752547 189.687451)">motor / égés</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(361.895828 199.093614)">(szakasz)</text>
+   </g>
+   <g id="f3_text_19">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(425.422257 256.655013)">lambda-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(427.811664 266.061175)">szonda</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="f3_p92e5e6b7c7">
+   <rect x="4.32" y="4.32" width="481.796384" height="288.288"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+<div class="fr"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 490.436384 296.928" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="f4_figure_1">
+  <g id="f4_patch_1">
+   <path d="M 0 296.928 
+L 490.436384 296.928 
+L 490.436384 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="f4_axes_1">
+   <g id="f4_patch_2">
+    <path d="M 87.252164 61.582685 
+Q 97.125041 61.582685 105.656277 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 101.656277 59.582685 
+L 105.656277 61.582685 
+L 101.656277 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_3">
+    <path d="M 182.031781 61.582685 
+Q 191.904658 61.582685 200.435893 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 196.435893 59.582685 
+L 200.435893 61.582685 
+L 196.435893 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_4">
+    <path d="M 276.811397 61.582685 
+Q 286.684274 61.582685 295.21551 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 291.21551 59.582685 
+L 295.21551 61.582685 
+L 291.21551 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_5">
+    <path d="M 371.591014 61.582685 
+Q 381.46389 61.582685 389.995126 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 385.995126 59.582685 
+L 389.995126 61.582685 
+L 385.995126 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_6">
+    <path d="M 71.455562 191.904658 
+Q 85.672504 191.904658 98.547806 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 94.547806 189.904658 
+L 98.547806 191.904658 
+L 94.547806 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_7">
+    <path d="M 129.902992 191.904658 
+Q 144.119934 191.904658 156.995236 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 152.995236 189.904658 
+L 156.995236 191.904658 
+L 152.995236 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_8">
+    <path d="M 233.37074 191.904658 
+Q 245.218192 191.904658 254.382362 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 250.382362 189.904658 
+L 254.382362 191.904658 
+L 250.382362 193.904658 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_9">
+    <path d="M 320.252055 191.904658 
+Q 332.099507 191.904658 342.605318 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 338.605318 189.904658 
+L 342.605318 191.904658 
+L 338.605318 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_line2d_1">
+    <path d="M 418.980822 191.904658 
+L 442.675726 191.904658 
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="f4_patch_10">
+    <path d="M 442.675726 191.904658 
+Q 442.675726 216.586849 442.675726 239.9274 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 444.675726 235.9274 
+L 442.675726 239.9274 
+L 440.675726 235.9274 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_11">
+    <path d="M 415.031671 259.040219 
+L 114.896219 259.040219 
+L 114.896219 208.253071 
+" style="fill: none; stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 112.896219 212.253071 
+L 114.896219 208.253071 
+L 116.896219 212.253071 
+z
+" style="stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_patch_12">
+    <path d="M 381.46389 144.514849 
+Q 381.46389 159.324164 381.46389 172.791839 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 383.46389 168.791839 
+L 381.46389 172.791839 
+L 379.46389 168.791839 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f4_text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="26.040329" transform="rotate(-0 12.218301 26.040329)">Vezérlés (nyílt hurok) – pl. hidegindítási dúsítás</text>
+   </g>
+   <g id="f4_patch_13">
+    <path d="M 14.587792 80.143693 
+L 84.882674 80.143693 
+Q 88.041995 80.143693 88.041995 76.984373 
+L 88.041995 46.180997 
+Q 88.041995 43.021677 84.882674 43.021677 
+L 14.587792 43.021677 
+Q 11.428471 43.021677 11.428471 46.180997 
+L 11.428471 76.984373 
+Q 11.428471 80.143693 14.587792 80.143693 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_patch_14">
+    <path d="M 109.367408 80.143693 
+L 179.66229 80.143693 
+Q 182.821611 80.143693 182.821611 76.984373 
+L 182.821611 46.180997 
+Q 182.821611 43.021677 179.66229 43.021677 
+L 109.367408 43.021677 
+Q 106.208088 43.021677 106.208088 46.180997 
+L 106.208088 76.984373 
+Q 106.208088 80.143693 109.367408 80.143693 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_patch_15">
+    <path d="M 204.147025 80.143693 
+L 274.441907 80.143693 
+Q 277.601227 80.143693 277.601227 76.984373 
+L 277.601227 46.180997 
+Q 277.601227 43.021677 274.441907 43.021677 
+L 204.147025 43.021677 
+Q 200.987704 43.021677 200.987704 46.180997 
+L 200.987704 76.984373 
+Q 200.987704 80.143693 204.147025 80.143693 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_patch_16">
+    <path d="M 298.926641 80.143693 
+L 369.221523 80.143693 
+Q 372.380844 80.143693 372.380844 76.984373 
+L 372.380844 46.180997 
+Q 372.380844 43.021677 369.221523 43.021677 
+L 298.926641 43.021677 
+Q 295.767321 43.021677 295.767321 46.180997 
+L 295.767321 76.984373 
+Q 295.767321 80.143693 298.926641 80.143693 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_patch_17">
+    <path d="M 393.706258 80.143693 
+L 464.00114 80.143693 
+Q 467.16046 80.143693 467.16046 76.984373 
+L 467.16046 46.180997 
+Q 467.16046 43.021677 464.00114 43.021677 
+L 393.706258 43.021677 
+Q 390.546937 43.021677 390.546937 46.180997 
+L 390.546937 76.984373 
+Q 390.546937 80.143693 393.706258 80.143693 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_text_2">
+    <text style="font-style: italic; font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: end" x="466.37063" y="93.17589" transform="rotate(-0 466.37063 93.17589)">nincs visszacsatolás: a λ-t senki nem méri</text>
+   </g>
+   <g id="f4_text_3">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="144.514849" transform="rotate(-0 12.218301 144.514849)">Szabályozás (zárt hurok) – lambdaszabályozás</text>
+   </g>
+   <g id="f4_patch_18">
+    <path d="M 14.587792 210.465666 
+L 69.086071 210.465666 
+Q 72.245392 210.465666 72.245392 207.306345 
+L 72.245392 176.50297 
+Q 72.245392 173.343649 69.086071 173.343649 
+L 14.587792 173.343649 
+Q 11.428471 173.343649 11.428471 176.50297 
+L 11.428471 207.306345 
+Q 11.428471 210.465666 14.587792 210.465666 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_patch_19">
+    <path d="M 114.896219 206.91143 
+C 118.876062 206.91143 122.693436 205.330222 125.50761 202.516048 
+C 128.321784 199.701875 129.902992 195.8845 129.902992 191.904658 
+C 129.902992 187.924815 128.321784 184.107441 125.50761 181.293267 
+C 122.693436 178.479093 118.876062 176.897885 114.896219 176.897885 
+C 110.916377 176.897885 107.099002 178.479093 104.284829 181.293267 
+C 101.470655 184.107441 99.889447 187.924815 99.889447 191.904658 
+C 99.889447 195.8845 101.470655 199.701875 104.284829 202.516048 
+C 107.099002 205.330222 110.916377 206.91143 114.896219 206.91143 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_text_4">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="90.411485" y="187.165677" transform="rotate(-0 90.411485 187.165677)">+</text>
+   </g>
+   <g id="f4_text_5">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start" x="119.6352" y="220.338542" transform="rotate(-0 119.6352 220.338542)">−</text>
+   </g>
+   <g id="f4_patch_20">
+    <path d="M 160.706367 210.465666 
+L 231.001249 210.465666 
+Q 234.16057 210.465666 234.16057 207.306345 
+L 234.16057 176.50297 
+Q 234.16057 173.343649 231.001249 173.343649 
+L 160.706367 173.343649 
+Q 157.547047 173.343649 157.547047 176.50297 
+L 157.547047 207.306345 
+Q 157.547047 210.465666 160.706367 210.465666 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_text_6">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="144.119934" y="186.333351" transform="rotate(-0 144.119934 186.333351)">e</text>
+   </g>
+   <g id="f4_patch_21">
+    <path d="M 259.435134 210.465666 
+L 317.882564 210.465666 
+Q 321.041885 210.465666 321.041885 207.306345 
+L 321.041885 176.50297 
+Q 321.041885 173.343649 317.882564 173.343649 
+L 259.435134 173.343649 
+Q 256.275814 173.343649 256.275814 176.50297 
+L 256.275814 207.306345 
+Q 256.275814 210.465666 259.435134 210.465666 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_patch_22">
+    <path d="M 346.316449 210.465666 
+L 416.611332 210.465666 
+Q 419.770652 210.465666 419.770652 207.306345 
+L 419.770652 176.50297 
+Q 419.770652 173.343649 416.611332 173.343649 
+L 346.316449 173.343649 
+Q 343.157129 173.343649 343.157129 176.50297 
+L 343.157129 207.306345 
+Q 343.157129 210.465666 346.316449 210.465666 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_patch_23">
+    <path d="M 417.401162 277.601227 
+L 467.95029 277.601227 
+Q 471.109611 277.601227 471.109611 274.441907 
+L 471.109611 243.638532 
+Q 471.109611 240.479211 467.95029 240.479211 
+L 417.401162 240.479211 
+Q 414.241841 240.479211 414.241841 243.638532 
+L 414.241841 274.441907 
+Q 414.241841 277.601227 417.401162 277.601227 
+z
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f4_text_7">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="264.963945" y="253.251975" transform="rotate(-0 264.963945 253.251975)">visszacsatolás: λ_mért</text>
+   </g>
+   <g id="f4_text_8">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(350.408984 132.084574)">zavaró jellemző:</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(317.694547 140.959711)">hamislevegő, üzemanyagnyomás</text>
+   </g>
+   <g id="f4_text_9">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="67.506411" y="239.609521" transform="rotate(-0 67.506411 239.609521)">e = λ_alap − λ_mért</text>
+   </g>
+   <g id="f4_text_10">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(20.72242 54.662397)">hűtőfolyadék-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.49967 64.06856)">hőmérséklet</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(38.064483 73.474722)">(NTC)</text>
+   </g>
+   <g id="f4_text_11">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(120.965974 59.197479)">jelleggörbe</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(132.577006 68.603641)">(ECU)</text>
+   </g>
+   <g id="f4_text_12">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="239.294466" y="63.90056" transform="rotate(-0 239.294466 63.90056)">injektor</text>
+   </g>
+   <g id="f4_text_13">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="334.074082" y="63.90056" transform="rotate(-0 334.074082 63.90056)">motor</text>
+   </g>
+   <g id="f4_text_14">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="428.853699" y="64.06856" transform="rotate(-0 428.853699 64.06856)">kipufogógáz</text>
+   </g>
+   <g id="f4_text_15">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.937057 189.519451)">λ-alapjel</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(34.3104 198.925614)">= 1</text>
+   </g>
+   <g id="f4_line2d_2">
+    <path d="M 104.233512 202.567364 
+L 125.558926 181.241951 
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f4_line2d_3">
+    <path d="M 104.233512 181.241951 
+L 125.558926 202.567364 
+" clip-path="url(#f4_pbf7d5ee5d3)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f4_text_16">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(172.650777 189.687451)">szabályozó</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(183.915964 199.093614)">(ECU)</text>
+   </g>
+   <g id="f4_text_17">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(272.704099 189.519451)">injektor</text>
+    <!-- ($t_i$) -->
+    <g transform="translate(282.778849 198.925614)">
+     <text>
+      <tspan x="0" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+      <tspan x="8.424866" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+      <tspan x="3.273483" y="-0.640625" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">t</tspan>
+      <tspan x="6.563354" y="0.7375" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">i</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="f4_text_18">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(354.752547 189.687451)">motor / égés</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(361.895828 199.093614)">(szakasz)</text>
+   </g>
+   <g id="f4_text_19">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(425.422257 256.655013)">lambda-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(427.811664 266.061175)">szonda</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="f4_pbf7d5ee5d3">
+   <rect x="4.32" y="4.32" width="481.796384" height="288.288"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+<div class="fr"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 490.436384 296.928" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="f5_figure_1">
+  <g id="f5_patch_1">
+   <path d="M 0 296.928 
+L 490.436384 296.928 
+L 490.436384 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="f5_axes_1">
+   <g id="f5_patch_2">
+    <path d="M 87.252164 61.582685 
+Q 97.125041 61.582685 105.656277 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 101.656277 59.582685 
+L 105.656277 61.582685 
+L 101.656277 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_3">
+    <path d="M 182.031781 61.582685 
+Q 191.904658 61.582685 200.435893 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 196.435893 59.582685 
+L 200.435893 61.582685 
+L 196.435893 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_4">
+    <path d="M 276.811397 61.582685 
+Q 286.684274 61.582685 295.21551 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 291.21551 59.582685 
+L 295.21551 61.582685 
+L 291.21551 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_5">
+    <path d="M 371.591014 61.582685 
+Q 381.46389 61.582685 389.995126 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 385.995126 59.582685 
+L 389.995126 61.582685 
+L 385.995126 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_6">
+    <path d="M 71.455562 191.904658 
+Q 85.672504 191.904658 98.547806 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 94.547806 189.904658 
+L 98.547806 191.904658 
+L 94.547806 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_7">
+    <path d="M 129.902992 191.904658 
+Q 144.119934 191.904658 156.995236 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 152.995236 189.904658 
+L 156.995236 191.904658 
+L 152.995236 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_8">
+    <path d="M 233.37074 191.904658 
+Q 245.218192 191.904658 255.724003 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 251.724003 189.904658 
+L 255.724003 191.904658 
+L 251.724003 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_9">
+    <path d="M 320.252055 191.904658 
+Q 332.099507 191.904658 341.263677 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 337.263677 189.904658 
+L 341.263677 191.904658 
+L 337.263677 193.904658 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f5_line2d_1">
+    <path d="M 418.980822 191.904658 
+L 442.675726 191.904658 
+" clip-path="url(#f5_p4e20de3eae)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="f5_patch_10">
+    <path d="M 442.675726 191.904658 
+Q 442.675726 216.586849 442.675726 239.9274 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 444.675726 235.9274 
+L 442.675726 239.9274 
+L 440.675726 235.9274 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_11">
+    <path d="M 415.031671 259.040219 
+L 114.896219 259.040219 
+L 114.896219 208.253071 
+" style="fill: none; stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 112.896219 212.253071 
+L 114.896219 208.253071 
+L 116.896219 212.253071 
+z
+" style="stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_patch_12">
+    <path d="M 381.46389 144.514849 
+Q 381.46389 159.324164 381.46389 172.791839 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 383.46389 168.791839 
+L 381.46389 172.791839 
+L 379.46389 168.791839 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f5_text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="26.040329" transform="rotate(-0 12.218301 26.040329)">Vezérlés (nyílt hurok) – pl. hidegindítási dúsítás</text>
+   </g>
+   <g id="f5_patch_13">
+    <path d="M 14.587792 80.143693 
+L 84.882674 80.143693 
+Q 88.041995 80.143693 88.041995 76.984373 
+L 88.041995 46.180997 
+Q 88.041995 43.021677 84.882674 43.021677 
+L 14.587792 43.021677 
+Q 11.428471 43.021677 11.428471 46.180997 
+L 11.428471 76.984373 
+Q 11.428471 80.143693 14.587792 80.143693 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_patch_14">
+    <path d="M 109.367408 80.143693 
+L 179.66229 80.143693 
+Q 182.821611 80.143693 182.821611 76.984373 
+L 182.821611 46.180997 
+Q 182.821611 43.021677 179.66229 43.021677 
+L 109.367408 43.021677 
+Q 106.208088 43.021677 106.208088 46.180997 
+L 106.208088 76.984373 
+Q 106.208088 80.143693 109.367408 80.143693 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_patch_15">
+    <path d="M 204.147025 80.143693 
+L 274.441907 80.143693 
+Q 277.601227 80.143693 277.601227 76.984373 
+L 277.601227 46.180997 
+Q 277.601227 43.021677 274.441907 43.021677 
+L 204.147025 43.021677 
+Q 200.987704 43.021677 200.987704 46.180997 
+L 200.987704 76.984373 
+Q 200.987704 80.143693 204.147025 80.143693 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_patch_16">
+    <path d="M 298.926641 80.143693 
+L 369.221523 80.143693 
+Q 372.380844 80.143693 372.380844 76.984373 
+L 372.380844 46.180997 
+Q 372.380844 43.021677 369.221523 43.021677 
+L 298.926641 43.021677 
+Q 295.767321 43.021677 295.767321 46.180997 
+L 295.767321 76.984373 
+Q 295.767321 80.143693 298.926641 80.143693 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_patch_17">
+    <path d="M 393.706258 80.143693 
+L 464.00114 80.143693 
+Q 467.16046 80.143693 467.16046 76.984373 
+L 467.16046 46.180997 
+Q 467.16046 43.021677 464.00114 43.021677 
+L 393.706258 43.021677 
+Q 390.546937 43.021677 390.546937 46.180997 
+L 390.546937 76.984373 
+Q 390.546937 80.143693 393.706258 80.143693 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_text_2">
+    <text style="font-style: italic; font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: end" x="466.37063" y="93.17589" transform="rotate(-0 466.37063 93.17589)">nincs visszacsatolás: a λ-t senki nem méri</text>
+   </g>
+   <g id="f5_text_3">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="144.514849" transform="rotate(-0 12.218301 144.514849)">Szabályozás (zárt hurok) – lambdaszabályozás</text>
+   </g>
+   <g id="f5_patch_18">
+    <path d="M 14.587792 210.465666 
+L 69.086071 210.465666 
+Q 72.245392 210.465666 72.245392 207.306345 
+L 72.245392 176.50297 
+Q 72.245392 173.343649 69.086071 173.343649 
+L 14.587792 173.343649 
+Q 11.428471 173.343649 11.428471 176.50297 
+L 11.428471 207.306345 
+Q 11.428471 210.465666 14.587792 210.465666 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_patch_19">
+    <path d="M 114.896219 206.91143 
+C 118.876062 206.91143 122.693436 205.330222 125.50761 202.516048 
+C 128.321784 199.701875 129.902992 195.8845 129.902992 191.904658 
+C 129.902992 187.924815 128.321784 184.107441 125.50761 181.293267 
+C 122.693436 178.479093 118.876062 176.897885 114.896219 176.897885 
+C 110.916377 176.897885 107.099002 178.479093 104.284829 181.293267 
+C 101.470655 184.107441 99.889447 187.924815 99.889447 191.904658 
+C 99.889447 195.8845 101.470655 199.701875 104.284829 202.516048 
+C 107.099002 205.330222 110.916377 206.91143 114.896219 206.91143 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_text_4">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="90.411485" y="187.165677" transform="rotate(-0 90.411485 187.165677)">+</text>
+   </g>
+   <g id="f5_text_5">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start" x="119.6352" y="220.338542" transform="rotate(-0 119.6352 220.338542)">−</text>
+   </g>
+   <g id="f5_patch_20">
+    <path d="M 160.706367 210.465666 
+L 231.001249 210.465666 
+Q 234.16057 210.465666 234.16057 207.306345 
+L 234.16057 176.50297 
+Q 234.16057 173.343649 231.001249 173.343649 
+L 160.706367 173.343649 
+Q 157.547047 173.343649 157.547047 176.50297 
+L 157.547047 207.306345 
+Q 157.547047 210.465666 160.706367 210.465666 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_text_6">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="144.119934" y="186.333351" transform="rotate(-0 144.119934 186.333351)">e</text>
+   </g>
+   <g id="f5_patch_21">
+    <path d="M 259.435134 210.465666 
+L 317.882564 210.465666 
+Q 321.041885 210.465666 321.041885 207.306345 
+L 321.041885 176.50297 
+Q 321.041885 173.343649 317.882564 173.343649 
+L 259.435134 173.343649 
+Q 256.275814 173.343649 256.275814 176.50297 
+L 256.275814 207.306345 
+Q 256.275814 210.465666 259.435134 210.465666 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_patch_22">
+    <path d="M 346.316449 210.465666 
+L 416.611332 210.465666 
+Q 419.770652 210.465666 419.770652 207.306345 
+L 419.770652 176.50297 
+Q 419.770652 173.343649 416.611332 173.343649 
+L 346.316449 173.343649 
+Q 343.157129 173.343649 343.157129 176.50297 
+L 343.157129 207.306345 
+Q 343.157129 210.465666 346.316449 210.465666 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_patch_23">
+    <path d="M 417.401162 277.601227 
+L 467.95029 277.601227 
+Q 471.109611 277.601227 471.109611 274.441907 
+L 471.109611 243.638532 
+Q 471.109611 240.479211 467.95029 240.479211 
+L 417.401162 240.479211 
+Q 414.241841 240.479211 414.241841 243.638532 
+L 414.241841 274.441907 
+Q 414.241841 277.601227 417.401162 277.601227 
+z
+" clip-path="url(#f5_p4e20de3eae)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f5_text_7">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="264.963945" y="253.251975" transform="rotate(-0 264.963945 253.251975)">visszacsatolás: λ_mért</text>
+   </g>
+   <g id="f5_text_8">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(350.408984 132.084574)">zavaró jellemző:</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(317.694547 140.959711)">hamislevegő, üzemanyagnyomás</text>
+   </g>
+   <g id="f5_text_9">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="67.506411" y="239.609521" transform="rotate(-0 67.506411 239.609521)">e = λ_alap − λ_mért</text>
+   </g>
+   <g id="f5_text_10">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(20.72242 54.662397)">hűtőfolyadék-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.49967 64.06856)">hőmérséklet</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(38.064483 73.474722)">(NTC)</text>
+   </g>
+   <g id="f5_text_11">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(120.965974 59.197479)">jelleggörbe</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(132.577006 68.603641)">(ECU)</text>
+   </g>
+   <g id="f5_text_12">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="239.294466" y="63.90056" transform="rotate(-0 239.294466 63.90056)">injektor</text>
+   </g>
+   <g id="f5_text_13">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="334.074082" y="63.90056" transform="rotate(-0 334.074082 63.90056)">motor</text>
+   </g>
+   <g id="f5_text_14">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="428.853699" y="64.06856" transform="rotate(-0 428.853699 64.06856)">kipufogógáz</text>
+   </g>
+   <g id="f5_text_15">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.937057 189.519451)">λ-alapjel</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(34.3104 198.925614)">= 1</text>
+   </g>
+   <g id="f5_line2d_2">
+    <path d="M 104.233512 202.567364 
+L 125.558926 181.241951 
+" clip-path="url(#f5_p4e20de3eae)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f5_line2d_3">
+    <path d="M 104.233512 181.241951 
+L 125.558926 202.567364 
+" clip-path="url(#f5_p4e20de3eae)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f5_text_16">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(172.650777 189.687451)">szabályozó</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(183.915964 199.093614)">(ECU)</text>
+   </g>
+   <g id="f5_text_17">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(272.704099 189.519451)">injektor</text>
+    <!-- ($t_i$) -->
+    <g transform="translate(282.778849 198.925614)">
+     <text>
+      <tspan x="0" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+      <tspan x="8.424866" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+      <tspan x="3.273483" y="-0.640625" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">t</tspan>
+      <tspan x="6.563354" y="0.7375" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">i</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="f5_text_18">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(354.752547 189.687451)">motor / égés</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(361.895828 199.093614)">(szakasz)</text>
+   </g>
+   <g id="f5_text_19">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(425.422257 256.655013)">lambda-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(427.811664 266.061175)">szonda</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="f5_p4e20de3eae">
+   <rect x="4.32" y="4.32" width="481.796384" height="288.288"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+<div class="fr"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 490.436384 296.928" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="f6_figure_1">
+  <g id="f6_patch_1">
+   <path d="M 0 296.928 
+L 490.436384 296.928 
+L 490.436384 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="f6_axes_1">
+   <g id="f6_patch_2">
+    <path d="M 87.252164 61.582685 
+Q 97.125041 61.582685 105.656277 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 101.656277 59.582685 
+L 105.656277 61.582685 
+L 101.656277 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_3">
+    <path d="M 182.031781 61.582685 
+Q 191.904658 61.582685 200.435893 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 196.435893 59.582685 
+L 200.435893 61.582685 
+L 196.435893 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_4">
+    <path d="M 276.811397 61.582685 
+Q 286.684274 61.582685 295.21551 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 291.21551 59.582685 
+L 295.21551 61.582685 
+L 291.21551 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_5">
+    <path d="M 371.591014 61.582685 
+Q 381.46389 61.582685 389.995126 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 385.995126 59.582685 
+L 389.995126 61.582685 
+L 385.995126 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_6">
+    <path d="M 71.455562 191.904658 
+Q 85.672504 191.904658 98.547806 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 94.547806 189.904658 
+L 98.547806 191.904658 
+L 94.547806 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_7">
+    <path d="M 129.902992 191.904658 
+Q 144.119934 191.904658 156.995236 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 152.995236 189.904658 
+L 156.995236 191.904658 
+L 152.995236 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_8">
+    <path d="M 233.37074 191.904658 
+Q 245.218192 191.904658 255.724003 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 251.724003 189.904658 
+L 255.724003 191.904658 
+L 251.724003 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_9">
+    <path d="M 320.252055 191.904658 
+Q 332.099507 191.904658 342.605318 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 338.605318 189.904658 
+L 342.605318 191.904658 
+L 338.605318 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_line2d_1">
+    <path d="M 418.980822 191.904658 
+L 442.675726 191.904658 
+" clip-path="url(#f6_p72aa578261)" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: square"/>
+   </g>
+   <g id="f6_patch_10">
+    <path d="M 442.675726 191.904658 
+Q 442.675726 216.586849 442.675726 238.58576 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 444.675726 234.58576 
+L 442.675726 238.58576 
+L 440.675726 234.58576 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_11">
+    <path d="M 415.031671 259.040219 
+L 114.896219 259.040219 
+L 114.896219 209.594712 
+" style="fill: none; stroke-dasharray: 8.88,3.84; stroke-dashoffset: 0; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 112.896219 213.594712 
+L 114.896219 209.594712 
+L 116.896219 213.594712 
+z
+" style="stroke-dasharray: 8.88,3.84; stroke-dashoffset: 0; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f6_patch_12">
+    <path d="M 381.46389 144.514849 
+Q 381.46389 159.324164 381.46389 172.791839 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 383.46389 168.791839 
+L 381.46389 172.791839 
+L 379.46389 168.791839 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f6_text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="26.040329" transform="rotate(-0 12.218301 26.040329)">Vezérlés (nyílt hurok) – pl. hidegindítási dúsítás</text>
+   </g>
+   <g id="f6_patch_13">
+    <path d="M 14.587792 80.143693 
+L 84.882674 80.143693 
+Q 88.041995 80.143693 88.041995 76.984373 
+L 88.041995 46.180997 
+Q 88.041995 43.021677 84.882674 43.021677 
+L 14.587792 43.021677 
+Q 11.428471 43.021677 11.428471 46.180997 
+L 11.428471 76.984373 
+Q 11.428471 80.143693 14.587792 80.143693 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_patch_14">
+    <path d="M 109.367408 80.143693 
+L 179.66229 80.143693 
+Q 182.821611 80.143693 182.821611 76.984373 
+L 182.821611 46.180997 
+Q 182.821611 43.021677 179.66229 43.021677 
+L 109.367408 43.021677 
+Q 106.208088 43.021677 106.208088 46.180997 
+L 106.208088 76.984373 
+Q 106.208088 80.143693 109.367408 80.143693 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_patch_15">
+    <path d="M 204.147025 80.143693 
+L 274.441907 80.143693 
+Q 277.601227 80.143693 277.601227 76.984373 
+L 277.601227 46.180997 
+Q 277.601227 43.021677 274.441907 43.021677 
+L 204.147025 43.021677 
+Q 200.987704 43.021677 200.987704 46.180997 
+L 200.987704 76.984373 
+Q 200.987704 80.143693 204.147025 80.143693 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_patch_16">
+    <path d="M 298.926641 80.143693 
+L 369.221523 80.143693 
+Q 372.380844 80.143693 372.380844 76.984373 
+L 372.380844 46.180997 
+Q 372.380844 43.021677 369.221523 43.021677 
+L 298.926641 43.021677 
+Q 295.767321 43.021677 295.767321 46.180997 
+L 295.767321 76.984373 
+Q 295.767321 80.143693 298.926641 80.143693 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_patch_17">
+    <path d="M 393.706258 80.143693 
+L 464.00114 80.143693 
+Q 467.16046 80.143693 467.16046 76.984373 
+L 467.16046 46.180997 
+Q 467.16046 43.021677 464.00114 43.021677 
+L 393.706258 43.021677 
+Q 390.546937 43.021677 390.546937 46.180997 
+L 390.546937 76.984373 
+Q 390.546937 80.143693 393.706258 80.143693 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_text_2">
+    <text style="font-style: italic; font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: end" x="466.37063" y="93.17589" transform="rotate(-0 466.37063 93.17589)">nincs visszacsatolás: a λ-t senki nem méri</text>
+   </g>
+   <g id="f6_text_3">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="144.514849" transform="rotate(-0 12.218301 144.514849)">Szabályozás (zárt hurok) – lambdaszabályozás</text>
+   </g>
+   <g id="f6_patch_18">
+    <path d="M 14.587792 210.465666 
+L 69.086071 210.465666 
+Q 72.245392 210.465666 72.245392 207.306345 
+L 72.245392 176.50297 
+Q 72.245392 173.343649 69.086071 173.343649 
+L 14.587792 173.343649 
+Q 11.428471 173.343649 11.428471 176.50297 
+L 11.428471 207.306345 
+Q 11.428471 210.465666 14.587792 210.465666 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_patch_19">
+    <path d="M 114.896219 206.91143 
+C 118.876062 206.91143 122.693436 205.330222 125.50761 202.516048 
+C 128.321784 199.701875 129.902992 195.8845 129.902992 191.904658 
+C 129.902992 187.924815 128.321784 184.107441 125.50761 181.293267 
+C 122.693436 178.479093 118.876062 176.897885 114.896219 176.897885 
+C 110.916377 176.897885 107.099002 178.479093 104.284829 181.293267 
+C 101.470655 184.107441 99.889447 187.924815 99.889447 191.904658 
+C 99.889447 195.8845 101.470655 199.701875 104.284829 202.516048 
+C 107.099002 205.330222 110.916377 206.91143 114.896219 206.91143 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_text_4">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="90.411485" y="187.165677" transform="rotate(-0 90.411485 187.165677)">+</text>
+   </g>
+   <g id="f6_text_5">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start" x="119.6352" y="220.338542" transform="rotate(-0 119.6352 220.338542)">−</text>
+   </g>
+   <g id="f6_patch_20">
+    <path d="M 160.706367 210.465666 
+L 231.001249 210.465666 
+Q 234.16057 210.465666 234.16057 207.306345 
+L 234.16057 176.50297 
+Q 234.16057 173.343649 231.001249 173.343649 
+L 160.706367 173.343649 
+Q 157.547047 173.343649 157.547047 176.50297 
+L 157.547047 207.306345 
+Q 157.547047 210.465666 160.706367 210.465666 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_text_6">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="144.119934" y="186.333351" transform="rotate(-0 144.119934 186.333351)">e</text>
+   </g>
+   <g id="f6_patch_21">
+    <path d="M 259.435134 210.465666 
+L 317.882564 210.465666 
+Q 321.041885 210.465666 321.041885 207.306345 
+L 321.041885 176.50297 
+Q 321.041885 173.343649 317.882564 173.343649 
+L 259.435134 173.343649 
+Q 256.275814 173.343649 256.275814 176.50297 
+L 256.275814 207.306345 
+Q 256.275814 210.465666 259.435134 210.465666 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_patch_22">
+    <path d="M 346.316449 210.465666 
+L 416.611332 210.465666 
+Q 419.770652 210.465666 419.770652 207.306345 
+L 419.770652 176.50297 
+Q 419.770652 173.343649 416.611332 173.343649 
+L 346.316449 173.343649 
+Q 343.157129 173.343649 343.157129 176.50297 
+L 343.157129 207.306345 
+Q 343.157129 210.465666 346.316449 210.465666 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_patch_23">
+    <path d="M 417.401162 277.601227 
+L 467.95029 277.601227 
+Q 471.109611 277.601227 471.109611 274.441907 
+L 471.109611 243.638532 
+Q 471.109611 240.479211 467.95029 240.479211 
+L 417.401162 240.479211 
+Q 414.241841 240.479211 414.241841 243.638532 
+L 414.241841 274.441907 
+Q 414.241841 277.601227 417.401162 277.601227 
+z
+" clip-path="url(#f6_p72aa578261)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f6_text_7">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="264.963945" y="253.251975" transform="rotate(-0 264.963945 253.251975)">visszacsatolás: λ_mért</text>
+   </g>
+   <g id="f6_text_8">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(350.408984 132.084574)">zavaró jellemző:</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(317.694547 140.959711)">hamislevegő, üzemanyagnyomás</text>
+   </g>
+   <g id="f6_text_9">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="67.506411" y="239.609521" transform="rotate(-0 67.506411 239.609521)">e = λ_alap − λ_mért</text>
+   </g>
+   <g id="f6_text_10">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(20.72242 54.662397)">hűtőfolyadék-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.49967 64.06856)">hőmérséklet</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(38.064483 73.474722)">(NTC)</text>
+   </g>
+   <g id="f6_text_11">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(120.965974 59.197479)">jelleggörbe</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(132.577006 68.603641)">(ECU)</text>
+   </g>
+   <g id="f6_text_12">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="239.294466" y="63.90056" transform="rotate(-0 239.294466 63.90056)">injektor</text>
+   </g>
+   <g id="f6_text_13">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="334.074082" y="63.90056" transform="rotate(-0 334.074082 63.90056)">motor</text>
+   </g>
+   <g id="f6_text_14">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="428.853699" y="64.06856" transform="rotate(-0 428.853699 64.06856)">kipufogógáz</text>
+   </g>
+   <g id="f6_text_15">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.937057 189.519451)">λ-alapjel</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(34.3104 198.925614)">= 1</text>
+   </g>
+   <g id="f6_line2d_2">
+    <path d="M 104.233512 202.567364 
+L 125.558926 181.241951 
+" clip-path="url(#f6_p72aa578261)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f6_line2d_3">
+    <path d="M 104.233512 181.241951 
+L 125.558926 202.567364 
+" clip-path="url(#f6_p72aa578261)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f6_text_16">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(172.650777 189.687451)">szabályozó</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(183.915964 199.093614)">(ECU)</text>
+   </g>
+   <g id="f6_text_17">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(272.704099 189.519451)">injektor</text>
+    <!-- ($t_i$) -->
+    <g transform="translate(282.778849 198.925614)">
+     <text>
+      <tspan x="0" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+      <tspan x="8.424866" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+      <tspan x="3.273483" y="-0.640625" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">t</tspan>
+      <tspan x="6.563354" y="0.7375" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">i</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="f6_text_18">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(354.752547 189.687451)">motor / égés</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(361.895828 199.093614)">(szakasz)</text>
+   </g>
+   <g id="f6_text_19">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(425.422257 256.655013)">lambda-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(427.811664 266.061175)">szonda</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="f6_p72aa578261">
+   <rect x="4.32" y="4.32" width="481.796384" height="288.288"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+<div class="fr"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 490.436384 296.928" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="f7_figure_1">
+  <g id="f7_patch_1">
+   <path d="M 0 296.928 
+L 490.436384 296.928 
+L 490.436384 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="f7_axes_1">
+   <g id="f7_patch_2">
+    <path d="M 87.252164 61.582685 
+Q 97.125041 61.582685 105.656277 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 101.656277 59.582685 
+L 105.656277 61.582685 
+L 101.656277 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_3">
+    <path d="M 182.031781 61.582685 
+Q 191.904658 61.582685 200.435893 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 196.435893 59.582685 
+L 200.435893 61.582685 
+L 196.435893 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_4">
+    <path d="M 276.811397 61.582685 
+Q 286.684274 61.582685 293.873869 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 289.873869 59.582685 
+L 293.873869 61.582685 
+L 289.873869 63.582685 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_5">
+    <path d="M 371.591014 61.582685 
+Q 381.46389 61.582685 389.995126 61.582685 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 385.995126 59.582685 
+L 389.995126 61.582685 
+L 385.995126 63.582685 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_6">
+    <path d="M 334.074082 29.989479 
+Q 334.074082 36.900493 334.074082 41.128225 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 336.074082 37.128225 
+L 334.074082 41.128225 
+L 332.074082 37.128225 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_7">
+    <path d="M 71.455562 191.904658 
+Q 85.672504 191.904658 98.547806 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 94.547806 189.904658 
+L 98.547806 191.904658 
+L 94.547806 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_8">
+    <path d="M 129.902992 191.904658 
+Q 144.119934 191.904658 156.995236 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 152.995236 189.904658 
+L 156.995236 191.904658 
+L 152.995236 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_9">
+    <path d="M 233.37074 191.904658 
+Q 245.218192 191.904658 255.724003 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 251.724003 189.904658 
+L 255.724003 191.904658 
+L 251.724003 193.904658 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_10">
+    <path d="M 320.252055 191.904658 
+Q 332.099507 191.904658 341.263677 191.904658 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 337.263677 189.904658 
+L 341.263677 191.904658 
+L 337.263677 193.904658 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f7_line2d_1">
+    <path d="M 418.980822 191.904658 
+L 442.675726 191.904658 
+" clip-path="url(#f7_p5b8c996022)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="f7_patch_11">
+    <path d="M 442.675726 191.904658 
+Q 442.675726 216.586849 442.675726 239.9274 
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 444.675726 235.9274 
+L 442.675726 239.9274 
+L 440.675726 235.9274 
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_12">
+    <path d="M 415.031671 259.040219 
+L 114.896219 259.040219 
+L 114.896219 208.253071 
+" style="fill: none; stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 112.896219 212.253071 
+L 114.896219 208.253071 
+L 116.896219 212.253071 
+z
+" style="stroke-dasharray: 4.44,1.92; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="f7_patch_13">
+    <path d="M 381.46389 144.514849 
+Q 381.46389 159.324164 381.46389 171.450198 
+" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 383.46389 167.450198 
+L 381.46389 171.450198 
+L 379.46389 167.450198 
+z
+" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="f7_text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="26.040329" transform="rotate(-0 12.218301 26.040329)">Vezérlés (nyílt hurok) – pl. hidegindítási dúsítás</text>
+   </g>
+   <g id="f7_patch_14">
+    <path d="M 14.587792 80.143693 
+L 84.882674 80.143693 
+Q 88.041995 80.143693 88.041995 76.984373 
+L 88.041995 46.180997 
+Q 88.041995 43.021677 84.882674 43.021677 
+L 14.587792 43.021677 
+Q 11.428471 43.021677 11.428471 46.180997 
+L 11.428471 76.984373 
+Q 11.428471 80.143693 14.587792 80.143693 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_patch_15">
+    <path d="M 109.367408 80.143693 
+L 179.66229 80.143693 
+Q 182.821611 80.143693 182.821611 76.984373 
+L 182.821611 46.180997 
+Q 182.821611 43.021677 179.66229 43.021677 
+L 109.367408 43.021677 
+Q 106.208088 43.021677 106.208088 46.180997 
+L 106.208088 76.984373 
+Q 106.208088 80.143693 109.367408 80.143693 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_patch_16">
+    <path d="M 204.147025 80.143693 
+L 274.441907 80.143693 
+Q 277.601227 80.143693 277.601227 76.984373 
+L 277.601227 46.180997 
+Q 277.601227 43.021677 274.441907 43.021677 
+L 204.147025 43.021677 
+Q 200.987704 43.021677 200.987704 46.180997 
+L 200.987704 76.984373 
+Q 200.987704 80.143693 204.147025 80.143693 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_patch_17">
+    <path d="M 298.926641 80.143693 
+L 369.221523 80.143693 
+Q 372.380844 80.143693 372.380844 76.984373 
+L 372.380844 46.180997 
+Q 372.380844 43.021677 369.221523 43.021677 
+L 298.926641 43.021677 
+Q 295.767321 43.021677 295.767321 46.180997 
+L 295.767321 76.984373 
+Q 295.767321 80.143693 298.926641 80.143693 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_patch_18">
+    <path d="M 393.706258 80.143693 
+L 464.00114 80.143693 
+Q 467.16046 80.143693 467.16046 76.984373 
+L 467.16046 46.180997 
+Q 467.16046 43.021677 464.00114 43.021677 
+L 393.706258 43.021677 
+Q 390.546937 43.021677 390.546937 46.180997 
+L 390.546937 76.984373 
+Q 390.546937 80.143693 393.706258 80.143693 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_text_2">
+    <text style="font-style: italic; font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: end" x="466.37063" y="93.17589" transform="rotate(-0 466.37063 93.17589)">nincs visszacsatolás: a λ-t senki nem méri</text>
+   </g>
+   <g id="f7_text_3">
+    <text style="font-weight: 700; font-size: 7.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="351.84526" y="26.374967" transform="rotate(-0 351.84526 26.374967)">hamislevegő → λ &gt; 1, nincs korrekció</text>
+   </g>
+   <g id="f7_text_4">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: start" x="12.218301" y="144.514849" transform="rotate(-0 12.218301 144.514849)">Szabályozás (zárt hurok) – lambdaszabályozás</text>
+   </g>
+   <g id="f7_patch_19">
+    <path d="M 14.587792 210.465666 
+L 69.086071 210.465666 
+Q 72.245392 210.465666 72.245392 207.306345 
+L 72.245392 176.50297 
+Q 72.245392 173.343649 69.086071 173.343649 
+L 14.587792 173.343649 
+Q 11.428471 173.343649 11.428471 176.50297 
+L 11.428471 207.306345 
+Q 11.428471 210.465666 14.587792 210.465666 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_patch_20">
+    <path d="M 114.896219 206.91143 
+C 118.876062 206.91143 122.693436 205.330222 125.50761 202.516048 
+C 128.321784 199.701875 129.902992 195.8845 129.902992 191.904658 
+C 129.902992 187.924815 128.321784 184.107441 125.50761 181.293267 
+C 122.693436 178.479093 118.876062 176.897885 114.896219 176.897885 
+C 110.916377 176.897885 107.099002 178.479093 104.284829 181.293267 
+C 101.470655 184.107441 99.889447 187.924815 99.889447 191.904658 
+C 99.889447 195.8845 101.470655 199.701875 104.284829 202.516048 
+C 107.099002 205.330222 110.916377 206.91143 114.896219 206.91143 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_text_5">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="90.411485" y="187.165677" transform="rotate(-0 90.411485 187.165677)">+</text>
+   </g>
+   <g id="f7_text_6">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start" x="119.6352" y="220.338542" transform="rotate(-0 119.6352 220.338542)">−</text>
+   </g>
+   <g id="f7_patch_21">
+    <path d="M 160.706367 210.465666 
+L 231.001249 210.465666 
+Q 234.16057 210.465666 234.16057 207.306345 
+L 234.16057 176.50297 
+Q 234.16057 173.343649 231.001249 173.343649 
+L 160.706367 173.343649 
+Q 157.547047 173.343649 157.547047 176.50297 
+L 157.547047 207.306345 
+Q 157.547047 210.465666 160.706367 210.465666 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_text_7">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="144.119934" y="186.333351" transform="rotate(-0 144.119934 186.333351)">e</text>
+   </g>
+   <g id="f7_patch_22">
+    <path d="M 259.435134 210.465666 
+L 317.882564 210.465666 
+Q 321.041885 210.465666 321.041885 207.306345 
+L 321.041885 176.50297 
+Q 321.041885 173.343649 317.882564 173.343649 
+L 259.435134 173.343649 
+Q 256.275814 173.343649 256.275814 176.50297 
+L 256.275814 207.306345 
+Q 256.275814 210.465666 259.435134 210.465666 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_patch_23">
+    <path d="M 346.316449 210.465666 
+L 416.611332 210.465666 
+Q 419.770652 210.465666 419.770652 207.306345 
+L 419.770652 176.50297 
+Q 419.770652 173.343649 416.611332 173.343649 
+L 346.316449 173.343649 
+Q 343.157129 173.343649 343.157129 176.50297 
+L 343.157129 207.306345 
+Q 343.157129 210.465666 346.316449 210.465666 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #cccccc; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_patch_24">
+    <path d="M 417.401162 277.601227 
+L 467.95029 277.601227 
+Q 471.109611 277.601227 471.109611 274.441907 
+L 471.109611 243.638532 
+Q 471.109611 240.479211 467.95029 240.479211 
+L 417.401162 240.479211 
+Q 414.241841 240.479211 414.241841 243.638532 
+L 414.241841 274.441907 
+Q 414.241841 277.601227 417.401162 277.601227 
+z
+" clip-path="url(#f7_p5b8c996022)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="f7_text_8">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="264.963945" y="253.251975" transform="rotate(-0 264.963945 253.251975)">visszacsatolás: λ_mért</text>
+   </g>
+   <g id="f7_text_9">
+    <text style="font-weight: 700; font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(346.474203 131.965824)">zavaró jellemző:</text>
+    <text style="font-weight: 700; font-size: 7.6px; font-family: 'DejaVu Sans'" transform="translate(310.57489 140.900336)">hamislevegő, üzemanyagnyomás</text>
+   </g>
+   <g id="f7_text_10">
+    <text style="font-size: 7.8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="67.506411" y="239.609521" transform="rotate(-0 67.506411 239.609521)">e = λ_alap − λ_mért</text>
+   </g>
+   <g id="f7_text_11">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(20.72242 54.662397)">hűtőfolyadék-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.49967 64.06856)">hőmérséklet</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(38.064483 73.474722)">(NTC)</text>
+   </g>
+   <g id="f7_text_12">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(120.965974 59.197479)">jelleggörbe</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(132.577006 68.603641)">(ECU)</text>
+   </g>
+   <g id="f7_text_13">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="239.294466" y="63.90056" transform="rotate(-0 239.294466 63.90056)">injektor</text>
+   </g>
+   <g id="f7_text_14">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="334.074082" y="63.90056" transform="rotate(-0 334.074082 63.90056)">motor</text>
+   </g>
+   <g id="f7_text_15">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'; text-anchor: middle" x="428.853699" y="64.06856" transform="rotate(-0 428.853699 64.06856)">kipufogógáz</text>
+   </g>
+   <g id="f7_text_16">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(23.937057 189.519451)">λ-alapjel</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(34.3104 198.925614)">= 1</text>
+   </g>
+   <g id="f7_line2d_2">
+    <path d="M 104.233512 202.567364 
+L 125.558926 181.241951 
+" clip-path="url(#f7_p5b8c996022)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f7_line2d_3">
+    <path d="M 104.233512 181.241951 
+L 125.558926 202.567364 
+" clip-path="url(#f7_p5b8c996022)" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="f7_text_17">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(172.650777 189.687451)">szabályozó</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(183.915964 199.093614)">(ECU)</text>
+   </g>
+   <g id="f7_text_18">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(272.704099 189.519451)">injektor</text>
+    <!-- ($t_i$) -->
+    <g transform="translate(282.778849 198.925614)">
+     <text>
+      <tspan x="0" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+      <tspan x="8.424866" y="-0.640625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+      <tspan x="3.273483" y="-0.640625" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">t</tspan>
+      <tspan x="6.563354" y="0.7375" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">i</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="f7_text_19">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(354.752547 189.687451)">motor / égés</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(361.895828 199.093614)">(szakasz)</text>
+   </g>
+   <g id="f7_text_20">
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(425.422257 256.655013)">lambda-</text>
+    <text style="font-size: 8.4px; font-family: 'DejaVu Sans'" transform="translate(427.811664 266.061175)">szonda</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="f7_p5b8c996022">
+   <rect x="4.32" y="4.32" width="481.796384" height="288.288"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+</div>
+
+<p class="small">Hatásvázlat a fejezet definíciói alapján; a szaggatott vonal a visszacsatoló ág. Az utolsó lépés a hamislevegő zavaró hatását mutatja.</p>
+<script>
+const MODE="steps", MSG=["<b>Vezérlés:</b> a hőmérséklet alapján az ECU jelleggörbéből számol befecskendezési időt; az eredményt (λ) senki nem méri – nyílt hurok.", "<b>1.</b> Alapjel: λ = 1 (sztöchiometrikus keverék).", "<b>2.</b> Összegző: hibajel e = λ_alap − λ_mért.", "<b>3.</b> Szabályozó (ECU): a hibajel alapján módosítja a befecskendezési időt.", "<b>4.</b> Beavatkozó: injektor, t_i befecskendezési idő.", "<b>5.</b> Szabályozott szakasz: motor, égés – itt alakul ki a tényleges λ.", "<b>6.</b> Érzékelő: a lambdaszonda méri a kipufogógáz λ-ját, és visszavezeti az összegzőhöz – zárt hurok.", "<b>Hamislevegő:</b> a szívócsőbe nem mért levegő jut, a keverék szegényebb (λ > 1). A vezérlés ezt nem veszi észre; a szabályozásban λ_mért > 1, e < 0, a szabályozó <b>növeli t_i-t</b>, amíg λ vissza nem áll ≈ 1-re (a hosszú távú korrekció is ezt mutatja)."], PARTS={}, LABELS=["1", "2", "3", "4", "5", "6", "7", "8"];
+const FR=[...document.querySelectorAll(".fr")], ST=document.getElementById("status");
+let k=0, timer=null;
+function show(i){k=Math.max(0,Math.min(FR.length-1,i));FR.forEach((f,j)=>f.classList.toggle("on",j===k));
+  document.querySelectorAll("button[data-i]").forEach(b=>b.classList.toggle("on",+b.dataset.i===k));
+  const r=document.getElementById("pos");if(r){r.value=k;}
+  const c=document.getElementById("cnt");if(c){c.textContent=(MODE==="slider"?LABELS[k]:(k+1)+"/"+FR.length);}
+  ST.innerHTML=MSG[k]||"";}
+function stop(){if(timer){clearInterval(timer);timer=null;}const p=document.getElementById("play");if(p)p.textContent="▶ Lejátszás";}
+document.querySelectorAll("button[data-i]").forEach(b=>b.onclick=()=>{stop();show(+b.dataset.i);});
+const B=id=>document.getElementById(id);
+if(B("first")){B("first").onclick=()=>{stop();show(0);};B("prev").onclick=()=>{stop();show(k-1);};B("next").onclick=()=>{stop();show(k+1);};
+  B("play").onclick=()=>{if(timer){stop();return;}if(k>=FR.length-1)show(0);B("play").textContent="⏸ Szünet";
+    timer=setInterval(()=>{if(k>=FR.length-1)stop();else show(k+1);},2200);};}
+if(B("pos"))B("pos").oninput=()=>{stop();show(+B("pos").value);};
+document.querySelectorAll("g[id]").forEach(g=>{const m=g.id.match(/_p_([A-Za-z0-9]+)$/);if(!m||!(m[1] in PARTS))return;
+  g.classList.add("part");const t=document.createElementNS("http://www.w3.org/2000/svg","title");t.textContent=PARTS[m[1]];g.prepend(t);
+  const on=()=>{document.querySelectorAll("g.part").forEach(x=>{const mm=x.id.match(/_p_([A-Za-z0-9]+)$/);x.classList.toggle("hl",mm&&mm[1]===m[1]);});ST.innerHTML="<b>"+PARTS[m[1]]+"</b>";};
+  g.addEventListener("mouseenter",on);g.addEventListener("click",on);g.addEventListener("focus",on);
+  g.addEventListener("mouseleave",()=>{document.querySelectorAll("g.part.hl").forEach(x=>x.classList.remove("hl"));ST.innerHTML=MSG[k]||"";});});
+document.addEventListener("keydown",e=>{if(e.key==="ArrowRight"){stop();show(k+1);}if(e.key==="ArrowLeft"){stop();show(k-1);}});
+
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

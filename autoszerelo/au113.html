@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>31.3 Beavatkozók: injektorok, gyújtótekercsek, fojtószelep,
+alapjárat-szabályozó, EGR-szelep – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Gépjármű-villamosság és -elektronika</a> › <a href="index.html#auch30">31 Elektronikus motorirányítás</a></p>
+<div class="links"><a class="prev" rel="prev" href="au112.html">← 31.2 Érzékelők és jeladók</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au114.html">32.1 Adatbusz-hálózatok: CAN, LIN, FlexRay, MOST és Ethernet →</a></div>
+</nav>
+<h2 data-number="31.3" id="au113"><span
+class="header-section-number">31.3</span> Beavatkozók: injektorok,
+gyújtótekercsek, fojtószelep, alapjárat-szabályozó, EGR-szelep</h2>
+<h3 data-number="31.3.1" id="motiváció"><span
+class="header-section-number">31.3.1</span> Motiváció</h3>
+<p>Egy szervizben az ügyfél panasza: a motor hidegen rángat, melegen
+néha nem veszi fel a gázt, és a műszerfalon világít a motorhiba-lámpa. A
+hibakód-kiolvasás után a rendszerteszter „2. henger injektor-áramkör
+hibát” vagy „EGR-szelep visszajelző jel érvénytelen” üzenetet ad.
+Ilyenkor az autószerelőnek tudnia kell, hogy a motorvezérlő egység (ECU)
+<strong>parancsait</strong> hogyan hajtják végre az úgynevezett
+beavatkozók, és azt is, hogy azokat hogyan lehet szakszerűen, a gyártói
+adatokkal összehasonlítva megmérni. Ez az alfejezet a benzin- és
+dízelmotoros rendszerek leggyakoribb beavatkozóit – injektorok,
+gyújtótekercsek, fojtószelep, alapjárat-szabályozó, EGR-szelep,
+turbó-nyomásszabályozó, tartályszellőztető szelep – mutatja be, és
+előkészíti a későbbi, oszcilloszkópos méréseket.</p>
+<h3 data-number="31.3.2" id="szemléletes-kép"><span
+class="header-section-number">31.3.2</span> Szemléletes kép</h3>
+<p>Képzeljük el a motorirányítás zárt szabályozási körét: az érzékelők
+jeleit (légtömeg, fordulatszám, hőmérséklet, lambdaszonda) az ECU
+feldolgozza, majd <strong>villamos jelekkel</strong> utasítja a
+beavatkozókat. Például egy injektor úgy adagol, hogy az ECU rövid időre
+földre zárja az injektor tekercsét, ezáltal az mágneses tér kinyitja a
+szeleget. A gyújtótekercsnél hasonló elvű, de nagyobb energiájú
+kapcsolás történik. Az elektronikus fojtószelep egy villanymotorral
+állítja a szívócső levegőáramát, míg az EGR-szelep és a turbó szabályozó
+az emisszió és a töltőnyomás beállításáért felel. Az alábbi kapcsolási
+rajz és ábrák segítenek a szemléltetésben.</p>
+<hr />
+<h3 data-number="31.3.3" id="alapfogalmak-és-definíciók"><span
+class="header-section-number">31.3.3</span> Alapfogalmak és
+definíciók</h3>
+<p><strong>Definíció.</strong> <strong>Beavatkozó</strong> (actuator):
+olyan villamos, elektromágneses, pneumatikus vagy hidraulikus végrehajtó
+elem, amely a motorvezérlő egység parancsát mechanikai mozgássá,
+áramlássá vagy villamos kisüléssé alakítja. A gépjárművekben leginkább
+mágnesszelepek (solenoid), villanymotorok és gyújtótekercsek fordulnak
+elő.</p>
+<p><strong>Definíció.</strong> <strong>PWM-vezérlés</strong>
+(pulse-width modulation, impulzusszélesség-moduláció): a vezérlőjel
+feszültségét állandó amplitúdóval, de változó bekapcsolási idővel
+(kitöltési tényezővel) kapcsoljuk. A kitöltési tényező
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><msub><mi>t</mi><mtext mathvariant="normal">be</mtext></msub><mi>/</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">d = t_{\text{be}}/T</annotation></semantics></math>,
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">be</mtext></msub><annotation encoding="application/x-tex">t_{\text{be}}</annotation></semantics></math>
+a bekapcsolt idő,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+a periódusidő. A beavatkozó pillanatnyi árama vagy teljesítménye a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>-vel
+arányosítható.</p>
+<p><strong>Megjegyzés.</strong> A modern EDC (Electronic Diesel Control)
+és Motronic-rendszerekben az ECU szinte minden beavatkozót
+<strong>kapcsolóüzemmódban</strong>, azaz gyors ki- és bekapcsolással,
+PWM-mel vagy egyetlen, időzített impulzussal működtet; ritkábban analóg
+feszültséggel.</p>
+<hr />
+<h3 data-number="31.3.4" id="befecskendezőszelepek-működtetése"><span
+class="header-section-number">31.3.4</span> Befecskendezőszelepek
+működtetése</h3>
+<p><strong>Feladat.</strong> Az injektor (befecskendezőszelep) a
+tüzelőanyagot adott idő alatt, porlasztva a szívócsőbe (közvetett
+befecskendezés) vagy közvetlenül az égéstérbe juttatja. A motorterhelés
+és fordulatszám függvényében az ECU meghatározza a szükséges
+tüzelőanyag-mennyiséget, és abból kiszámítja a nyitási időt.</p>
+<p><strong>Felépítés és működés.</strong> A leggyakoribb injektor egy
+elektromágneses szelep: a tűszelepet rugó nyomja a szelepülésre, a
+tekercsbe vezetett áram pedig mágneses erővel felemeli a tűt. Amíg a
+szelep nyitva van, a tüzelőanyag a rögzített nyomáskülönbség
+(benzinmotoroknál a szívócsőnyomás és a befecskendezési nyomás,
+dízelmotoroknál a közös nyomásterű rendszer nyomása) hatására átáramlik.
+A nyitási idő ezredmásodperc nagyságrendű: Otto-motoroknál jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">1\,\text{ms}</annotation></semantics></math>
+–
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">10\,\text{ms}</annotation></semantics></math>,
+dízelmotoroknál
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">0{,}3\,\text{ms}</annotation></semantics></math>
+–
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">1{,}5\,\text{ms}</annotation></semantics></math>
+(ellenőrizendő: gyártói adat, rendszerfüggő).</p>
+<p><strong>Összefüggés.</strong> A befecskendezett tüzelőanyag-térfogat
+közelítőleg arányos a nyitási idővel:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">ü</mtext></msub><mo>=</mo><msub><mi>q</mi><mtext mathvariant="normal">inj</mtext></msub><mspace width="0.167em"></mspace><msub><mi>t</mi><mi>i</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">V_{\text{ü}} = q_{\text{inj}}\, t_i,</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mtext mathvariant="normal">ü</mtext></msub><annotation encoding="application/x-tex">V_{\text{ü}}</annotation></semantics></math>
+a befecskendezett térfogat (mm³ vagy cm³),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><mtext mathvariant="normal">inj</mtext></msub><annotation encoding="application/x-tex">q_{\text{inj}}</annotation></semantics></math>
+az injektor statikus átfolyási tényezője (állandó nyomáson, teljesen
+nyitott tűnél, pl. cm³/min),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>i</mi></msub><annotation encoding="application/x-tex">t_i</annotation></semantics></math>
+a nyitási idő (ms vagy min). A gyakorlatban az egyenlet pontosított,
+mert a nyitás és zárás véges időt vesz igénybe, és a nyomás
+változhat.</p>
+<p><strong>Áramszabályozott működtetés.</strong> Az injektor tekercsének
+induktivitása miatt az áram nem ugrik azonnal. Ha az ECU egyszerűen
+bekapcsolná a tranzisztort, az áram exponenciálisan emelkedne,
+késleltetve a nyitást. A szívócső-befecskendezés nagy impedanciájú (kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>12</mn><annotation encoding="application/x-tex">12</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">16\,\Omega</annotation></semantics></math>)
+injektorait az ECU egyszerűen bekapcsolja: 12 V-on az áram legfeljebb
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mi>U</mi><mi>/</mi><mi>R</mi><mo>≈</mo><mn>12</mn><mi>/</mi><mn>14</mn><mo>≈</mo><mn>0</mn><mo>,</mo><mn>86</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = U/R \approx 12/14 \approx 0{,}86\,\text{A}</annotation></semantics></math>-ig
+emelkedik (telítéses vezérlés). Az alacsony impedanciájú (kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">3\,\Omega</annotation></semantics></math>)
+injektorokat – benzin-közvetlenbefecskendezés, common rail
+mágnesszelepes injektorok – kétfázisú, ún.
+<strong>csúcsáram–tartóáram</strong> üzemmódban működtetik, gyakran
+emelt (boost) feszültségről (ellenőrizendő: gyártói adat):</p>
+<ol type="1">
+<li><strong>Csúcsáram szakasz</strong>: a tranzisztor bekapcsol, az áram
+gyorsan emelkedik, amíg eléri a csúcsáramot (pl.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">10\,\text{A}</annotation></semantics></math>
+– ellenőrizendő gyártói adat).</li>
+<li><strong>Tartóáram szakasz</strong>: ekkor az ECU átvált PWM- vagy
+lineáris szabályozásra, és csak annyi áramot tart fenn, ami a nyitva
+tartáshoz elegendő (pl.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">2\,\text{A}</annotation></semantics></math>
+– ellenőrizendő). Ez csökkenti a melegedést és a fogyasztást.</li>
+<li><strong>Kikapcsolás</strong>: a tranzisztor lezár, az áram gyorsan
+megszűnik, a szelep zár.</li>
+</ol>
+<p>A csúcsáram–tartóáram hullámalakot a következő ábra szemlélteti.</p>
+<figure>
+<img src="assets/au113-plot-1.png"
+alt="Injektor áramszabályozás: csúcsáram–tartóáram - Szemléltető, kitalált tanulási adatsor egy befecskendezőszelep vezérlőáramára; nem mért érték. A csúcsáram 10 A, a tartóáram 2 A példa." />
+<figcaption aria-hidden="true">Injektor áramszabályozás:
+csúcsáram–tartóáram - Szemléltető, kitalált tanulási adatsor egy
+befecskendezőszelep vezérlőáramára; nem mért érték. A csúcsáram 10 A, a
+tartóáram 2 A példa.</figcaption>
+</figure>
+<p><strong>SZÁMÍTÁS – nyitási idő és befecskendezett
+mennyiség</strong></p>
+<p>Adott: egy benzinmotor injektor statikus átfolyása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mtext mathvariant="normal">inj</mtext></msub><mo>=</mo><mn>220</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">cm</mtext><mn>3</mn></msup><mi>/</mi><mtext mathvariant="normal">min</mtext></mrow><annotation encoding="application/x-tex">q_{\text{inj}} = 220\, \text{cm}^3/\text{min}</annotation></semantics></math>
+a rendszer üzemi nyomásán (pl.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">bar</mtext></mrow><annotation encoding="application/x-tex">3{,}0\,\text{bar}</annotation></semantics></math>).
+Az ECU adott üzemállapotban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">t_i = 3{,}5\,\text{ms}</annotation></semantics></math>
+nyitási időt számít.</p>
+<p>Keresett: a befecskendezett tüzelőanyag-térfogat egy henger
+munkaciklusában.</p>
+<p>Megoldás:</p>
+<ol type="1">
+<li><p>Váltsuk át a nyitási időt percre:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext><mo>=</mo><mfrac><mrow><mn>3</mn><mo>,</mo><mn>5</mn></mrow><mrow><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow></mfrac><mspace width="0.167em"></mspace><mtext mathvariant="normal">min</mtext><mo>=</mo><mn>5</mn><mo>,</mo><mn>833</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">min</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t_i = 3{,}5\,\text{ms} = \frac{3{,}5}{60\,000}\,\text{min} = 5{,}833 \times 10^{-5}\,\text{min}.</annotation></semantics></math></p></li>
+<li><p>Számítsuk ki a térfogatot:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">ü</mtext></msub><mo>=</mo><msub><mi>q</mi><mtext mathvariant="normal">inj</mtext></msub><mspace width="0.167em"></mspace><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mn>220</mn><mspace width="0.167em"></mspace><mfrac><msup><mtext mathvariant="normal">cm</mtext><mn>3</mn></msup><mtext mathvariant="normal">min</mtext></mfrac><mo>×</mo><mn>5</mn><mo>,</mo><mn>833</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">min</mtext><mo>=</mo><mn>0</mn><mo>,</mo><mn>01283</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">cm</mtext><mn>3</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">V_{\text{ü}} = q_{\text{inj}}\, t_i = 220\, \frac{\text{cm}^3}{\text{min}} \times 5{,}833 \times 10^{-5}\,\text{min} = 0{,}01283\,\text{cm}^3.</annotation></semantics></math></p></li>
+<li><p>Váltsuk át mm³-re:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>01283</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">cm</mtext><mn>3</mn></msup><mo>=</mo><mn>12</mn><mo>,</mo><mn>83</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">mm</mtext><mn>3</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">0{,}01283\,\text{cm}^3 = 12{,}83\,\text{mm}^3.</annotation></semantics></math></p></li>
+</ol>
+<p><strong>Ellenőrzés</strong>: a kapott érték reális, mert egy
+Otto-motor egy hengerébe járó mennyiség jellemzően néhány tíz mm³
+nagyságrendű.</p>
+<p><strong>Összefüggés.</strong> A nyitási időt az ECU az alábbi formula
+szerint közelíti (példa):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><msub><mi>t</mi><mtext mathvariant="normal">alap</mtext></msub><mo>⋅</mo><msub><mi>λ</mi><mtext mathvariant="normal">cél</mtext></msub><mo>⋅</mo><msub><mi>k</mi><mtext mathvariant="normal">hőm</mtext></msub><mo>⋅</mo><msub><mi>k</mi><mtext mathvariant="normal">nyomás</mtext></msub><mo>+</mo><msub><mi>t</mi><mtext mathvariant="normal">korr</mtext></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">t_i = t_{\text{alap}} \cdot \lambda_{\text{cél}} \cdot k_{\text{hőm}} \cdot k_{\text{nyomás}} + t_{\text{korr}},</annotation></semantics></math>
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">alap</mtext></msub><annotation encoding="application/x-tex">t_{\text{alap}}</annotation></semantics></math>
+a légtömegből és a sztöchiometrikus keverési arányból számított alap
+idő,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mtext mathvariant="normal">cél</mtext></msub><annotation encoding="application/x-tex">\lambda_{\text{cél}}</annotation></semantics></math>
+a cél légviszony,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mtext mathvariant="normal">hőm</mtext></msub><annotation encoding="application/x-tex">k_{\text{hőm}}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mtext mathvariant="normal">nyomás</mtext></msub><annotation encoding="application/x-tex">k_{\text{nyomás}}</annotation></semantics></math>
+korrekciós tényezők,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mtext mathvariant="normal">korr</mtext></msub><annotation encoding="application/x-tex">t_{\text{korr}}</annotation></semantics></math>
+az akkumulátorfeszültség stb. kompenzációja. A pontos peremfeltételeket
+mindig a gyártó adja meg.</p>
+<p><strong>Tranzisztoros végfokozat.</strong> Az injektor kapcsolását az
+ECU végfokozatába épített teljesítmény-tranzisztorok (általában NPN vagy
+MOSFET) végzik. Egy injektorpár, hengersor vagy hengerenkénti vezérlésű
+rendszer is előfordul. A következő kapcsolási rajz elvi felépítést
+mutat.</p>
+<figure>
+<img src="assets/au113-diagram-1.png"
+alt="Injektor kapcsolóköre (elvi rajz) - Az ECU végfokozatának npn tranzisztora (T1) az injektor tekercsét (L1) a test felé kapcsolja (földelő kapcsolás); a tekercs a biztosítón és a főrelén át állandó pluszt kap. A vezérlőjel külön vezetéken a bázisra jut. A V1 Zener-dióda a kollektor és a test között a lekapcsolási feszültségcsúcsot korlátozza (kb. 60–80 V, ellenőrizendő: gyártói adat)." />
+<figcaption aria-hidden="true">Injektor kapcsolóköre (elvi rajz) - Az
+ECU végfokozatának npn tranzisztora (T1) az injektor tekercsét (L1) a
+test felé kapcsolja (földelő kapcsolás); a tekercs a biztosítón és a
+főrelén át állandó pluszt kap. A vezérlőjel külön vezetéken a bázisra
+jut. A V1 Zener-dióda a kollektor és a test között a lekapcsolási
+feszültségcsúcsot korlátozza (kb. 60–80 V, ellenőrizendő: gyártói
+adat).</figcaption>
+</figure>
+<p><strong>Megjegyzés.</strong> A rajzon az injektortekercs (L1) csak a
+T1 tranzisztoron át kap testet; a vezérlőjel külön kapcsokon jut a
+bázisra, a tápvezetékhez nem csatlakozik. A V1 Zener-dióda szerepe, hogy
+a tranzisztor kikapcsolásakor az induktivitásban tárolt energia ne
+okozzon a tranzisztort tönkretevő feszültségcsúcsot: a lekapcsolási
+csúcsot a végfokozat Zener-diódája kb. 60–80 V-ra korlátozza
+(ellenőrizendő: gyártói adat); ez a tüske az oszcilloszkópon az injektor
+mechanikus zárásának jele is. A tekerccsel párhuzamos egyszerű
+szabadonfutó dióda lassítaná a zárást, ezért injektorvégfokozatban
+ritka. A valódi ECU-kban gyakran belső aktív áramkorlátozás és további
+védőáramkörök is vannak.</p>
+<hr />
+<h3 data-number="31.3.5"
+id="gyújtótekercs-vezérlés-és-zárásszög-szabályozás"><span
+class="header-section-number">31.3.5</span> Gyújtótekercs-vezérlés és
+zárásszög-szabályozás</h3>
+<p><strong>Feladat.</strong> A gyújtótekercs feladata, hogy a gyújtási
+időpontban nagyfeszültségű szikrát szolgáltasson a gyújtógyertyának. A
+tekercsben a primer tekercs áramának hirtelen megszakításával
+indukálódik a szekunder nagyfeszültség.</p>
+<p><strong>Zárásszög-szabályozás.</strong> Ahhoz, hogy a primer áram
+elérje a kívánt megszakítási áramot (pl.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">8\,\text{A}</annotation></semantics></math>),
+idő kell. Az ECU a gyújtási időpont előtt annyi idővel zárja a
+primerkört, hogy a tekercs árama elérje a célértéket. Ezt az időt
+<strong>zárási időnek</strong>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>z</mi></msub><annotation encoding="application/x-tex">t_z</annotation></semantics></math>,
+angolul dwell time) nevezzük. Hagyományos, megszakítós rendszereknél ezt
+<strong>zárásszögben</strong> adták meg – az elosztótengely azon
+szögelfordulása, amíg a primer kör zárva van (az elosztótengely a
+főtengely fele akkora fordulatszámmal forog, ezért a főtengelyszög ennek
+kétszerese; pl. 4 hengeres motornál a 90°-os szikraközből a zárásszög
+kb. 50–54° elosztótengely-fok; ellenőrizendő). Elektronikus
+rendszerekben az ECU pontos időt számol a tekercs töltésére.</p>
+<p><strong>Összefüggés.</strong> A zárásszög és a zárási idő közötti
+kapcsolat:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>φ</mi><mi>z</mi></msub><mo>=</mo><msup><mn>720</mn><mo>∘</mo></msup><mo>⋅</mo><mfrac><msub><mi>t</mi><mi>z</mi></msub><mi>T</mi></mfrac><mo>=</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>⋅</mo><mfrac><mi>n</mi><mn>60</mn></mfrac><mspace width="0.167em"></mspace><msub><mi>t</mi><mi>z</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">\varphi_z = 720^\circ \cdot \frac{t_z}{T} = 360^\circ \cdot \frac{n}{60}\,t_z,</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>φ</mi><mi>z</mi></msub><annotation encoding="application/x-tex">\varphi_z</annotation></semantics></math>
+a zárásszög főtengely-fokban,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>z</mi></msub><annotation encoding="application/x-tex">t_z</annotation></semantics></math>
+a zárási idő (s a második alakban),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+a ciklusidő (ms) két gyújtás között. (Elosztótengely-fokban a zárásszög
+ennek fele:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><msup><mn>360</mn><mo>∘</mo></msup><mo>⋅</mo><msub><mi>t</mi><mi>z</mi></msub><mi>/</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">\gamma = 360^\circ \cdot t_z/T</annotation></semantics></math>.)
+Négyütemű motornál egy hengernél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mn>000</mn><mi>/</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">T = 120\,000 / n</annotation></semantics></math>
+ms (ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+fordulatszám 1/min), mert egy henger minden második fordulatnál gyújt,
+vagyis a ciklus 720° főtengelyszög.</p>
+<p><strong>SZÁMÍTÁS – zárásszög-szabályozás</strong></p>
+<p>Adott: egy motor fordulatszáma
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>3000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n = 3000\, \text{1/min}</annotation></semantics></math>.
+Az ECU által igényelt zárási idő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>z</mi></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">t_z = 3{,}5\,\text{ms}</annotation></semantics></math>
+(ellenőrizendő: gyártói adat).</p>
+<p>Keresett: a zárásszög fokban.</p>
+<p>Megoldás:</p>
+<ol type="1">
+<li>Ciklusidő kiszámítása:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mfrac><mrow><mn>120</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mn>3000</mn></mfrac><mo>=</mo><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">T = \frac{120\,000}{3000} = 40\,\text{ms}.</annotation></semantics></math></li>
+<li>Zárásszög főtengely-fokban:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>φ</mi><mi>z</mi></msub><mo>=</mo><msup><mn>720</mn><mo>∘</mo></msup><mo>⋅</mo><mfrac><mrow><mn>3</mn><mo>,</mo><mn>5</mn></mrow><mn>40</mn></mfrac><mo>=</mo><msup><mn>63</mn><mo>∘</mo></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">\varphi_z = 720^\circ \cdot \frac{3{,}5}{40} = 63^\circ.</annotation></semantics></math></li>
+</ol>
+<p><strong>Ellenőrzés</strong>: 3000 1/min-nél a főtengely 18 000 °/s
+sebességgel forog, 3,5 ms alatt 63°-ot fordul; elosztótengely-fokban ez
+31,5°, ami a régi elosztós rendszerek jellemző 30–60°-os tartományába
+esik.</p>
+<p><strong>Vezérlés.</strong> A modern gyújtórendszereknél az ECU nem
+egyszerűen zárásszöget számít, hanem a tekercs áramát is méri és
+szabályozza. A primer áramot egy teljesítmény-tranzisztor kapcsolja. A
+zárási idő alatt a primeráram a tekercs induktivitása miatt fokozatosan
+nő, amíg el nem éri az áramkorlátot; a megszakításkor a
+primerfeszültségen több száz voltos csúcs, majd az égési vonal látszik
+(a szikra ideje alatt).</p>
+<figure id="fig-au113-1">
+<div class="fig-interactive"><iframe src="figures/html/au113-1.html" title="A gyújtótekercs primeráramának és primerfeszültségének jelalakja a zárási idővel és a szikrával." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au113-1.png" style="width:90.0%"
+alt="A gyújtótekercs primeráramának és primerfeszültségének jelalakja a zárási idővel és a szikrával." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au113-1.png" style="width:90.0%"
+alt="A gyújtótekercs primeráramának és primerfeszültségének jelalakja a zárási idővel és a szikrával." /></details></div>
+<figcaption>A gyújtótekercs primeráramának (felül) és
+primerfeszültségének (alul) szemléltető jelalakja
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>3000</mn></mrow><annotation encoding="application/x-tex">n = 3000</annotation></semantics></math>
+1/min-nél: a szürke sáv a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>z</mi></msub><mo>=</mo><mn>3</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">t_z = 3{,}5</annotation></semantics></math>
+ms zárási idő, amely 63° főtengely-elfordulásnak felel meg; a szikra a
+FHP előtt 10°-nál, a megszakítás pillanatában keletkezik (szemléltető
+modell, nem mért jel)</figcaption>
+</figure>
+<p>Az interaktív változatban a fordulatszám, a zárási idő és a fedélzeti
+feszültség állítható; a kalkulátor kiírja a zárásszöget főtengely- és
+elosztótengely-fokban (az utóbbi a főtengelyszög fele), valamint azt,
+hogy a megszakítási áram eléri-e az áramkorlátot.</p>
+<p><strong>Példa.</strong> Egy intelligens gyújtótekercs (pl. COP –
+coil-on-plug) esetén az ECU egy vezérlőjelet küld, a tekercsbe épített
+elektronika pedig maga szabályozza az áramot. Ez csökkenti az ECU
+terhelését.</p>
+<hr />
+<h3 data-number="31.3.6"
+id="elektronikus-fojtószelep-drive-by-wire"><span
+class="header-section-number">31.3.6</span> Elektronikus fojtószelep
+(drive-by-wire)</h3>
+<p><strong>Definíció.</strong> Az elektronikus fojtószelep (electronic
+throttle control, ETC) a gázpedál helyzetét érzékelő jel alapján,
+villanymotorral állítja a fojtószelepet; a pedál és a fojtószelep között
+nincs mechanikus bowden.</p>
+<p><strong>Felépítés.</strong> A fojtószelepházban egy szögbeállító
+egyenáramú motor, egy vagy két potenciométeres vagy Hall-elektrós
+helyzet-visszajelző, valamint a fojtószeleptányér található. A motor
+általában hídáramkörön keresztül kap tápfeszültséget, így mindkét
+irányban forgatható.</p>
+<figure id="fig-au113-2">
+<div class="fig-interactive"><iframe src="figures/html/au113-2.html" title="Befecskendezőszelep tekerccsel és tűszeleppel, elektronikus fojtószelep-egység motorral és két helyzetérzékelővel, valamint EGR-szelep a hűtővel." loading="lazy" style="width:100%;border:0;height:640px"></iframe><noscript><img src="figures/img/au113-2.png" style="width:95.0%"
+alt="Befecskendezőszelep tekerccsel és tűszeleppel, elektronikus fojtószelep-egység motorral és két helyzetérzékelővel, valamint EGR-szelep a hűtővel." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au113-2.png" style="width:95.0%"
+alt="Befecskendezőszelep tekerccsel és tűszeleppel, elektronikus fojtószelep-egység motorral és két helyzetérzékelővel, valamint EGR-szelep a hűtővel." /></details></div>
+<figcaption>A beavatkozók sematikus metszete: (a) elektromágneses
+befecskendezőszelep, (b) elektronikus fojtószelep-egység, (c) EGR-szelep
+a hűtővel; folytonos vonal: vezérlés nélküli (zárt) helyzet, szaggatott:
+vezérelt, nyitott helyzet</figcaption>
+</figure>
+<p>Az ábrán követhető, mi mozdul a beavatkozó teszt során: az
+injektorban a tekercs meghúzza a horgonyt, és a tű felemelkedik a
+fészekről; a fojtószelep-egységben a DC motor a fogaskerék-áttételen át
+elfordítja a tányért a visszatérítő rugó ellenében, a két
+helyzetérzékelő ellentétes jele pedig visszajelzi a szöget; az
+EGR-szelepnél a működtető lenyitja a szeleptányért, és a hűtött
+kipufogógáz a szívóoldalra áramlik. Az interaktív változatban a
+„Vezérlés ki/be” gombbal a két állapot váltható, rámutatásra az
+alkatrész neve és szerepe jelenik meg.</p>
+<p><strong>Működés.</strong> Az ECU a gázpedál helyzetéből (és más
+jelekből, pl. menetstabilizáló) kiszámítja a kívánt nyomatékot, majd
+ebből a kívánt fojtószelep-szöget. A visszajelző jel és a kívánt érték
+közötti eltérés alapján PID-szabályozó állítja a motort. Az ETC egyben
+az alapjárat-szabályozást is ellátja, ezért külön alapjárat-szabályozóra
+nincs szükség.</p>
+<p><strong>Biztonsági funkció.</strong> A redundáns visszajelzők
+lehetővé teszik a hibás jel észlelését. Hiba esetén az ECU csökkentett
+teljesítményű üzemmódba (limp-home) kapcsol, a fojtószelep rugó hatására
+kis nyitásra térhet.</p>
+<p><strong>Példa.</strong> Ha a gázpedál érzékelője hibás jelet ad, az
+ECU letiltja a motorterhelést, és a vezető csak korlátozottan tud gázt
+adni; a hibakód tárolódik.</p>
+<hr />
+<h3 data-number="31.3.7" id="alapjárat-szabályozó-régi-rendszerek"><span
+class="header-section-number">31.3.7</span> Alapjárat-szabályozó (régi
+rendszerek)</h3>
+<p>A korábbi, mechanikus fojtószelepű Otto-motoroknál az alapjárati
+fordulatszámot külön <strong>alapjárat-szabályozó szelep</strong> (idle
+air control valve, IACV) tartotta. Ez a fojtószelepet megkerülő
+légcsatornában lévő, léptetőmotoros vagy forgómotoros tolattyú. Az ECU a
+hűtőfolyadék-hőmérséklet, a terhelés (klíma, generátor) és a
+fordulatszám alapján állítja a megkerülő levegő mennyiségét. A mai
+drive-by-wire rendszerekben ezt a feladatot az elektronikus fojtószelep
+veszi át, így az alapjárat-szabályozó mint különálló elem már ritka.</p>
+<hr />
+<h3 data-number="31.3.8" id="egr-szelep"><span
+class="header-section-number">31.3.8</span> EGR-szelep</h3>
+<p><strong>Feladat.</strong> A kipufogógáz-visszavezető szelep (EGR –
+exhaust gas recirculation) bizonyos üzemállapotokban a kipufogógáz egy
+részét visszavezeti a szívóoldalra, hogy csökkentse az égési
+csúcshőmérsékletet és ezzel a NOx-kibocsátást. Otto- és dízelmotoroknál
+egyaránt alkalmazzák.</p>
+<p><strong>Felépítés és működés.</strong> A szelep lehet vákuummal vagy
+villamosan működtetett. A modern rendszerekben elektromos (egyenáramú
+vagy léptetőmotoros) EGR-szelepet használnak beépített
+helyzet-visszajelzővel. Az ECU a visszajelző jel alapján zárt hurkú
+szabályozással állítja a szelep nyitását.</p>
+<p><strong>Példa.</strong> Dízelmotornál részterhelésen az ECU 10–40%-os
+EGR-arányt is beállíthat; a visszajelző potenciométer 0,5–4,5 V jelet ad
+a nyitás függvényében (ellenőrizendő gyártói adat).</p>
+<p><strong>Tipikus hiba.</strong> A korom és olajpára lerakódás miatt a
+szelep beragad, a visszajelző jel ellentmondásos lesz, hibakódot és
+teljesítményvesztést okoz.</p>
+<hr />
+<h3 data-number="31.3.9" id="turbó-nyomásszabályozó"><span
+class="header-section-number">31.3.9</span> Turbó nyomásszabályozó</h3>
+<p>A turbófeltöltős motoroknál a töltőnyomást elektronikusan
+szabályozzák. Két gyakori megoldás:</p>
+<ul>
+<li><strong>Wastegate (megkerülő szelep):</strong> egy pneumatikus vagy
+elektromos aktuátor nyitja a turbina megkerülő szelepét, ezzel
+korlátozza a turbina fordulatszámát és a töltőnyomást. Az ECU a
+töltőnyomás-érzékelő jele alapján PWM-mel vezérel egy mágnesszelepet,
+amely a vákuum/túltöltő nyomást kiadja az aktuátorra.</li>
+<li><strong>Változtatható geometriájú turbina (VGT):</strong> állítható
+vezetőgyűrű vagy lapátok segítségével változtatja a turbina hatásfokát.
+Az ECU elektromos motoros vagy pneumatikus állítóművel állítja a
+pozíciót, visszajelző jel segítségével.</li>
+</ul>
+<p>A turbószabályozó az emisszió és a teljesítmény egyensúlyát tartja;
+hibája túltöltés-védelmi üzemmódot (overboost) és hibakódot okoz.</p>
+<hr />
+<h3 data-number="31.3.10" id="tartályszellőztető-szelep"><span
+class="header-section-number">31.3.10</span> Tartályszellőztető
+szelep</h3>
+<p>A benzinüzemű járművek párolgáscsökkentő rendszerében a széntöltetű
+tartályból a kigőzölgést a <strong>tartályszellőztető szelep</strong>
+(EVAP purge valve) időszakosan a szívócsőbe vezeti. Az ECU a
+lambdaszabályozásra való tekintettel PWM-mel szakaszosan nyitja, hogy ne
+borítsa fel a keveréket. A szelep hibája (ragadás, tekercsszakadás) a
+motor járását és az emissziót rontja.</p>
+<hr />
+<h3 data-number="31.3.11" id="beavatkozó-vizsgálat-elve"><span
+class="header-section-number">31.3.11</span> Beavatkozó vizsgálat
+elve</h3>
+<p>A diagnosztika során az alábbi elvi lépéseket követjük; a konkrét
+mérési adatok és kapcsolási rajzok mindig a gyártói javítási utasításból
+származnak.</p>
+<p><strong>Szabály.</strong> A beavatkozó vizsgálatot
+<strong>feszültségmentes állapotban kezdjük</strong>: gyújtás ki, kulcs
+eltávolítva, akkumulátor negatív saru lekötve (a gyártó előírása
+szerint, adatvesztés elkerülése mellett). Csak ezután bontjuk a
+csatlakozót és mérünk ellenállást.</p>
+<p><strong>Ellenőrzési sorrend:</strong></p>
+<ol type="1">
+<li><strong>Szemrevételezés:</strong> csatlakozó korrózió, törött
+vezeték, sérült szigetelés, mechanikai rongálódás.</li>
+<li><strong>Tekercsellenállás mérése:</strong> multiméterrel, a
+beavatkozó csatlakozóján a megfelelő pólusok között. Például egy
+injektor ellenállása jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>17</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">17\,\Omega</annotation></semantics></math>
+(benzinmotor, ellenőrizendő gyártói adat), egy gyújtótekercs primer
+ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">0{,}3</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">1{,}5\,\Omega</annotation></semantics></math>.
+A mért érték eltérése tekercsszakadást vagy zárlatot jelez.</li>
+<li><strong>Vezérlőjel vizsgálata:</strong> oszcilloszkóppal az ECU
+felőli csatlakoztatóra visszakötve, a beavatkozó csatlakozóján vagy
+visszapróbálva. A jelalak jellegzetes: injektor esetén négyszögimpulzus,
+gyújtásnál zárási idő és megszakítási csúcs. A feszültségszint és
+időtartam összehasonlítása a gyártói adattal.</li>
+<li><strong>Beavatkozó teszt:</strong> rendszerteszterrel aktiváljuk az
+adott beavatkozót (pl. injektor kattogtatás, EGR-szelep mozgatás,
+fojtószelep nyitás-zárás). Figyeljük a visszajelző jelet és a
+hangot.</li>
+</ol>
+<p><strong>Figyelem – gyújtás és injektor oszcilloszkópos
+mérése.</strong> A gyújtás primer oldalán lekapcsoláskor több száz volt,
+a szekunder oldalon több tíz kilovolt feszültség keletkezik
+(ellenőrizendő: gyártói adat); az injektor lekapcsolási tüskéje kb.
+60–80 V, ami a műszer bemenetének kiválasztásánál számít. Járó motornál
+gyújtótekercset, gyertyacsatlakozót nem húzunk le és nem érintünk; a
+szekunder jelet csak a gyártó által előírt kapacitív vagy induktív
+érzékelővel mérjük, a primer jelet osztóval (pl. 10:1 vagy 20:1) védett
+bemeneten. Szívritmus-szabályozót (pacemaker) viselő személy gyújtási
+rendszeren nem dolgozik. Ha egy henger gyújtását kiiktatjuk, az
+injektorát is le kell tiltani, különben a katalizátor károsodik.</p>
+<p><strong>Figyelem.</strong> A befecskendező rendszerek nagynyomású
+oldalán (különösen közös nyomásterű dízelmotoroknál) a mért értékek és a
+beavatkozó teszt a jármű saját veszélyeit hordozza: a nagynyomású
+tüzelőanyagsugár bőrbe hatolhat, ezért a rendszer nyomásmentesítése és a
+gyártói eljárás betartása kötelező.</p>
+<p><strong>Továbbvitt eredmény.</strong> A beavatkozók itt megismert
+vezérlési módjait (PWM, csúcsáram–tartóáram, zárásszög) és a mérési
+elveket használjuk az <a href="au144.html">Jeladók és beavatkozók
+vizsgálata multiméterrel és oszcilloszkóppal</a> alfejezetben; ott
+részletesen tárgyaljuk a konkrét hullámformák kiértékelését és a
+hibaazonosítást.</p>
+<hr />
+<h3 data-number="31.3.12" id="minőségellenőrzés"><span
+class="header-section-number">31.3.12</span> Minőségellenőrzés</h3>
+<p>A beavatkozók ellenőrzéséhez az alábbi ellenőrzőlista használható. Az
+értékek <strong>tanulási példák</strong>, és minden konkrét járműnél a
+gyártói javítási adat a mérvadó.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Beavatkozó</th>
+<th>Jellemző ellenőrzés</th>
+<th>Példaérték</th>
+<th>Megjegyzés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Injektor</td>
+<td>tekercsellenállás</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>17</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">17\,\Omega</annotation></semantics></math></td>
+<td>ellenőrizendő gyártói adat</td>
+</tr>
+<tr>
+<td>Injektor</td>
+<td>vezérlőimpulzus idő</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">10\,\text{ms}</annotation></semantics></math></td>
+<td>terhelésfüggő</td>
+</tr>
+<tr>
+<td>Gyújtótekercs</td>
+<td>primer ellenállás</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">0{,}3</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">1{,}5\,\Omega</annotation></semantics></math></td>
+<td>ellenőrizendő</td>
+</tr>
+<tr>
+<td>Gyújtótekercs</td>
+<td>zárási idő</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">5\,\text{ms}</annotation></semantics></math></td>
+<td>a fedélzeti feszültségtől függ (ellenőrizendő)</td>
+</tr>
+<tr>
+<td>Elektronikus fojtószelep</td>
+<td>visszajelző feszültség</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">4{,}5\,\text{V}</annotation></semantics></math></td>
+<td>két jel ellentétes irányban</td>
+</tr>
+<tr>
+<td>EGR-szelep</td>
+<td>visszajelző feszültség</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">0{,}5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">4{,}5\,\text{V}</annotation></semantics></math></td>
+<td>nyitás arányában</td>
+</tr>
+<tr>
+<td>Tartályszellőztető szelep</td>
+<td>tekercsellenállás</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>30</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">30\,\Omega</annotation></semantics></math></td>
+<td>ellenőrizendő</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Valós életbeli alkalmazás.</strong></p>
+<p>Egy hét-nyolc éves dízelmotoros autónál alapjáraton remegés, füstölés
+és időnként vészüzemre váltás jelentkezett. A rendszerteszter hibakódot
+mutatott: EGR-szelep visszajelző jel érvénytelen. Az autószerelő
+kiolvasta az élő adatokat: a visszajelző feszültség 0,9 V-nál nem
+változott, pedig a szelep nyitása 40%-ot kért. Először a csatlakozót és
+vezetékeket ellenőrizte, majd multiméterrel megmérte a visszajelző
+kimenetet. A jel nem következett. A szelep kiszerelésekor erős
+koromlerakódást talált; a szeleptányér beragadt. A szelep tisztítva és
+újratanítva (adaptálva) lett, a hibakód törlése után próbaúton a jel
+0,5–3 V között változott, a motor járása rendeződött. Tanulság: a
+beavatkozó teszt és az élő adatok megfigyelése hamar lokalizálja a
+hibát.</p>
+<p><strong>Gyakorlati útmutató – beavatkozó-ellenőrzés
+munkalap</strong></p>
+<p><strong>Cél:</strong> injektor tekercsellenállás mérése és vezérlőjel
+ellenőrzése, beavatkozóteszt végrehajtása.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> alvázszám, motorszám,
+típus, évjárat, motorkód; a gyártói javítási adatból a szükséges
+ellenőrzési értékek.</p>
+<p><strong>Szerszámok, mérőeszközök:</strong> multiméter, oszcilloszkóp,
+rendszerteszter, bontószerszám, védőkesztyű, szigetelőszőnyeg, elszívó
+(ha motor jár).</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák. A motor járhat közben az
+elszívás kötelező; ügyelj a forgó részekre, forró felületekre és a
+tüzelőanyag rendszerére.</p>
+<p><strong>Munkalépések:</strong></p>
+<ol type="1">
+<li>Rögzítse a jármű adatait, az ügyfél panaszát, a hibakódokat.</li>
+<li>Állítsa le a motort, vegye le a gyújtást, várja meg a gyártó előírta
+időt (pl. kondenzátorok kisülése) – ellenőrizendő.</li>
+<li>Kösse le az akkumulátor negatív saruját a gyártói adatmentési
+eljárás betartásával.</li>
+<li>Keresse meg az injektor csatlakozóját; szükség esetén távolítsa el a
+motorburkolatot.</li>
+<li>Mérje multiméterrel az injektor tekercsellenállását a csatlakozó
+megfelelő pólusai között. Hasonlítsa össze a gyártói adattal (pl.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>±</mo><mn>2</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">12\pm 2\,\Omega</annotation></semantics></math>);
+eltérés esetén cserélje az injektort.</li>
+<li>Csatlakoztassa az oszcilloszkópot a visszakötött csatlakozóra (vagy
+használjon visszapróbáló tűt). Indítsa be a motort, és figyelje a
+vezérlőimpulzust. Ellenőrizze az amplitúdót és az időtartamot.</li>
+<li>Kapcsoljon rendszertesztert, válassza a beavatkozó tesztet (injektor
+aktiválás), és hallgassa az injektor kattogását. Figyelje, hogy a teszt
+alatt a motor fordulatszáma változik-e.</li>
+<li>A mérési eredményeket rögzítse a munkalapon; végezzen próbautat, és
+törölje a hibakódot, majd ellenőrizze a readiness státuszt.</li>
+</ol>
+<p><strong>Tipikus hibák.</strong></p>
+<ol type="1">
+<li><strong>Hiba:</strong> Ellenállásmérést a csatlakozó bontása nélkül,
+a vezérlőegységre csatlakoztatva végeznek. Ez téves értéket adhat, és
+károsíthatja az ECU-t. <strong>Helyes gyakorlat:</strong> mindig
+feszültségmentesen, a beavatkozó oldali csatlakozón mérjünk.</li>
+<li><strong>Hiba:</strong> A zárásszöget nem ellenőrzik, csak a
+gyújtótekercs ellenállását; így egy hibás töltésszabályozás rejtve
+marad. <strong>Helyes gyakorlat:</strong> oszcilloszkóppal is vizsgáljuk
+a primer jel időbeli lefutását.</li>
+<li><strong>Hiba:</strong> Az EGR-szelep tisztítása után elfelejtik
+elvégezni az adaptációt; a motor egyenetlenül jár, hibakód tér vissza.
+<strong>Helyes gyakorlat:</strong> minden cserénél/tisztításnál végezzük
+el a gyártói adaptációs eljárást.</li>
+</ol>
+<hr />
+<h3 data-number="31.3.13" id="önellenőrzés"><span
+class="header-section-number">31.3.13</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e, hogy az injektor nyitási ideje és a befecskendezett
+tüzelőanyag-mennyiség között arányos összefüggés van? Indokolja
+röviden.</li>
+<li>Mi a csúcsáram–tartóáram üzemmód célja az injektor
+működtetésénél?</li>
+<li>Számítsa ki a főtengely-fokban mért zárásszöget, ha a ciklusidő 60
+ms, a zárási idő 4 ms.</li>
+<li>Miben különbözik az elektronikus fojtószelep az
+alapjárat-szabályozós régi rendszertől?</li>
+<li>Miért nem mérhetjük az EGR-szelep helyzet-visszajelzőjének
+ellenállását bekötött, feszültség alatti csatlakozón, és hogyan mérjük
+helyette a jelét?</li>
+</ol>
+<hr />
+<h3 data-number="31.3.14" id="feladatok"><span
+class="header-section-number">31.3.14</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Definíció: hogyan működteti az ECU az
+injektort, és milyen paraméterrel szabályozza az adagolt
+mennyiséget?</p>
+<p><strong>2. feladat (A)</strong> Számolja ki, mekkora
+tüzelőanyag-térfogatot adagol egy injektor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mn>4</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">t_i = 4{,}0\,\text{ms}</annotation></semantics></math>
+nyitási idő alatt, ha statikus átfolyása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mtext mathvariant="normal">inj</mtext></msub><mo>=</mo><mn>180</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">cm</mtext><mn>3</mn></msup><mi>/</mi><mtext mathvariant="normal">min</mtext></mrow><annotation encoding="application/x-tex">q_{\text{inj}} = 180\,\text{cm}^3/\text{min}</annotation></semantics></math>.</p>
+<p><strong>3. feladat (B)</strong> Egy négyütemű motor fordulatszáma
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>4000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext></mrow><annotation encoding="application/x-tex">n = 4000\,\text{1/min}</annotation></semantics></math>.
+Az ECU zárási ideje
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>z</mi></msub><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">t_z = 2{,}5\,\text{ms}</annotation></semantics></math>.
+Számítsa ki a zárásszöget főtengely-fokban.</p>
+<p><strong>4. feladat (B)</strong> Adott egy elektronikus fojtószelep
+visszajelző jele: az 1. potenciométer 0,5 V (zárt) – 4,5 V (nyitott), a
+2. potenciométer 4,5 V (zárt) – 0,5 V (nyitott). Az ECU élő adatban 2,0
+V-ot és 3,2 V-ot mutat. A gyártói tűrés: a két jel összege
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>±</mo><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5{,}0\,\text{V} \pm 0{,}1\,\text{V}</annotation></semantics></math>
+(tanulási példa). Lehetséges-e ez normál működés esetén? Indokolja.</p>
+<p><strong>5. feladat (C)</strong> Egy injektor (nagy impedanciájú,
+szívócsőbe fecskendező típus) tekercsellenállása a gyártói adat szerint
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>12</mn><annotation encoding="application/x-tex">12</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">16\,\Omega</annotation></semantics></math>,
+de a multiméter 2,3
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math>-t
+mér. Milyen hibára következtethetünk, és milyen további vizsgálatot
+javasol?</p>
+<p><strong>6. feladat (D)</strong> Egy turbófeltöltős dízelmotornál
+túltöltés-védelmi üzemmód és „turbó mágnesszelep áramkör” hibakódja van.
+Rendszerteszterrel a beavatkozó teszt során a mágnesszelep nem kattog. A
+csatlakozón a tápfeszültség 12 V, a vezérlőjel azonban 0 V (nincs PWM).
+Mi a következtetés? Indokolja a diagnosztikai lépéseket.</p>
+<hr />
+<h3 data-number="31.3.15" id="megoldások"><span
+class="header-section-number">31.3.15</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Igen, mert a nyitási idő és az átfolyási tényező szorzata adja a
+térfogatot:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">ü</mtext></msub><mo>=</mo><msub><mi>q</mi><mtext mathvariant="normal">inj</mtext></msub><msub><mi>t</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">V_{\text{ü}} = q_{\text{inj}} t_i</annotation></semantics></math>.</li>
+<li>A csúcsáram gyors nyitást biztosít, a tartóáram pedig kisebb hőt és
+fogyasztást, miközben a szelep nyitva marad.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>φ</mi><mi>z</mi></msub><mo>=</mo><msup><mn>720</mn><mo>∘</mo></msup><mo>⋅</mo><mn>4</mn><mi>/</mi><mn>60</mn><mo>=</mo><msup><mn>48</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi_z = 720^\circ \cdot 4/60 = 48^\circ</annotation></semantics></math>
+főtengelyszög (elosztótengely-fokban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>24</mn><mo>∘</mo></msup><annotation encoding="application/x-tex">24^\circ</annotation></semantics></math>).</li>
+<li>Az elektronikus fojtószelep a fojtószelepet motorral állítja, és
+nincs külön alapjárat-szabályozó; a régi rendszer mechanikus bowdenes
+fojtószelepet és külön megkerülő légcsatornás szabályozót használt.</li>
+<li>Feszültség alatt az ellenállásmérés hamis értéket ad, és a műszert
+vagy az ECU-t károsíthatja; a jelet feszültségméréssel, visszapróbálva
+mérjük, az ellenállást pedig lekötött csatlakozón.</li>
+</ol>
+<p><strong>1. feladat (A)</strong> Az ECU egy teljesítménytranzisztorral
+kapcsolja az injektor tekercsét; a nyitási időt
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>i</mi></msub><annotation encoding="application/x-tex">t_i</annotation></semantics></math>)
+szabályozza, amellyel arányos a befecskendezett
+tüzelőanyag-mennyiség.</p>
+<p><strong>2. feladat (A)</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mtext mathvariant="normal">inj</mtext></msub><mo>=</mo><mn>180</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">cm</mtext><mn>3</mn></msup><mi>/</mi><mtext mathvariant="normal">min</mtext></mrow><annotation encoding="application/x-tex">q_{\text{inj}} = 180\,\text{cm}^3/\text{min}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">t_i = 4\,\text{ms}</annotation></semantics></math>.
+Számoljuk:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mn>180</mn><mfrac><msup><mtext mathvariant="normal">cm</mtext><mn>3</mn></msup><mtext mathvariant="normal">min</mtext></mfrac><mo>×</mo><mfrac><mn>4</mn><mrow><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow></mfrac><mspace width="0.167em"></mspace><mtext mathvariant="normal">min</mtext><mo>=</mo><mn>0</mn><mo>,</mo><mn>012</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">cm</mtext><mn>3</mn></msup><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">mm</mtext><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">V = 180 \frac{\text{cm}^3}{\text{min}} \times \frac{4}{60\,000}\,\text{min} = 0,012\,\text{cm}^3 = 12\,\text{mm}^3</annotation></semantics></math>.
+Tehát 12 mm³.</p>
+<p><strong>3. feladat (B)</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mfrac><mrow><mn>120</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mn>4000</mn></mfrac><mo>=</mo><mn>30</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">ms</mtext></mrow><annotation encoding="application/x-tex">T = \frac{120\,000}{4000} = 30\,\text{ms}</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>φ</mi><mi>z</mi></msub><mo>=</mo><msup><mn>720</mn><mo>∘</mo></msup><mo>⋅</mo><mfrac><mrow><mn>2</mn><mo>,</mo><mn>5</mn></mrow><mn>30</mn></mfrac><mo>=</mo><msup><mn>60</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\varphi_z = 720^\circ \cdot \frac{2{,}5}{30} = 60^\circ</annotation></semantics></math>.
+A zárásszög
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>60</mn><mo>∘</mo></msup><annotation encoding="application/x-tex">60^\circ</annotation></semantics></math>
+főtengelyszög (elosztótengely-fokban
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>30</mn><mo>∘</mo></msup><annotation encoding="application/x-tex">30^\circ</annotation></semantics></math>).</p>
+<p><strong>4. feladat (B)</strong> Az 1. jel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}0\,\text{V}</annotation></semantics></math>,
+így a nyitás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>0</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>4</mn><mo>,</mo><mn>0</mn><mo>=</mo><mn>37</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mi>%</mi></mrow><annotation encoding="application/x-tex">(2{,}0-0{,}5)/4{,}0 = 37{,}5\,\%</annotation></semantics></math>.
+A 2. jel várt értéke
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>5</mn><mo>−</mo><mn>0</mn><mo>,</mo><mn>375</mn><mo>⋅</mo><mn>4</mn><mo>,</mo><mn>0</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">4{,}5 - 0{,}375 \cdot 4{,}0 = 3{,}0\,\text{V}</annotation></semantics></math>;
+a két jel összege normálisan
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5{,}0\,\text{V}</annotation></semantics></math>.
+A mért
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>,</mo><mn>0</mn><mo>+</mo><mn>3</mn><mo>,</mo><mn>2</mn><mo>=</mo><mn>5</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">2{,}0 + 3{,}2 = 5{,}2\,\text{V}</annotation></semantics></math>
+a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">\pm 0{,}1\,\text{V}</annotation></semantics></math>-os
+tűrésen kívül esik: a két jel nem hihető, az ECU hibát tárol és
+vészüzemre vált. Ellenőrizzük a jeladók tápját
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">5\,\text{V}</annotation></semantics></math>),
+testét, a csatlakozót, majd a fojtószelep-egységet.</p>
+<p><strong>5. feladat (C)</strong> Előbb ellenőrizzük, hogy a típus
+valóban nagy impedanciájú-e (az alacsony impedanciájú, kb. 1–3
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math>-os
+injektoroknál a 2,3
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math>
+éppen normális érték). Ha igen, az alacsony ellenállás (2,3
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math>)
+a menetzárlatra utalhat. Ezt követően javasolt az injektor ki- és
+beszerelés utáni ellenőrzése, valamint cseréje, mert a menetzárlatos
+injektor nem működik megfelelően.</p>
+<p><strong>6. feladat (D)</strong> A vezérlőjel hiánya az ECU és a
+mágnesszelep közötti szakadást, vezetékhibát, vagy az ECU meghibásodását
+jelzi. A tápfeszültség megléte kizárja a biztosíték/tápellátás hibát. A
+diagnosztikai lépések: feszültségmentesítés után ellenőrizni a vezetékek
+folytonosságát, ellenállását, esetleg oszcilloszkóppal a kimenetet; ha a
+vezetékek jók, az ECU végfokozata hibás.</p>
+<hr />
+<h3 data-number="31.3.16" id="rövid-összefoglaló"><span
+class="header-section-number">31.3.16</span> Rövid összefoglaló</h3>
+<p>Ebben az alfejezetben a motorirányítás legfontosabb beavatkozóit
+tekintettük át: a befecskendezőszelepeket, a gyújtótekercseket, az
+elektronikus fojtószelepet, az alapjárat-szabályozót, az EGR-szelepet, a
+turbó-nyomásszabályozót és a tartályszellőztető szelepet. A beavatkozók
+jellemzően kapcsolóüzemű, PWM-vezérelt elemek; az injektoroknál a
+csúcsáram–tartóáram mód gyors nyitást és kis hőtermelést biztosít. A
+befecskendezett tüzelőanyag-mennyiség a nyitási idővel arányos:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">ü</mtext></msub><mo>=</mo><msub><mi>q</mi><mtext mathvariant="normal">inj</mtext></msub><msub><mi>t</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">V_{\text{ü}} = q_{\text{inj}} t_i</annotation></semantics></math>.
+A gyújtótekercsnél a zárási idő/szög meghatározza a primer áram
+nagyságát; a zárásszög számítható a ciklusidőből. Az elektronikus
+fojtószelep a pedáljelből állítja a levegőmennyiséget és átveszi az
+alapjárat-szabályozást. A diagnosztikai vizsgálat során
+feszültségmentesítés után tekercsellenállást mérünk, majd
+oszcilloszkóppal és rendszerteszterrel ellenőrizzük a vezérlőjeleket és
+a működést. Minden mért értéket a gyártói javítási adattal kell
+összevetni; a megadott példaértékek tanulási célúak. A beavatkozók
+vezérlésének elveit a <a href="au144.html">Jeladók és beavatkozók
+vizsgálata multiméterrel és oszcilloszkóppal</a> alfejezetben
+alkalmazzuk a részletes hibakeresésnél.</p>
+<h3 data-number="31.3.17" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">31.3.17</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: gyártói javítási utasítások és kapcsolási rajzok (pl.
+injektor vezérlőkapcsolás, EGR visszajelző értékek), a gyártó által
+megadott beavatkozóteszt-eljárások, a vonatkozó OBD/EOBD diagnosztikai
+szabványok (ISO 15031), valamint a motorirányítás alapjait tárgyaló
+szakkönyvek. Az alábbi állítások ellenőrizendők: a befecskendezők
+jellemző nyitási idői és áramértékei, a gyújtótekercs primer ellenállás-
+és zárási idő tartománya, az injektor tekercsellenállás példaértéke, az
+EGR visszajelző feszültség tartománya, a mágnesszelepek ellenállásai. A
+feltüntetett számok tanulási példák, konkrét járműnél a gyártói adat a
+mérvadó. A jogszabályi hatásokat az alfejezet nem tárgyalja, de a
+beavatkozók diagnosztikája a hatályos környezetvédelmi és munkavédelmi
+előírások betartásával végezhető.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au112.html">← 31.2 Érzékelők és jeladók</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au114.html">32.1 Adatbusz-hálózatok: CAN, LIN, FlexRay, MOST és Ethernet →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

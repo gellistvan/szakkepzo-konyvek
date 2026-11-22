@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>39.3 Jeladók és beavatkozók vizsgálata multiméterrel és
+oszcilloszkóppal – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz9">IX. RÉSZ – Járműkarbantartás, hatósági vizsgálat és diagnosztika</a> › <a href="index.html#auch38">39 Villamos diagnosztika</a></p>
+<div class="links"><a class="prev" rel="prev" href="au143.html">← 39.2 Gyújtásvizsgálat és oszcilloszkópos gyújtásdiagnosztika</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au145.html">39.4 Áramút-alapú hibakeresés: feszültségesés, szakadás, zárlat, nyugalmi áram →</a></div>
+</nav>
+<h2 data-number="39.3" id="au144"><span
+class="header-section-number">39.3</span> Jeladók és beavatkozók
+vizsgálata multiméterrel és oszcilloszkóppal</h2>
+<p>Motiváció: egy autó hidegindítás után rángat, a motor sárga ellenőrző
+lámpája világít, a rendszerteszter hibakódot mutat a
+hűtőfolyadék-hőmérséklet-jeladó körében. A hibakód azonban csak irányt
+ad: nem mondja meg, hogy a jeladó, a vezeték, a csatlakozó vagy a
+motorvezérlő egység hibás. A jeladók és beavatkozók vizsgálata éppen
+ezért nem merül ki a hibakód kiolvasásában; a javítónak multiméterrel és
+oszcilloszkóppal kell eldöntenie, hol szakadt meg a mérési lánc. Ebben
+az alfejezetben a gyakorlatban leggyakrabban vizsgált érzékelők és
+beavatkozók ellenőrzési sorrendjét tanuljuk meg, az <a
+href="au112.html">Érzékelők és jeladók</a> alfejezetben megismert
+bekötési logikára és a <a href="au113.html">Beavatkozók: injektorok,
+gyújtótekercsek, fojtószelep, alapjárat-szabályozó, EGR-szelep</a>
+alfejezetben bemutatott beavatkozói működésre építve.</p>
+<h3 data-number="39.3.1" id="szemléletes-kép-jelalak-a-műszeren"><span
+class="header-section-number">39.3.1</span> Szemléletes kép: jelalak a
+műszeren</h3>
+<p>Képzeljünk el egy főtengely-jeladó mérési elrendezést. Az
+oszcilloszkóp egyik csatornája az induktív jeladó két kapcsát méri, a
+másik egy aktív Hall-jeladó jelvezetékét. A képernyőn az induktív jeladó
+fordulatszámmal növekvő amplitúdójú, váltakozó szinuszszerű jelet ad, a
+Hall-jeladó pedig rögzített amplitúdójú, éles négyszögjelet. A
+gyakorlott szerelő nemcsak azt nézi, hogy van-e valamilyen jel, hanem
+azt is, hogy a jelalak alakja, amplitúdója, frekvenciája és alapvonala
+megfelel-e a gyártói javítási adatnak.</p>
+<figure>
+<img src="assets/au144-plot-1.png"
+alt="Forgó jeladók tipikus jelalakjai (szemléltető) - Szemléltető, kitalált tanulási adatsor (kb. 750 Hz-es jel, azonos periódusidő); az induktív jel amplitúdója a fordulatszámmal nő. A tényleges amplitúdó és jelalak gyártói adat szerint (ellenőrizendő)." />
+<figcaption aria-hidden="true">Forgó jeladók tipikus jelalakjai
+(szemléltető) - Szemléltető, kitalált tanulási adatsor (kb. 750 Hz-es
+jel, azonos periódusidő); az induktív jel amplitúdója a fordulatszámmal
+nő. A tényleges amplitúdó és jelalak gyártói adat szerint
+(ellenőrizendő).</figcaption>
+</figure>
+<p>A grafikonon a 0 V körül, pozitív és negatív félhullámmal váltakozó
+görbe az induktív jeladóé, a 0,2 és 4,8 V között ugráló négyszögjel az
+aktív Hall-jeladóé. Az induktív jel a fordulatszámmal együtt növekvő
+amplitúdójú, a Hall-jel feszültségszintje közel állandó. A jelalakok
+valós értékei típusonként eltérnek, ezért minden döntésnél a gyártói
+adat az elsődleges.</p>
+<h3 data-number="39.3.2" id="alapfogalmak-és-a-mérési-lánc"><span
+class="header-section-number">39.3.2</span> Alapfogalmak és a mérési
+lánc</h3>
+<p><strong>Definíció: a jeladó-vizsgálat három pontja.</strong> Egy
+motorirányítási érzékelő leggyakrabban három villamos ponttal
+kapcsolódik a vezérlőegységhez: tápfeszültség, test és jel. A vizsgálat
+során ezt a három pontot mindig ebben a sorrendben ellenőrizzük, mert a
+bemenő teljesítmény nélküli jel hamis diagnózishoz vezet.</p>
+<p>A három pont szerepe:</p>
+<ul>
+<li><strong>Tápfeszültség:</strong> az aktív érzékelő külső energiát
+kap, jellemzően 5 V referenciafeszültséget, ritkábban 12 V-ot. Jele:
+<code>5 V</code> vagy <code>12 V</code> a jeladó csatlakozóján, gyújtás
+bekapcsolt állapotában.</li>
+<li><strong>Test:</strong> a jeladó áramának visszavezetése. A test nem
+nulla ellenállású; ezért a testpontot terhelés alatt kell
+ellenőrizni.</li>
+<li><strong>Jelvezeték:</strong> a jeladó kimenete, amelyet az ECU
+analóg bemenete vagy frekvenciabemenete olvas. A jelet alapjáratban,
+terhelésen és gyorsítás közben is mérni kell.</li>
+</ul>
+<p><strong>Szabály: mérési sorrend táp, test, jel után.</strong> Először
+a csatlakozó bekötött állapotában, lehetőség szerint a csatlakozó
+hátoldalán bevezetett mérőtűvel vagy mérőadapterrel (kitörőboxszal)
+mérjük a tápfeszültséget a jeladó tápfeszültség-kapcsa és az akkumulátor
+negatív pólusa között. Ezután a jeladó testkapcsa és az akkumulátor
+negatív pólusa közötti feszültségesést mérjük. Ez jó esetben 0,1 V-nál
+kisebb (ellenőrizendő: gyártói adat). Végül a jelkapcsot mérjük
+oszcilloszkóppal vagy multiméterrel. A vezeték szigetelését csak akkor
+szúrjuk át, ha a gyártó megengedi; a szúrás helyét utána szigetelni
+kell, mert az átszúrt szigetelésen nedvesség jut a vezetékbe, ami később
+korróziót és átmeneti ellenállást okoz
+<code>(ellenőrizendő: gyártói utasítás)</code>.</p>
+<p><strong>Definíció: terheléses mérés.</strong> A feszültséget nem
+elegendő szabadon lógó, üresjárásban lévő csatlakozón mérni, mert a
+szakadozott, korrodált vezeték kis mérőáram mellett szépen mutatja a
+feszültséget, de terhelésre letörik. Ezért a mérést bekötött, működő
+rendszerben, indítás vagy járatás közben, illetve ismert terhelő
+ellenállással végezzük. Például egy 5 V referenciafeszültséget az
+ECU-ról leválasztva, terhelő ellenállással ellenőrizve a feszültség nem
+eshet 4,8 V alá (ellenőrizendő: gyártói adat).</p>
+<h3 data-number="39.3.3" id="jeladók-vizsgálata-csoportonként"><span
+class="header-section-number">39.3.3</span> Jeladók vizsgálata
+csoportonként</h3>
+<h4 data-number="39.3.3.1"
+id="forgó-jeladók-induktív-hall-és-aktív-kerékfordulatszám-jeladó"><span
+class="header-section-number">39.3.3.1</span> Forgó jeladók: induktív,
+Hall és aktív kerékfordulatszám-jeladó</h4>
+<p>A főtengely-, vezérműtengely- és kerékfordulatszám-jeladók
+leggyakrabban induktív vagy Hall-elvű érzékelők. Az <strong>induktív
+jeladó passzív</strong>: nincs tápfeszültsége, két vezetéke van, és a
+fogaskerék elhaladásakor váltakozó feszültséget generál. A
+<strong>Hall-jeladó aktív</strong>: jellemzően három vezetéke van,
+tápfeszültséget igényel, és négyszögjelet ad.</p>
+<p><strong>Gyakorlati ellenőrzés:</strong></p>
+<ol type="1">
+<li>Csatlakozó lehúzása után keressük meg a gyártói kapcsolási rajz
+alapján a táp-, test- és jelkapcsokat.</li>
+<li>Induktív jeladónál mérjük a tekercs ellenállását. A jeladó típusától
+függően az ellenállás jellemzően néhány száz ohm és 2 kΩ között van
+(ellenőrizendő: gyártói adat). Szakadás vagy nulla ellenállás hibát
+jelez.</li>
+<li>Hall-jeladónál a csatlakozó visszahelyezése és gyújtás bekapcsolása
+után mérjük a táp- és testkapcsot. A tápfeszültség jellemzően 5 V vagy
+12 V (ellenőrizendő: gyártói adat).</li>
+<li>A jelkimenetet oszcilloszkóppal mérjük motorjáratás közben. Induktív
+jelnél a feszültség amplitúdója a fordulatszámmal növekszik, Hall-jelnél
+közel állandó négyszögjel a jellemző.</li>
+<li>A jelalakból a fogaskerék hiányzó fogai, foghézagok és a szenzor
+távolságproblémái is láthatók. A nem megfelelő légrés elnyomja a
+jelet.</li>
+</ol>
+<p><strong>Számítás: jel frekvenciája.</strong> A fordulatszám- és
+kerékfordulatszám-jeladóknál a jel frekvenciáját a fordulatszám és a
+jelet adó fogaskerék fogszáma határozza meg:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mfrac><mi>n</mi><mn>60</mn></mfrac><mspace width="0.167em"></mspace><mi>z</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">f = \frac{n}{60}\, z,</annotation></semantics></math></p>
+<p>ahol <code>n</code> a fordulatszám (1/min), <code>z</code> a
+fogaskerék fogszáma.</p>
+<p><strong>Kidolgozott példa.</strong> Egy kerékfordulatszám-jeladó 48
+fogú fogaskerékkel dolgozik, a kerék 1000 1/min fordulatszámmal
+forog.</p>
+<ul>
+<li>Adott: <code>n = 1000 1/min</code>, <code>z = 48</code>.</li>
+<li>Keresett: a jel frekvenciája.</li>
+<li>Képlet: <code>f = (n/60)·z</code>.</li>
+<li>Behelyettesítés:
+<code>f = (1000/60)·48 = 16,67·48 = 800 Hz</code>.</li>
+<li>Ellenőrzés: 1000 1/min = 16,67 1/s, 48 fog másodpercenként 800 jelet
+ad, tehát a 800 Hz helyes.</li>
+</ul>
+<h4 data-number="39.3.3.2" id="fojtószelep--és-gázpedál-érzékelő"><span
+class="header-section-number">39.3.3.2</span> Fojtószelep- és
+gázpedál-érzékelő</h4>
+<p>A fojtószelep-potenciométer a szívócsőbe jutó levegő
+fojtószelepállását, a gázpedál-érzékelő a vezető pedál szándékát jelzi.
+Mindkettő jellemzően 5 V referenciafeszültségről dolgozik, és egy vagy
+két egymástól eltérő jelkimenetet ad. A redundancia a biztonságot
+szolgálja: ha az egyik jel hibás, az ECU hibakódot tárol, és a motor
+biztonsági üzemmódba kapcsol.</p>
+<p><strong>Ellenőrzés multiméterrel:</strong></p>
+<ol type="1">
+<li>A csatlakozó lehúzása nélkül, gyújtás bekapcsolt állapotában mérjük
+a tápfeszültséget; jó esetben 4,9–5,1 V (ellenőrizendő: gyártói
+adat).</li>
+<li>A testkapocs feszültségesése az akkumulátor negatívja felé közel 0 V
+legyen.</li>
+<li>A jelkapcson a feszültség alapjáratban a fojtószelep-záróállásnak
+megfelelő, kissé 0 V feletti érték, teljesen kinyitott fojtószelepnél a
+referenciafeszültséghez közeli. Például 0,5–4,5 V (ellenőrizendő:
+gyártói adat).</li>
+<li>A gázpedál-érzékelőnél a két egymástól eltérő jel összege jellemzően
+a referenciafeszültségnek felel meg, vagy egyik jel a másik kétszerese
+(ellenőrizendő: gyártói adat).</li>
+</ol>
+<p><strong>Oszcilloszkópos vizsgálat.</strong> A pedál lassú, egyenletes
+lenyomásakor a jel nem ugorhat, nem lehet rajta tüske vagy
+ellenállás-törésből adódó szakadás. A hirtelen, rossz érintkezésből
+adódó letörések a csúszópálya kopását jelzik.</p>
+<h4 data-number="39.3.3.3" id="hőmérséklet-érzékelők-ntc"><span
+class="header-section-number">39.3.3.3</span> Hőmérséklet-érzékelők
+(NTC)</h4>
+<p>A hűtőfolyadék- és beszívott levegőhőmérséklet-érzékelő leggyakrabban
+NTC-ellenállás. Az NTC jellemzője, hogy melegedéskor az ellenállása
+csökken. A vezérlőegység egy belső vagy külső húzóellenállással
+feszültségosztót alkot, és a jel feszültségét méri:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>j</mi></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">ref</mtext></msub><mfrac><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>+</mo><msub><mi>R</mi><mtext mathvariant="normal">NTC</mtext></msub></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">U_j = U_{\text{ref}} \frac{R_{\text{NTC}}}{R_1 + R_{\text{NTC}}},</annotation></semantics></math></p>
+<p>ahol <code>U_ref</code> a referenciafeszültség, <code>R_1</code> a
+sorbakötött húzóellenállás.</p>
+<p><strong>Kidolgozott ellenőrzési példa.</strong> Egy
+hűtőfolyadék-hőmérséklet-érzékelőt 5 V referenciafeszültségű osztóban 1
+kΩ-os húzóellenállással kötnek be. Hidegen az NTC ellenállása 2,5
+kΩ.</p>
+<ul>
+<li>Adott: <code>U_ref = 5,0 V</code>, <code>R_1 = 1,0 kΩ</code>,
+<code>R_NTC = 2,5 kΩ</code>.</li>
+<li>Keresett: a jel feszültsége hidegen.</li>
+<li>Képlet: <code>U_j = U_ref · R_NTC / (R_1 + R_NTC)</code>.</li>
+<li>Behelyettesítés:
+<code>U_j = 5,0 · 2,5 / (1,0 + 2,5) = 5,0 · 2,5 / 3,5 = 3,57 V</code>.</li>
+<li>Ellenőrzés: 3,57 V a 0–5 V-os tartományon belül van.</li>
+</ul>
+<p>Gyakorlatban a csatlakozó lehúzása után multiméterrel az NTC
+ellenállását mérjük adott hőmérsékleten, és a mért értéket a gyártói
+hőmérséklet–ellenállás táblázattal vetjük össze. Bekötött állapotban a
+jel feszültségét ellenőrizzük. Ha a jel közel 5 V, az NTC szakadt vagy a
+testvezeték sérült; ha közel 0 V, a jelvezeték testzárlatos vagy az NTC
+rövidzárlatos.</p>
+<p>A hidegindítási gazdagítás és a ventilátorvezérlés is ezen az
+érzékelőn alapul, ezért a téves hőmérséklet-érték hidegindítási
+nehézséget, rossz alapjáratot vagy magas fogyasztást okoz.</p>
+<h4 data-number="39.3.3.4"
+id="szívócsőnyomás-érzékelő-map-és-légtömegmérő-hfm"><span
+class="header-section-number">39.3.3.4</span> Szívócsőnyomás-érzékelő
+(MAP) és légtömegmérő (HFM)</h4>
+<p>A szívócsőnyomás-érzékelő (MAP) a szívócső abszolút nyomását méri, a
+légtömegmérő (HFM/MAF) a beszívott levegő tényleges tömegét. A
+MAP-jeladó 5 V referenciafeszültségről dolgozik, és az abszolút
+nyomással arányos feszültségjelet ad. A HFM hőfilmes mérőeleme gyorsan
+érzékeli a légáramlás hűtő hatását, és a gyártótól függően
+feszültségjelet vagy frekvenciát szolgáltat.</p>
+<p><strong>Ellenőrzés:</strong></p>
+<ol type="1">
+<li>A MAP-nál és a HFM-nél is a táp-, test- és jelkapcsok sorrendjét
+követjük.</li>
+<li>A MAP esetében a jel feszültsége alapjáraton alacsonyabb,
+terheléskor emelkedik. A mért abszolút nyomásértékeket a rendszerteszter
+élő adataival összevetve ellenőrizhetjük.</li>
+<li>A HFM-jel gyors gázadásra rövid időn belül emelkedni kezd. A
+szennyezett hőfilm lassú vagy csökkent jelet ad, ami keverékszabályozási
+hibához vezet.</li>
+<li>A légtömegmérőt általában csak a gyártó által ajánlott
+tisztítófolyadékkal szabad tisztítani; a hőfilmet mechanikusan
+megérinteni tilos.</li>
+</ol>
+<h4 data-number="39.3.3.5" id="kopogásérzékelő"><span
+class="header-section-number">39.3.3.5</span> Kopogásérzékelő</h4>
+<p>A kopogásérzékelő piezo-elvű rezgésérzékelő, amely a gépjármű
+motorblokkján érzékeli a kopogási frekvenciát. A jel feszültsége kicsi,
+sávszűrt, ezért multiméterrel nem értékelhető megbízhatóan;
+oszcilloszkóppal viszont a kopogási tüskék megjelenése figyelhető meg. A
+gyakorlatban a kopogásérzékelő ellenőrzése két módon történik: a
+rendszerteszter élő adatában kopogásjelenségkor növekszik a kopogási
+jel, illetve oszcilloszkóppal a motorblokk megkocogtatásakor rövid,
+csillapodó tüskék jelennek meg. A kopogásérzékelő rögzítőcsavarját a
+gyártó által előírt nyomatékkal kell meghúzni, mert a hibás nyomaték
+megváltoztatja a jel amplitúdóját.</p>
+<h4 data-number="39.3.3.6" id="lambdaszonda"><span
+class="header-section-number">39.3.3.6</span> Lambdaszonda</h4>
+<p>A lambdaszonda a kipufogógáz oxigéntartalmát jelzi. A hagyományos
+ugrószonda feszültségjele szegény keveréknél alacsony (kb. 0,1 V), dús
+keveréknél magas (kb. 0,8–0,9 V), és a szabályozott üzemben néhányszor
+másodpercenként vált (ellenőrizendő: gyártói adat). A szélessávú
+lambdaszonda áramjelet ad, amelyet a vezérlőegység értékel ki.</p>
+<p><strong>Diagnosztikai lépések:</strong></p>
+<ul>
+<li>A szonda fűtésköre külön táp- és testkapcsokkal rendelkezik. A fűtés
+ellenállását hideg, lehúzott csatlakozónál mérjük; jellemzően néhány ohm
+és 20 ohm között van (ellenőrizendő: gyártói adat).</li>
+<li>A jelvezetéken oszcilloszkóppal ellenőrizzük a váltakozást. A
+kiöregedett, lassú szonda ritkán vált, és a katalizátor szabályozása is
+gyenge.</li>
+<li>A lambdaszonda pontos hullámformáját és váltási gyakoriságát a
+rendszerteszter élő adataiban is nyomon követhetjük, ami a <a
+href="au134.html">Rendszerteszter-használat</a> alfejezetben tanult
+élőadat-módszerrel együtt használható.</li>
+</ul>
+<h3 data-number="39.3.4" id="beavatkozók-vizsgálata"><span
+class="header-section-number">39.3.4</span> Beavatkozók vizsgálata</h3>
+<h4 data-number="39.3.4.1" id="befecskendezőszelep-injektor"><span
+class="header-section-number">39.3.4.1</span> Befecskendezőszelep
+(injektor)</h4>
+<p>A befecskendezőszelep mágnesszelep, amely a vezérlőegység által
+kapcsolt árammal nyit. Vizsgálata során először feszültségmentes,
+lehúzott csatlakozónál mérjük a tekercs ellenállását. A nagy
+impedanciájú injektor ellenállása 11–16 Ω, a kis impedanciájú injektoré
+néhány ohm között lehet (ellenőrizendő: gyártói adat). A vezérlőjelet
+bekötött csatlakozón járatott motornál oszcilloszkóppal mérjük.
+Testoldalon kapcsolt injektornál a vezérlőkapocs feszültsége a nyitás
+idejére közel 0 V-ra esik; a zárás pillanatában rövid, kb. 40–80 V-os
+induktív tüske jelenik meg <code>(ellenőrizendő: gyártói adat)</code>.
+Peak-and-hold vezérlésnél az áramjelen egy nagyobb nyitóáram, majd
+kisebb tartóáram látszik. A vezérlési időt (ms) az oszcilloszkópon a 0
+V-os szakasz hossza adja, és ez összevethető a rendszerteszter élő
+adatával.</p>
+<h4 data-number="39.3.4.2"
+id="alapjárat-szabályozó-és-egyéb-beavatkozók"><span
+class="header-section-number">39.3.4.2</span> Alapjárat-szabályozó és
+egyéb beavatkozók</h4>
+<p>Az alapjárat-szabályozó lehet léptetőmotoros vagy PWM-vezérelt
+forgócsapos szelep. Az ellenőrzés első lépése a tekercsek
+ellenállásmérése a gyártói értékekkel összevetve. A PWM-vezérelt elemnél
+oszcilloszkóppal a kitöltési tényezőt mérhetjük:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mfrac><msub><mi>t</mi><mtext mathvariant="normal">be</mtext></msub><mi>T</mi></mfrac><mo>⋅</mo><mn>100</mn><mi>%</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">D = \frac{t_{\text{be}}}{T} \cdot 100\%,</annotation></semantics></math></p>
+<p>ahol <code>t_be</code> a bekapcsolt idő, <code>T</code> a
+periódusidő. A szelep akkor jó, ha a kitöltési tényező változik a
+terhelés és a fordulatszám függvényében. Az EGR-, EVAP-,
+turbó-szabályozó és termosztát-beavatkozók vizsgálata hasonló elvű:
+először ellenállásmérés, majd aktív teszt a rendszerteszterrel, végül
+oszcilloszkópos jelvizsgálat.</p>
+<h4 data-number="39.3.4.3" id="motorvezérlő-egység-vizsgálata"><span
+class="header-section-number">39.3.4.3</span> Motorvezérlő egység
+vizsgálata</h4>
+<p>A motorvezérlő egységet közvetlenül, ellenállásmérővel mérni
+<strong>tilos</strong>, mert a mérőáram a bemeneti/kimeneti fokozatokat
+károsíthatja. Az ECU-t mindig közvetetten, a táp-, test- és jelvezetékek
+ellenőrzésével vizsgáljuk. Ha minden bemeneti jel és beavatkozói vezeték
+rendben van, az ECU mégis hibásan működik, a gyártói diagnosztikai
+eljárás szerint a vezérlőegység csereprogramja következik. A vizsgálat
+során kitörőboxot, oszcilloszkópot és rendszertesztert használunk; a
+feszültségméréseket a megfelelő mérési kategóriájú (jellemzően CAT III,
+ellenőrizendő) műszerrel végezzük.</p>
+<h3 data-number="39.3.5" id="minőségellenőrzés"><span
+class="header-section-number">39.3.5</span> Minőségellenőrzés</h3>
+<p>A mérési lánc minden elemét a gyártói javítási adattal, vagy annak
+hiányában a rendszerteszter által mutatott elvárható értékkel
+hasonlítjuk össze.</p>
+<p><strong>Ellenőrzőlista jeladóvizsgálathoz:</strong></p>
+<ol type="1">
+<li>A jármű azonosítása és a gyártói áramútrajz beszerzése.</li>
+<li>A jeladó csatlakozójának ellenőrzése: korrózió, törött
+csatlakozóretesz, húzási sérülés.</li>
+<li>Tápfeszültség mérése bekötött csatlakozónál, terhelés alatt.</li>
+<li>Testkapocs feszültségesése.</li>
+<li>Jelkimenet mérése multiméterrel, majd oszcilloszkóppal.</li>
+<li>Aktív teszt futtatása a rendszerteszterrel a beavatkozókhoz.</li>
+<li>A mért értékek rögzítése a munkalapon, a gyártói adat mellett.</li>
+</ol>
+<h3 data-number="39.3.6"
+id="valós-életbeli-alkalmazás-hidegindítási-hibakeresés"><span
+class="header-section-number">39.3.6</span> Valós életbeli alkalmazás:
+hidegindítási hibakeresés</h3>
+<p>Az ügyfél azt panaszolja, hogy hidegen nehezen indul az autó, melegen
+is dús, kormos a kipufogó, és magas a fogyasztás. A rendszerteszter
+P0115 jellegű hibakódot mutat (példakód, ellenőrizendő). A
+hibafeltételezés az, hogy az NTC hűtőfolyadék-hőmérséklet-jeladó vagy
+annak vezetéke nem a tényleges hőmérsékletet jelzi, ezért az ECU a
+valósnál jóval hidegebb motort (vagy szakadt kört) érzékel, és
+túldúsít.</p>
+<p><strong>Mérési lépések:</strong></p>
+<ol type="1">
+<li>A csatlakozó lehúzása után megmérjük az NTC ellenállását 20 ºC-os
+motorhőmérsékletnél. A mért érték 12,5 kΩ (példaérték), a gyártói
+táblázat szerint 20 ºC-on 2,5 kΩ lenne (ellenőrizendő). Az ellenállás
+túl magas.</li>
+<li>Bekötött állapotban a jelvezetéken a feszültség közel 4,9 V, ami a
+gyártói elvárásnál magasabb.</li>
+<li>A csatlakozó és a vezeték átvizsgálásakor a jelvezetéken
+szigeteléssérülést, a csatlakozóban korróziót találunk.</li>
+<li>Az érzékelőt kicseréljük (az ellenállása 20 °C-on a táblázattól
+eltér); a korrodált csatlakozót tisztítjuk, a sérült vezetékszakaszt a
+gyártói utasítás szerint javítjuk, majd a hibakódot töröljük.</li>
+<li>A próbaút során a hidegindítás és az üzemanyag-korrekció visszaáll a
+normál tartományba.</li>
+</ol>
+<p><strong>Tanulság:</strong> a hibakód irányt ad, de a döntő a mért
+fizikai érték összevetése a gyártói adattal.</p>
+<h3 data-number="39.3.7"
+id="gyakorlati-útmutató-hall-jeladó-és-hűtőfolyadék-hőmérséklet-érzékelő-vizsgálata"><span
+class="header-section-number">39.3.7</span> Gyakorlati útmutató:
+Hall-jeladó és hűtőfolyadék-hőmérséklet-érzékelő vizsgálata</h3>
+<p><strong>Cél:</strong> aktív főtengely-jeladó és
+NTC-hőmérséklet-érzékelő állapotának megállapítása multiméterrel és
+oszcilloszkóppal.</p>
+<p><strong>Jármű- és adatazonosítás:</strong> rendszám, alvázszám,
+motorkód, gyártói kapcsolási rajz beszerzése (ellenőrizendő: gyártói
+adat).</p>
+<p><strong>Szükséges eszközök:</strong> CAT III multiméter,
+oszcilloszkóp, hátoldali mérőtűk és mérőadapter (kitörőbox), csatlakozó-
+és vezetékvizsgáló készlet, munkalap, gyártói hibakeresési
+folyamatábra.</p>
+<p><strong>Anyagok:</strong> elektromos érintkezőtisztító,
+vezeték-javító anyagok a gyártói előírás szerint.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<p><strong>Munkabiztonsági és környezetvédelmi lépések:</strong> a
+gyújtás kikapcsolása, az akkumulátor lekötésének szükség szerinti
+gyártói eljárása, a munkaterület tiszta, száraz felülete, a sérült
+vezetékek hulladékkezelése. Elektromos mérésnél tilos a vezérlőegység
+kapcsaira ellenállásmérővel mérni.</p>
+<figure id="fig-au144-1">
+<div class="fig-interactive"><iframe src="figures/html/au144-1.html" title="Feszültségmérés a csatlakozón: helyesen hátulról betolt vékony mérőtűvel vagy mérőadapterrel; hibásan elölről szétfeszítve az érintkezőt vagy átszúrva a vezeték szigetelését." loading="lazy" style="width:100%;border:0;height:480px"></iframe><noscript><img src="figures/img/au144-1.png" style="width:95.0%"
+alt="Feszültségmérés a csatlakozón: helyesen hátulról betolt vékony mérőtűvel vagy mérőadapterrel; hibásan elölről szétfeszítve az érintkezőt vagy átszúrva a vezeték szigetelését." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au144-1.png" style="width:95.0%"
+alt="Feszültségmérés a csatlakozón: helyesen hátulról betolt vékony mérőtűvel vagy mérőadapterrel; hibásan elölről szétfeszítve az érintkezőt vagy átszúrva a vezeték szigetelését." /></details></div>
+<figcaption>Mérés a csatlakozón: helyes és hibás módszerek (sematikus
+vonalrajz)</figcaption>
+</figure>
+<p><strong>Figyelem – mérés a csatlakozón.</strong> Az ábra szerint
+helyes a vékony hátoldali mérőtű a vezetéktömítés mellett (1) vagy a
+mérőadapter, „Y” mérőkábel (2). Hibás a vastag mérőcsúcs elölről a
+hüvelybe (3), mert szétfeszíti az érintkezőt; a vezeték szigetelésének
+átszúrása (4) nedvességet enged a rézbe, ezért csak kivételesen, a
+gyártó engedélyével és utólagos tömítéssel alkalmazható – a 3. lépés
+„átszúrható tűje” ezt a kockázatot hordozza.</p>
+<p><strong>Munkalépések:</strong></p>
+<ol type="1">
+<li>A járművet azonosítjuk, a gyártói rajz alapján bejelöljük a
+Hall-jeladó táp-, test- és jelkapcsát.</li>
+<li>A Hall-jeladó csatlakozóját lehúzzuk, ellenőrizzük a csatlakozó
+reteszelését és az érintkezők korrózióját.</li>
+<li>Visszakötjük a csatlakozót, hátoldali mérőtűvel vagy mérőadapterrel
+megmérjük a tápfeszültséget. Gyújtás bekapcsolása után 5 V vagy 12 V
+jellemző (ellenőrizendő).</li>
+<li>Megmérjük a testkapocs feszültségesését az akkumulátor negatív pólus
+felé. Jó esetben 0,1 V alatti (ellenőrizendő).</li>
+<li>Oszcilloszkóppal motoros járatás közben megmérjük a jelkimenetet. A
+Hall-jelnek négyszögjelnek kell lennie, a feszültségszint 0,2–4,8 V
+közötti (példaérték, ellenőrizendő).</li>
+<li>A hűtőfolyadék-érzékelőnél a csatlakozó lehúzása után megmérjük az
+NTC ellenállását. Hideg motornál (20 °C) az érték néhány kΩ (példa: 2,5
+kΩ), meleg motornál (90 °C) néhány száz Ω (ellenőrizendő: gyártói
+táblázat).</li>
+<li>Visszakötjük a csatlakozót, hátoldali mérőtűvel vagy mérőadapterrel
+megmérjük a jel feszültségét. A jel nem lehet 0 V vagy 5 V, ha a motor
+hőmérséklete a tartomány közepén van.</li>
+<li>Ha bármely mért érték eltér, a gyártói hibakeresési folyamatábra
+szerint a vezetékeket, csatlakozókat és az ECU bemenetét célzottan
+vizsgáljuk.</li>
+<li>A javítás után töröljük a hibakódot, és ellenőrizzük a motor hideg-
+és melegindítását.</li>
+</ol>
+<p><strong>Tipikus hibák a munkában:</strong></p>
+<ul>
+<li>A jeladó mérését a csatlakozó lehúzásával végzik, így a hibás
+csatlakozó nem derül ki.</li>
+<li>A testkapcsot nem ellenőrzik terhelés alatt, így a korrodált
+testvezeték feszültségesése rejtve marad.</li>
+<li>A Hall-jeladó jelét nem oszcilloszkóppal, hanem csak multiméterrel
+mérik, így a jelalak hibáját nem veszik észre.</li>
+<li>Az NTC értékét kézzel melegítve becslik, ahelyett, hogy a
+hőmérséklet–ellenállás táblázatot használnák.</li>
+</ul>
+<h3 data-number="39.3.8" id="tipikus-hibák"><span
+class="header-section-number">39.3.8</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>A mérési sorrend megfordítása.</strong> Ha először a
+jelet mérik, és a jel hibás, de a tápfeszültség vagy a test is hibás,
+félrevezető következtetést vonnak le. A helyes sorrend: táp, test,
+jel.</p></li>
+<li><p><strong>A jelvezetéket ellenállásmérővel mérik bekötött ECU
+mellett.</strong> Ez a vezérlőegység bemeneti fokozatát károsíthatja. A
+jelvezetéket csak feszültségmentes, lehúzott ECU és érzékelő mellett
+szabad ellenállással mérni, vagy a gyártói előírás szerint.</p></li>
+<li><p><strong>A jelet terheletlen, szabad csatlakozón mérik.</strong> A
+szakadozott vezeték üresjárásban szépen mutatja a feszültséget, de a
+gyenge érintkezés terhelés alatt letörik. A mérésnek a működő
+rendszerben, átszúrt tűvel kell történnie.</p></li>
+<li><p><strong>A kopogásérzékelőt multiméterrel próbálják
+ellenőrizni.</strong> A piezo-jel millivoltos, tüskeszerű; a
+multiméteres mérés nem ad használható képet. A kopogásérzékelő
+vizsgálata oszcilloszkóppal és rendszerteszteres élő adatokkal
+történik.</p></li>
+<li><p><strong>A lambdaszonda fűtését és jelét nem választják
+szét.</strong> A fűtéskör szakadása miatt a szonda hideg marad, a jel
+lassú, de a jelvezeték önmagában jónak tűnhet. Mindkét kört külön kell
+mérni.</p></li>
+</ol>
+<h3 data-number="39.3.9" id="önellenőrzés"><span
+class="header-section-number">39.3.9</span> Önellenőrzés</h3>
+<p><strong>1. kérdés.</strong> Igaz-e, hogy egy induktív
+főtengely-jeladó 5 V tápfeszültséget igényel? Indokold.</p>
+<p><strong>2. kérdés.</strong> Miért kell a jeladó testkapcsát terhelés
+alatt mérni?</p>
+<p><strong>3. kérdés.</strong> Egy 60 fogú főtengely-fogaskerék 800
+1/min fordulatszámon forog. Mekkora a jel frekvenciája?</p>
+<p><strong>4. kérdés.</strong> Az NTC hűtőfolyadék-érzékelő jele közel 5
+V. Mi a két legvalószínűbb hiba?</p>
+<p><strong>5. kérdés.</strong> Mi a helyes sorrend egy háromvezetékes
+aktív jeladó vizsgálatánál?</p>
+<h3 data-number="39.3.10" id="az-önellenőrzés-megoldásai"><span
+class="header-section-number">39.3.10</span> Az önellenőrzés
+megoldásai</h3>
+<p><strong>1. kérdés.</strong> Hamis. Az induktív jeladó passzív, saját
+maga generál váltakozó feszültséget, nincs szüksége tápfeszültségre; a
+Hall-jeladó aktív, az igényel tápfeszültséget.</p>
+<p><strong>2. kérdés.</strong> Mert a testvezeték szakadozott vagy
+korrodált állapotban üresjárásban 0 V-ot mutathat, de terhelés alatt
+feszültségesés jelenik meg rajta. A bekötött rendszerben, működés
+közbeni mérés mutatja meg a valódi állapotot.</p>
+<p><strong>3. kérdés.</strong>
+<code>f = n/60 · z = 800/60 · 60 = 800 Hz</code>.</p>
+<p><strong>4. kérdés.</strong> Az NTC szakadt (az ellenállása nagyon
+nagy), vagy a testvezeték szakadt. A jel ilyenkor a
+referenciafeszültséghez közelít.</p>
+<p><strong>5. kérdés.</strong> Először a tápfeszültséget, második
+lépésként a testet, majd a jelet ellenőrizzük. A jelet oszcilloszkóppal,
+terhelés alatt is mérni kell.</p>
+<h3 data-number="39.3.11" id="feladatok"><span
+class="header-section-number">39.3.11</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Sorold fel a háromvezetékes aktív
+jeladó három villamos pontját, és írd le mindegyik funkcióját.</p>
+<p><strong>2. feladat (A).</strong> Egy főtengely-jeladó fogaskereke 60
+fogú, a motor fordulatszáma 2400 1/min. Számítsd ki a jel frekvenciáját
+hertzben.</p>
+<p><strong>3. feladat (B).</strong> Egy NTC hőmérséklet-érzékelő
+húzóellenállása 1,5 kΩ, referenciafeszültsége 5 V. Hidegen az NTC
+ellenállása 4,5 kΩ. Mekkora a jelfeszültség hidegen? Meleg állapotban az
+NTC 0,5 kΩ-ra csökken. Mekkora a jelfeszültség melegen? Értelmezd a két
+értéket.</p>
+<p><strong>4. feladat (B).</strong> Rajzold le áramútrajz vázlatával egy
+Hall-jeladó bekötését: 5 V tápfeszültség, test, jel, vezérlőegység,
+mérési pontok. A rajzolás után írd le, melyik ponton mérnél
+oszcilloszkóppal, és milyen jelet várnál.</p>
+<p><strong>5. feladat (C).</strong> Egy technikus a fojtószelep-érzékelő
+jelvezetékét multiméterrel méri zárt fojtószelepnél, gyújtás bekapcsolt
+állapotában. A jel 4,9 V, de a tápfeszültség 5,1 V. A technikus szerint
+az érzékelő hibás. Mi lehet a helyes diagnózis? Milyen további mérést
+javasolsz?</p>
+<p><strong>6. feladat (D).</strong> Egy benzinmotoros autó hibakódja a
+légtömegmérő (HFM) körét jelzi. Az alábbi mérési eredményeket kapod:
+tápfeszültség 5 V, test 0,1 V, a jel oszcilloszkópon közel vízszintes
+vonal, csak nagy gázadásra mozdul kissé. Mit ellenőriznél először, és
+miért? Javasolj javítási lépést.</p>
+<h3 data-number="39.3.12" id="a-feladatok-megoldásai"><span
+class="header-section-number">39.3.12</span> A feladatok megoldásai</h3>
+<p><strong>1. feladat megoldása.</strong> Tápfeszültség: az érzékelő
+működési energiáját adja, jellemzően 5 V vagy 12 V. Test: az áram
+visszavezetése a járműtest felé. Jel: a mért fizikai mennyiséget hordozó
+feszültség- vagy frekvenciajel, amit az ECU feldolgoz.</p>
+<p><strong>2. feladat megoldása.</strong> Adott:
+<code>n = 2400 1/min</code>, <code>z = 60</code>. Keresett:
+<code>f</code>.
+<code>f = n/60 · z = 2400/60 · 60 = 40 · 60 = 2400 Hz</code>.
+Ellenőrzés: 2400 1/min = 40 1/s, foganként egy jel: 40·60 = 2400 Hz.</p>
+<p><strong>3. feladat megoldása.</strong> Adott:
+<code>U_ref = 5 V</code>, <code>R_1 = 1,5 kΩ</code>, hideg
+<code>R_NTC = 4,5 kΩ</code>, meleg <code>R_NTC = 0,5 kΩ</code>. Képlet:
+<code>U_j = U_ref · R_NTC / (R_1 + R_NTC)</code>.</p>
+<p>Hidegen:
+<code>U_j = 5 · 4,5 / (1,5 + 4,5) = 5 · 4,5 / 6 = 3,75 V</code>.
+Melegen:
+<code>U_j = 5 · 0,5 / (1,5 + 0,5) = 5 · 0,5 / 2 = 1,25 V</code>.</p>
+<p>Értelmezés: melegedéskor az NTC ellenállása csökken, ezért a jel
+feszültsége 3,75 V-ról 1,25 V-ra csökken. Ez az elvárható NTC-irány.</p>
+<p><strong>4. feladat megoldása.</strong> A rajzon a felső vezeték az 5
+V tápfeszültség és a jel, az alsó a test. Az oszcilloszkópot a jel és a
+test közé kötjük. Motoros járatás közben négyszögjelet várunk, amelynek
+feszültségszintje 0,2–4,8 V között váltakozik (példaérték,
+ellenőrizendő: gyártói adat).</p>
+<p><strong>5. feladat megoldása.</strong> A technikus hibásan csak a jel
+feszültségét nézte. A jel 4,9 V, a táp 5,1 V, a különbség 0,2 V. Ez
+lehet érzékelőhiba, de lehet a jelvezeték szakadt vagy nagy ellenállású
+is. Zárt állásnál a 4,9 V a testkapocs szakadására vagy a jelvezeték 5
+V-os zárlatára utal; mérjük a testkapocs feszültségesését. Javasolt
+mérés: a táp és a test a bekötött rendszerben, majd a jel terhelés
+alatt. Ha a jelvezetéknél üresjárásban 4,9 V, de bekötött ECU-nél a
+motor nem reagál, a vezeték ellenállását feszültségmentes állapotban
+mérni kell. A fojtószelep-érzékelőt a gyártói diagnosztikai folyamatábra
+szerint kell ellenőrizni.</p>
+<p><strong>6. feladat megoldása.</strong> A táp és a test rendben van,
+de a jel alig mozog, ami a légtömegmérő szennyezett vagy elakadt
+mérőelemére utal. Először a légtömegmérő hőmérsékleti és légtömeg-jelét
+kell élő adatban ellenőrizni, majd a szűrőt és a házat. A hibás
+légtömegmérőt tisztítani vagy gyártó szerint cserélni kell, majd a
+hibakódot törölni és a keverékszabályozást próbaúton ellenőrizni.</p>
+<h3 data-number="39.3.13" id="rövid-összefoglaló"><span
+class="header-section-number">39.3.13</span> Rövid összefoglaló</h3>
+<p>A jeladók és beavatkozók vizsgálatának alapelve az, hogy mindig
+meghatározott sorrendben, a táp-, test- és jelponton mérünk, lehetőleg
+terhelés alatt, hátoldali mérőtűvel vagy mérőadapterrel, a gyártói
+adattal összevetve. Az induktív jeladó passzív, váltakozó jelet ad; a
+Hall- és aktív érzékelők tápfeszültséget igényelnek, négyszögjelet
+adnak. Az NTC ellenállása melegedésre csökken, a jel feszültsége ezért
+csökken. A fojtószelep- és gázpedál-érzékelő 5 V referenciafeszültséggel
+dolgozik, a jelnek egyenletesen kell változnia. A HFM, a kopogásérzékelő
+és a lambdaszonda vizsgálatához oszcilloszkóp kell, mert a jel gyors
+vagy kicsi. A beavatkozók ellenállását először feszültségmentes
+állapotban mérjük, a vezérlőjelet oszcilloszkóppal és rendszerteszterrel
+ellenőrizzük. A motorvezérlő egységet közvetlenül ellenállásmérővel
+mérni <strong>tilos</strong>. <strong>Továbbvitt eredmény.</strong> Az
+itt kidolgozott mérési sorrendet és döntési logikát a <a
+href="au154.html">Vezetékjavítás, csatlakozók, világítás, áramellátás és
+indítás szerelése</a> alfejezetben az áramellátó és indítórendszer
+szerelésénél, valamint az <a href="au155.html">Elektronikus rendszerek
+javítása: ABS/ESP, légzsák, komfort, klíma és ADAS</a> alfejezetben a
+biztonsági és komfortrendszerek jeladóinak vizsgálatánál
+alkalmazzuk.</p>
+<h3 data-number="39.3.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">39.3.14</span> Források és ellenőrzési
+hiányok</h3>
+<p>Az alfejezet az általános járművillamos méréstechnikai alapokra, a
+gyártói motorirányítási és diagnosztikai gyakorlatra, az MSZ EN 60617
+villamos rajzjelekre, valamint az OBD/EOBD diagnosztikai protokollokra
+épül (ISO 15031, SAE J1962 – ellenőrizendő: hatályos változat). A
+konkrét táp- és jelfeszültség-értékek, ellenállás-határok, frekvenciák,
+csatlakozó-kiosztások és csavarónyomatékok gyártó- és típusfüggők, ezért
+azokat a gyártói javítási adatból kell ellenőrizni. Ellenőrizendő
+továbbá a mérőműszer CAT-besorolása, az NTC hőmérséklet-ellenállás
+táblázatai, valamint a lambdaszonda és a kopogásérzékelő pontos
+jelalak-adatai.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au143.html">← 39.2 Gyújtásvizsgálat és oszcilloszkópos gyújtásdiagnosztika</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au145.html">39.4 Áramút-alapú hibakeresés: feszültségesés, szakadás, zárlat, nyugalmi áram →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

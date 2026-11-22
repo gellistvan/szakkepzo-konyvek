@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Megállási út: reakcióút + fékút</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="vk">Kezdősebesség v_0</label><input id="vk" type="range" min="20" max="150" step="1" value="50" aria-label="Kezdősebesség v_0"><output id="vk_o" for="vk"></output></div>
+<div class="row"><label for="tr">Reakcióidő t_r</label><input id="tr" type="range" min="0" max="2" step="0.1" value="1" aria-label="Reakcióidő t_r"><output id="tr_o" for="tr"></output></div>
+<div class="row"><label for="a">Lassulás a</label><input id="a" type="range" min="3" max="10" step="0.5" value="7" aria-label="Lassulás a"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="tf">Felfutási idő</label><input id="tf" type="range" min="0" max="0.4" step="0.05" value="0" aria-label="Felfutási idő"><output id="tf_o" for="tf"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 350" role="img" aria-label="A megállási út a reakcióútból és a fékútból áll; a fékút a sebesség négyzetével nő."></svg>
+<p class="small">Alapérték: a fejezet 1. példája (50 km/h, 7 m/s², t_r = 1 s → 13,9 + 13,8 = 27,7 m). 5. feladat: 100 km/h, 8 / 5 m/s², t_r = 0 → 48,2 / 77,2 m (a fejezet 27,8 m/s-mal kerekítve 48,3 m-t ad). Képletből számolt tanulási értékek.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"vk":"km/h", "tr":"s", "a":"m/s²", "tf":"s"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const v0 = v.vk / 3.6, tr = v.tr, a = v.a, tf = v.tf;
+const sr = v0 * tr, sf = v0 * tf - a * tf * tf / 6, v1 = v0 - a * tf / 2, s3 = v1 * v1 / (2 * a), s = sr + sf + s3;
+const t1 = tr + tf, t2 = t1 + v1 / a;
+const X0 = 60, Y0 = 250, W = 540, H = 200, tmax = Math.max(8, t2 * 1.05), vmax = 150 / 3.6;
+const X = t => X0 + W * t / tmax, Y = u => Y0 - H * u / vmax;
+el("line", {x1: X0, y1: Y0, x2: X0 + W, y2: Y0, stroke: css("--line")}); el("line", {x1: X0, y1: Y0, x2: X0, y2: Y0 - H, stroke: css("--line")});
+for (let t = 0; t <= tmax; t += 1) el("text", {x: X(t), y: Y0 + 16, "font-size": 11, "text-anchor": "middle"}, String(t));
+for (let u = 0; u <= 40; u += 10) el("text", {x: X0 - 6, y: Y(u) + 4, "font-size": 11, "text-anchor": "end"}, String(u));
+el("text", {x: X0 + W, y: Y0 + 32, "font-size": 12, "text-anchor": "end"}, "idő t (s)");
+el("text", {x: X0 - 50, y: Y0 - H - 8, "font-size": 12}, "v (m/s)");
+el("path", {d: `M${X(0)} ${Y0} L${X(0)} ${Y(v0)} L${X(tr)} ${Y(v0)} L${X(tr)} ${Y0} Z`, fill: css("--hl"), "fill-opacity": 0.35, stroke: "none"});
+let d = `M${X(tr)} ${Y0}`; for (let i = 0; i <= 20; i++) { const t = tr + tf * i / 20; d += ` L${X(t)} ${Y(v0 - a * (t - tr) ** 2 / (2 * Math.max(tf, 1e-9)))}`; }
+d += ` L${X(t1)} ${Y0} Z`; if (tf > 0) el("path", {d: d, fill: css("--grid"), stroke: "none"});
+el("path", {d: `M${X(t1)} ${Y0} L${X(t1)} ${Y(v1)} L${X(t2)} ${Y0} Z`, fill: css("--hl2"), "fill-opacity": 0.45, stroke: "none"});
+let p = `M${X(0)} ${Y(v0)} L${X(tr)} ${Y(v0)}`; for (let i = 0; i <= 20; i++) { const t = tr + tf * i / 20; p += ` L${X(t)} ${Y(v0 - a * (t - tr) ** 2 / (2 * Math.max(tf, 1e-9)))}`; }
+p += ` L${X(t2)} ${Y0}`; el("path", {d: p, fill: "none", stroke: css("--line"), "stroke-width": 2.5});
+// út-sáv (méretarányos)
+const sc = 540 / Math.max(160, s * 1.05), yb = 300;
+el("rect", {x: X0, y: yb, width: sr * sc, height: 18, fill: css("--hl"), "fill-opacity": 0.5, stroke: css("--line")});
+el("rect", {x: X0 + sr * sc, y: yb, width: Math.max(sf, 0) * sc, height: 18, fill: css("--grid"), stroke: css("--line")});
+el("rect", {x: X0 + (sr + sf) * sc, y: yb, width: s3 * sc, height: 18, fill: css("--hl2"), "fill-opacity": 0.6, stroke: css("--line")});
+el("text", {x: X0 + s * sc + 6, y: yb + 14, "font-size": 12}, "🚗 " + fmt(s, 1) + " m");
+el("text", {x: X0, y: yb + 36, "font-size": 11}, "reakcióút | felfutás | fékút (méretarányos sáv)");
+status(`Reakcióút s<sub>r</sub> = v<sub>0</sub>·t<sub>r</sub> = <b>${fmt(sr, 1)} m</b>, felfutás s<sub>f</sub> = ${fmt(sf, 1)} m, fékút s<sub>3</sub> = v<sub>1</sub>²/(2a) = <b>${fmt(s3, 1)} m</b>.<br>` +
+       `Megállási út: <b>${fmt(s, 1)} m</b>; megállási idő ${fmt(t2, 2)} s. Kétszeres sebességnél a fékút négyszeres.`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

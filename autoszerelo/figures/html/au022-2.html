@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fémek elemi cellái – forgatható modell</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="lat">Rácstípus</label><select id="lat" aria-label="Rácstípus"><option value="tkk" selected>TKK – térben középpontos köbös</option><option value="lkk">LKK – lapközéppontos köbös</option><option value="hsi">HSI – hexagonális szoros illeszkedésű</option></select></div>
+<div class="row"><label for="az">Forgatás (azimut)</label><input id="az" type="range" min="0" max="360" step="5" value="330" aria-label="Forgatás (azimut)"><output id="az_o" for="az"></output></div>
+<div class="row"><label for="el">Dőlés</label><input id="el" type="range" min="0" max="60" step="5" value="20" aria-label="Dőlés"><output id="el_o" for="el"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 400" role="img" aria-label="Térben középpontos, lapon középpontos köbös és hexagonális elemi cella forgatható vonalrajza."></svg>
+<p class="small">Sematikus, nem méretarányos modell (a gömbök kisebbek a valós atomsugárnál, hogy a cella belseje látsszon). A rácshibák (vakancia, intersticiós és szubsztitúciós atom, éldiszlokáció) a statikus ábrán láthatók.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"az":"°", "el":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const D={"tkk": {"title": "Térben középpontos köbös (TKK)", "sub": "8 sarokatom + 1 középső atom", "ex": "α-Fe (912 °C alatt), δ-Fe, Cr", "atoms": [[-1.0, -1.0, -1.0, 0], [-1.0, -1.0, 1.0, 0], [-1.0, 1.0, -1.0, 0], [-1.0, 1.0, 1.0, 0], [1.0, -1.0, -1.0, 0], [1.0, -1.0, 1.0, 0], [1.0, 1.0, -1.0, 0], [1.0, 1.0, 1.0, 0], [0, 0, 0, 1]], "edges": [[[-1, -1, -1], [1, -1, -1]], [[1, -1, -1], [1, 1, -1]], [[1, 1, -1], [-1, 1, -1]], [[-1, 1, -1], [-1, -1, -1]], [[-1, -1, 1], [1, -1, 1]], [[1, -1, 1], [1, 1, 1]], [[1, 1, 1], [-1, 1, 1]], [[-1, 1, 1], [-1, -1, 1]], [[-1, -1, -1], [-1, -1, 1]], [[1, -1, -1], [1, -1, 1]], [[1, 1, -1], [1, 1, 1]], [[-1, 1, -1], [-1, 1, 1]]]}, "lkk": {"title": "Lapközéppontos köbös (LKK)", "sub": "8 sarokatom + 6 lapközépi atom", "ex": "γ-Fe (912–1394 °C), Al, Cu", "atoms": [[-1.0, -1.0, -1.0, 0], [-1.0, -1.0, 1.0, 0], [-1.0, 1.0, -1.0, 0], [-1.0, 1.0, 1.0, 0], [1.0, -1.0, -1.0, 0], [1.0, -1.0, 1.0, 0], [1.0, 1.0, -1.0, 0], [1.0, 1.0, 1.0, 0], [-1, 0, 0, 1], [1, 0, 0, 1], [0, -1, 0, 1], [0, 1, 0, 1], [0, 0, -1, 1], [0, 0, 1, 1]], "edges": [[[-1, -1, -1], [1, -1, -1]], [[1, -1, -1], [1, 1, -1]], [[1, 1, -1], [-1, 1, -1]], [[-1, 1, -1], [-1, -1, -1]], [[-1, -1, 1], [1, -1, 1]], [[1, -1, 1], [1, 1, 1]], [[1, 1, 1], [-1, 1, 1]], [[-1, 1, 1], [-1, -1, 1]], [[-1, -1, -1], [-1, -1, 1]], [[1, -1, -1], [1, -1, 1]], [[1, 1, -1], [1, 1, 1]], [[-1, 1, -1], [-1, 1, 1]]]}, "hsi": {"title": "Hexagonális szoros illeszkedésű (HSI)", "sub": "hatszöges hasáb, 3 belső atom a középsíkon", "ex": "Mg, Ti, Zn", "atoms": [[1.15, 0.0, -0.9389749999999999, 0], [0.5750000000000001, 0.9959292143521044, -0.9389749999999999, 0], [-0.5749999999999997, 0.9959292143521045, -0.9389749999999999, 0], [-1.15, 1.408343819019456e-16, -0.9389749999999999, 0], [-0.5750000000000005, -0.995929214352104, -0.9389749999999999, 0], [0.5750000000000001, -0.9959292143521044, -0.9389749999999999, 0], [0, 0, -0.9389749999999999, 0], [1.15, 0.0, 0.9389749999999999, 0], [0.5750000000000001, 0.9959292143521044, 0.9389749999999999, 0], [-0.5749999999999997, 0.9959292143521045, 0.9389749999999999, 0], [-1.15, 1.408343819019456e-16, 0.9389749999999999, 0], [-0.5750000000000005, -0.995929214352104, 0.9389749999999999, 0], [0.5750000000000001, -0.9959292143521044, 0.9389749999999999, 0], [0, 0, 0.9389749999999999, 0], [0.575, 0.33197640478403473, 0, 1], [-0.575, 0.33197640478403473, 0, 1], [-1.2196615245336428e-16, -0.6639528095680696, 0, 1]], "edges": [[[1.15, 0.0, -0.9389749999999999], [0.5750000000000001, 0.9959292143521044, -0.9389749999999999]], [[0.5750000000000001, 0.9959292143521044, -0.9389749999999999], [-0.5749999999999997, 0.9959292143521045, -0.9389749999999999]], [[-0.5749999999999997, 0.9959292143521045, -0.9389749999999999], [-1.15, 1.408343819019456e-16, -0.9389749999999999]], [[-1.15, 1.408343819019456e-16, -0.9389749999999999], [-0.5750000000000005, -0.995929214352104, -0.9389749999999999]], [[-0.5750000000000005, -0.995929214352104, -0.9389749999999999], [0.5750000000000001, -0.9959292143521044, -0.9389749999999999]], [[0.5750000000000001, -0.9959292143521044, -0.9389749999999999], [1.15, 0.0, -0.9389749999999999]], [[1.15, 0.0, 0.9389749999999999], [0.5750000000000001, 0.9959292143521044, 0.9389749999999999]], [[0.5750000000000001, 0.9959292143521044, 0.9389749999999999], [-0.5749999999999997, 0.9959292143521045, 0.9389749999999999]], [[-0.5749999999999997, 0.9959292143521045, 0.9389749999999999], [-1.15, 1.408343819019456e-16, 0.9389749999999999]], [[-1.15, 1.408343819019456e-16, 0.9389749999999999], [-0.5750000000000005, -0.995929214352104, 0.9389749999999999]], [[-0.5750000000000005, -0.995929214352104, 0.9389749999999999], [0.5750000000000001, -0.9959292143521044, 0.9389749999999999]], [[0.5750000000000001, -0.9959292143521044, 0.9389749999999999], [1.15, 0.0, 0.9389749999999999]], [[1.15, 0.0, -0.9389749999999999], [1.15, 0.0, 0.9389749999999999]], [[0.5750000000000001, 0.9959292143521044, -0.9389749999999999], [0.5750000000000001, 0.9959292143521044, 0.9389749999999999]], [[-0.5749999999999997, 0.9959292143521045, -0.9389749999999999], [-0.5749999999999997, 0.9959292143521045, 0.9389749999999999]], [[-1.15, 1.408343819019456e-16, -0.9389749999999999], [-1.15, 1.408343819019456e-16, 0.9389749999999999]], [[-0.5750000000000005, -0.995929214352104, -0.9389749999999999], [-0.5750000000000005, -0.995929214352104, 0.9389749999999999]], [[0.5750000000000001, -0.9959292143521044, -0.9389749999999999], [0.5750000000000001, -0.9959292143521044, 0.9389749999999999]]]}}, L=D[v.lat], az=v.az*Math.PI/180, e=v.el*Math.PI/180, fg=css("--fg");
+const P=p=>{const xr=p[0]*Math.cos(az)-p[1]*Math.sin(az), yr=p[0]*Math.sin(az)+p[1]*Math.cos(az);
+  return [280+95*xr, 200-95*(p[2]*Math.cos(e)+yr*Math.sin(e)), yr*Math.cos(e)-p[2]*Math.sin(e)];};
+el("rect",{x:0,y:0,width:560,height:400,fill:"#fff",rx:8});
+L.edges.forEach(q=>{const a=P(q[0]),b=P(q[1]),back=(a[2]+b[2])/2>0.3;
+  el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:"#000","stroke-width":back?1:2,"stroke-dasharray":back?"6 4":""});});
+L.atoms.map(a=>[P(a),a[3]]).sort((m,n)=>n[0][2]-m[0][2]).forEach(([p,inn])=>{
+  el("circle",{cx:p[0],cy:p[1],r:inn?25:22,fill:inn?"#777":"#e0e0e0",stroke:"#000","stroke-width":1.5});
+  el("circle",{cx:p[0]-7,cy:p[1]-7,r:6,fill:"#fff","fill-opacity":0.8});});
+el("text",{x:280,y:30,"font-size":16,"text-anchor":"middle","font-weight":"bold",fill:"#000"},L.title);
+el("text",{x:280,y:385,"font-size":13,"text-anchor":"middle",fill:"#000"},L.sub+"; pl. "+L.ex);
+status("<b>"+L.title+"</b>: "+L.sub+". Példafémek: "+L.ex+". A szaggatott élek a cella hátsó élei; a sötét gömbök a középső, lapközépi vagy belső atomok.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

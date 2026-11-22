@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hengernyomás és gyújtásszög</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="sp">Gyújtásszög (FHP előtt, negatív)</label><input id="sp" type="range" min="-40" max="0" step="1" value="-20" aria-label="Gyújtásszög (FHP előtt, negatív)"><output id="sp_o" for="sp"></output></div>
+<div class="row"><label for="kn">Kopogás</label><input id="kn" type="checkbox" aria-label="Kopogás"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Öt nyomásgörbe: motorozott, helyes, korai, késői gyújtás és kopogásos égés."></svg>
+<p class="small">Szemléltető modell, kitalált adatok (ε = 10, κ ≈ 1,3, Wiebe-égés: késedelem 8°, tartam 35°); a valós görbe motoronként és üzemállapotonként eltér, nem mért érték.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"sp":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const E=10.0,LA=0.3,P1=1.0,K=1.3,R=1.0,DL=8.0,DU=35.0;
+const vol=f=>{const t=f*Math.PI/180,x=(1-Math.cos(t))+(1-Math.sqrt(1-Math.pow(LA*Math.sin(t),2)))/LA;return 1+(E-1)*x/2;};
+const pm=f=>P1*Math.pow(vol(-180)/vol(f),K);
+const xb=(f,s)=>{const z=Math.max(0,(f-(s+DL))/DU);return 1-Math.exp(-5*z*z*z);};
+const pf=(f,s,kn)=>{let p=pm(f)*(1+R*xb(f,s)*2.2);if(kn){const t0=s+DL+0.55*DU,d=f-t0;if(d>0)p+=7*Math.exp(-d/9)*Math.sin(2*Math.PI*d/2.2);}return p;};
+const X0=55,X1=540,Y0=280,Y1=20,X=f=>X0+(X1-X0)*(f+60)/150,Y=p=>Y0-(Y0-Y1)*Math.min(p,70)/70;
+const L=css("--line"),F=css("--fg");
+el("line",{x1:X0,y1:Y0,x2:X1,y2:Y0,stroke:L});el("line",{x1:X0,y1:Y0,x2:X0,y2:Y1,stroke:L});
+for(let q=-60;q<=90;q+=30)el("text",{x:X(q),y:Y0+15,"font-size":10,"text-anchor":"middle"},q);
+for(let q=0;q<=70;q+=10)el("text",{x:X0-5,y:Y(q)+4,"font-size":10,"text-anchor":"end"},q);
+el("line",{x1:X(0),y1:Y0,x2:X(0),y2:Y1,stroke:css("--grid")});el("text",{x:X(0)+4,y:Y0-6,"font-size":10},"FHP");
+el("text",{x:(X0+X1)/2,y:Y0+32,"font-size":11,"text-anchor":"middle"},"főtengelyszög φ (°)");
+el("text",{x:14,y:(Y0+Y1)/2,"font-size":11,"text-anchor":"middle",transform:"rotate(-90 14 "+(Y0+Y1)/2+")"},"p (bar)");
+let a="",b="",best=-1e9,bf=0;
+for(let f=-60;f<=90;f+=0.25){a+=(f>-60?"L":"M")+X(f)+" "+Y(pm(f));const p=pf(f,v.sp,v.kn);b+=(f>-60?"L":"M")+X(f)+" "+Y(p);if(pf(f,v.sp,0)>best){best=pf(f,v.sp,0);bf=f;}}
+let r="";for(let f=-60;f<=90;f+=0.5)r+=(f>-60?"L":"M")+X(f)+" "+Y(pf(f,-20,0));
+el("path",{d:r,fill:"none",stroke:css("--grid"),"stroke-width":3});
+el("path",{d:a,fill:"none",stroke:F,"stroke-width":1.5,"stroke-dasharray":"2 4"});
+el("path",{d:b,fill:"none",stroke:css("--hl2"),"stroke-width":2.2});
+el("path",{d:"M"+X(v.sp)+" "+(Y(pm(v.sp))+4)+" l-6 12 h12 z",fill:css("--hl")});
+el("circle",{cx:X(bf),cy:Y(best),r:5,fill:css("--bg"),stroke:F,"stroke-width":2});
+el("text",{x:X1,y:Y1+12,"font-size":10,"text-anchor":"end"},"pontozott: motorozott · szürke: helyes (−20°) · színes: beállított");
+let m="Szikra "+(-v.sp)+"° FHP előtt → nyomáscsúcs <b>"+fmt(best,1)+" bar</b> <b>"+fmt(bf,1)+"°</b>-nál ("+(bf>=0?"FHP után":"FHP előtt")+"). ";
+if(bf<6)m+="<span class='bad'>Túl korai gyújtás: a csúcs FHP-hoz közel/előtte, a még felfelé mozgó dugattyú ellen dolgozik az égés, nő a kopogásveszély.</span>";
+else if(bf>18)m+="<span class='bad'>Túl késői gyújtás: alacsonyabb, későbbi csúcs, kisebb nyomaték, forróbb kipufogógáz.</span>";
+else m+="<span class='ok'>Kedvező: a csúcs kb. 10–15°-kal FHP után.</span>";
+if(v.kn)m+=" Kopogás: a csúcs körül nagyfrekvenciás nyomáslengés (a kopogásérzékelő ezt a rezgést érzékeli).";
+status(m);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

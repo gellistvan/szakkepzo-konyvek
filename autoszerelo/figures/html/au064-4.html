@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szelephézag és alátétvastagság</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="phi">bütyök elforgatása</label><input id="phi" type="range" min="0" max="360" step="5" value="180" aria-label="bütyök elforgatása"><output id="phi_o" for="phi"></output></div>
+<div class="row"><label for="h_regi">régi alátét</label><input id="h_regi" type="range" min="2.0" max="3.5" step="0.01" value="2.7" aria-label="régi alátét"><output id="h_regi_o" for="h_regi"></output></div>
+<div class="row"><label for="h_mert">mért hézag (hidegen)</label><input id="h_mert" type="range" min="0.05" max="0.5" step="0.01" value="0.15" aria-label="mért hézag (hidegen)"><output id="h_mert_o" for="h_mert"></output></div>
+<div class="row"><label for="h_eloirt">előírt hézag</label><input id="h_eloirt" type="range" min="0.1" max="0.4" step="0.01" value="0.25" aria-label="előírt hézag"><output id="h_eloirt_o" for="h_eloirt"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 340" role="img" aria-label="Szelephézag mérése a bütyök alapkörén; állítócsavaros himba, cserélhető alátét és hidraulikus emelő metszete."></svg>
+<p class="small">Forgasd a bütyköt: a hézag csak akkor mérhető, ha az alapkör áll a követő felett (szelep zárva, hideg motor). Az alapértékek a fejezet kidolgozott példáját adják (2,70 mm → 2,60 mm); az előírt hézag gyártói adat (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"phi":"°", "h_regi":"mm", "h_mert":"mm", "h_eloirt":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const phi=v.phi, hr=v.h_regi, hm=v.h_mert, he=v.h_eloirt;
+const hu=hr+(hm-he), fg=css("--fg");
+const L=Math.max(0,Math.cos(phi*Math.PI/180))**3*40, RBp=60, cx=150, gap=12;
+const top=230-L;
+// csészés emelő + alátét + szár
+el("rect",{x:95,y:top+15,width:110,height:45,fill:"#9a9a9a",stroke:"#000"});
+el("rect",{x:110,y:top,width:80,height:15,fill:"#ddd",stroke:"#000"});
+el("line",{x1:cx,y1:top+60,x2:cx,y2:330,stroke:fg,"stroke-width":4});
+const cy=top-gap-RBp+L*0;  // a bütyök tengelye rögzített
+const cyc=230-gap-RBp;
+let d=""; for(let a=0;a<=360;a+=3){const t=a*Math.PI/180, psi=(phi+90)*Math.PI/180;
+ const r=RBp+40*Math.max(0,Math.cos(t-psi))**3; d+=(a?"L":"M")+(cx+r*Math.cos(t)).toFixed(1)+" "+(cyc+r*Math.sin(t)).toFixed(1);}
+el("path",{d:d+"Z",fill:"#fff",stroke:"#000","stroke-width":2});
+el("circle",{cx:cx,cy:cyc,r:6,fill:"#000"});
+const onBase = L<0.5;
+if(onBase){ el("rect",{x:20,y:230-gap+2,width:140,height:gap-4,fill:"#555"}); el("text",{x:20,y:230-gap-6,"font-size":12},"hézagmérő"); }
+el("text",{x:260,y:60,"font-size":15,"font-weight":"bold",fill:onBase?css("--ok"):css("--bad")}, onBase?"✔ alapkör: a hézag mérhető":"✘ a bütyök emel: itt nem mérhető");
+el("text",{x:260,y:100,"font-size":13},"Alátétszámítás:");
+el("text",{x:260,y:125,"font-size":13},"h_új = h_régi + (h_mért − h_előírt)");
+el("text",{x:260,y:150,"font-size":13},"= "+fmt(hr,2)+" + ("+fmt(hm,2)+" − "+fmt(he,2)+")");
+el("text",{x:260,y:178,"font-size":15,"font-weight":"bold"},"= "+fmt(hu,2)+" mm");
+el("text",{x:260,y:210,"font-size":13}, hm>he+0.001?"nagyobb hézag → vastagabb alátét":(hm<he-0.001?"kisebb hézag → vékonyabb alátét":"a hézag megfelel"));
+status("Bütyökszög "+phi+"° · bütyökemelés "+(onBase?"0 (alapkör)":"> 0")+" · új alátét: <b>"+fmt(hu,2)+" mm</b>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

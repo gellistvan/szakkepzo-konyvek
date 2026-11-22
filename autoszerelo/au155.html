@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>42.2 Elektronikus rendszerek javítása: ABS/ESP, légzsák,
+komfort, klíma és ADAS – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz10">X. RÉSZ – Szerelési gyakorlat</a> › <a href="index.html#auch41">42 Elektromos berendezések szerelése</a></p>
+<div class="links"><a class="prev" rel="prev" href="au154.html">← 42.1 Vezetékjavítás, csatlakozók, világítás, áramellátás és indítás szerelése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au156.html">43.1 Kerékpárok szerkezete: váz, hajtómű, fék és futómű →</a></div>
+</nav>
+<h2 data-number="42.2" id="au155"><span
+class="header-section-number">42.2</span> Elektronikus rendszerek
+javítása: ABS/ESP, légzsák, komfort, klíma és ADAS</h2>
+<h3 data-number="42.2.1" id="motiváció"><span
+class="header-section-number">42.2.1</span> Motiváció</h3>
+<p>Egy hétköznapi műhelyi helyzetből indulunk: a szervizbe behoznak egy
+középkategóriás autót, az ügyfél panasza szerint „a műszerfalon
+egyszerre jött be az ABS-lámpa és a csúszásgátló ikon, majd később a
+légzsák-lámpa is kigyulladt, és azóta világít”. A klíma sem hűt
+rendesen, a jobb hátsó ablakemelő pedig csak néha működik. A szerelőnek
+egyszerre kell rendszerszemlélettel átlátnia a hibát, és biztonságosan,
+a gyártói javítási utasítás szerint dolgoznia. Ez az alfejezet pontosan
+erre tanít: az ABS, ASR és ESP rendszer javítására, a pirotechnikai
+biztonságot igénylő légzsák- és övfeszítő-szerelésre, a
+komfortelektronika tanítására és ellenőrzésére, a klímaszervizre,
+valamint a vezetőtámogató rendszerek (ADAS) kalibrálását tartalmazó
+munkafolyamatokra.</p>
+<h3 data-number="42.2.2" id="szemléletes-kép"><span
+class="header-section-number">42.2.2</span> Szemléletes kép</h3>
+<p>Képzeljük el, hogy a jármű akkumulátorát a gyártói előírás szerint
+lecsatlakoztattuk, a műhelyben elszívó működik, a jármű kerekét
+kitámasztottuk. A diagnosztikai műszer a következő hibakódokat olvassa:
+<code>C0035</code> (tanulási példa: a kód jelentése gyártóspecifikus,
+ellenőrizendő; itt: kerékfordulatszám-érzékelő szakadás),
+<code>B0013</code> (tanulási példa: vezetőoldali légzsák gyújtókör túl
+nagy ellenállás; gyártóspecifikus, ellenőrizendő) és <code>B1082</code>
+(tanulási példa: jobb hátsó ablakemelő-rendszer hibás; gyártóspecifikus,
+ellenőrizendő). A szerelő kezében multiméter, oszcilloszkóp és a gyártói
+áramútrajz van. A rendszerek szintjeit így foglalhatjuk össze:</p>
+<figure>
+<img src="assets/au155-diagram-1.png"
+alt="Az elektronikus rendszerek javítási csoportjai - A tanulási fejezetben tárgyalt rendszerek és főbb beavatkozó egységek; nem részletes járműarchitektúra." />
+<figcaption aria-hidden="true">Az elektronikus rendszerek javítási
+csoportjai - A tanulási fejezetben tárgyalt rendszerek és főbb
+beavatkozó egységek; nem részletes járműarchitektúra.</figcaption>
+</figure>
+<p>Az ábra rétegei egymás mellé rendelt rendszercsoportok (a sorrendjük
+nem javítási sorrend), a legalsó sáv a közös járműhálózat: az egyes
+rendszerek fizikailag és diagnosztikailag elkülönülnek, de a
+buszkommunikáción keresztül sokszor összefüggenek. Például a
+kerékfordulatszám-érzékelő jele nemcsak az ABS-nek, hanem a hegyimentő
+rásegítésnek (ESP) és a gumiabroncsnyomás-figyelőnek is kell.</p>
+<h3 data-number="42.2.3" id="definíciók-és-összefüggések"><span
+class="header-section-number">42.2.3</span> Definíciók és
+összefüggések</h3>
+<p><strong>Definíció.</strong> <strong>ABS (Antilock Braking
+System)</strong> – blokkolásgátló rendszer. A
+kerékfordulatszám-érzékelők jeleiből érzékeli, ha egy kerék a fékezés
+során blokkolna, és a hidraulikus egység (HCU) segítségével rövid,
+periodikus nyomáscsökkentést, tartást vagy felépítést végez az adott
+kerékfékhengerben, így a kerék a tapadási határ közelében marad.</p>
+<p><strong>Definíció.</strong> <strong>ASR (Acceleration Slip
+Regulation)</strong> – kipörgésgátló. Hasonló elv alapján, gyorsítás
+közben érzékeli a hajtott kerék kipörgését; a motor
+nyomatékcsökkentésével (gyújtás, befecskendezés pillanata, elektronikus
+fojtószelep) és/vagy fékezeti beavatkozással visszafogja a hajtási
+szlipet.</p>
+<p><strong>Definíció.</strong> <strong>ESP (Electronic Stability
+Programme)</strong> – menetstabilizáló rendszer. A kormányszög, a
+kerékfordulatszám, az oldalirányú gyorsulás és a legyezési sebesség
+jeleiből felismeri a jármű alul- vagy túlkormányzott viselkedését, és
+egy vagy több kerék célzott fékezésével, valamint esetleg
+motornyomaték-csökkentéssel korrigálja a menetstabilitást.</p>
+<p><strong>Definíció.</strong> <strong>SRS (Supplemental Restraint
+System)</strong> – kiegészítő védelmi rendszer, a légzsákok és
+övfeszítők gyűjtőneve. A pirotechnikai gyújtóegységek robbanékony
+szerkezetek, ezért a javításukra speciális biztonsági előírások
+vonatkoznak.</p>
+<p><strong>Definíció.</strong> <strong>ADAS (Advanced Driver Assistance
+Systems)</strong> – fejlett vezetőtámogató rendszerek. Ide tartoznak a
+kamera, radar, ultrahang vagy lidar alapú rendszerek: sávtartó,
+vészfékasszisztens, adaptív távolságtartó, holttérfigyelő stb. Az
+érzékelő pontos geometriája kritikus a működéshez, ezért javítás után
+kalibrálni kell.</p>
+<p><strong>Összefüggés.</strong> A kerékfordulatszám-érzékelő jele lehet
+<strong>passzív induktív</strong> típusú: a fogazott jeladógyűrű forgása
+váltakozó feszültséget kelt, a jel frekvenciája arányos a kerék
+fordulatszámával, az amplitúdója is nő a kerékfordulatszámmal. A
+<strong>Hall-elvű aktív</strong> érzékelőnél a vezérlőegység
+tápfeszültséget ad (gyakran 7–14 V), az érzékelő pedig négyszögjelet
+vagy digitális állapotjelet ad, amelynek kapcsolási frekvenciája
+ugyancsak a kerékfordulatszámmal arányos.</p>
+<figure id="fig-au155-1">
+<div class="fig-interactive"><iframe src="figures/html/au155-1.html" title="Induktív és aktív kerékérzékelő jelalakja két sebességnél: az induktív szinuszjel amplitúdója és frekvenciája is nő, az aktív érzékelő 7 és 14 mA között kapcsoló áramjelének csak a frekvenciája nő." loading="lazy" style="width:100%;border:0;height:520px"></iframe><noscript><img src="figures/img/au155-1.png" style="width:85.0%"
+alt="Induktív és aktív kerékérzékelő jelalakja két sebességnél: az induktív szinuszjel amplitúdója és frekvenciája is nő, az aktív érzékelő 7 és 14 mA között kapcsoló áramjelének csak a frekvenciája nő." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au155-1.png" style="width:85.0%"
+alt="Induktív és aktív kerékérzékelő jelalakja két sebességnél: az induktív szinuszjel amplitúdója és frekvenciája is nő, az aktív érzékelő 7 és 14 mA között kapcsoló áramjelének csak a frekvenciája nő." /></details></div>
+<figcaption>A passzív induktív és az aktív kerékfordulatszám-érzékelő
+jelalakja 20 és 60 km/h-nál (C = 2,1 m, 48 fog; szemléltető, számított
+jel)</figcaption>
+</figure>
+<p>Az ábra felső része az induktív érzékelő szinuszos feszültségét
+mutatja: 20 km/h-nál kb. 127 Hz és kis csúcsérték, 60 km/h-nál kb. 381
+Hz és nagyobb csúcsérték. Az alsó rész az aktív érzékelő áramjelét: a
+két szint (kb. 7 és 14 mA, ellenőrizendő) a sebességtől független, csak
+a váltások üteme sűrűsödik. Az interaktív változatban a sebesség, a
+fogszám és a gördülési sugár állítható, a frekvencia
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mi>v</mi><mi>/</mi><mi>C</mi><mo>⋅</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">f = v/C \cdot z</annotation></semantics></math>)
+kiszámítva jelenik meg; a „légrés túl nagy” kapcsoló az induktív jel
+csökkenését mutatja.</p>
+<h3 data-number="42.2.4" id="felépítés-és-működés"><span
+class="header-section-number">42.2.4</span> Felépítés és működés</h3>
+<h4 data-number="42.2.4.1" id="abs-asr-és-esp-javítása"><span
+class="header-section-number">42.2.4.1</span> ABS, ASR és ESP
+javítása</h4>
+<p>A blokkolásgátló rendszer fő részei:</p>
+<ul>
+<li><strong>Kerékfordulatszám-érzékelők</strong> – minden keréknél, a
+kerékagyon vagy a hajtott tengely közelében. A jeladógyűrű a kerékagyon
+vagy az állandó sebességű csuklóházon van; az érzékelő légrése a gyártó
+által előírt (jellemzően 0,3–1,0 mm, ellenőrizendő).</li>
+<li><strong>Hidraulikus egység (HCU)</strong> – fogadja a vezérlőegység
+utasításait. Belső szolenoid szelepei és szivattyúja módosítja a
+kerékfékhengerek nyomását.</li>
+<li><strong>Elektronikus vezérlőegység (ECU)</strong> – a rendszer
+„agya”, amely a jeleket értékeli és a beavatkozókat vezérli.</li>
+<li><strong>További érzékelők</strong> – kormányszög, oldalirányú
+gyorsulás, legyezési szögsebesség, féklámpa-kapcsoló,
+nyomásérzékelők.</li>
+</ul>
+<p>Az ABS működése: amikor erőteljes fékezésnél egy kerék lassulása
+eltér a számított járműlassulástól, a vezérlőegység az adott kerék
+mágnesszelepét átkapcsolja, hogy a nyomást tartsa vagy csökkentse. A
+beavatkozás során a fékpedál pulzálását, zaját a járműben érezni
+lehet.</p>
+<p>A javítás során:</p>
+<ol type="1">
+<li><strong>Hibakód kiolvasása</strong> diagnosztikai műszerrel.</li>
+<li><strong>Célzott mérés:</strong> az érzékelő tekercsellenállása
+induktív típusnál jellemzően 800–1600 Ω (ellenőrizendő: gyártói adat),
+Hall-érzékelőnél a tápfeszültség és a jel alakja oszcilloszkóppal.</li>
+<li><strong>Légrés-ellenőrzés</strong> hézagmérővel, a gyártói érték
+szerint.</li>
+<li><strong>Jeladógyűrű ellenőrzése:</strong> törött fog, korrózió,
+szennyeződés.</li>
+<li><strong>Hidraulikus egység vizsgálata:</strong> szivárgás,
+eltömődött szűrő, szolenoid ellenállás, aktivátorteszt a
+rendszerteszterrel.</li>
+<li><strong>Kódolás és kalibrálás:</strong> az ABS/ESP vezérlőegység
+cseréje vagy új érzékelő beszerelése után el kell végezni az adott
+típusra előírt kódolást, esetleg kormányszög-érzékelő kalibrálást,
+oldalirányú gyorsulás-érzékelő nullpont-tanítást.</li>
+</ol>
+<h4 data-number="42.2.4.2"
+id="biztonsági-elektronika-légzsák-és-övfeszítő"><span
+class="header-section-number">42.2.4.2</span> Biztonsági elektronika:
+légzsák és övfeszítő</h4>
+<p>A légzsákrendszer központi vezérlője érzékeli az ütközést, és
+pirotechnikai gyújtóegységeket indít. A vezérlőegység a gyújtókört
+folyamatosan ellenőrzi, ezért ha a spirálkábelt, az érzékelőt vagy a
+modult szabálytalanul csatlakoztatják, hibakódot tárol.</p>
+<p><strong>Előírás.</strong> A légzsák- és övfeszítő-rendszeren
+bármilyen munkálat előtt a gyújtást ki kell kapcsolni, a 12 V-os
+akkumulátor negatív pólusát le kell kötni, és a gyártó által előírt
+várakozási időt (jellemzően 3–15 perc, ellenőrizendő a gyártói javítási
+utasításban) kell eltölteni, hogy a tartalék kondenzátorok kisüljenek.
+Csak ezután szabad a pirotechnikai egységeket bontani.</p>
+<p><strong>Tilos.</strong> A gyújtóegységet közvetlenül
+ellenállásmérővel vagy bármilyen áramforrással vizsgálni, mert az
+indítóáram hatására a gyújtóegység beindulhat, súlyos sérülést
+okozva.</p>
+<p><strong>Spirálkábel:</strong> kormányműszer középső helyzetéből
+szerelendő, a középhelyzet jelölését a gyártó adja. A csatlakozók
+biztonsági retesszel rendelkeznek, a csatlakozót csak a retesz feloldása
+után szabad bontani.</p>
+<h4 data-number="42.2.4.3" id="komfortelektronika"><span
+class="header-section-number">42.2.4.3</span> Komfortelektronika</h4>
+<p>A komfortfunkciók (ablakemelő, központi zár, tükörmozgató,
+ülésállítás, napfénytető) elektronikus vezérlőegységei többnyire CAN-
+vagy LIN-buszon kommunikálnak. Javítás után a rendszereket gyakran újra
+kell „tanítani”:</p>
+<ul>
+<li><strong>Ablakemelő:</strong> a felső és alsó végállás gyakran a
+motorszabályozóba van betanítva. A motort vagy vezérlőegységet cserélve
+el kell végezni a tanítást: az ablakot teljesen leengedni, majd teljesen
+felhúzni, és a kapcsolót a gyártó által meghatározott ideig
+tartani.</li>
+<li><strong>Központi zár:</strong> a távirányító vevője és az aktuátorok
+szinkronizálása szükséges lehet a rádiófrekvenciás adóval.</li>
+<li><strong>Tükrök:</strong> memorizált állások törlése és
+újratanítása.</li>
+</ul>
+<p>A hibakeresésnél mindig a tünetből indulunk ki, és a gyártói
+áramútrajz alapján a kapcsolót, a motor áramkörét, a csatlakozókat és a
+biztosítékokat ellenőrizzük.</p>
+<h4 data-number="42.2.4.4" id="klímaszerviz"><span
+class="header-section-number">42.2.4.4</span> Klímaszerviz</h4>
+<p>A klímaberendezés javítása során a hűtőkör nyomás alatt áll. Az F-gáz
+szabályozás szerint a hűtőközeggel végzett munkákhoz (lefejtés,
+visszafejtés, töltés, szivárgásvizsgálat) <strong>képesítés
+szükséges</strong>. A hűtőközeget a légkörbe engedni tilos.</p>
+<p>A klímaszerviz jellemző lépései:</p>
+<ol type="1">
+<li><strong>Hűtőközeg-típus azonosítása</strong> (címke: R134a/R1234yf;
+az R1234yf gyúlékony, a folyékony hűtőközeg fagysérülést okoz:
+védőszemüveg és kesztyű kötelező, szikra és nyílt láng tilos).
+HV-kompresszoros járművön a klímakör bontása előtt a
+HV-feszültségmentesítés is szükséges lehet (ellenőrizendő: gyártói
+eljárás).</li>
+<li><strong>Nyomásellenőrzés:</strong> az alacsony oldalon (szívóoldal)
+jellemzően 1,5–3 bar, a magas oldalon 10–18 bar (ellenőrizendő a
+környezeti hőmérséklet és a gyártói töltetmennyiség függvényében).</li>
+<li><strong>Hűtőközeg-visszanyerés</strong> klímaszerviz-állomással, a
+rendszer leürítése.</li>
+<li><strong>Vákuumozás</strong> a nedvesség eltávolításához, majd
+<strong>vákuumtartási (tömörségi) próba</strong> a töltés előtt
+(ellenőrizendő: gyártói idő); szivárgó körbe nem szabad hűtőközeget
+tölteni.</li>
+<li><strong>Töltés</strong> a címke szerinti tömegű hűtőközeggel és az
+előírt olajjal; HV-kompresszornál kizárólag a gyártó által előírt
+szigetelő olajjal (a hagyományos PAG-olaj a HV-rendszer szigetelését
+veszélyeztetheti; ellenőrizendő: gyártói adat).</li>
+<li><strong>Működés- és szivárgásellenőrzés</strong> elektronikus
+detektorral vagy buborékos spray-vel.</li>
+</ol>
+<p>A hibás kompresszort, eltömődött expanziós szelepet vagy szivárgó
+kondenzátort a gyártó szerint kell cserélni; a rendszert csak szűrővel
+együtt szabad javítani.</p>
+<h4 data-number="42.2.4.5" id="adas-diagnosztika-és-kalibrálás"><span
+class="header-section-number">42.2.4.5</span> ADAS diagnosztika és
+kalibrálás</h4>
+<p>A vezetőtámogató rendszerek érzékelői (kamera, radar, ultrahang) a
+járműhöz képesti pontos geometriát igényelnek. Szélvédőcsere,
+érzékelőcsere, futómű beállítás után a rendszer diagnosztikája általában
+hibakódot jelezhet, vagy a szerviznek kötelező kalibrálást végeznie. A
+kalibrálás lehet:</p>
+<ul>
+<li><strong>Statikus:</strong> a járművet egy sík, vízszintes padlóra
+állítjuk, a gyártó által előírt céltáblát megfelelő távolságra
+helyezzük, és diagnosztikai műszerrel elindítjuk a kalibrációs
+rutint.</li>
+<li><strong>Dinamikus:</strong> rövid próbaút közben, azonosított
+útburkolati jelek és folyamatos jelrögzítés mellett a rendszer magát
+kiegyenlíti (ellenőrizendő a gyártói javaslat).</li>
+</ul>
+<p><strong>Előírás.</strong> ADAS-kalibrálást csak a gyártói
+céltáblákkal, a jármű terhelési állapotát, az üzemanyagszintet és a
+futómű beállítását pontosan betartva szabad végezni. A hibás kalibrálás
+téves vészfékbecsléshez vagy nem megfelelő sávtartáshoz vezethet, ami
+közúti balesetveszélyt okoz.</p>
+<h3 data-number="42.2.5" id="kidolgozott-példák"><span
+class="header-section-number">42.2.5</span> Kidolgozott példák</h3>
+<h4 data-number="42.2.5.1"
+id="példa-1-induktív-kerékfordulatszám-érzékelő-ellenőrzése"><span
+class="header-section-number">42.2.5.1</span> Példa 1: Induktív
+kerékfordulatszám-érzékelő ellenőrzése</h4>
+<p>Adott egy jármű, amelyen az ABS-lámpa világít. A diagnosztikai műszer
+a jobb első kerékfordulatszám-érzékelő hibáját jelzi. A gyártói adat
+szerint az érzékelő tekercsellenállása 800–1600 Ω, a légrés 0,3–1,0 mm
+(tanulási példa, ellenőrizendő: gyártói adat).</p>
+<p><strong>Számítás.</strong> A szerelő multiméterrel mér: az érzékelő
+ellenállása
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mtext mathvariant="normal">érzékelő</mtext></msub><mo>=</mo><mn>1250</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R_{\text{érzékelő}} = 1250\,\Omega</annotation></semantics></math>,
+ami a tűréshatáron belül van. A légrést hézagmérővel ellenőrzi:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mm</mtext></mrow><annotation encoding="application/x-tex">0{,}8\,\text{mm}</annotation></semantics></math>.
+Ez is megfelel. A jeladógyűrű fogai épek, nincs fémforgács. A hiba tehát
+valószínűleg mégsem az érzékelő, hanem a csatlakozó szakadása az
+érzékelő és az ABS-vezérlő között.</p>
+<p>A szerelő a gyártói áramútrajz alapján átnézi a kábelköteget, és az
+érzékelő csatlakozójánál a csatlakozó hüvely korrodált. A csatlakozót
+kontaktjavítóval tisztítja, a szilikon-tömítőgyűrűt ellenőrzi, majd új
+csatlakozó hüvelyt présel fel. A hibakód törlése után rövid próbaút: az
+ABS-lámpa elalszik, a rendszerteszter nem mutat hibát.</p>
+<h4 data-number="42.2.5.2"
+id="példa-2-hall-elvű-érzékelő-jelének-ellenőrzése"><span
+class="header-section-number">42.2.5.2</span> Példa 2: Hall-elvű
+érzékelő jelének ellenőrzése</h4>
+<p>Egy másik járművön a bal hátsó kerékfordulatszám-érzékelő jele
+hiányzik. Az érzékelő aktív (Hall- vagy magnetorezisztív) típusú, két
+vezetéken kapja a tápot az ABS-vezérlőtől, és a jelét áramváltozásként
+adja (kb. 7 mA / 14 mA – ellenőrizendő: gyártói adat). A mérés:</p>
+<ul>
+<li>Tápfeszültség az érzékelő csatlakozóján: a vezérlő belső tápja (a
+gyártói adat szerint; ellenőrizendő), nem a 30-as vagy 15-ös
+kapocs.</li>
+<li>Oszcilloszkóppal (vagy áramfogóval) a vezérlő oldali mérőponton, a
+kerék megforgatásakor a mérőellenálláson eső feszültség két szint között
+váltakozik (az áram kb. 7 mA és 14 mA között kapcsol,
+ellenőrizendő).</li>
+<li>A frekvencia a kerék forgási sebességéből számítható. Ha a kerék
+gördülési kerülete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mtext mathvariant="normal">kerék</mtext></msub><mo>=</mo><mn>2</mn><mi>π</mi><msub><mi>r</mi><mtext mathvariant="normal">d</mtext></msub><mo>≈</mo><mn>2</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext></mrow><annotation encoding="application/x-tex">C_{\text{kerék}} = 2\pi r_{\text{d}} \approx 2{,}1\,\text{m}</annotation></semantics></math>
+és a jeladógyűrű 48 fogú, akkor 60 km/h-nál a kerékfordulatszám:</li>
+</ul>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">kerék</mtext></msub><mo>=</mo><mfrac><mi>v</mi><msub><mi>C</mi><mtext mathvariant="normal">kerék</mtext></msub></mfrac><mo>=</mo><mfrac><mrow><mn>16</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><mrow><mn>2</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext></mrow></mfrac><mo>≈</mo><mn>7</mn><mo>,</mo><mn>95</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">s</mtext><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mn>477</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">1/min</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">n_{\text{kerék}} = \frac{v}{C_{\text{kerék}}} = \frac{16{,}7\,\text{m/s}}{2{,}1\,\text{m}} \approx 7{,}95\,\text{s}^{-1} = 477\,\text{1/min}.</annotation></semantics></math></p>
+<p>A jel frekvenciája
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">kerék</mtext></msub><mo>⋅</mo><msub><mi>z</mi><mtext mathvariant="normal">fog</mtext></msub><mo>=</mo><mn>7</mn><mo>,</mo><mn>95</mn><mo>⋅</mo><mn>48</mn><mo>≈</mo><mn>382</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">f = n_{\text{kerék}} \cdot z_{\text{fog}} = 7{,}95 \cdot 48 \approx 382\,\text{Hz}.</annotation></semantics></math></p>
+<p>Az oszcilloszkóp frekvenciája ennek megfelelő értéket mutat, tehát a
+jeladó egészséges. A hiba a vezeték szigetelésének sérülése lehet,
+amelyet át kell vizsgálni.</p>
+<h3 data-number="42.2.6" id="minőségellenőrzés"><span
+class="header-section-number">42.2.6</span> Minőségellenőrzés</h3>
+<p><strong>Ellenőrzőlista elektronikus rendszer javítása
+után:</strong></p>
+<ul>
+<li>Hibakódok törlése és újraolvasása: maradt-e hiba?</li>
+<li>Az adott rendszer öntesztjének lefutása (pl. az ABS-lámpa kialvása a
+próbaút elején).</li>
+<li>Aktív biztonsági rendszereknél a gyártói funkcióteszt (pl. ABS
+vészfékezés, ESP beavatkozás) biztonságos körülmények között.</li>
+<li>ADAS-kalibrálás után a kalibrációs rutin sikeres befejezésének
+(állapotjel, kalibrációs érték) kiolvasása és próbaút a gyártói
+feltételekkel.</li>
+<li>Légzsák rendszernél a gyújtókör ellenállását a diagnosztikai
+műszerrel, <strong>nem külső ellenállásmérővel</strong>.</li>
+<li>Klímánál a nyomásértékek a gyártói táblázat szerint, hűtőközeg
+szivárgásvizsgálat, beltér hőmérséklet ellenőrzése.</li>
+</ul>
+<h3 data-number="42.2.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">42.2.7</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy ügyfél panasza: „a menetstabilizáló szimbólum néha felvillan, az
+ABS-lámpa pedig hosszabb lejtmenetben jön be.” A rendszerteszter
+kiolvassa a bal hátsó kerékfordulatszám-érzékelő hibáját. A szerelő a
+járművet emelőre állítja (bakra támasztva), leválasztja a csatlakozót,
+és megméri az érzékelő ellenállását:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>920</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R = 920\,\Omega</annotation></semantics></math>,
+a gyártói érték szerint 800–1600 Ω, tehát ez rendben van. A légrés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mm</mtext></mrow><annotation encoding="application/x-tex">1{,}0\,\text{mm}</annotation></semantics></math>,
+ami a tűrés felső határán van. A jeladógyűrű tisztának tűnik. A hibakód
+törlése után rövid próbaút során a hiba visszatér, de csak akkor, amikor
+a kerék oldalirányban terhelést kap. A szerelő rájön, hogy a csapágy
+lötyög; a kerékfordulatszám-érzékelőnek a kerékagyhoz viszonyított
+holtjátéka eltér, a légrés megnyúlik. A kerékcsapágy cseréje és az
+érzékelő újra rögzítése után a hiba megszűnik. A tanulság: az érzékelő
+hibakódja nem mindig magát az érzékelőt jelenti; ellenőrizni kell a
+jeladógyűrűt, a légrést, a csapágy játékát és a kábelköteget is.</p>
+<h3 data-number="42.2.8" id="gyakorlati-útmutató"><span
+class="header-section-number">42.2.8</span> Gyakorlati útmutató</h3>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre,
+oktató felügyeletére és a gyártói javítási utasítás betartására
+vonatkozik; a megadott értékek tanulási példák.</p>
+<h4 data-number="42.2.8.1"
+id="gyakorlati-útmutató-kerékfordulatszám-érzékelő-cseréje-abs"><span
+class="header-section-number">42.2.8.1</span> 1. gyakorlati útmutató:
+Kerékfordulatszám-érzékelő cseréje (ABS)</h4>
+<p><strong>Cél:</strong> a jobb első kerékfordulatszám-érzékelő cseréje
+és jelének ellenőrzése.</p>
+<p><strong>Szerszámok és anyagok:</strong> kerékemelő, bak,
+kéziszerszámok, nyomatékkulcs, hézagmérő, multiméter, oszcilloszkóp
+(vagy diagnosztikai műszer), új érzékelő, a gyártó által előírt
+rögzítőcsavar/rögzítőpatent és szerelőpaszta (ellenőrizendő: gyártói
+adat), kontaktjavító spray.</p>
+<p><strong>Munkalépések:</strong></p>
+<ol type="1">
+<li><strong>Járműazonosítás:</strong> adja meg a motorszám, EVIN,
+évjárat alapján a gyártói javítási adatokat; szerezze be az adott
+típusra való érzékelőt.</li>
+<li><strong>Emelés és alátámasztás:</strong> a járművet emelővel
+emeljük, állítsuk bakra; a felemelt jármű alá csak alátámasztva szabad
+bemenni.</li>
+<li><strong>Csatlakozó bontása:</strong> a kerékdob mögött ill. a
+kerékagynál lévő érzékelőcsatlakozót oldja, húzza szét; ne húzza a
+kábelt.</li>
+<li><strong>Rögzítő oldása:</strong> a szenzort általában egy vagy két
+csavar fogja; távolítsa el a rögzítőt.</li>
+<li><strong>Érzékelő kihúzása:</strong> óvatosan, forgatva húzza ki a
+furatból. Ne hajlítsa meg a tartólemezt.</li>
+<li><strong>Tisztítás:</strong> a rögzítőfuratot tisztítsa meg; a
+jeladógyűrűn ellenőrizze a fogak épségét és a szennyeződést.</li>
+<li><strong>Új érzékelő beszerelése:</strong> ütközésig tolja be; soha
+nem a kábelre ütve. A gyártói légrés beállításához használt csavarokat a
+megadott nyomatékkal (ellenőrizendő) húzza.</li>
+<li><strong>Csatlakoztatás:</strong> csatlakoztassa az új érzékelőt;
+ellenőrizze a reteszt, a tömítést.</li>
+<li><strong>Mérés:</strong> multiméterrel az ellenállást, és ha
+lehetséges, oszcilloszkóppal a jelet. Kerék megforgatásakor a
+jelfrekvencia arányos a kerékfordulatszámmal.</li>
+<li><strong>Hibakód törlése és próbaút:</strong> rendszerteszterrel
+törölje a hibakódot, végezzen ABS-próbát; ellenőrizze, hogy a lámpa
+elalszik, és a rendszer beavatkozik.</li>
+<li><strong>Dokumentálás:</strong> rögzítse a mérési eredményeket és az
+alkatrészcserét a munkalapon.</li>
+</ol>
+<h4 data-number="42.2.8.2"
+id="gyakorlati-útmutató-vezetőoldali-légzsákmodul-cseréje"><span
+class="header-section-number">42.2.8.2</span> 2. gyakorlati útmutató:
+Vezetőoldali légzsákmodul cseréje</h4>
+<p><strong>Biztonsági korlát.</strong> Pirotechnikai egységen csak
+feszültségmentesített állapotban, a gyártói előírás szerint, és csak
+olyan személy dolgozhat, aki erre ki van képezve. A feszültség alatt
+lévő légzsákrendszeren tilos munkát végezni.</p>
+<p><strong>Munkalépések:</strong></p>
+<ol type="1">
+<li><strong>Várakozási idő:</strong> kapcsolja ki a gyújtást, távolítsa
+el a kulcsot; kösse le az akkumulátor negatív pólusát. Várja ki a
+gyártói várakozási időt (pl. 10 perc; ellenőrizendő).</li>
+<li><strong>Szerelési pozíció:</strong> állítsa a kormánykereket a
+gyártói középhelyzetbe (spirálkábel középhelyzetét megtartva).</li>
+<li><strong>Modul bontása:</strong> a gyártói előírás szerinti pontokon
+oldja a légzsákmodul rögzítőcsavarjait vagy reteszét. Ne használjon
+sérült szerszámot.</li>
+<li><strong>Modul kihúzása:</strong> óvatosan, a csatlakozót még ne
+bontsa.</li>
+<li><strong>Csatlakozó bontása:</strong> az SRS-csatlakozónál a gyártó
+szerinti zárfeloldás után válassza le a modult; a csatlakozót rövidre
+záró eszközt (shorting clip) ha a gyártó előír, helyezze fel.</li>
+<li><strong>Tárolás:</strong> a kivett, ki nem oldott légzsákmodult a
+burkolatával (kibomló oldalával) felfelé, sík, nem éghető felületen,
+hőforrástól, nyílt lángtól és elektromos zavartól távol, lezárt helyen
+tárolja; hordozáskor a kibomló oldalt a testétől elfordítva vigye
+(ellenőrizendő: gyártói kezelési utasítás).</li>
+<li><strong>Új modul beszerelése:</strong> a sorrend fordított; a modul
+csatlakoztatása után a rögzítőcsavarokat a gyártói nyomatékkal
+húzza.</li>
+<li><strong>Akkumulátor visszakötése:</strong> gyújtás kikapcsolva, a
+járműben és a légzsákok kioldási zónájában senki sem tartózkodik;
+először a pozitív, majd a negatív pólust kötjük vissza. A gyújtást
+először a jármű mellől, a kioldási zónán kívülről kapcsoljuk be
+(ellenőrizendő: gyártói eljárás).</li>
+<li><strong>Diagnosztika:</strong> rendszerteszterrel ellenőrizze a
+gyújtóköröket, az SRS-lámpát; törölje a hibakódot, ha a rendszer
+tiszta.</li>
+<li><strong>Dokumentálás:</strong> a légzsákmodul cseréjét és a
+várakozási időt dokumentálni kell.</li>
+</ol>
+<h3 data-number="42.2.9" id="tipikus-hibák"><span
+class="header-section-number">42.2.9</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>Légzsák-rendszeren ellenállásmérő használata.</strong> A
+szerelő a gyújtóegységet multiméterrel akarja „átmérni”. Ez
+életveszélyes: a mérőáram működésbe hozhatja a pirotechnikai gyújtót. A
+diagnosztikai műszerrel a gyújtókör ellenőrzése biztonságos.</li>
+<li><strong>ABS-érzékelő cseréje a jeladógyűrű ellenőrzése
+nélkül.</strong> Ha a gyűrű fogai töröttek vagy a légrés rossz, az új
+érzékelő is hibát ad. A munkaművelet előtt a rendszerszemléletű
+ellenőrzés szükséges.</li>
+<li><strong>ADAS-kalibrálás elmaradása.</strong> Szélvédőcsere vagy
+kamera-bontás után a sávtartó asszisztens újra pontatlanul működik, de a
+hibakód nem feltétlenül jelenik meg azonnal. A gyártói kalibrálási
+utasítás be nem tartása közlekedésbiztonsági kockázat.</li>
+<li><strong>Klímaszerviz töltés megfelelő jogosultság nélkül.</strong> A
+hűtőközeg nem tűnik veszélyesnek, de fagyási sérülést okozhat, a
+légkörbe jutó F-gáz pedig környezetkárosító; a jogosultság nélküli
+munkavégzés jogszabályba ütközik.</li>
+<li><strong>Komfortelektronikai tanítás elfelejtése.</strong> Az
+ablakemelő motor cseréje után a rendszer hibát jelez vagy nem tanulja a
+végállásokat, ha a tanítást elmulasztják.</li>
+</ol>
+<h3 data-number="42.2.10" id="önellenőrzés"><span
+class="header-section-number">42.2.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e, hogy az induktív kerékfordulatszám-érzékelő jelének
+frekvenciája csökken a kerék fordulatszámának növekedésével?</li>
+<li>Miért tilos a légzsák gyújtóegységet ellenállásmérővel mérni?</li>
+<li>Mi a teendő egy légzsákrendszer javítását megelőzően?</li>
+<li>Melyik rendszerhez tartozik a kormányszög-érzékelő
+kalibrációja?</li>
+<li>Mi a teendő a klímarendszer hűtőközeg-visszanyerésével, és milyen
+képesítés kell?</li>
+</ol>
+<p>A válaszok a Megoldások elején találhatók.</p>
+<h3 data-number="42.2.11" id="feladatok"><span
+class="header-section-number">42.2.11</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Sorolja fel az ABS-rendszer fő
+részeit és azok szerepét.</p>
+<p><strong>2. feladat (A).</strong> Milyen mérésekkel ellenőrizhető egy
+kerékfordulatszám-érzékelő?</p>
+<p><strong>3. feladat (B).</strong> Egy jármű kerék gördülési sugara
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mtext mathvariant="normal">d</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>34</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext></mrow><annotation encoding="application/x-tex">r_{\text{d}} = 0{,}34\,\text{m}</annotation></semantics></math>,
+a jeladógyűrű 50 fogú. Számítsa ki a jel frekvenciáját 80 km/h
+sebességnél.</p>
+<p><strong>4. feladat (B).</strong> Rajzolja le az aktív érzékelő
+kétvezetékes bekötését az ABS-vezérlőhöz.</p>
+<p><strong>5. feladat (C).</strong> Egy ABS-javítás után a hibakód
+törlése ellenére a rendszerteszter folyamatosan „kalibrálás hiányzik”
+hibát jelez. Mi lehet az ok, és hogyan járjon el?</p>
+<p><strong>6. feladat (D).</strong> Ügyfél panasza: a légzsák-lámpa
+világít. A diagnosztikai műszer azt jelzi, hogy a vezetőoldali gyújtókör
+ellenállása nagy. Ismertesse a hibakeresési láncot és a biztonsági
+lépéseket a légzsákmodul cseréjéig.</p>
+<h3 data-number="42.2.12" id="megoldások"><span
+class="header-section-number">42.2.12</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok:</strong></p>
+<ol type="1">
+<li>Hamis. A frekvencia arányosan nő a kerék fordulatszámával.</li>
+<li>Mert a mérőáram beindíthatja a pirotechnikai gyújtóegységet.</li>
+<li>Gyújtás ki, akkumulátor negatív lakötés, gyártói várakozási idő
+kivárása.</li>
+<li>Az ABS/ESP rendszerhez; a kormányszög-érzékelő nullpontját
+kalibrálni kell.</li>
+<li>Hűtőközeget vissza kell nyerni klímaszerviz-állomással; az F-gáz
+szabályozás szerinti képesítés szükséges, a hűtőközeget légkörbe engedni
+tilos.</li>
+</ol>
+<p><strong>1. feladat (A).</strong> Fő részek:
+kerékfordulatszám-érzékelők (keréksebesség jele), hidraulikus egység
+(nyomásmódosítás), elektronikus vezérlőegység (jelek feldolgozása,
+vezérlés), kormányszög-érzékelő, oldalirányú gyorsulás- és legyezési
+érzékelő, féklámpa-kapcsoló.</p>
+<p><strong>2. feladat (A).</strong> Induktív érzékelőnél:
+tekercsellenállás, légrés, jeladógyűrű állapota, oszcilloszkóppal a
+váltakozó feszültség frekvenciája és amplitúdója. Aktív (Hall-)
+érzékelőnél: a vezérlőtől kapott táp megléte, az áramjel két szintje
+(kb. 7/14 mA, ellenőrizendő) és frekvenciája a vezérlő oldali
+mérőponton.</p>
+<p><strong>3. feladat (B).</strong> Szoftver használható, de kézzel is:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>80</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km/h</mtext><mo>=</mo><mn>22</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v = 80\,\text{km/h} = 22{,}2\,\text{m/s}</annotation></semantics></math>.
+Kerék kerülete:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>2</mn><mi>π</mi><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>34</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mo>=</mo><mn>2</mn><mo>,</mo><mn>14</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext></mrow><annotation encoding="application/x-tex">C = 2\pi\cdot 0{,}34\,\text{m} = 2{,}14\,\text{m}</annotation></semantics></math>.
+Kerékfordulatszám:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mi>v</mi><mi>/</mi><mi>C</mi><mo>=</mo><mn>22</mn><mo>,</mo><mn>2</mn><mi>/</mi><mn>2</mn><mo>,</mo><mn>14</mn><mo>=</mo><mn>10</mn><mo>,</mo><mn>38</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">s</mtext><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">n = v/C = 22{,}2/2{,}14 = 10{,}38\,\text{s}^{-1}</annotation></semantics></math>.
+Jel frekvencia:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mi>n</mi><mo>⋅</mo><msub><mi>z</mi><mtext mathvariant="normal">fog</mtext></msub><mo>=</mo><mn>10</mn><mo>,</mo><mn>38</mn><mo>⋅</mo><mn>50</mn><mo>=</mo><mn>519</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f = n \cdot z_{\text{fog}} = 10{,}38 \cdot 50 = 519\,\text{Hz}</annotation></semantics></math>.</p>
+<p><strong>4. feladat (B).</strong> A rajz lényege: az aktív érzékelő
+két vezetéken csatlakozik az ABS-vezérlőhöz, a tápot a vezérlő adja, a
+jel áramjel. A bekötést egyszerűen ábrázoljuk:</p>
+<figure>
+<img src="assets/au155-diagram-2.png"
+alt="Aktív (Hall-elvű) kerékfordulatszám-érzékelő kétvezetékes bekötése (elvi) - Elvi rajz: a vezérlő belső tápja áramot hajt az érzékelőn át, a mérőellenálláson eső feszültségből olvassa ki az áramjelet (kb. 7/14 mA, szemléltető, ellenőrizendő a gyártói adat szerint); a kapocsjelölések gyártófüggők." />
+<figcaption aria-hidden="true">Aktív (Hall-elvű)
+kerékfordulatszám-érzékelő kétvezetékes bekötése (elvi) - Elvi rajz: a
+vezérlő belső tápja áramot hajt az érzékelőn át, a mérőellenálláson eső
+feszültségből olvassa ki az áramjelet (kb. 7/14 mA, szemléltető,
+ellenőrizendő a gyártói adat szerint); a kapocsjelölések
+gyártófüggők.</figcaption>
+</figure>
+<p>A rajzon az aktív érzékelő két vezetékkel csatlakozik az
+ABS-vezérlőhöz: a felső vezetéken (1) kapja a vezérlő belső tápját, az
+alsón (2) az áram a vezérlőben lévő mérőellenálláson át folyik a testre.
+Az érzékelő az áramát a fogak ütemében két szint (kb. 7 és 14 mA,
+ellenőrizendő) között kapcsolja, a vezérlő a mérőellenálláson eső
+feszültségből számolja a frekvenciát.</p>
+<p><strong>5. feladat (C).</strong> A kalibrálás hiánya általában a
+kormányszög-érzékelő újratanítását jelenti. A következőt tegye: végezze
+el a gyártói kalibrációs rutint diagnosztikai műszerrel; ellenőrizze a
+kormányszög-érzékelő alapjeleit; a kalibrálás után törölje a hibakódot,
+majd végezzen próbaút. Ha a hibakód visszatér, ellenőrizze a
+kormányszög-érzékelő bekötését és a jármű futómű-beállítását.</p>
+<p><strong>6. feladat (D).</strong> Hibakeresés:</p>
+<ul>
+<li>Gyújtás ki, akkumulátor negatív lekötése, várakozási idő.</li>
+<li>Vizsgálja a légzsákmodul csatlakozóját, a spirálkábel
+sérüléseit.</li>
+<li>Diagnosztikai műszerrel ellenőrizze a gyújtókör ellenállását (nem
+külső műszerrel).</li>
+<li>Ha a modul hibás, cserélje ki a gyakorlati útmutató szerint; a
+cserét követően törölje a hibakódot és ellenőrizze az SRS-lámpát.</li>
+</ul>
+<h3 data-number="42.2.13" id="rövid-összefoglaló"><span
+class="header-section-number">42.2.13</span> Rövid összefoglaló</h3>
+<p>A fejezetben áttekintettük az ABS, ASR és ESP rendszer felépítését, a
+kerékfordulatszám-érzékelők vizsgálatát és cseréjét, a légzsák- és
+övfeszítőrendszer biztonságos szerelését, a komfortelektronika
+tanításait, a klímaszerviz alapjait és az ADAS-érzékelők kalibrálását.
+Kiemeltük, hogy a gyártói javítási utasítás mindig elsőbbséget élvez; a
+munkákhoz gyakran diagnosztikai műszer, speciális célszerszám és pontos
+várakozási/nyomatékadatok szükségesek. A légzsák egység pirotechnikai
+szerkezet, ezért feszültségmentesítés, várakozási idő és szakszerű
+tárolás nélkül tilos szerelni. Az ABS hiba keresésekor az érzékelőn
+kívül a jeladógyűrűt, a légrést, a csapágyat és a csatlakozókat is
+ellenőrizni kell. <strong>Továbbvitt eredmény:</strong> ez a
+rendszerezett javítási módszertan a vizsgafelkészülés gyakorlati
+hibakeresési és szerelési feladataiban válik majd alkalmazhatóvá; a
+lépések tudatos követése csökkenti a hibás javítás és a baleset
+kockázatát.</p>
+<h3 data-number="42.2.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">42.2.14</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: gyártói javítási kézikönyvek és kódolási utasítások;
+ENSZ-EGB előírások (pl. ECE R13-H a fékrendszerre, ECE R94/R95 a
+légzsákra; pontos számok ellenőrizendők); EU általános biztonsági
+rendelet (GSR, az ADAS-rendszerekre; pontos hatály ellenőrizendő); F-gáz
+szabályozás (uniós és hazai, pontos rendeleti számok ellenőrizendők).
+Ellenőrizendő továbbá: kerékfordulatszám-érzékelő jellemző ellenállás-
+és légrés-értéktartományai, légzsák várakozási idő, csavarok meghúzási
+nyomatéka, klíma nyomásértékek és töltetmennyiségek, ADAS kalibrációs
+távolságok és céltábla-elrendezések. A szövegben szereplő minden konkrét
+szám példa.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au154.html">← 42.1 Vezetékjavítás, csatlakozók, világítás, áramellátás és indítás szerelése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au156.html">43.1 Kerékpárok szerkezete: váz, hajtómű, fék és futómű →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

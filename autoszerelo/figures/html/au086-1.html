@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kerékfelfüggesztések kinematikája</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="k">Felfüggesztés</label><select id="k" aria-label="Felfüggesztés"><option value="trailing" selected>hosszlengőkar</option><option value="semi">ferde lengőkar</option><option value="dwb">kettős keresztlengőkar</option><option value="mcp">McPherson</option><option value="multi">többlengőkaros</option><option value="rigid">merev híd (egyoldali berugózás)</option></select></div>
+<div class="row"><label for="z">Berugózás (+) / kirugózás (−)</label><input id="z" type="range" min="-80" max="80" step="1" value="40" aria-label="Berugózás (+) / kirugózás (−)"><output id="z_o" for="z"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 340" role="img" aria-label="Felfüggesztéstípus-választó és berugózás-csúszka; a lengőkarok mozgása és a kerékdőlés változása a karosszériához képest."></svg>
+<p class="small">Elölnézeti, síkbeli szemléltető kinematika kitalált, tipikus karhosszakkal (alsó kar 0,40 m, felső kar 0,28 m); hosszlengőkarnál a dőlésváltozás 0°. A valós kinematikát a gyártói adat és a futóműbemérés adja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"z":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const kind=v.k, z=v.z/1000;
+const L0=[0,0],LA=0.40,U0=[0.06,0.28],UB=0.28,KN=Math.hypot(-0.06,0.28),TOP=[0.30,0.76];
+function ci(c0,r0,c1,r1){const dx=c1[0]-c0[0],dy=c1[1]-c0[1],d=Math.hypot(dx,dy),a=(r0*r0-r1*r1+d*d)/(2*d),h=Math.sqrt(Math.max(r0*r0-a*a,0));
+ const xm=c0[0]+a*dx/d,ym=c0[1]+a*dy/d,p1=[xm+h*dy/d,ym-h*dx/d],p2=[xm-h*dy/d,ym+h*dx/d];return p1[1]>p2[1]?p1:p2;}
+el("rect",{x:0,y:0,width:560,height:340,fill:"#fff"});
+const S=420, X=x=>140+S*x, Y=y=>250-S*y;
+function line(a,b,w,dash){el("line",{x1:X(a[0]),y1:Y(a[1]),x2:X(b[0]),y2:Y(b[1]),stroke:"#000","stroke-width":w,"stroke-dasharray":dash||"none"});}
+function jt(p,f){el("circle",{cx:X(p[0]),cy:Y(p[1]),r:6,fill:f?"#000":"#fff",stroke:"#000","stroke-width":2});}
+function wheelAt(cx,cy,ang){const w=0.08,h=0.6,c=Math.cos(ang),s=Math.sin(ang);const P=[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(q=>[cx+q[0]*c+q[1]*s,cy-q[0]*s+q[1]*c]);
+ el("polygon",{points:P.map(q=>X(q[0])+","+Y(q[1])).join(" "),fill:"#555",stroke:"#000"});}
+el("rect",{x:X(-0.25),y:Y(0.82),width:S*0.35,height:14,fill:"#ddd",stroke:"#999"});
+el("text",{x:X(-0.25),y:Y(0.86),"font-size":12,fill:"#555"},"karosszéria");
+el("line",{x1:X(-0.3),y1:Y(z+0.0-0.0)+0,x2:X(-0.3),y2:Y(0),stroke:"#fff"});
+let cam=0, txt="";
+if(kind==="dwb"||kind==="multi"||kind==="mcp"){
+ const th=Math.asin(Math.max(-0.9,Math.min(0.9,z/LA))), L=[LA*Math.cos(th),LA*Math.sin(th)];
+ line(L0,L,5);jt(L0,true);jt(L,false);
+ let ang;
+ if(kind==="mcp"){ang=Math.atan2(TOP[0]-L[0],TOP[1]-L[1])-Math.atan2(TOP[0]-LA,TOP[1]);line(L,TOP,4);jt(TOP,true);}
+ else{const U=ci(U0,UB,L,KN);line(U0,U,5);line(L,U,6);jt(U0,true);jt(U,false);ang=Math.atan2(U[0]-L[0],U[1]-L[1])-Math.atan2(-0.06,0.28);
+  if(kind==="multi"){line([0.02,0.12],[L[0]+0.0,L[1]+0.12],2,"6 4");}}
+ cam=ang*180/Math.PI; const wc=[L[0]+0.12,L[1]+0.14]; wheelAt(wc[0],wc[1],-ang);
+ txt=kind==="mcp"?"McPherson: a rugóstag a felső támasztócsapágy körül billen, ezért berugózáskor a kerékdőlés kissé változik.":
+   (kind==="dwb"?"Kettős keresztlengőkar: a rövidebb felső kar miatt berugózáskor a kerék negatív irányba dől (a teteje befelé).":"Többlengőkaros: a karok hossza és iránya hangolja a dőlés- és nyomtávváltozást (itt a kettős kar közelítésével).");}
+else if(kind==="rigid"){const th=Math.atan2(z,1.5);cam=th*180/Math.PI;
+ line([-0.15,0.10],[0.45,0.10+0.6*Math.tan(th)*0+z],6);wheelAt(0.47,0.10+z+0.0,-th);jt([-0.15,0.10],false);
+ txt="Merev híd: ha csak az egyik kerék rugózik be, az egész híd megdől, a kerékdőlés a karosszériához képest változik.";}
+else{const semi=kind==="semi";const th=Math.asin(Math.max(-1,Math.min(1,z/0.35)));cam=semi?th*180/Math.PI*Math.sin(25*Math.PI/180):0;
+ line([0.0,0.15],[0.35,0.15+z],6);jt([0.0,0.15],true);wheelAt(0.4,0.15+z,-cam*Math.PI/180);
+ txt=semi?"Ferde lengőkar (forgástengely kb. 25°-ban, szemléltető): berugózáskor a kerékdőlés és a kitérés együtt változik.":"Hosszlengőkar: a forgástengely merőleges a menetirányra, a kerék a karosszériához képest nem dől (0°).";}
+el("text",{x:20,y:24,"font-size":13,fill:"#000"},"berugózás: "+fmt(v.z,0)+" mm");
+el("text",{x:20,y:44,"font-size":13,fill:"#000","font-weight":"bold"},"kerékdőlés-változás: "+fmt(cam,2)+"°");
+status(txt+" Síkbeli, szemléltető geometria; a valós értékek gyártói adatok (ellenőrizendő).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

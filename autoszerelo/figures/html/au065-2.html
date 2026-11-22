@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Láncnyúlás és vezérlési késés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="dl">láncnyúlás a húzott ágon</label><input id="dl" type="range" min="0.0" max="8.0" step="0.1" value="2.6" aria-label="láncnyúlás a húzott ágon"><output id="dl_o" for="dl"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 340" role="img" aria-label="Láncos vezérműhajtás feszítővel és sínekkel; megnyúlt lánc miatti vezérlési késés."></svg>
+<p class="small">Szemléltető modell: késés = 2·ΔL/(π·d)·360°, d = 117 mm (z = 46, 8 mm-es osztás – feltételezett). A megengedett szögeltérés (példa: 6,0°) és a feszítő határa gyártói adat (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"dl":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const dl=v.dl, D=117.229, tooth=15.6522, lim=6.0;
+const lagC=2*dl/(Math.PI*D)*360, lagV=lagC/2;
+const fg=css("--fg");
+function sprocket(cx,cy,r,ang,lab){ el("circle",{cx:cx,cy:cy,r:r,fill:"#ddd",stroke:"#000","stroke-width":2});
+  const a=ang*Math.PI/180; el("line",{x1:cx,y1:cy,x2:cx+(r-6)*Math.sin(a),y2:cy-(r-6)*Math.cos(a),stroke:"#000","stroke-width":4});
+  el("polygon",{points:(cx-6)+","+(cy-r-16)+" "+(cx+6)+","+(cy-r-16)+" "+cx+","+(cy-r-6),fill:fg});
+  el("text",{x:cx,y:cy+r+16,"text-anchor":"middle","font-size":12},lab);}
+sprocket(150,290,32,0,"z = 23");
+sprocket(80,90,58,-lagV,"z = 46");
+sprocket(220,90,58,-lagV,"z = 46");
+el("polyline",{points:"118,300 25,95 80,30 220,30 278,95 182,300",fill:"none",stroke:fg,"stroke-width":5,"stroke-linejoin":"round"});
+const ext=Math.min(dl,8)/8;               // a feszítő kifutása (szemléltető, 8 mm-nél határ)
+el("rect",{x:2,y:200,width:30,height:16,fill:"#888",stroke:"#000"});
+el("rect",{x:32,y:203,width:8+ext*40,height:10,fill:"#fff",stroke:"#000"});
+el("text",{x:330,y:60,"font-size":14},"Vezérműtengely késése:");
+el("text",{x:330,y:85,"font-size":18,"font-weight":"bold"},fmt(lagC,1)+"° főtengelyszög");
+el("text",{x:330,y:108,"font-size":13},"("+fmt(lagV,2)+"° a vezérműtengelyen)");
+const ok=lagC<lim;
+el("text",{x:330,y:145,"font-size":14,"font-weight":"bold",fill:ok?css("--ok"):css("--bad")},ok?"határon belül (példa: 6,0°)":"határ felett (példa: 6,0°)");
+el("text",{x:330,y:172,"font-size":13},"egy fogátugrás: "+fmt(tooth,1)+"°");
+el("text",{x:330,y:196,"font-size":13},lagC<tooth/2?"→ nyúlás/kopás, nem fogátugrás":"→ fogátugrás gyanúja is felmerül");
+el("text",{x:330,y:232,"font-size":12,fill:css("--muted")},"feszítő kifutása: "+Math.round(ext*100)+" %"+(ext>=1?" – HATÁRON":""));
+status("Láncnyúlás a húzott ágon: <b>"+fmt(dl,1)+" mm</b> → késés "+fmt(lagC,1)+"° főtengelyszög. A 2. példa 5,0°-a kb. "+fmt(2.56,1)+" mm nyúlásnak felel meg (szemléltető modell).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

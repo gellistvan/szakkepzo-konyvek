@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fejcsőszög, villaelőtét és utánfutás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="alpha">Fejcsőszög α</label><input id="alpha" type="range" min="64" max="76" step="0.5" value="71" aria-label="Fejcsőszög α"><output id="alpha_o" for="alpha"></output></div>
+<div class="row"><label for="off">Villaelőtét e</label><input id="off" type="range" min="20" max="70" step="1" value="45" aria-label="Villaelőtét e"><output id="off_o" for="off"></output></div>
+<div class="row"><label for="rad">Kerék sugara R</label><input id="rad" type="range" min="250" max="370" step="5" value="350" aria-label="Kerék sugara R"><output id="rad_o" for="rad"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Az első kerék és a villa oldalnézete: a kormánytengely talajmetszéspontja és a kerék talppontja közötti utánfutás a fejcsőszög és a villaelőtét függvényében."></svg>
+<p class="small">Szemléltető geometria; a valós értékek típusfüggők (gyártói geometriatáblázat). Ellenőrzés: α = 71°, e = 45 mm, R = 350 mm → t ≈ 73 mm.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"alpha":"°", "off":"mm", "rad":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const a=v.alpha*Math.PI/180, R=v.rad, e=v.off, t=(R*Math.cos(a)-e)/Math.sin(a);
+const k=0.38, gx=330, gy=290, X=x=>gx+x*k, Y=y=>gy-y*k;   // mm -> px, a kerék talppontja x=0
+el("line",{x1:20,x2:545,y1:gy,y2:gy,stroke:css("--fg")});
+el("circle",{cx:X(0),cy:Y(R),r:R*k,fill:"none",stroke:css("--fg"),"stroke-width":2.5});
+el("circle",{cx:X(0),cy:Y(R),r:4,fill:css("--fg")});
+const ux=-Math.cos(a), uy=Math.sin(a), nx=Math.sin(a), ny=Math.cos(a);
+const Px=-e*nx, Py=R-e*ny;                              // a tengely pontja
+const s0=-Py/uy, Gx=Px+s0*ux;                          // talajmetszés
+const T=(s)=>[Px+s*ux,Py+s*uy];
+const A=T(s0), B=T(R*1.15+260);
+el("line",{x1:X(A[0]),y1:Y(A[1]),x2:X(B[0]),y2:Y(B[1]),stroke:css("--fg"),"stroke-dasharray":"8 3 2 3"});
+const H0=T(R*1.0+60), H1=T(R*1.0+210), FB=T(R*0.35);
+el("line",{x1:X(H0[0]),y1:Y(H0[1]),x2:X(H1[0]),y2:Y(H1[1]),stroke:css("--fg"),"stroke-width":9});
+el("polyline",{points:[X(H0[0])+","+Y(H0[1]),X(FB[0])+","+Y(FB[1]),X(0)+","+Y(R)].join(" "),fill:"none",stroke:css("--fg"),"stroke-width":4});
+el("line",{x1:X(Px),y1:Y(Py),x2:X(0),y2:Y(R),stroke:css("--fg"),"stroke-width":1.5});
+el("text",{x:X(0)+10,y:Y(R)-8,"font-size":12},"e = "+fmt(e,0)+" mm");
+el("line",{x1:X(0),y1:gy,x2:X(Gx),y2:gy,stroke:"#c0392b","stroke-width":6});
+el("text",{x:(X(0)+X(Gx))/2,y:gy+18,"font-size":12,"text-anchor":"middle"},"t = "+fmt(t,0)+" mm");
+el("text",{x:X(Gx)-60,y:gy-10,"font-size":12,"text-anchor":"end"},"α = "+fmt(v.alpha,1)+"°");
+const verdict=t<45?"fordulékony, „ideges” kormányzás":(t<=75?"kiegyensúlyozott":"stabil egyenesfutás, nehezebb kormányzás");
+status("<b>t = (R·cos α − e)/sin α = ("+fmt(R,0)+"·cos "+fmt(v.alpha,1)+"° − "+fmt(e,0)+")/sin "+fmt(v.alpha,1)+"° = "+fmt(t,1)+" mm</b> → "+verdict+
+ ". Laposabb fejcső (kisebb α) vagy kisebb villaelőtét → nagyobb utánfutás. (A 45 és 75 mm-es sávhatár szemléltető, ellenőrizendő.)");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

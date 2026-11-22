@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kardáncsukló szöghibája</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="beta">Csuklószög β</label><input id="beta" type="range" min="0" max="45" step="1" value="30" aria-label="Csuklószög β"><output id="beta_o" for="beta"></output></div>
+<div class="row"><label for="dbl">Elrendezés</label><select id="dbl" aria-label="Elrendezés"><option value="0" selected>egy kardáncsukló</option><option value="1">kettős kardán, azonos villasík (Z)</option><option value="2">kettős kardán, 90°-kal elforgatott villa</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 330" role="img" aria-label="A kimenő és bemenő szögsebesség aránya a bemenő villa elfordulásának függvényében; β-csúszka és kettős kardán választó, animált futópont."></svg>
+<p class="small">ω₂/ω₁ = cos β / (1 − sin²β·sin²φ₁); β = 30°-nál 0,866 és 1,155. A kettős kardánnál mindkét csukló β szöget zár be, a bemenő és kimenő tengely párhuzamos (Z-elrendezés). Számolt görbe, nem mérés.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"beta":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(!window.__t0){window.__t0=performance.now();}
+if(!window.__an){window.__an=setInterval(draw,60);}
+const b=v.beta*Math.PI/180, cb=Math.cos(b), sb2=Math.sin(b)**2;
+const T=x=>Math.atan2(Math.sin(x),Math.cos(x)*cb), Ti=x=>Math.atan2(Math.sin(x)*cb,Math.cos(x));
+const unw=(a,ref)=>{while(a-ref>Math.PI)a-=2*Math.PI;while(a-ref<-Math.PI)a+=2*Math.PI;return a;};
+const del=v.dbl==2?Math.PI/2:0;
+function out(p){const p2=T(p);if(!v.dbl)return unw(p2,p);return unw(Ti(p2-del)+del,p);}
+function rat(p){const h=1e-4;return (out(p+h)-out(p-h))/(2*h);}
+el("rect",{x:0,y:0,width:640,height:330,fill:"#fff"});
+const X0=60,X1=620,Y0=290,Y1=20,lo=0.6,hi=1.45;
+const X=d=>X0+(X1-X0)*d/360, Y=r=>Y0-(Y0-Y1)*(r-lo)/(hi-lo);
+el("line",{x1:X0,y1:Y0,x2:X1,y2:Y0,stroke:"#000"});el("line",{x1:X0,y1:Y0,x2:X0,y2:Y1,stroke:"#000"});
+for(let d=0;d<=360;d+=90){el("text",{x:X(d),y:Y0+16,"font-size":12,"text-anchor":"middle",fill:"#000"},d+"°");}
+for(let r=0.6;r<=1.41;r+=0.2){el("line",{x1:X0-4,y1:Y(r),x2:X1,y2:Y(r),stroke:"#ddd"});el("text",{x:X0-7,y:Y(r)+4,"font-size":12,"text-anchor":"end",fill:"#000"},fmt(r,1));}
+el("text",{x:(X0+X1)/2,y:Y0+34,"font-size":12,"text-anchor":"middle",fill:"#000"},"φ₁ (°)");
+el("text",{x:16,y:(Y0+Y1)/2,"font-size":12,"text-anchor":"middle",fill:"#000",transform:"rotate(-90 16 "+(Y0+Y1)/2+")"},"kimenő/bemenő szögsebesség");
+let d1="",mn=9,mx=0;for(let k=0;k<=360;k++){const r=rat(k*Math.PI/180);mn=Math.min(mn,r);mx=Math.max(mx,r);d1+=(k?"L":"M")+X(k)+" "+Y(Math.max(lo,Math.min(hi,r)));}
+el("path",{d:d1,fill:"none",stroke:"#000","stroke-width":2.5});
+el("line",{x1:X0,y1:Y(1),x2:X1,y2:Y(1),stroke:"#888","stroke-dasharray":"5 4"});
+const ph=((performance.now()-window.__t0)/1000*60)%360, rp=rat(ph*Math.PI/180);
+el("circle",{cx:X(ph),cy:Y(Math.max(lo,Math.min(hi,rp))),r:6,fill:"#000"});
+const kind=["egy kardáncsukló","kettős kardán, Z-elrendezés, azonos villasík (helyes)","kettős kardán, 90°-kal elforgatott középső villa (HIBÁS)"][v.dbl];
+status("<b>"+kind+"</b>, β = "+fmt(v.beta,0)+"° · φ₁ = "+fmt(ph,0)+"° → ω<sub>ki</sub>/ω<sub>be</sub> = <b>"+fmt(rp,3)+"</b> · szélsőértékek: "+fmt(mn,3)+" … "+fmt(mx,3)+
+ (v.dbl==0?" (cos β = "+fmt(cb,3)+", 1/cos β = "+fmt(1/cb,3)+")":(v.dbl==1?" – az ingadozás kiegyenlítődik.":" – az ingadozás összeadódik.")));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

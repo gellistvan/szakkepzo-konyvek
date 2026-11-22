@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>33.3 Villamos hajtás: villanymotor, inverter, DC/DC átalakító,
+regeneratív fékezés és hőmenedzsment – Autószerelő</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz8">VIII. RÉSZ – Hibrid és elektromos járművek</a> › <a href="index.html#auch32">33 Hibrid és elektromos hajtás</a></p>
+<div class="links"><a class="prev" rel="prev" href="au118.html">← 33.2 A nagyfeszültségű akkumulátor és az akkumulátor-felügyelet (BMS)</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au120.html">33.4 Töltés: AC és DC töltés, töltőcsatlakozók, töltési módok →</a></div>
+</nav>
+<h2 data-number="33.3" id="au119"><span
+class="header-section-number">33.3</span> Villamos hajtás: villanymotor,
+inverter, DC/DC átalakító, regeneratív fékezés és hőmenedzsment</h2>
+<h3 data-number="33.3.1" id="motiváció"><span
+class="header-section-number">33.3.1</span> Motiváció</h3>
+<p>Egy hibrid vagy elektromos jármű az olajcsere és a légszűrő világánál
+sokkal kevesebb gondozást igényel, de amikor megjelenik egy
+„Rendszerhiba, csökkentett teljesítmény” vagy „12 V akkumulátor nem
+töltődik” panasz, a szerelőnek pontosan kell látnia, merre folyik az
+energia. Ebben az alfejezetben az akkumulátortól a kerékig vezető
+nagyfeszültségű útra és a visszafelé, a fékezéskor megvalósuló
+energia-visszanyerésre koncentrálunk. Azt is megértjük, miért van
+szükség a modern elektromos autóban ugyanúgy 12 V-os hálózatra, és miért
+veszélyes a narancssárga kábelköteg akkor is, ha a jármű ki van
+kapcsolva.</p>
+<h3 data-number="33.3.2" id="szemléletes-kép"><span
+class="header-section-number">33.3.2</span> Szemléletes kép</h3>
+<p>Képzelj el egy elektromos hajtásláncot: a padló alatt lévő
+nagyfeszültségű akkumulátor egyenáramot ad, a motor fölött elhelyezkedő
+inverter ebből háromfázisú váltakozó áramot készít, a hajtómotor pedig
+ezt mechanikus forgássá alakítja. A forgást egy egyszerű reduktor viszi
+át a kerekekre. Fékezéskor a folyamat megfordul: a kerék forgatja a
+motort, amely generátorként dolgozik, az inverter egyenirányít, és a
+visszanyert energia visszaáramlik az akkumulátorba.</p>
+<figure>
+<img src="assets/au119-diagram-1.png"
+alt="Elektromos hajtáslánc energia útja - Szemléltető rétegábra a fő energiafolyamról; a visszafelé nyíl a rekuperációt jelzi. A valós járművekben további hűtőkörök és biztonsági kapcsolók is vannak." />
+<figcaption aria-hidden="true">Elektromos hajtáslánc energia útja -
+Szemléltető rétegábra a fő energiafolyamról; a visszafelé nyíl a
+rekuperációt jelzi. A valós járművekben további hűtőkörök és biztonsági
+kapcsolók is vannak.</figcaption>
+</figure>
+<p>Ez a rétegábra a kétirányú energiautat mutatja: akkumulátor →
+inverter → motor → reduktor → kerék, visszafelé pedig kerék → motor
+(generátor üzem) → inverter (egyenirányító üzem) → akkumulátor.</p>
+<h3 data-number="33.3.3" id="definíciók-és-összefüggések"><span
+class="header-section-number">33.3.3</span> Definíciók és
+összefüggések</h3>
+<p><strong>Definíció. Hajtómotor.</strong> Az elektromos hajtású
+járműben a kerékhajtást végző villamos gép. Az autóiparban leggyakrabban
+háromfázisú váltakozó áramú motorokat használnak: állandó mágneses
+szinkronmotor (PMSM, permanent magnet synchronous motor), aszinkron
+motor (induction motor), ritkábban gerjesztett szinkronmotor (externally
+excited synchronous motor). A motor nyomatéka az állórész mezője és a
+forgórész mágneses tere közötti erőhatásból származik.</p>
+<p><strong>Definíció. Inverter.</strong> Az inverter (átalakító) a
+nagyfeszültségű egyenfeszültségből három, egymástól 120°-kal eltolt
+fázisú váltakozó feszültséget állít elő, a motor fordulatszámának és
+nyomatékigényének megfelelően. A kapcsolóelemek (IGBT vagy SiC MOSFET)
+gyorsan ki- és bekapcsolják a feszültséget, az így kapott
+impulzusszélesség-modulált (PWM) jel a motor induktivitásán keresztül
+közelítőleg szinuszos áramot eredményez.</p>
+<p><strong>Definíció. DC/DC átalakító.</strong> Olyan
+feszültségátalakító, amely a nagyfeszültségű akkumulátor feszültségét
+(jellemzően több száz volt, típusonként ellenőrizendő) a 12 V-os
+fedélzeti hálózat számára megfelelő, kb. 13,5–14,5 V feszültséggé
+alakítja. Az elektromos jármű ezen keresztül tölti a 12 V-os
+akkumulátort és táplálja a hagyományos fogyasztókat.</p>
+<p><strong>Definíció. Regeneratív fékezés (rekuperáció).</strong> A
+jármű mozgási energiájának visszanyerése úgy, hogy a hajtómotor
+generátoros üzemmódban fékező nyomatékot fejt ki, a keletkező villamos
+energiát az inverter egyenirányítja, és az akkumulátorba tölti.</p>
+<p><strong>Összefüggés.</strong> Az energiaátalakítás teljesítménye a
+hajtásláncban:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mfrac><msub><mi>P</mi><mtext mathvariant="normal">kerék</mtext></msub><mrow><msub><mi>η</mi><mtext mathvariant="normal">inverter</mtext></msub><mo>⋅</mo><msub><mi>η</mi><mtext mathvariant="normal">motor</mtext></msub><mo>⋅</mo><msub><mi>η</mi><mtext mathvariant="normal">reduktor</mtext></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">P_{\text{be}} = \frac{P_{\text{kerék}}}{\eta_{\text{inverter}} \cdot \eta_{\text{motor}} \cdot \eta_{\text{reduktor}}}</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><annotation encoding="application/x-tex">P_{\text{be}}</annotation></semantics></math>
+az akkumulátorból felvett egyenáramú teljesítmény,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">kerék</mtext></msub><annotation encoding="application/x-tex">P_{\text{kerék}}</annotation></semantics></math>
+a kerekeken leadott mechanikus teljesítmény, az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math>
+tényezők az egyes részegységek hatásfokai. A gyakorlatban egyszerűbb
+átlagos hatásfokkal számolni, de részegységenként is lehetséges.</p>
+<h3 data-number="33.3.4" id="felépítés-és-működés"><span
+class="header-section-number">33.3.4</span> Felépítés és működés</h3>
+<h4 data-number="33.3.4.1" id="hajtómotorok"><span
+class="header-section-number">33.3.4.1</span> Hajtómotorok</h4>
+<p>Az elektromos járművek motorjának három fő típusa van. Az állandó
+mágneses szinkronmotor (PMSM) forgórésze neodímium- vagy más
+ritkaföldfém-mágneseket tartalmaz, így a forgórész mágneses tere
+állandó. Az állórész háromfázisú tekercselésű, a forgó mágneses mező
+húzza magával a forgórészt, ezért a motor fordulatszáma szinkronban van
+a mezővel. A PMSM nagy teljesítménysűrűségű, kiváló hatásfokú, ezért a
+legelterjedtebb. Hátránya a ritkaföldfém-alapú mágnesek ára és a magas
+fordulatszámon növekvő veszteség.</p>
+<p>Az aszinkron motor forgórésze rövidrezárt kalickás tekercselésű,
+tehát nincs benne állandó mágnes. Az állórész forgó mezeje feszültséget
+indukál a kalickában, az indukált áram és a mező kölcsönhatása hozza
+létre a nyomatékot. Az aszinkron motor olcsóbb, mágneseket nem igényel,
+és nagy fordulatszámon is jól szabályozható. Hatásfoka valamivel
+alacsonyabb, mint a PMSM-é, ezért gyakran kiegészítő motorként vagy
+nagyobb teljesítményű, összkerékhajtású jármű hátsó hajtásánál
+alkalmazzák.</p>
+<p>A gerjesztett szinkronmotor forgórészében tekercs van, amelyet
+csúszógyűrűn vagy indukciós úton táplálnak. A gyártók azért választják
+néha, mert nincs ritkaföldfém-mágnes, és a gerjesztést terhelés szerint
+szabályozva a motor hatásfoka széles tartományban kedvező maradhat. A
+csúszógyűrűk kopó alkatrészek, ezért a karbantartási igény valamivel
+nagyobb.</p>
+<p>A hajtómotor rendszerint nem közvetlenül a kerékhez kapcsolódik: egy
+egyszerű, egyfokozatú reduktor (fix áttételű fogaskerékpár) csökkenti a
+motor fordulatszámát és növeli a nyomatékot. A reduktor elláthatja a
+differenciálmű feladatát is. A motor fordulatszáma gyakran eléri a 12
+000–18 000 1/min értéket, ezért a reduktor áttétele jellemzően 8:1–10:1
+(ellenőrizendő: járműtípus adata).</p>
+<h4 data-number="33.3.4.2" id="inverter-és-közbenső-kör"><span
+class="header-section-number">33.3.4.2</span> Inverter és közbenső
+kör</h4>
+<p>Az inverter felépítése három félhídból áll, mindegyik fázisra
+kettő-kettő kapcsoló félvezetővel. A vezérlő mikrokontroller a motor
+szöghelyzetét és az áramokat folyamatosan méri, és a kapcsolókat PWM
+jellel vezérli. A kívánt nyomaték alapján az inverter beállítja az áram
+nagyságát, a fordulatszám alapján pedig a feszültség frekvenciáját: ez a
+mezőorientált (vektoros) szabályozás lényege.</p>
+<p>Az inverterben a bemeneti oldalon nagy kapacitású közbenső kör
+kondenzátorok simítják az egyenfeszültséget, és feszültségcsúcsokat
+nyelnek el. A kondenzátorok a jármű kikapcsolása után is életveszélyes
+töltést tarthatnak, ezért a feszültségmentesítésnél a gyártó szerinti
+várakozási idő és a feszültségmentesség külön mérése kötelező. A modern
+inverterek passzív kisütő ellenállásokat és gyors kisütési funkciót is
+tartalmaznak, de erre nem szabad vakon hagyatkozni.</p>
+<p>A kapcsolóelemek hagyományosan IGBT (bipoláris tranzisztor szigetelt
+kapuval), újabban szilícium-karbid (SiC) MOSFET eszközök. A SiC kisebb
+kapcsolási veszteségű, magasabb hőmérsékletet bír, és kisebb hűtési
+igényű, ezért a nagyobb hatásfokú, hosszabb hatótávú járművekben egyre
+gyakoribb.</p>
+<figure id="fig-au119-2">
+<div class="fig-interactive"><iframe src="figures/html/au119-2.html" title="Állandó mágneses szinkronmotor kivágása tekercseléssel, mágneses forgórésszel és rezolverrel; inverter teljesítménymodullal és közbenső köri kondenzátorral." loading="lazy" style="width:100%;border:0;height:640px"></iframe><noscript><img src="figures/img/au119-2.png" style="width:95.0%"
+alt="Állandó mágneses szinkronmotor kivágása tekercseléssel, mágneses forgórésszel és rezolverrel; inverter teljesítménymodullal és közbenső köri kondenzátorral." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au119-2.png" style="width:95.0%"
+alt="Állandó mágneses szinkronmotor kivágása tekercseléssel, mágneses forgórésszel és rezolverrel; inverter teljesítménymodullal és közbenső köri kondenzátorral." /></details></div>
+<figcaption>A villamos hajtás „fekete dobozai” sematikus vonalrajzon:
+(a) állandó mágneses szinkronmotor keresztmetszete hűtőköpennyel,
+háromfázisú tekercseléssel, beágyazott mágnesekkel és rezolverrel; (b)
+aszinkronmotor kalickás forgórésze összehasonlításként; (c) inverter
+nyitott fedéllel: teljesítménymodul, DC-köri kondenzátor, meghajtó- és
+vezérlőpanel, HV DC bemenet, háromfázisú kimenet, hűtőlap</figcaption>
+</figure>
+<p>Az ábra figyelmeztetése a legfontosabb műhelyi szabály: a DC-köri
+kondenzátor a lekapcsolás után is töltött lehet, ezért az inverter
+fedelét csak a gyártói várakozási idő és a feszültségmentesség mérése
+után, jogosult személy nyithatja. Az interaktív változatban a hűtés, a
+HV-részek és a panelek rétegként kapcsolhatók, rámutatásra az elem neve
+jelenik meg.</p>
+<p><strong>HV-biztonság.</strong> A nagyfeszültségű rendszeren – így az
+inverteren, a hajtómotoron, a DC/DC átalakítón és a narancssárga
+kábelkötegen – csak arra kiképzett, jogosult személy dolgozhat. Minden
+munka előtt el kell végezni a gyártói feszültségmentesítést: jogosultság
+és szigetelő kesztyű ellenőrzése, munkaterület lezárása, gyújtás ki, 12
+V-os akkumulátor lekötése, HV-leválasztó eltávolítása és visszakapcsolás
+elleni biztosítása, a gyártói várakozási idő letelte, majd a
+feszültségmentesség mérése megfelelő mérési kategóriájú (CAT III,
+ellenőrizendő) műszerrel. A műszert mérés előtt és után ismert
+feszültségforráson ellenőrizni kell, az eredményt dokumentálni.</p>
+<h4 data-number="33.3.4.3"
+id="dcdc-átalakító-és-a-12-v-os-hálózat"><span
+class="header-section-number">33.3.4.3</span> DC/DC átalakító és a 12
+V-os hálózat</h4>
+<p>Az elektromos jármű vezérlőegységei, biztonsági rendszerei,
+világítása, ablakemelői, rádiója és számos érzékelője 12 V-ról működik.
+A nagyfeszültségű akkumulátor feszültsége ehhez túl magas, ezért a DC/DC
+átalakító a HV-feszültséget galvanikusan leválasztott, stabil 12 V-os
+hálózati feszültséggé alakítja, és tölti a 12 V-os akkumulátort. A DC/DC
+átalakító a HV-rendszer egyik legfontosabb eleme: ha meghibásodik, az
+autó nem tud elindulni, mert a vezérlőegységek és a HV-kontaktorok
+működéséhez is 12 V kell.</p>
+<p>A 12 V-os hálózatban találjuk az elektromos segédberendezéseket is. A
+fékrásegítőhöz szükséges vákuumot elektromos vákuumszivattyú állítja elő
+(ha a rendszer nem elektromechanikus rásegítésű), a klímakompresszort
+pedig nagyfeszültségű, villamos hajtású kompresszor működteti. A
+szervokormány leggyakrabban 12 V-os elektromechanikus kormánymű, a
+hűtőventilátor és a vízpumpa pedig a hűtőkörökben villamos hajtású.</p>
+<h4 data-number="33.3.4.4"
+id="regeneratív-fékezés-és-fék-blending"><span
+class="header-section-number">33.3.4.4</span> Regeneratív fékezés és
+fék-blending</h4>
+<p>A rekuperáció során a vezető lábát leemelve a gázpedálról a motor
+generátorként kezd fékezni. Az inverter egyenirányító üzemmódba vált, és
+a megtermelt energiát az akkumulátorba tölti. A rekuperáció mértéke a
+jármű sebességétől, az akkumulátor töltöttségétől, a hőmérséklettől és a
+vezérlési stratégiától függ. Teljesen feltöltött akkumulátornál az
+energia-visszatáplálás korlátozott, ilyenkor a motor féknyomatékát is
+csökkenteni kell.</p>
+<p>A hidraulikus fék és a motorfék összehangolását fék-blendingnek
+nevezzük. A vezető ugyanazt a pedálerőt érzi, miközben a rendszer
+eldönti, hogy a kívánt lassulás mekkora részét állítja elő
+rekuperációval, és mekkora részét hidraulikus súrlódó fékekkel. Az
+ABS/ESP rendszerrel együttműködve a szabályozás biztosítja, hogy a kerék
+soha ne blokkoljon, és a rekuperáció ne okozzon instabil fékezést. A
+rekuperációval a fékbetétek kopása jelentősen csökken, de a hidraulikus
+féket nem szünteti meg: vészfékezéskor, alacsony sebességen és hideg
+akkumulátornál a súrlódó fékre is szükség van.</p>
+<figure id="fig-au119-1">
+<div class="fig-interactive"><iframe src="figures/html/au119-1.html" title="A kért lassulás megosztása rekuperatív és súrlódó fékezés között a sebesség függvényében." loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/au119-1.png" style="width:90.0%"
+alt="A kért lassulás megosztása rekuperatív és súrlódó fékezés között a sebesség függvényében." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/au119-1.png" style="width:90.0%"
+alt="A kért lassulás megosztása rekuperatív és súrlódó fékezés között a sebesség függvényében." /></details></div>
+<figcaption>Fék-blending szemléltető modellje: állandó, 2 m/s²-es kért
+lassulásnál a rekuperatív rész (sraffozott) nagy sebességnél a motor
+teljesítményhatára miatt
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P/(m\,v)</annotation></semantics></math>
+szerint csökken, 10 km/h alatt lecseng; a hiányzó részt a súrlódó fék
+adja (pontozott). Szaggatott vonal: a rekuperációs határ 95 %-os
+töltöttségnél vagy hideg akkumulátornál
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mn>60</mn></mrow><annotation encoding="application/x-tex">P = 60</annotation></semantics></math>
+kW,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>1600</mn></mrow><annotation encoding="application/x-tex">m = 1600</annotation></semantics></math>
+kg, szemléltető adatok)</figcaption>
+</figure>
+<p>Az ábrából a műhelyi tünetek is érthetők: feltöltött vagy hideg
+akkumulátornál a súrlódó fék nagyobb részt vállal, ezért a fékbetét
+gyorsabban kophat, és a pedálérzet is változhat. Példa: 100 km/h-nál
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mtext mathvariant="normal">reku,max</mtext></msub><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1600</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kg</mtext><mo>⋅</mo><mn>27</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>1</mn><mo>,</mo><mn>35</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">m/s</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">a_{\text{reku,max}} = 60\,000\,\text{W} / (1600\,\text{kg} \cdot 27{,}8\,\text{m/s}) \approx 1{,}35\,\text{m/s}^2</annotation></semantics></math>,
+tehát a 2 m/s²-es lassulásból kb. 0,65 m/s²-et a súrlódó fék ad. Az
+interaktív kalkulátorban a kért lassulás, a töltöttség, az
+akkumulátor-hőmérséklet, a teljesítményhatár és a tömeg állítható;
+kiírja a rekuperált teljesítményt és a súrlódó fék részarányát.</p>
+<h4 data-number="33.3.4.5" id="hőmenedzsment"><span
+class="header-section-number">33.3.4.5</span> Hőmenedzsment</h4>
+<p>A villamos hajtás nem termel annyi hulladékhőt, mint a belső égésű
+motor, ezért az utastér fűtése külön rendszert igényel. A hőszivattyú a
+levegőből vagy a hajtásrendszer hulladékhőjéből von el hőt, és a
+hűtőközeg kompressziójával magasabb hőmérsékleten adja le az utastér
+felé. A hőszivattyú hatásfokként értelmezett jósági tényezője (COP)
+elérheti a 2–4 értéket is, tehát 1 kW villamos teljesítménnyel 2–4 kW
+hőteljesítményt mozgat.</p>
+<p>A HV-akkumulátort, az invertert és a motort zárt hűtőkörök hűtik vagy
+fűtik. Az akkumulátor optimális üzemi hőmérséklete általában 20–30 °C
+körül van, ezért hideg időben előfűtik, melegben hűtik. Az inverter és a
+motor hűtőköre a keletkező veszteséghőt szállítja el; a hőszivattyú ezt
+a hulladékhőt is hasznosíthatja, javítva a téli hatótávot.</p>
+<h3 data-number="33.3.5" id="kidolgozott-példák"><span
+class="header-section-number">33.3.5</span> Kidolgozott példák</h3>
+<p><strong>1. számítás – Hajtáslánc hatásfok.</strong> Egy elektromos
+jármű sík úton, 100 km/h sebességnél 18 kW teljesítményt igényel a
+kerekeken. A motor hatásfoka 93%, az inverteré 96%, a reduktoré 98%.
+Mennyi teljesítményt vesz fel a nagyfeszültségű akkumulátorból?</p>
+<p><strong>Adott:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">kerék</mtext></msub><mo>=</mo><mn>18</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mo>=</mo><mn>18</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{kerék}} = 18{,}0\,\text{kW} = 18\,000\,\text{W}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mtext mathvariant="normal">motor</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>93</mn></mrow><annotation encoding="application/x-tex">\eta_{\text{motor}} = 0{,}93</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mtext mathvariant="normal">inverter</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>96</mn></mrow><annotation encoding="application/x-tex">\eta_{\text{inverter}} = 0{,}96</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mtext mathvariant="normal">reduktor</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>98</mn></mrow><annotation encoding="application/x-tex">\eta_{\text{reduktor}} = 0{,}98</annotation></semantics></math>.</p>
+<p><strong>Keresett:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><annotation encoding="application/x-tex">P_{\text{be}}</annotation></semantics></math></p>
+<p><strong>Képlet:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><msub><mi>P</mi><mtext mathvariant="normal">kerék</mtext></msub><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>η</mi><mtext mathvariant="normal">motor</mtext></msub><msub><mi>η</mi><mtext mathvariant="normal">inverter</mtext></msub><msub><mi>η</mi><mtext mathvariant="normal">reduktor</mtext></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P_{\text{be}} = P_{\text{kerék}} / (\eta_{\text{motor}} \eta_{\text{inverter}} \eta_{\text{reduktor}})</annotation></semantics></math></p>
+<p><strong>Behelyettesítés:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mfrac><mrow><mn>18</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>93</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>96</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>98</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>18</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>875</mn></mrow></mfrac><mo>≈</mo><mn>20</mn><mspace width="0.167em"></mspace><mn>570</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>≈</mo><mn>20</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext></mrow><annotation encoding="application/x-tex">P_{\text{be}} = \frac{18\,000}{0{,}93 \cdot 0{,}96 \cdot 0{,}98} = \frac{18\,000}{0{,}875} \approx 20\,570\,\text{W} \approx 20{,}6\,\text{kW}</annotation></semantics></math></p>
+<p><strong>Ellenőrzés:</strong> a hatásfokok szorzata 1-nél kisebb, így
+a bemenő teljesítmény nagyobb, mint a kerékteljesítmény; a 20,6 kW
+reális érték egy kompakt elektromos autónál. ∎</p>
+<p><strong>2. számítás – Rekuperált energia.</strong> Egy 1500 kg tömegű
+jármű 100 km/h-ról 20 km/h-ra lassul rekuperációval. A mozgási energia
+hány százalékát lehet visszatölteni, ha a
+kerék–motor–inverter–akkumulátor lánc hatásfoka 70%? Mennyi az
+akkumulátorba visszatöltött energia kWh-ban?</p>
+<p><strong>Adott:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>1500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kg</mtext></mrow><annotation encoding="application/x-tex">m = 1500\,\text{kg}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>1</mn></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km/h</mtext><mo>=</mo><mn>27</mn><mo>,</mo><mn>78</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v_1 = 100\,\text{km/h} = 27{,}78\,\text{m/s}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>2</mn></msub><mo>=</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km/h</mtext><mo>=</mo><mn>5</mn><mo>,</mo><mn>56</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v_2 = 20\,\text{km/h} = 5{,}56\,\text{m/s}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mtext mathvariant="normal">reku</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>70</mn></mrow><annotation encoding="application/x-tex">\eta_{\text{reku}} = 0{,}70</annotation></semantics></math>.</p>
+<p><strong>Keresett:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mtext mathvariant="normal">vissza</mtext></msub><annotation encoding="application/x-tex">E_{\text{vissza}}</annotation></semantics></math></p>
+<p><strong>Képletek:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">k</mtext></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>m</mi><msup><mi>v</mi><mn>2</mn></msup><mo>,</mo><mspace width="1.0em"></mspace><mi mathvariant="normal">Δ</mi><msub><mi>E</mi><mtext mathvariant="normal">k</mtext></msub><mo>=</mo><msub><mi>E</mi><mtext mathvariant="normal">k1</mtext></msub><mo>−</mo><msub><mi>E</mi><mtext mathvariant="normal">k2</mtext></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>E</mi><mtext mathvariant="normal">vissza</mtext></msub><mo>=</mo><msub><mi>η</mi><mtext mathvariant="normal">reku</mtext></msub><mo>⋅</mo><mi mathvariant="normal">Δ</mi><msub><mi>E</mi><mtext mathvariant="normal">k</mtext></msub></mrow><annotation encoding="application/x-tex">E_{\text{k}} = \frac12 m v^2, \quad \Delta E_{\text{k}} = E_{\text{k1}} - E_{\text{k2}}, \quad E_{\text{vissza}} = \eta_{\text{reku}} \cdot \Delta E_{\text{k}}</annotation></semantics></math></p>
+<p><strong>Behelyettesítés:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">k1</mtext></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>⋅</mo><mn>1500</mn><mo>⋅</mo><mn>27</mn><mo>,</mo><msup><mn>78</mn><mn>2</mn></msup><mo>=</mo><mn>750</mn><mo>⋅</mo><mn>771</mn><mo>,</mo><mn>8</mn><mo>≈</mo><mn>578</mn><mspace width="0.167em"></mspace><mn>850</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J</mtext></mrow><annotation encoding="application/x-tex">E_{\text{k1}} = \frac12 \cdot 1500 \cdot 27{,}78^2 = 750 \cdot 771{,}8 \approx 578\,850\,\text{J}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">k2</mtext></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>⋅</mo><mn>1500</mn><mo>⋅</mo><mn>5</mn><mo>,</mo><msup><mn>56</mn><mn>2</mn></msup><mo>=</mo><mn>750</mn><mo>⋅</mo><mn>30</mn><mo>,</mo><mn>9</mn><mo>≈</mo><mn>23</mn><mspace width="0.167em"></mspace><mn>175</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J</mtext></mrow><annotation encoding="application/x-tex">E_{\text{k2}} = \frac12 \cdot 1500 \cdot 5{,}56^2 = 750 \cdot 30{,}9 \approx 23\,175\,\text{J}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><msub><mi>E</mi><mtext mathvariant="normal">k</mtext></msub><mo>=</mo><mn>578</mn><mspace width="0.167em"></mspace><mn>850</mn><mo>−</mo><mn>23</mn><mspace width="0.167em"></mspace><mn>175</mn><mo>=</mo><mn>555</mn><mspace width="0.167em"></mspace><mn>675</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J</mtext><mo>≈</mo><mn>0</mn><mo>,</mo><mn>154</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">\Delta E_{\text{k}} = 578\,850 - 23\,175 = 555\,675\,\text{J} \approx 0{,}154\,\text{kWh}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">vissza</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>70</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>154</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>108</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">E_{\text{vissza}} = 0{,}70 \cdot 0{,}154 = 0{,}108\,\text{kWh}</annotation></semantics></math></p>
+<p><strong>Ellenőrzés:</strong> 1 kWh = 3,6 MJ, ezért 555 675 J ≈ 0,154
+kWh. A 0,108 kWh visszatáplált energia 15 kWh/100 km átlagfogyasztás
+mellett kb. 0,7 km megtételére elég (100 km/h-nál, 20,6 kW-os
+felvétellel kb. 20 s haladásra); városi forgalomban viszont a sok
+fékezés miatt összeadódik. ∎</p>
+<p><strong>3. számítás – DC/DC átalakító.</strong> A DC/DC átalakító 400
+V bemeneti feszültségből 14,5 V kimeneti feszültséget állít elő, a 12
+V-os hálózat áramfelvétele 100 A. Az átalakító hatásfoka 92%. Mekkora a
+bemeneti áram?</p>
+<p><strong>Adott:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{ki}} = 14{,}5\,\text{V}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{ki}} = 100\,\text{A}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>92</mn></mrow><annotation encoding="application/x-tex">\eta = 0{,}92</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>400</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{be}} = 400\,\text{V}</annotation></semantics></math>.</p>
+<p><strong>Keresett:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mtext mathvariant="normal">be</mtext></msub><annotation encoding="application/x-tex">I_{\text{be}}</annotation></semantics></math></p>
+<p><strong>Képletek:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><msub><mi>I</mi><mtext mathvariant="normal">ki</mtext></msub></mrow><annotation encoding="application/x-tex">P_{\text{ki}} = U_{\text{ki}} I_{\text{ki}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><mi>/</mi><mi>η</mi></mrow><annotation encoding="application/x-tex">P_{\text{be}} = P_{\text{ki}} / \eta</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mi>/</mi><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub></mrow><annotation encoding="application/x-tex">I_{\text{be}} = P_{\text{be}} / U_{\text{be}}</annotation></semantics></math>.</p>
+<p><strong>Behelyettesítés:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mn>100</mn><mo>=</mo><mn>1450</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{ki}} = 14{,}5 \cdot 100 = 1450\,\text{W}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>1450</mn><mi>/</mi><mn>0</mn><mo>,</mo><mn>92</mn><mo>≈</mo><mn>1576</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{be}} = 1450 / 0{,}92 \approx 1576\,\text{W}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>1576</mn><mi>/</mi><mn>400</mn><mo>≈</mo><mn>3</mn><mo>,</mo><mn>94</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{be}} = 1576 / 400 \approx 3{,}94\,\text{A}</annotation></semantics></math>.</p>
+<p><strong>Ellenőrzés:</strong> a bemeneti áram jóval kisebb, mint a
+kimeneti, mert a feszültség sokkal magasabb. ∎</p>
+<h3 data-number="33.3.6" id="minőségellenőrzés"><span
+class="header-section-number">33.3.6</span> Minőségellenőrzés</h3>
+<p>A villamos hajtás ellenőrzése diagnosztikai műszerrel kezdődik:
+kiolvassuk a hajtásvezérlő hibakódjait, megnézzük az élő adatokat (motor
+fordulatszám, fázisáram, inverter hőmérséklet, DC/DC kimeneti
+teljesítmény, HV-akkumulátor SoC és hőmérséklet). Mechanikusan
+ellenőrizni kell a hajtómotor felfogatását, a hűtőcsövek szivárgását, a
+csatlakozók szoros illeszkedését és a narancssárga kábelek szigetelését.
+A DC/DC átalakító 12 V-os kimenetét a 12 V-os akkumulátor sarkain
+mérjük: terhelés nélkül jellemzően 13,5–14,5 V közötti értéket kell
+kapnunk (ellenőrizendő: gyártói adat). A hibrid/EV járműveknél a 12 V-os
+akkumulátor nem rendelkezik hagyományos generátorról töltéssel, ezért a
+töltőfeszültséget kizárólag a DC/DC átalakító biztosítja.</p>
+<p>A nagyfeszültségű oldal szigetelési ellenállását csak
+feszültségmentesített állapotban, szigetelésmérővel mérheti jogosult
+személy. A mérőfeszültség és a határérték a gyártói előírásból
+származik, a tipikus nagyságrend 500 V DC mérési feszültségnél több MΩ
+(ellenőrizendő). A szigetelési hiba tűzbiztonsági és áramütésveszélyes
+állapotot jelezhet, ezért azt soha nem szabad áthidalni.</p>
+<h3 data-number="33.3.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">33.3.7</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy hibrid jármű tulajdonosa azt panaszolja, hogy az autó hideg
+reggeleken nem indul, a műszerfal elsötétül, és a 12 V-os akkumulátor
+töltöttsége folyamatosan alacsony. A szerelő diagnosztikai műszerrel
+kiolvassa a hibakódot: a DC/DC átalakító kommunikációs hibája vagy
+alacsony kimeneti feszültsége jelenik meg (ellenőrizendő: konkrét
+gyártói hibakód). A 12 V-os akkumulátor sarkain üzemkész (READY)
+állapotban 11,8 V-ot mér, ami alacsony. A HV-oldalon a szerelő nem mér
+(üzemkész állapotban ez feszültség alatti HV-munka lenne,
+feszültségmentesített állapotban pedig 0 V-ot kellene mérni): a
+rendszerteszter élő adataiban a DC/DC átalakító HV-bemeneti feszültsége
+(pl. 385 V) megfelelő, tehát az átalakító bemenete rendben van. A hiba a
+DC/DC átalakító 12 V-os kimeneti csatlakozójában vagy magában az
+átalakítóban keresendő. A csatlakozó oxidált, ellenállása túl nagy,
+ezért a kimeneti feszültség összeesik. A javítás a csatlakozó
+tisztítása, a kábelköteg ellenőrzése, szükség esetén az átalakító
+cseréje, majd a rendszer tesztelése. Tanulság: elektromos és hibrid
+járművön a 12 V-os akkumulátor nem „a motor melletti hagyományos” elem,
+hanem a DC/DC átalakítón keresztül függ a nagyfeszültségű
+rendszertől.</p>
+<h3 data-number="33.3.8" id="tipikus-hibák"><span
+class="header-section-number">33.3.8</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>„Az elektromos autóban nincs is 12 V-os
+akkumulátor.”</strong> Valójában a vezérlőegységek, a biztonsági
+rendszerek és a HV-kontaktorok indítása 12 V-ról történik. A DC/DC
+átalakító és a 12 V-os akkumulátor meghibásodása megakadályozhatja az
+indítást.</li>
+<li><strong>„A rekuperáció miatt soha nem kell fékbetétet
+cserélni.”</strong> A fékbetétek kopása valóban csökken, de vészfékezés,
+hideg akkumulátor vagy nagy terhelés esetén a hidraulikus fék dolgozik.
+Ráadásul a ritkább használat miatt a féktárcsák korrodálhatnak, a
+féknyergek vezetőcsapjai beragadhatnak, ezért a rendszeres kenést és
+ellenőrzést nem szabad elhagyni.</li>
+<li><strong>„A motor és az inverter egyetlen egység, ezért ha melegszik,
+az csak vezérléstechnikai hiba.”</strong> A hűtőkör szivárgása,
+elégtelen hűtőfolyadék vagy hibás szivattyú is okozhat túlmelegedést,
+amit a diagnosztikai műszer „inverter hőmérséklet túl magas” hibakódként
+jelez. Ilyenkor a hűtőrendszert is vizsgálni kell.</li>
+<li><strong>„A DC/DC átalakítót multiméterrel közvetlenül a HV-oldalon
+mérem.”</strong> Ez tilos. A HV-oldal mérése csak jogosult személynek,
+feszültségmentesítés után, megfelelő műszerrel és egyéni védőeszközökkel
+engedélyezett.</li>
+</ol>
+<h3 data-number="33.3.9" id="önellenőrzés"><span
+class="header-section-number">33.3.9</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A PMSM forgórésze állandó mágneseket tartalmaz,
+ezért a fordulatszáma szinkronban van az állórész forgó mágneses
+mezőjével. (Indokold.)</li>
+<li>Miért van szükség az elektromos járműben 12 V-os hálózatra?</li>
+<li>Számítás: Ha a kerekeken leadott teljesítmény 80 kW, a reduktor
+hatásfoka 97%, a motoré 94%, az inverteré 96%, mekkora a
+HV-akkumulátorból felvett teljesítmény? (Kerekíts egész kW-ra.)</li>
+<li>Mit jelent a fék-blending?</li>
+<li>Mi a szerepe a közbenső kör kondenzátorainak az inverterben, és
+miért veszélyesek?</li>
+</ol>
+<h3 data-number="33.3.10" id="feladatok"><span
+class="header-section-number">33.3.10</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Nevezd meg a három leggyakoribb
+elektromos hajtómotortípust, és foglald össze egy-egy mondatban a
+működési elvüket!</p>
+<p><strong>2. feladat (A)</strong> Egy DC/DC átalakító 400 V-ról 14,0
+V-ra alakít át. A 12 V-os akkumulátor töltőárama 20 A. Mennyi a kimeneti
+teljesítmény, és mekkora a bemeneti áram, ha az átalakító hatásfoka
+90%?</p>
+<p><strong>3. feladat (B)</strong> Egy 1600 kg tömegű elektromos autó 80
+km/h-ról 30 km/h-ra lassul. A rekuperációs lánc hatásfoka 75%. Számold
+ki a mozgási energia csökkenését (kJ-ban) és a visszatölthető energiát
+(kWh-ban)!</p>
+<p><strong>4. feladat (B)</strong> A fenti rétegábrát követve írd le
+röviden, milyen útja van az energiának akkor, amikor a jármű gyorsít, és
+mi történik fékezéskor!</p>
+<p><strong>5. feladat (C)</strong> Hasonlítsd össze az állandó mágneses
+szinkronmotor és az aszinkron motor előnyeit és hátrányait egy
+elektromos jármű hajtására! Milyen szempontok dönthetnek a gyártó
+választásában?</p>
+<p><strong>6. feladat (D)</strong> Egy elektromos járműnél a
+diagnosztikai műszer „inverter túlmelegedés” hibát jelez, a jármű
+korlátozott teljesítményre vált. Sorold fel, milyen mérésekkel és
+ellenőrzésekkel szűkítenéd a hiba okát! Melyik mérés igényel
+nagyfeszültségű jogosultságot?</p>
+<h3 data-number="33.3.11" id="megoldások"><span
+class="header-section-number">33.3.11</span> Megoldások</h3>
+<h4 data-number="33.3.11.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">33.3.11.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li>Igaz. A forgórész állandó mágneses tere csak akkor ad állandó (nem
+nulla átlagú) nyomatékot, ha az állórész forgó mezejével azonos
+fordulattal forog; eltérő fordulatnál a nyomaték előjele periodikusan
+változna, átlaga nulla. A nyomaték nagyságát a két mező közötti szög
+(terhelési szög) határozza meg, amelyet az inverter a forgórész-helyzet
+mérése alapján szabályoz.</li>
+<li>A 12 V-os hálózat látja el a vezérlőegységeket, biztonsági
+rendszereket, világítást, komfortberendezéseket, valamint a
+HV-kontaktorok működtetését. A nagyfeszültséget DC/DC átalakító
+csökkenti, és tölti a 12 V-os akkumulátort.</li>
+<li>A felvett teljesítmény:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>80</mn><mspace width="0.167em"></mspace><mn>000</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>97</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>94</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>96</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>91</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext></mrow><annotation encoding="application/x-tex">P_{\text{be}} = 80\,000 / (0{,}97 \cdot 0{,}94 \cdot 0{,}96) \approx 91{,}4\,\text{kW}</annotation></semantics></math>,
+tehát kb. 91 kW.</li>
+<li>A fék-blending a hidraulikus súrlódó fék és a regeneratív motorfék
+összehangolása úgy, hogy a vezető kívánt lassulása a rekuperáció
+korlátait figyelembe véve mindig biztonságos és stabil legyen.</li>
+<li>A közbenső kör kondenzátorai simítják az egyenfeszültséget,
+csökkentik a feszültségcsúcsokat és átmeneti energiaforrásként
+szolgálnak. A jármű kikapcsolása után nagy töltés maradhat bennük, ezért
+feszültségmentesítés előtt mindig ki kell sütni, és mérni kell a
+feszültségmentességet.</li>
+</ol>
+<h4 data-number="33.3.11.2" id="feladat-megoldása"><span
+class="header-section-number">33.3.11.2</span> 1. feladat megoldása</h4>
+<ul>
+<li><strong>PMSM:</strong> állandó mágneses forgórész, az állórész forgó
+mezeje szinkronban forgatja; nagy teljesítménysűrűség.</li>
+<li><strong>Aszinkron motor:</strong> rövidrezárt kalickás forgórész, az
+indukált áram és a mező kölcsönhatása hozza a nyomatékot; nincs mágnes,
+olcsóbb.</li>
+<li><strong>Gerjesztett szinkronmotor:</strong> a forgórész tekercsét
+külön táplálják, így mágnes nélkül is szinkron üzem; a gerjesztés
+szabályozható.</li>
+</ul>
+<h4 data-number="33.3.11.3" id="feladat-megoldása-1"><span
+class="header-section-number">33.3.11.3</span> 2. feladat megoldása</h4>
+<p><strong>Adott:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{ki}} = 14{,}0\,\text{V}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{ki}} = 20\,\text{A}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>90</mn></mrow><annotation encoding="application/x-tex">\eta = 0{,}90</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>400</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{be}} = 400\,\text{V}</annotation></semantics></math>.</p>
+<p><strong>P_kimeneti:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>14</mn><mo>,</mo><mn>0</mn><mo>⋅</mo><mn>20</mn><mo>=</mo><mn>280</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{ki}} = 14{,}0 \cdot 20 = 280\,\text{W}</annotation></semantics></math>.</p>
+<p><strong>Bemeneti teljesítmény:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>280</mn><mi>/</mi><mn>0</mn><mo>,</mo><mn>90</mn><mo>≈</mo><mn>311</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{be}} = 280 / 0{,}90 \approx 311\,\text{W}</annotation></semantics></math>.</p>
+<p><strong>Bemeneti áram:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>311</mn><mi>/</mi><mn>400</mn><mo>≈</mo><mn>0</mn><mo>,</mo><mn>78</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{be}} = 311 / 400 \approx 0{,}78\,\text{A}</annotation></semantics></math>.
+∎</p>
+<h4 data-number="33.3.11.4" id="feladat-megoldása-2"><span
+class="header-section-number">33.3.11.4</span> 3. feladat megoldása</h4>
+<p><strong>Adott:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>1600</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kg</mtext></mrow><annotation encoding="application/x-tex">m = 1600\,\text{kg}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>1</mn></msub><mo>=</mo><mn>80</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km/h</mtext><mo>=</mo><mn>22</mn><mo>,</mo><mn>22</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v_1 = 80\,\text{km/h} = 22{,}22\,\text{m/s}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>2</mn></msub><mo>=</mo><mn>30</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">km/h</mtext><mo>=</mo><mn>8</mn><mo>,</mo><mn>33</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v_2 = 30\,\text{km/h} = 8{,}33\,\text{m/s}</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>75</mn></mrow><annotation encoding="application/x-tex">\eta = 0{,}75</annotation></semantics></math>.</p>
+<p><strong>Energia csökkenés:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">k1</mtext></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>⋅</mo><mn>1600</mn><mo>⋅</mo><mn>22</mn><mo>,</mo><msup><mn>22</mn><mn>2</mn></msup><mo>=</mo><mn>800</mn><mo>⋅</mo><mn>493</mn><mo>,</mo><mn>7</mn><mo>≈</mo><mn>395</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J</mtext><mo>=</mo><mn>395</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kJ</mtext></mrow><annotation encoding="application/x-tex">E_{\text{k1}} = \frac12 \cdot 1600 \cdot 22{,}22^2 = 800 \cdot 493{,}7 \approx 395\,000\,\text{J} = 395\,\text{kJ}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">k2</mtext></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>⋅</mo><mn>1600</mn><mo>⋅</mo><mn>8</mn><mo>,</mo><msup><mn>33</mn><mn>2</mn></msup><mo>=</mo><mn>800</mn><mo>⋅</mo><mn>69</mn><mo>,</mo><mn>4</mn><mo>≈</mo><mn>55</mn><mspace width="0.167em"></mspace><mn>500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">J</mtext><mo>=</mo><mn>55</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kJ</mtext></mrow><annotation encoding="application/x-tex">E_{\text{k2}} = \frac12 \cdot 1600 \cdot 8{,}33^2 = 800 \cdot 69{,}4 \approx 55\,500\,\text{J} = 55{,}5\,\text{kJ}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><msub><mi>E</mi><mtext mathvariant="normal">k</mtext></msub><mo>=</mo><mn>395</mn><mo>−</mo><mn>55</mn><mo>,</mo><mn>5</mn><mo>=</mo><mn>339</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kJ</mtext></mrow><annotation encoding="application/x-tex">\Delta E_{\text{k}} = 395 - 55{,}5 = 339{,}5\,\text{kJ}</annotation></semantics></math></p>
+<p><strong>Visszatölthető energia:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">vissza</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>75</mn><mo>⋅</mo><mn>339</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kJ</mtext><mo>≈</mo><mn>254</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kJ</mtext><mo>≈</mo><mn>0</mn><mo>,</mo><mn>0707</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">E_{\text{vissza}} = 0{,}75 \cdot 339{,}5\,\text{kJ} \approx 254{,}6\,\text{kJ} \approx 0{,}0707\,\text{kWh}</annotation></semantics></math>.
+∎</p>
+<h4 data-number="33.3.11.5" id="feladat-megoldása-3"><span
+class="header-section-number">33.3.11.5</span> 4. feladat megoldása</h4>
+<p>Gyorsításkor a nagyfeszültségű akkumulátor egyenárama az inverterbe
+jut, ahol háromfázisú váltakozó áram lesz. A motor ezt mechanikus
+forgássá alakítja, a reduktor pedig csökkenti a fordulatszámot és növeli
+a nyomatékot, végül a differenciálmű a kerekekre viszi az erőt.
+Fékezéskor a kerék forgatja a motort, amely generátorként termel, az
+inverter egyenirányít, és az energia visszafelé, az akkumulátorba
+töltődik.</p>
+<h4 data-number="33.3.11.6" id="feladat-megoldása-4"><span
+class="header-section-number">33.3.11.6</span> 5. feladat megoldása</h4>
+<p>PMSM: nagy teljesítménysűrűség, kiváló hatásfok, kompakt méret;
+hátránya a ritkaföldfém-mágnesek költsége, hőmérséklet-érzékenység, nagy
+fordulatszámon növekvő veszteség. Aszinkron: olcsó, nincs mágnes,
+robusztus, nagy fordulatszámon is jól szabályozható; hátránya valamivel
+alacsonyabb hatásfok, nagyobb hűtési igény, kisebb teljesítménysűrűség.
+A gyártó a célpiac, a hatótáv, a költségvetés és a motor
+karakterisztikája alapján választ, néha kombinálva is.</p>
+<h4 data-number="33.3.11.7" id="feladat-megoldása-5"><span
+class="header-section-number">33.3.11.7</span> 6. feladat megoldása</h4>
+<p>Először a diagnosztikai műszerrel ellenőrizzük a hibakódot és az élő
+hőmérsékleti adatokat (inverter, motor, hűtőfolyadék). Ellenőrizzük a
+hűtőfolyadék szintjét, a hűtőkör nyomását, a szivattyú működését, a
+csövek szivárgását. Vizuálisan ellenőrizzük az inverter bordázatát,
+szellőzését. A HV-oldali mérések (inverter tápellátás, szigetelési
+ellenállás) feszültségmentesítés után, jogosult személy által
+végezhetők. A hűtőkör és a 12 V-os oldal mérései nem igényelnek
+HV-jogosultságot, de a HV-rendszer közelében végzett munka miatt a
+biztonsági előírásokat be kell tartani.</p>
+<h3 data-number="33.3.12" id="rövid-összefoglaló"><span
+class="header-section-number">33.3.12</span> Rövid összefoglaló</h3>
+<p>Az elektromos hajtásláncban a nagyfeszültségű egyenáramú energiát az
+inverter háromfázisú váltakozó árammá alakítja, a hajtómotor pedig
+mechanikus energiává. A leggyakoribb a PMSM, de használnak aszinkron és
+gerjesztett szinkronmotorokat is. A motor forgását egyszerű reduktor
+viszi a kerekekre. Az inverter kapcsolóelemei (IGBT vagy SiC) PWM-mel
+szabályozzák az áramot, a közbenső kör kondenzátorai töltést tárolnak,
+ezért mindig feszültségmentesítés és ellenőrző mérés szükséges. A DC/DC
+átalakító a HV-feszültséget 12 V-ra csökkenti, és a 12 V-os hálózatot,
+az akkumulátort tölti. A regeneratív fékezés a mozgási energia egy
+részét visszatölti, a fék-blending pedig a súrlódó fék és a motorfék
+összhangját biztosítja. A hőszivattyú és a hűtőkörök az akkumulátort, az
+invertert és a motort tartják optimális hőmérsékleten.
+<strong>Továbbvitt eredmény.</strong> Ezt a villamos hajtásláncot és
+energiautat használjuk a <a href="au120.html">Töltés: AC és DC töltés,
+töltőcsatlakozók, töltési módok</a> alfejezetben a töltési teljesítmény,
+a fedélzeti töltő és a rekuperációs energia kezelésének
+tárgyalásakor.</p>
+<h3 data-number="33.3.13" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">33.3.13</span> Források és ellenőrzési
+hiányok</h3>
+<p>Forrástípusok: villamos gépek és hajtások tankönyvek, gyártói képzési
+anyagok, ISO/EN szabványok a villamos járművek hajtásrendszerére; az
+ENSZ-EGB előírások közül a villamos hajtás biztonságára vonatkozó
+követelmények (ECE R100) – a pontos számok és hivatkozások
+ellenőrizendők. A motor fordulatszám-tartománya, a reduktor áttétele, a
+DC/DC feszültségszintek, a fék-blending határértékei és a hőszivattyú
+jellemzői járműtípusonként eltérőek, ezért a könyvben szereplő értékek
+tanulási példák. A nagyfeszültségű mérések eszközbesorolása és a
+szigetelésvizsgálati határértékek a gyártói javítási előírás szerint
+ellenőrizendők.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="au118.html">← 33.2 A nagyfeszültségű akkumulátor és az akkumulátor-felügyelet (BMS)</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="au120.html">33.4 Töltés: AC és DC töltés, töltőcsatlakozók, töltési módok →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

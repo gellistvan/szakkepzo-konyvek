@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Görgős fékpad működése</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pf">Pedálerő</label><input id="pf" type="range" min="0" max="500" step="10" value="200" aria-label="Pedálerő"><output id="pf_o" for="pf"></output></div>
+<div class="row"><label for="N">Kerékterhelés (szemléltető)</label><input id="N" type="range" min="2000" max="6000" step="100" value="4000" aria-label="Kerékterhelés (szemléltető)"><output id="N_o" for="N"></output></div>
+<div class="row"><label for="mu">Tapadási tényező μ</label><input id="mu" type="range" min="0.3" max="0.9" step="0.05" value="0.7" aria-label="Tapadási tényező μ"><output id="mu_o" for="mu"></output></div>
+<div class="row"><label for="anim">Görgők forgása</label><input id="anim" type="checkbox" checked aria-label="Görgők forgása"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 300" role="img" aria-label="Görgős fékpad animáció: a görgők forognak, a pedálerő növelésére a fékerő nő, csúszáskor a tapintógörgő lekapcsolja a padot"></svg>
+<p class="small">Szemléltető modell: a pedálerő–fékerő áttétel (12) és a kerékterhelés kitalált tanulási értékek, nem mért adatok. A pad a fékerőt méri, nem a jármű lassulását; a határértékek és a sebesség gyártói/jogszabályi adat (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"pf":"N", "N":"N", "mu":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(v.anim&&!FIG.tm)FIG.tm=setInterval(draw,60);if(!v.anim&&FIG.tm){clearInterval(FIG.tm);FIG.tm=null;}
+const k=12, Fdem=v.pf*k, Fmax=v.mu*v.N, slip=Fdem>Fmax, F=slip?Fmax:Fdem;
+const ph=(v.anim&&!slip)?performance.now()/400:0;
+el("rect",{x:0,y:0,width:600,height:300,fill:"#fff"});
+const R1=(cx,cy,r,dir)=>{el("circle",{cx:cx,cy:cy,r:r,fill:"#ddd",stroke:"#000","stroke-width":2});
+  for(let i=0;i<6;i++){const a=dir*ph+i*Math.PI/3;el("line",{x1:cx,y1:cy,x2:cx+r*0.85*Math.cos(a),y2:cy+r*0.85*Math.sin(a),stroke:"#666"});}};
+R1(150,220,45,1);R1(290,220,45,1);
+// kerék
+el("circle",{cx:220,cy:130,r:80,fill:"#777",stroke:"#000","stroke-width":2});el("circle",{cx:220,cy:130,r:45,fill:"#fff",stroke:"#000"});
+for(let i=0;i<5;i++){const a=-ph*0.56+i*2*Math.PI/5;el("line",{x1:220,y1:130,x2:220+42*Math.cos(a),y2:130+42*Math.sin(a),stroke:"#000","stroke-width":3});}
+// tapintógörgő
+el("circle",{cx:220,cy:215,r:13,fill:slip?"#c55a11":"#fff",stroke:"#000","stroke-width":2});
+el("text",{x:220,y:290,"font-size":12,"text-anchor":"middle",fill:"#000"},"tapintógörgő: "+(slip?"CSÚSZÁS → lekapcsol":"kerék forog"));
+// erőnyíl
+const L=F/30;el("line",{x1:335,y1:200,x2:335,y2:200-L,stroke:"#c55a11","stroke-width":5});
+el("text",{x:345,y:200-L/2,"font-size":12,fill:"#000"},"F_f = "+fmt(F,0)+" N");
+// mutatós kijelző
+const cx=500,cy=150,r=70;el("circle",{cx:cx,cy:cy,r:r,fill:"#fff",stroke:"#000","stroke-width":2});
+const fr=Math.min(1,F/5400), a=Math.PI*(1.25-1.5*fr);
+el("line",{x1:cx,y1:cy,x2:cx+60*Math.cos(a),y2:cy-60*Math.sin(a),stroke:"#000","stroke-width":3});
+el("text",{x:cx,y:cy+40,"font-size":12,"text-anchor":"middle",fill:"#000"},"fékerő");
+el("text",{x:cx,y:cy+95,"font-size":12,"text-anchor":"middle",fill:"#000"},"max. tapadás: "+fmt(Fmax,0)+" N");
+status("Pedálerő "+fmt(v.pf,0)+" N → kért fékerő "+fmt(Fdem,0)+" N (szemléltető áttétel: 12 N/N). "+(slip?"<b>A fékerő elérte a tapadási határt (μ·N = "+fmt(Fmax,0)+" N): a kerék megcsúszik, a tapintógörgő leállítja a padot.</b>":"A görgő a kereket hajtja; a fék reakciónyomatékát az ingamotor erőmérő cellája méri: F_f = "+fmt(F,0)+" N."));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

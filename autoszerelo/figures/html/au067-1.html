@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A hűtőkör: kis kör, nagy kör, fűtőág</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="T">hűtőfolyadék-hőmérséklet</label><input id="T" type="range" min="20" max="110" step="1" value="95" aria-label="hűtőfolyadék-hőmérséklet"><output id="T_o" for="T"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 400" role="img" aria-label="A hűtőfolyadék kis köre a bypasson, nagy köre a hűtőn át záródik; a fűtőradiátor párhuzamos ág."></svg>
+<p class="small">Szemléltető modell: a termosztát 87 °C-on kezd nyitni és 102 °C-on van teljesen nyitva (a fejezet vizsgálati példája), a ventilátor 100 °C-on kapcsol be (példa). A valós értékek és a bekötés gyártói adatok (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"T":"°C"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const T=v.T, f=Math.min(1,Math.max(0,(T-87)/(102-87))), fan=T>=100, fg=css("--fg");
+const G={"common": [[110.4, 276.0], [124.2, 276.0]], "out": [[262.2, 184.0], [289.8, 184.0]], "small": [[303.6, 197.8], [303.6, 340.4], [96.6, 340.4], [96.6, 289.8]], "big": [[317.4, 184.0], [345.0, 184.0], [345.0, 138.0], [391.0, 138.0]], "ret": [[432.4, 326.6], [432.4, 372.6], [59.8, 372.6], [59.8, 276.0], [82.8, 276.0]], "heat": [[216.2, 165.6], [216.2, 92.0]], "heat2": [[179.4, 69.0], [32.2, 69.0], [32.2, 276.0], [59.8, 276.0]]};
+function pl(pts,w,dash,col){el("polyline",{points:pts.map(p=>p.join(",")).join(" "),fill:"none",stroke:col||fg,"stroke-width":w,"stroke-dasharray":dash||""});}
+function bx(x,y,w,h,t){el("rect",{x:(x-0.3)*46,y:(8.6-y-h)*46,width:w*46,height:h*46,fill:"none",stroke:fg,"stroke-width":2});
+  el("text",{x:(x-0.3+w/2)*46,y:(8.6-y-h/2)*46+4,"text-anchor":"middle","font-size":12},t);}
+bx(3.0,1.8,3.0,3.2,"motor (hűtőköpeny)"); bx(8.8,1.5,1.8,4.5,"hűtő"); bx(4.2,6.6,1.6,1.0,"fűtőradiátor"); bx(8.9,7.0,1.6,1.0,"kiegyenlítőtartály");
+pl(G.common,3); pl(G.out,3);
+pl(G.small,1+6*(1-f),"10 6", f<1?css("--hl"):css("--grid"));
+pl(G.big,1+6*f,"",f>0?css("--hl2"):css("--grid")); pl(G.ret,1+6*f,"",f>0?css("--hl2"):css("--grid"));
+pl(G.heat,3,"2 4"); pl(G.heat2,3,"2 4");
+el("circle",{cx:(2.4-0.3)*46,cy:(8.6-2.6)*46,r:13,fill:"none",stroke:fg,"stroke-width":2});
+el("circle",{cx:(6.9-0.3)*46,cy:(8.6-4.6)*46,r:13,fill:f>0?css("--hl2"):"none",stroke:fg,"stroke-width":2});
+el("text",{x:(6.9-0.3)*46,y:(8.6-5.1)*46,"text-anchor":"middle","font-size":12},"termosztát");
+el("text",{x:(2.4-0.3)*46,y:(8.6-3.2)*46,"text-anchor":"middle","font-size":12},"szivattyú");
+const fx=(11.4-0.3)*46, fy=(8.6-3.7)*46;
+el("circle",{cx:fx,cy:fy,r:32,fill:fan?css("--hl"):"none","fill-opacity":fan?0.35:0,stroke:fg,"stroke-width":2,"stroke-dasharray":fan?"":"6 4"});
+el("text",{x:fx,y:fy+52,"text-anchor":"middle","font-size":12},fan?"ventilátor BE":"ventilátor ki");
+status("Hűtőfolyadék <b>"+fmt(T,0)+" °C</b> · termosztát-nyitás <b>"+fmt(f*100,0)+" %</b> · "+
+ (f<=0?"csak a kis kör (bypass) és a fűtőág él – a motor gyorsan melegszik":(f<1?"átmenet: a kis és a nagy kör egyszerre él, a nyílvastagság az arányt mutatja":"teljes nyitás: a folyadék a hűtőn át kering"))+
+ " · ventilátor: "+(fan?"<b>bekapcsolva</b>":"kikapcsolva"));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>
