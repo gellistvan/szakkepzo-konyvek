@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Receptúra-átszámító és formaméret-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mode">Mód</label><select id="mode" aria-label="Mód"><option value="mass" selected>kívánt tömeg (g)</option><option value="diam">kerek forma Ø (cm)</option><option value="rect">téglalap keret (cm)</option><option value="qty">darabszám</option></select></div>
+<div class="row"><label for="m2">Kívánt tömeg (tömeg mód)</label><input id="m2" type="range" min="100" max="10000" step="50" value="2500" aria-label="Kívánt tömeg (tömeg mód)"><output id="m2_o" for="m2"></output></div>
+<div class="row"><label for="a1">Régi Ø / a / db</label><input id="a1" type="range" min="4" max="60" step="1" value="18" aria-label="Régi Ø / a / db"><output id="a1_o" for="a1"></output></div>
+<div class="row"><label for="b1">Régi b (keretnél)</label><input id="b1" type="range" min="4" max="60" step="1" value="20" aria-label="Régi b (keretnél)"><output id="b1_o" for="b1"></output></div>
+<div class="row"><label for="a2">Új Ø / a / db</label><input id="a2" type="range" min="4" max="120" step="1" value="24" aria-label="Új Ø / a / db"><output id="a2_o" for="a2"></output></div>
+<div class="row"><label for="b2">Új b (keretnél)</label><input id="b2" type="range" min="4" max="60" step="1" value="30" aria-label="Új b (keretnél)"><output id="b2_o" for="b2"></output></div>
+<div class="row"><label for="kr">k kerekítése 2 tizedesre</label><input id="kr" type="checkbox" checked aria-label="k kerekítése 2 tizedesre"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Receptúra-átszámító: szerkeszthető alapreceptúra, szorzószám kívánt tömegből, darabszámból vagy formaméretből, átszámított és kerekített mennyiségek sávdiagramon"></svg>
+<p class="small">Alapbeállítás: a fejezet 1. példája (1005 g-os linzerreceptúra → 2500 g, k ≈ 2,49 → 1245; 623; 498; 125; 12,5 g, összesen 2503,5 g). Kerek formánál 18 → 24 cm = 3. példa (k ≈ 1,78), keretnél 20×30 → 30×40 cm = 4. példa (k = 2), darabszámnál 40 → 120 = 2. példa (k = 3). Tanulási eszköz, nem helyettesíti a munkahelyi receptúra-nyilvántartást.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m2":"g", "a1":"", "b1":"", "a2":"", "b2":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(!window.REC){window.REC=[["Liszt",500],["Vaj",250],["Porcukor",200],["Tojássárgája",50],["Só",5]];
+ const box=document.createElement("div");box.id="rec";box.innerHTML='<div class="small">Alapreceptúra (szerkeszthető: név és tömeg g-ban; üres név = kihagyva)</div>'+
+  REC.map((r,i)=>'<div class="row"><input id="n'+i+'" value="'+r[0]+'" aria-label="'+(i+1)+'. nyersanyag neve"><input id="g'+i+'" type="number" min="0" step="0.5" value="'+r[1]+'" aria-label="'+(i+1)+'. nyersanyag tömege (g)"><span class="small">g</span></div>').join("");
+ document.body.insertBefore(box,document.getElementById("status"));
+ box.querySelectorAll("input").forEach(x=>x.addEventListener("input",draw));}
+const base=[];for(let i=0;i<5;i++){const n=document.getElementById("n"+i).value.trim(),g=+document.getElementById("g"+i).value||0;if(n&&g>0)base.push([n,g]);}
+const tot=base.reduce((a,b)=>a+b[1],0);
+let k, how;
+if(v.mode=="mass"){k=v.m2/tot;how="k = m<sub>kívánt</sub>/m<sub>alap</sub> = "+fmt(v.m2,0)+" g / "+fmt(tot,1)+" g";}
+else if(v.mode=="diam"){k=Math.pow(v.a2/v.a1,2);how="k = (D<sub>új</sub>/D<sub>régi</sub>)² = ("+v.a2+"/"+v.a1+")²";}
+else if(v.mode=="rect"){k=(v.a2*v.b2)/(v.a1*v.b1);how="k = "+v.a2+"·"+v.b2+" / ("+v.a1+"·"+v.b1+")";}
+else {k=v.a2/v.a1;how="k = n<sub>kívánt</sub>/n<sub>alap</sub> = "+v.a2+"/"+v.a1;}
+if(v.kr) k=Math.round(k*100)/100;
+const gy=x=>x<20?Math.floor(x*2+0.5)/2:Math.floor(x+0.5);
+if(!base.length){status("Adj meg legalább egy nyersanyagot.");return;}
+const mx=Math.max(...base.map(b=>Math.max(b[1],b[1]*k)));
+let sumP=0;
+base.forEach((b,i)=>{const y=14+i*44, nv=b[1]*k, p=gy(nv); sumP+=p;
+ el("text",{x:10,y:y+14,"font-size":13},b[0]);
+ el("rect",{x:120,y:y,width:Math.max(1,b[1]/mx*260),height:14,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+ el("rect",{x:120,y:y+17,width:Math.max(1,nv/mx*260),height:14,fill:css("--hl"),opacity:0.6,stroke:css("--line"),"stroke-width":1.5});
+ el("text",{x:390,y:y+12,"font-size":12,fill:css("--muted")},fmt(b[1],b[1]%1?1:0)+" g (alap)");
+ el("text",{x:390,y:y+29,"font-size":12},fmt(nv,2)+" g → ");
+ el("text",{x:488,y:y+29,"font-size":13,"font-weight":"bold"},fmt(p,p%1?1:0)+" g");});
+const yS=14+base.length*44+8;
+el("text",{x:10,y:yS+14,"font-size":13,"font-weight":"bold"},"Összesen: "+fmt(tot,1)+" g → "+fmt(tot*k,2)+" g (pontos), "+fmt(sumP,1)+" g (gyakorlati)");
+const dev=(sumP-tot*k)/(tot*k)*100;
+status("<b>"+how+(v.kr?" ≈ ":" = ")+fmt(k,v.kr?2:4)+"</b>. Gyakorlati kerekítés: 20 g alatt 0,5 g-ra, fölötte 1 g-ra (tojásnál a darabszámról a technológia dönt). Ellenőrző összesítés: eltérés "+fmt(dev,2)+" % "+(Math.abs(dev)<=1?'<span class="ok">(rendben, ≤ 1 %)</span>':'<span class="bad">(> 1 %: keresd a hibát!)</span>'));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

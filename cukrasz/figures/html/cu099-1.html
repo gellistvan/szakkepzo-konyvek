@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formaméret-átszámító (tortapiskóta)</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="t0">Alapforma</label><select id="t0" aria-label="Alapforma"><option value="kor" selected>kör</option><option value="tegla">téglalap</option></select></div>
+<div class="row"><label for="d0">Alap Ø</label><input id="d0" type="range" min="14" max="32" step="1" value="24" aria-label="Alap Ø"><output id="d0_o" for="d0"></output></div>
+<div class="row"><label for="a0">Alap a</label><input id="a0" type="range" min="10" max="40" step="1" value="30" aria-label="Alap a"><output id="a0_o" for="a0"></output></div>
+<div class="row"><label for="b0">Alap b</label><input id="b0" type="range" min="10" max="60" step="1" value="40" aria-label="Alap b"><output id="b0_o" for="b0"></output></div>
+<div class="row"><label for="t1">Új forma</label><select id="t1" aria-label="Új forma"><option value="kor" selected>kör</option><option value="tegla">téglalap</option></select></div>
+<div class="row"><label for="d1">Új Ø</label><input id="d1" type="range" min="14" max="32" step="1" value="28" aria-label="Új Ø"><output id="d1_o" for="d1"></output></div>
+<div class="row"><label for="a1">Új a</label><input id="a1" type="range" min="10" max="40" step="1" value="30" aria-label="Új a"><output id="a1_o" for="a1"></output></div>
+<div class="row"><label for="b1">Új b</label><input id="b1" type="range" min="10" max="60" step="1" value="40" aria-label="Új b"><output id="b1_o" for="b1"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 700 300" role="img" aria-label="A régi és az új forma felülnézetben azonos léptékben, mellette a recept átszámított mennyiségei."></svg>
+<p class="small">k = A_új / A_alap (azonos tésztavastagság mellett). Kör: A = π·d²/4, téglalap: A = a·b; kör → kör esetén k = (d_új/d_alap)². A recept a fejezet 24 cm-es tortapiskótája (összesen 601 g). Ellenőrzés: 24 → 28 cm: k = 1,361; 24 → 26 cm: k = 1,174. A tojásméret (30 g fehérje, 20 g sárgája) tanulási érték, ellenőrizendő. A téglalap-méretek csak téglalap formánál számítanak.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"d0":"cm", "a0":"cm", "b0":"cm", "d1":"cm", "a1":"cm", "b1":"cm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const R=[["Tojásfehérje",180],["Tojássárgája",120],["Kristálycukor",150],["Finomliszt",120],["Étkezési keményítő",30],["Só",1]];
+function A(t,d,a,b){return t==="kor"?Math.PI*d*d/4:a*b;}
+const A0=A(v.t0,v.d0,v.a0,v.b0), A1=A(v.t1,v.d1,v.a1,v.b1), k=A1/A0;
+let tot=0;R.forEach(r=>tot+=r[1]);
+// rajz: a két forma azonos léptékben felülnézetben
+const md=Math.max(v.t0==="kor"?v.d0:Math.max(v.a0,v.b0), v.t1==="kor"?v.d1:Math.max(v.a1,v.b1));
+const sc=Math.min(7,250/md), cx=150, cy=145;
+function shape(t,d,a,b,dash,fill){
+  if(t==="kor") el("circle",{cx:cx,cy:cy,r:d/2*sc,fill:fill,stroke:css("--line"),"stroke-width":2,"stroke-dasharray":dash});
+  else el("rect",{x:cx-a/2*sc,y:cy-b/2*sc,width:a*sc,height:b*sc,fill:fill,stroke:css("--line"),"stroke-width":2,"stroke-dasharray":dash});
+}
+const big=A1>=A0;
+if(big){shape(v.t1,v.d1,v.a1,v.b1,"","none");shape(v.t0,v.d0,v.a0,v.b0,"6 4",css("--grid"));}
+else{shape(v.t0,v.d0,v.a0,v.b0,"6 4",css("--grid"));shape(v.t1,v.d1,v.a1,v.b1,"","none");}
+el("text",{x:cx,y:292,"text-anchor":"middle","font-size":13},"szaggatott: alapforma, folytonos: új forma");
+el("text",{x:330,y:28,"font-size":15,"font-weight":"bold"},"k = "+fmt(k,3));
+el("text",{x:330,y:48,"font-size":13},"terület: "+fmt(A0,0)+" → "+fmt(A1,0)+" cm²");
+let y=76;
+el("text",{x:330,y:y,"font-size":13,"font-weight":"bold"},"nyersanyag");
+el("text",{x:610,y:y,"font-size":13,"font-weight":"bold","text-anchor":"end"},"alap g");
+el("text",{x:690,y:y,"font-size":13,"font-weight":"bold","text-anchor":"end"},"új g");
+R.forEach(r=>{y+=22;el("text",{x:330,y:y,"font-size":13},r[0]);
+  el("text",{x:610,y:y,"font-size":13,"text-anchor":"end"},String(r[1]));
+  el("text",{x:690,y:y,"font-size":13,"text-anchor":"end"},String(Math.round(r[1]*k)));});
+y+=24;el("text",{x:330,y:y,"font-size":13,"font-weight":"bold"},"Összesen");
+el("text",{x:610,y:y,"font-size":13,"text-anchor":"end","font-weight":"bold"},String(tot));
+el("text",{x:690,y:y,"font-size":13,"text-anchor":"end","font-weight":"bold"},String(Math.round(tot*k)));
+const nf=R[0][1]*k/30, ns=R[1][1]*k/20;
+status("Szorzószám: <b>k = "+fmt(k,3)+"</b>. Tojásfehérje ≈ "+fmt(nf,1)+" db (30 g/db), sárgája ≈ "+fmt(ns,1)+
+  " db (20 g/db) – a tojást grammra mérjük, a darabszám csak becslés."+
+  (k>1.8||k<0.55?" <span class='bad'>Nagy eltérés: a sütési időt és a magasságot is ellenőrizd.</span>":""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

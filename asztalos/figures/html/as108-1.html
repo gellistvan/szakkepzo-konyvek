@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Felületkezelési kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mode">Felület</label><select id="mode" aria-label="Felület"><option value="1" selected>közvetlenül (m²)</option><option value="2">darabméretből</option></select></div>
+<div class="row"><label for="A">A felület</label><input id="A" type="range" min="0.1" max="30" step="0.1" value="8.8" aria-label="A felület"><output id="A_o" for="A"></output></div>
+<div class="row"><label for="hh">darab hossza</label><input id="hh" type="range" min="100" max="2500" step="10" value="800" aria-label="darab hossza"><output id="hh_o" for="hh"></output></div>
+<div class="row"><label for="sz">darab szélessége</label><input id="sz" type="range" min="50" max="1200" step="10" value="250" aria-label="darab szélessége"><output id="sz_o" for="sz"></output></div>
+<div class="row"><label for="vv">vastagság</label><input id="vv" type="range" min="3" max="60" step="1" value="18" aria-label="vastagság"><output id="vv_o" for="vv"></output></div>
+<div class="row"><label for="db">darabszám</label><input id="db" type="range" min="1" max="100" step="1" value="20" aria-label="darabszám"><output id="db_o" for="db"></output></div>
+<div class="row"><label for="ket">kétoldalt</label><input id="ket" type="checkbox" checked aria-label="kétoldalt"></div>
+<div class="row"><label for="elek">élek is</label><input id="elek" type="checkbox" checked aria-label="élek is"></div>
+<div class="row"><label for="qm">Anyagadat</label><select id="qm" aria-label="Anyagadat"><option value="1" selected>fajlagos felhordás q</option><option value="2">kiadósság K</option></select></div>
+<div class="row"><label for="q">q (rétegenként)</label><input id="q" type="range" min="20" max="400" step="5" value="120" aria-label="q (rétegenként)"><output id="q_o" for="q"></output></div>
+<div class="row"><label for="K">K kiadósság</label><input id="K" type="range" min="2" max="30" step="0.5" value="12" aria-label="K kiadósság"><output id="K_o" for="K"></output></div>
+<div class="row"><label for="n">rétegszám n</label><input id="n" type="range" min="1" max="6" step="1" value="3" aria-label="rétegszám n"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="loss">szórási veszteség</label><input id="loss" type="range" min="0" max="60" step="1" value="25" aria-label="szórási veszteség"><output id="loss_o" for="loss"></output></div>
+<div class="row"><label for="rho">lakk sűrűsége</label><input id="rho" type="range" min="0.8" max="1.6" step="0.05" value="1.0" aria-label="lakk sűrűsége"><output id="rho_o" for="rho"></output></div>
+<div class="row"><label for="hig">hígító (lakk tömegének)</label><input id="hig" type="range" min="0" max="50" step="1" value="10" aria-label="hígító (lakk tömegének)"><output id="hig_o" for="hig"></output></div>
+<div class="row"><label for="rhoh">hígító sűrűsége</label><input id="rhoh" type="range" min="0.6" max="1.0" step="0.05" value="0.8" aria-label="hígító sűrűsége"><output id="rhoh_o" for="rhoh"></output></div>
+<div class="row"><label for="pl">lakk egységára</label><input id="pl" type="range" min="500" max="15000" step="100" value="4800" aria-label="lakk egységára"><output id="pl_o" for="pl"></output></div>
+<div class="row"><label for="ph">hígító egységára</label><input id="ph" type="range" min="200" max="6000" step="50" value="1800" aria-label="hígító egységára"><output id="ph_o" for="ph"></output></div>
+<div class="row"><label for="sza">szárazanyag</label><input id="sza" type="range" min="10" max="100" step="1" value="45" aria-label="szárazanyag"><output id="sza_o" for="sza"></output></div>
+<div class="row"><label for="rhos">száraz film sűrűsége</label><input id="rhos" type="range" min="0.8" max="1.6" step="0.05" value="1.1" aria-label="száraz film sűrűsége"><output id="rhos_o" for="rhos"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 190" role="img" aria-label="Lakk- és hígítószükséglet és anyagköltség"></svg>
+<p class="small">Képletek a fejezet szerint; alapértékek: a 29.4.6 polclap-kalkuláció (8,8 m², 3 réteg, 25 % veszteség → 3,96 kg lakk, 0,495 l hígító, 19 899 Ft). Darabméretes módban a felület nincs kerekítve (8,756 m²). Árak és anyagadatok: mintaértékek, a gyártói adatlap a mérvadó.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"A":"m²", "hh":"mm", "sz":"mm", "vv":"mm", "db":"db", "q":"g/m²", "K":"m²/l", "n":"réteg", "loss":"%", "rho":"kg/l", "hig":"%", "rhoh":"kg/l", "pl":"Ft/kg", "ph":"Ft/l", "sza":"%", "rhos":"g/cm³"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const ft=x=>Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g," ");
+let A=v.A, Adb=0;
+if(v.mode==2){Adb=(v.ket?2:1)*v.hh*v.sz/1e6+(v.elek?(2*v.hh+2*v.sz)*v.vv/1e6:0); A=v.db*Adb;}
+let m_el, q_eff;
+if(v.qm==1){m_el=A*v.q*v.n;}else{m_el=A*v.n/v.K*v.rho*1000;}
+q_eff=m_el/(A*v.n);
+const m_sz=m_el*(1+v.loss/100), V_sz=m_sz/1000/v.rho, m_h=m_sz/1000*v.hig/100, V_h=m_h/v.rhoh;
+const c_l=m_sz/1000*v.pl, c_h=V_h*v.ph, c=c_l+c_h, s1=q_eff*v.sza/100/v.rhos;
+let h="";
+if(v.mode==2) h+="A = "+v.db+" · "+fmt(Adb,4)+" m² = <b>"+fmt(A,3)+" m²</b><br>";
+h+= (v.qm==1? "m<sub>elm</sub> = A·q·n = "+fmt(A,2)+" · "+v.q+" · "+v.n+" = <b>"+fmt(m_el,0)+" g</b>"
+            : "V = A·n/K = "+fmt(A,2)+" · "+v.n+" / "+fmt(v.K,1)+" = "+fmt(m_el/1000/v.rho,3)+" l → m<sub>elm</sub> = <b>"+fmt(m_el,0)+" g</b>");
+h+="<br>veszteséggel: m = "+fmt(m_el,0)+" · "+fmt(1+v.loss/100,2)+" = <b>"+fmt(m_sz/1000,2)+" kg</b> ≈ "+fmt(V_sz,2)+" l";
+h+="<br>hígító: "+fmt(m_h,3)+" kg ÷ "+fmt(v.rhoh,2)+" = <b>"+fmt(V_h,3)+" l</b>";
+h+="<br>költség: lakk "+ft(c_l)+" Ft + hígító "+ft(c_h)+" Ft = <b>"+ft(c)+" Ft</b>";
+h+="<br>szárazréteg: "+fmt(s1,0)+" µm/réteg, összesen ≈ <b>"+fmt(s1*v.n,0)+" µm</b>";
+status(h);
+// oszlopdiagram: elméleti, veszteség, hígító (kg) és költségmegoszlás
+const W=560, top=20, base=170, mx=Math.max(m_sz/1000+m_h,0.001), sc=130/mx;
+const bars=[["elméleti lakk",m_el/1000,"#ffffff"],["veszteség",(m_sz-m_el)/1000,"#bbbbbb"],["hígító",m_h,"#777777"]];
+let y=base;
+el("text",{x:20,y:14,"font-size":12},"anyagmennyiség (kg, halmozva)");
+bars.forEach(b=>{const hh=b[1]*sc; el("rect",{x:60,y:y-hh,width:90,height:hh,fill:b[2],stroke:"#000"});
+  if(hh>12) el("text",{x:160,y:y-hh/2+4,"font-size":11},b[0]+": "+fmt(b[1],2)+" kg"); y-=hh;});
+el("line",{x1:40,y1:base,x2:240,y2:base,stroke:css("--line")});
+const tot=Math.max(c,1), x0=300, bw=230;
+el("text",{x:x0,y:14,"font-size":12},"anyagköltség (Ft)");
+el("rect",{x:x0,y:60,width:bw*c_l/tot,height:40,fill:"#ffffff",stroke:"#000"});
+el("rect",{x:x0+bw*c_l/tot,y:60,width:bw*c_h/tot,height:40,fill:"#777777",stroke:"#000"});
+el("text",{x:x0,y:120,"font-size":11},"lakk: "+ft(c_l)+" Ft");
+el("text",{x:x0,y:136,"font-size":11},"hígító: "+ft(c_h)+" Ft");
+el("text",{x:x0,y:158,"font-size":13,"font-weight":"bold"},"összesen: "+ft(c)+" Ft");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

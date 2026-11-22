@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Középszélesség-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="b1">b₁ (L/4-nél)</label><input id="b1" type="range" min="100" max="400" step="5" value="260" aria-label="b₁ (L/4-nél)"><output id="b1_o" for="b1"></output></div>
+<div class="row"><label for="b2">b₂ (L/2-nél)</label><input id="b2" type="range" min="100" max="400" step="5" value="240" aria-label="b₂ (L/2-nél)"><output id="b2_o" for="b2"></output></div>
+<div class="row"><label for="b3">b₃ (3L/4-nél)</label><input id="b3" type="range" min="100" max="400" step="5" value="220" aria-label="b₃ (3L/4-nél)"><output id="b3_o" for="b3"></output></div>
+<div class="row"><label for="l">hossz L</label><input id="l" type="range" min="1000" max="5000" step="100" value="2500" aria-label="hossz L"><output id="l_o" for="l"></output></div>
+<div class="row"><label for="vv">vastagság</label><input id="vv" type="range" min="18" max="80" step="1" value="30" aria-label="vastagság"><output id="vv_o" for="vv"></output></div>
+<div class="row"><label for="db">darabszám</label><input id="db" type="range" min="1" max="50" step="1" value="12" aria-label="darabszám"><output id="db_o" for="db"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 270" role="img" aria-label="Szélezetlen deszka felülnézete három mérési hellyel; a beírt szélességekből középszélesség és térfogat"></svg>
+<p class="small">Alapértékek: a 7.1.7 2. kidolgozott példája (260, 240, 220 mm; 2,5 m; 30 mm; 12 db → 0,216 m³). A mérési helyet és a kerekítést a szállítási szerződés vagy a termékszabvány rögzíti (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"b1":"mm", "b2":"mm", "b3":"mm", "l":"mm", "vv":"mm", "db":"db"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const bk=(v.b1+v.b2+v.b3)/3, V=v.l/1000*bk/1000*v.vv/1000, Vt=V*v.db;
+status("b<sub>közép</sub> = ("+v.b1+" + "+v.b2+" + "+v.b3+") / 3 = <b>"+fmt(bk,1)+" mm</b>; V = "+fmt(v.l/1000,2)+" · "+fmt(bk/1000,3)+" · "+fmt(v.vv/1000,3)+" = <b>"+fmt(V,4)+" m³/db</b>; "+v.db+" db: <b>"+fmt(Vt,3)+" m³</b>");
+const X=x=>30+x/v.l*560, Y0=130, sc=0.35;
+const W=[v.b1,v.b2,v.b3], P=[0.25,0.5,0.75];
+function w(x){const t=(x/v.l-0.25)/0.5; return t<=0.5? v.b1+(v.b2-v.b1)*t*2 : v.b2+(v.b3-v.b2)*(t-0.5)*2;}
+let up="",lo="";for(let i=0;i<=60;i++){const x=v.l*i/60, h=w(x)*sc/2;up+=(i?"L":"M")+X(x)+" "+(Y0-h)+" ";lo+=(i?"L":"M")+X(x)+" "+(Y0+h)+" ";}
+el("path",{d:up,fill:"none",stroke:css("--line"),"stroke-width":2});el("path",{d:lo,fill:"none",stroke:css("--line"),"stroke-width":2});
+el("line",{x1:X(0),y1:Y0-w(0)*sc/2,x2:X(0),y2:Y0+w(0)*sc/2,stroke:css("--line"),"stroke-width":2});
+el("line",{x1:X(v.l),y1:Y0-w(v.l)*sc/2,x2:X(v.l),y2:Y0+w(v.l)*sc/2,stroke:css("--line"),"stroke-width":2});
+P.forEach((p,i)=>{const x=X(v.l*p),h=W[i]*sc/2;el("line",{x1:x,y1:Y0-h-10,x2:x,y2:Y0+h+10,stroke:css("--hl"),"stroke-width":2,"stroke-dasharray":"6 3"});
+ el("text",{x:x+6,y:Y0+4,"font-size":13,fill:css("--hl")},"b"+(i+1)+" = "+W[i]);el("text",{x:x,y:Y0+h+28,"text-anchor":"middle","font-size":12},["L/4","L/2","3L/4"][i]);});
+el("text",{x:310,y:250,"text-anchor":"middle","font-size":13},"L = "+v.l+" mm, v = "+v.vv+" mm (felülnézet, torzított lépték)");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

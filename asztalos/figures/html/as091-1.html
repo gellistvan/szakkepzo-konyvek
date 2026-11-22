@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szerszámtámasz és fordulatszám</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="g">Támasztávolság a munkadarabtól (mm)</label><input id="g" type="range" min="1" max="25" step="1" value="4" aria-label="Támasztávolság a munkadarabtól (mm)"><output id="g_o" for="g"></output></div>
+<div class="row"><label for="hr">Támasz teteje a középvonalhoz képest (mm)</label><input id="hr" type="range" min="-12" max="4" step="1" value="-2" aria-label="Támasz teteje a középvonalhoz képest (mm)"><output id="hr_o" for="hr"></output></div>
+<div class="row"><label for="D">Átmérő / oldalhossz D (mm)</label><input id="D" type="range" min="20" max="300" step="5" value="60" aria-label="Átmérő / oldalhossz D (mm)"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="sq">Szögletes (négyzetes) keresztmetszet – az átlóval számol</label><input id="sq" type="checkbox" aria-label="Szögletes (négyzetes) keresztmetszet – az átlóval számol"></div>
+<div class="row"><label for="vc">Forgácsolási sebesség v (m/s)</label><input id="vc" type="range" min="5" max="18" step="1" value="10" aria-label="Forgácsolási sebesség v (m/s)"><output id="vc_o" for="vc"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 420" role="img" aria-label="Keresztmetszet: a forgó munkadarab, a szerszámtámasz és a véső vágási pontja"></svg>
+<p class="small">Szemléltető modell: a véső 4 mm vastag, 10°-ban emelkedik a támasztól. Tájékoztató értékek a fejezetből: támasz 3–5 mm-re, 1–2 mm-rel a középvonal alatt; v nagyoláshoz 8–12, simításhoz 10–18 m/s – ellenőrizendő: gépkönyv.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"g":"mm", "hr":"mm", "D":"mm", "vc":"m/s"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const r=Math.min(110, v.D/2*2.2), R0=v.D/2, k=r/R0;  // rajzlépték: px/mm
+const cx=170, cy=200, g=v.g, hr=v.hr, ang=10*Math.PI/180;
+el("rect",{x:0,y:0,width:640,height:420,fill:"#fff"});
+el("circle",{cx:cx,cy:cy,r:r,fill:"#fff",stroke:"#000","stroke-width":2});
+el("circle",{cx:cx,cy:cy,r:r*0.6,fill:"none",stroke:"#888"});
+el("line",{x1:cx-r-20,y1:cy,x2:cx+r+190,y2:cy,stroke:"#000","stroke-dasharray":"10 3 2 3"});
+const rx=cx+r+g*k, ry=cy-hr*k;
+el("rect",{x:rx,y:ry,width:26,height:20,fill:"#9a9a9a",stroke:"#000"});
+// a véső a támaszon fekszik és 10°-ban a munkadarab felé emelkedik; a csúcs ott áll meg, ahol a kört eléri
+const t=4; let xe=rx, ye=ry-t; let hit=false;
+for(let s=0;s<400;s+=0.5){const x=rx-s, y=ry-t-s*Math.tan(ang); if((x-cx)**2+(y-cy)**2<=r*r){xe=x;ye=y;hit=true;break;}}
+el("polygon",{points:[[rx+170,ry+170*Math.tan(ang)],[xe,ye],[xe,ye+t],[rx+170,ry+t+170*Math.tan(ang)]].map(p=>p.join(",")).join(" "),fill:"#fff",stroke:"#000","stroke-width":1.5});
+const yc=(cy-ye)/k; const bad=g>5||yc<0;
+el("circle",{cx:xe,cy:ye,r:5,fill:bad?"#c00000":"#1f4e79"});
+el("text",{x:cx,y:cy+r+30,"text-anchor":"middle","font-size":14,fill:"#000"},"munkadarab Ø "+fmt(v.D,0)+" mm");
+el("text",{x:rx,y:ry+40,"font-size":13,fill:"#000"},"támasz");
+const d=v.sq?v.D*Math.SQRT2:v.D, n=v.vc*60000/(d*Math.PI);
+status("Vágási pont "+(yc>=0?fmt(yc,1)+" mm-rel a középvonal felett":fmt(-yc,1)+" mm-rel a középvonal ALATT")+
+ "; támasztávolság "+fmt(g,0)+" mm. "+(bad?"<b style='color:#c00000'>Becsapásveszély: a támaszt vidd közelebb (3–5 mm), a vágási pont legyen a középvonalon vagy kissé felette!</b>":"<b>Rendben (tájékoztató).</b>")+
+ "<br>Fordulatszám: "+(v.sq?"szögletes darab, átló = "+fmt(d,0)+" mm; ":"")+"n = v · 60 000 / (D · π) = "+fmt(v.vc,0)+" · 60 000 / ("+fmt(d,0)+" · π) ≈ <b>"+fmt(n,0)+" 1/min</b> – a gépen az ennél nem nagyobb legközelebbi fokozatot válaszd.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

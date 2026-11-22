@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teendők munkabalesetnél</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#555;--hl:#1f4e79;--btn:#f2f2f2;--bd:#888}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--btn:#2b2b2b;--bd:#777}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}
+button{font:inherit;padding:3px 10px;cursor:pointer;background:var(--btn);color:var(--fg);border:1px solid var(--bd);border-radius:4px}
+button.on{outline:2px solid var(--hl);font-weight:bold}
+input[type=range]{flex:1;min-width:120px}
+.pane{background:#fff;color:#111;border-radius:6px;padding:6px}
+.pane svg{width:100%;height:auto;display:block}
+#status{margin:6px 0;min-height:3em}
+.small{font-size:12px;color:var(--muted)}
+.parts{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.parts button{font-size:13px;padding:2px 7px}
+.dim{opacity:.18;transition:opacity .15s}
+label{margin-right:10px;white-space:nowrap}</style>
+</head>
+<body>
+<div class="ctl"><button id="back">◀ Vissza</button><button id="restart">⏮ Elölről</button>
+<span id="path" class="small"></span></div>
+<div class="pane" style="padding:14px;min-height:170px"><h3 id="t" style="margin:0 0 6px"></h3><p id="d" style="margin:0 0 12px"></p>
+<div id="b" class="ctl"></div></div>
+<p class="small">Nyolclépéses baleseti teendősor a gép leállításától a helyszín megőrzéséig, igen/nem elágazásokkal. Az
+aktuális elsősegély-ajánlás a mérvadó (ellenőrizendő); a képzésen tanult protokollt alkalmazd.</p>
+<script>
+const N={"s1": ["1. Állítsd le a gépet", "Nyomd meg a vészleállítót vagy kapcsold ki a főkapcsolót, és várd meg, amíg a szerszám teljesen megáll. A gép ne indulhasson újra.", [["Tovább", "s2"]]], "s2": ["2. Biztonságos a helyszín?", "Van-e még veszély: leeső darab, por, füst, villamos vezeték?", [["Igen", "s3"], ["Nem", "s2n"]]], "s2n": ["A veszély megszüntetése", "Szüntesd meg, ha biztonságosan tudod (például áramtalanítás). Ha nem, ne lépj be, hívd a 112-t, és tartsd távol a többieket.", [["Tovább", "s3"]]], "s3": ["3. Reagál a sérült?", "Szólítsd meg, érintsd meg a vállát.", [["Igen, reagál", "s5"], ["Nem reagál", "s4"]]], "s4": ["4. Normálisan lélegzik?", "Hajolj fölé, nézd a mellkasát, hallgasd a légzését 10 másodpercig.", [["Igen, lélegzik", "s4a"], ["Nem lélegzik", "s4b"]]], "s4a": ["Stabil oldalfekvés", "Eszméletlen, de lélegzik: helyezd stabil oldalfekvésbe, a fejét hajtsd hátra, az állát emeld fel. Hívd a 112-t, és folyamatosan figyeld a légzését.", [["Tovább", "s5"]]], "s4b": ["Újraélesztés", "Hívd azonnal a 112-t (vagy hívass). Kemény, sík felület; mellkasközép alsó fele; 30 mellkasi nyomás 100–120/perc ütemben, kb. 5–6 cm mélyen, majd 2 befúvás (30:2). Folytasd a mentő kiérkezéséig. Csak mellkasnyomás is jobb a semminél.", [["Tovább", "s7"]]], "s5": ["5. Hívd a 112-t (súlyos sérülésnél)", "Mondd el: mi történt, hány sérült van, milyen állapotban, a pontos cím és a műhely bejáratának leírása. Ne tedd le, amíg a diszpécser nem mondja.", [["Tovább", "s6"]]], "s6": ["6. Milyen a sérülés?", "Válaszd ki, és nyújts elsősegélyt a sérülés szerint.", [["Erős vérzés", "v"], ["Amputáció", "a"], ["Áramütés", "e"], ["Égés", "g"], ["Szemsérülés", "sz"]]], "v": ["Vérzéscsillapítás", "Kesztyű, steril gézlap a sebre, egyenletes közvetlen nyomás; a végtagot emeld a szív szintje fölé. Az átvérzett kötést ne vedd le, tegyél rá újabb réteget.", [["Tovább", "s7"]]], "a": ["Amputációs sérülés", "A csonkot steril kötéssel fedd, nyomással csillapítsd a vérzést. A levágott részt ne mosd: száraz, steril gézbe, műanyag zacskóba, a zacskót hideg vízbe – közvetlenül jégre soha.", [["Tovább", "s7"]]], "e": ["Áramütés", "Előbb az áramot szüntesd meg (csatlakozó, áramkör). Amíg az áramkör aktív, ne érintsd meg a sérültet. Utána életjelek; orvosi vizsgálat mindig kell.", [["Tovább", "s7"]]], "g": ["Égés", "Hűtsd folyó, langyos vízzel legalább 10–20 percig; a bőrhöz tapadt ruhát ne húzd le; steril fedés, kenőcs nélkül.", [["Tovább", "s7"]]], "sz": ["Szemsérülés", "Ne dörzsölje; öblítsd a belső szemzugtól kifelé. A szembe szúródott idegentestet ne távolítsd el: fedd le, hívj mentőt.", [["Tovább", "s7"]]], "s7": ["7. Jelentsd a felettesnek, oktatónak", "A balesetet azonnal jelenteni kell.", [["Tovább", "s8"]]], "s8": ["8. A helyszín megőrzése", "A kivizsgálásig lehetőleg ne változtass a helyszínen; ha a mentéshez meg kellett bontani valamit, jegyezd fel, mit, hogyan és ki volt jelen.", [["Újrakezdés", "s1"]]]};
+let hist=["s1"];
+function show(){const k=hist[hist.length-1],n=N[k];document.getElementById("t").textContent=n[0];
+ document.getElementById("d").textContent=n[1];const b=document.getElementById("b");b.innerHTML="";
+ n[2].forEach(x=>{const e=document.createElement("button");e.textContent=x[0];
+  e.onclick=()=>{if(x[1]==="s1")hist=["s1"];else hist.push(x[1]);show();};b.appendChild(e);});
+ document.getElementById("path").textContent="Lépések: "+hist.map(h=>N[h][0].split(" ")[0].replace(/[^0-9.]/g,"")||"•").join(" → ");}
+document.getElementById("back").onclick=()=>{if(hist.length>1)hist.pop();show();};
+document.getElementById("restart").onclick=()=>{hist=["s1"];show();};
+show();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aszalási tömegmérleg-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="m">Friss tömeg</label><input id="m" type="range" min="0.5" max="10" step="0.1" value="5.0" aria-label="Friss tömeg"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="w0">Kezdeti víztartalom</label><input id="w0" type="range" min="50" max="95" step="1" value="80" aria-label="Kezdeti víztartalom"><output id="w0_o" for="w0"></output></div>
+<div class="row"><label for="w1">Végső víztartalom</label><input id="w1" type="range" min="5" max="60" step="1" value="25" aria-label="Végső víztartalom"><output id="w1_o" for="w1"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Három tartománysáv a cukor, pH és pektin feltételeivel; oszlopdiagram a friss és aszalt gyümölcs víz- és szárazanyag-tartalmáról."></svg>
+<p class="small">A fejezet (cu045) példája: 5,0 kg friss szilva, 80 % → 25 % víz: 1,0 kg szárazanyag, 1,33 kg aszalt. 3,0 kg / 80 % / 25 % → 0,80 kg. A gélképződési tartományok tájékoztatók (ellenőrizendő: gyártói pektin-adatlap).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m":"kg", "w0":"%", "w1":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const m=v.m, w0=v.w0/100, w1=v.w1/100;
+if(w1>=w0){status('<span class="bad">A végső víztartalom legyen kisebb a kezdetinél.</span>');return;}
+const sz=m*(1-w0), veg=sz/(1-w1), ev=m-veg;
+el("defs",{}).innerHTML='<pattern id="hv" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#fff"/><line x1="0" y1="0" x2="0" y2="8" stroke="#000" stroke-width="2"/></pattern>';
+const base=260, sc=220/m;
+function bar(x,dry,wat,lab){el("rect",{x:x,y:base-dry*sc,width:110,height:dry*sc,fill:"#8c8c8c",stroke:css("--line")});
+ el("rect",{x:x,y:base-(dry+wat)*sc,width:110,height:wat*sc,fill:"url(#hv)",stroke:css("--line")});
+ el("text",{x:x+55,y:base+18,"text-anchor":"middle","font-size":13},lab);
+ el("text",{x:x+55,y:base-(dry+wat)*sc-6,"text-anchor":"middle","font-size":12},fmt(dry+wat,2)+" kg");}
+bar(70,sz,m-sz,"friss");
+bar(230,sz,veg-sz,"aszalt");
+el("rect",{x:230,y:base-m*sc,width:110,height:(m-veg)*sc,fill:"none",stroke:css("--muted"),"stroke-dasharray":"5 4"});
+el("text",{x:350,y:base-(m+veg)/2*sc,"font-size":12,fill:css("--muted")},"elpárolgott víz");
+[["#8c8c8c","szárazanyag (állandó)"],["url(#hv)","víz"]].forEach((q,i)=>{
+ el("rect",{x:380,y:40+i*28,width:22,height:16,fill:q[0],stroke:css("--line")});
+ el("text",{x:408,y:53+i*28,"font-size":13},q[1]);});
+status("Szárazanyag: <b>"+fmt(sz,2)+" kg</b> · aszalt tömeg: <b>"+fmt(veg,2)+" kg</b> · elpárolgott víz: <b>"+fmt(ev,2)+" kg</b>. Képlet: m<sub>sz</sub> = m·(1 − w<sub>0</sub>), m<sub>aszalt</sub> = m<sub>sz</sub>/(1 − w<sub>1</sub>).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

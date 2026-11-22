@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A metszősík helye és a rajzolat</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="d">Metszősík távolsága a béltől</label><input id="d" type="range" min="0" max="130" step="5" value="0" aria-label="Metszősík távolsága a béltől"><output id="d_o" for="d"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 250" role="img" aria-label="A béltől kifelé tolt metszősík és a keletkező rajzolat: sugármetszettől húrmetszetig"></svg>
+<p class="small">Szemléltető modell: évgyűrűk 10 mm-enként, a törzs kúpossága a láthatóság kedvéért túlzott; a határok (15 és 50 mm) tájékoztatók.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"d":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const RT=150,RING=10,TAPER=0.05,L=600,W=150,d=v.d;
+// bal: bütü a metszősíkkal
+const cx=95,cy=120,k=0.62;
+el("circle",{cx:cx,cy:cy,r:150*k,fill:"#bbb",stroke:css("--line")});
+el("circle",{cx:cx,cy:cy,r:138*k,fill:"#fff",stroke:css("--line")});
+el("circle",{cx:cx,cy:cy,r:90*k,fill:"#c8c8c8",stroke:css("--line")});
+for(let r=RING;r<138;r+=RING)el("circle",{cx:cx,cy:cy,r:r*k,fill:"none",stroke:"#000","stroke-width":0.5});
+for(let a=0;a<360;a+=20){const t=(a+7)*Math.PI/180;el("line",{x1:cx+5*k*Math.cos(t),y1:cy+5*k*Math.sin(t),x2:cx+136*k*Math.cos(t),y2:cy+136*k*Math.sin(t),stroke:"#000","stroke-width":0.35});}
+el("circle",{cx:cx,cy:cy,r:3,fill:"#000"});
+const h=Math.sqrt(Math.max(0,150*150-d*d))*k;
+el("line",{x1:cx+d*k,y1:cy-h,x2:cx+d*k,y2:cy+h,stroke:css("--hl2"),"stroke-width":3,"stroke-dasharray":"7 4"});
+el("rect",{x:cx+d*k-3,y:cy-W/2*k,width:6,height:W*k,fill:"none",stroke:css("--hl2"),"stroke-width":1.5});
+el("text",{x:cx,y:236,"text-anchor":"middle","font-size":12},"bütü, a sík a béltől "+d+" mm-re");
+// jobb: a sík felülete
+const X0=205,Y0=45,sc=0.55;
+el("rect",{x:X0,y:Y0,width:L*sc,height:W*sc,fill:"#fff",stroke:"#000","stroke-width":1.5});
+for(let r0=RING;r0<=RT;r0+=RING){for(const s of [1,-1]){let p="",pen=false;
+ for(let i=0;i<=200;i++){const z=i/200*L,r=r0-TAPER*(z-L/2);let y=NaN;if(r>d){y=s*Math.sqrt(r*r-d*d);}
+  if(!isNaN(y)&&Math.abs(y)<=W/2){p+=(pen?"L":"M")+(X0+z*sc).toFixed(1)+" "+(Y0+(W/2-y)*sc).toFixed(1);pen=true;}else pen=false;}
+ if(p)el("path",{d:p,fill:"none",stroke:"#000","stroke-width":0.8});}}
+if(d<15){let seed=3;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+ for(let i=0;i<26;i++){const z=20+rnd()*(L-80),y=-W/2+8+rnd()*(W-16),w=25+rnd()*30;
+  el("rect",{x:X0+z*sc,y:Y0+(W/2-y)*sc-1.5,width:w*sc,height:3,fill:"#888",stroke:"#000","stroke-width":0.4});}}
+el("text",{x:X0+L*sc/2,y:Y0+W*sc+20,"text-anchor":"middle","font-size":12},"a metszősík felülete (600 × 150 mm részlet), rostirány →");
+const kd=d<15?"sugármetszet (tükrös)":(d<50?"félhúr metszet":"húrmetszet (fladeres)");
+status("A sík a béltől <b>"+d+" mm</b>-re: <b>"+kd+"</b>. "+(d<15?"Az évgyűrűk párhuzamos csíkok, a bélsugarak fénylő tükörfoltok.":(d<50?"A csíkok a szélek felé ívesednek.":"Az évgyűrűk ívesen, „fladeresen” rajzolódnak ki.")));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

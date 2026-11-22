@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vajkrém hőmérséklet-illesztése</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="vaj">A vaj hőmérséklete</label><input id="vaj" type="range" min="10" max="30" step="1" value="19" aria-label="A vaj hőmérséklete"><output id="vaj_o" for="vaj"></output></div>
+<div class="row"><label for="alap">Az alap hőmérséklete</label><input id="alap" type="range" min="20" max="50" step="1" value="30" aria-label="Az alap hőmérséklete"><output id="alap_o" for="alap"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 310" role="img" aria-label="Vajkrém: a vaj és az alap hőfokától függően túrós, jó vagy folyós lesz a krém."></svg>
+<p class="small">Szemléltető modell a cu081 értékeiből (vaj 18–20 °C, alap 35 °C alatt); a zónahatárok nem mért értékek. Ellenőrizendő: a receptúra és a gyártói adatok.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"vaj":"°C", "alap":"°C"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const V0=18,V1=20,E0=16,E1=22,AM=35;
+function zone(v,a){ if(a>AM||v>E1) return "folyos"; if(v<E0) return "turos"; if(v>=V0&&v<=V1) return "jo"; return "hatar"; }
+const R={x:60,y:15,w:470,h:250}, X=t=>R.x+(t-10)/20*R.w, Y=T=>R.y+R.h-(T-20)/30*R.h;
+const lab={turos:"túrós, kicsapódott",jo:"jó emulzió",hatar:"határeset",folyos:"lágy, folyós"};
+function rect(x0,y0,x1,y1,fill,op){el("rect",{x:X(x0),y:Y(y1),width:X(x1)-X(x0),height:Y(y0)-Y(y1),fill:fill,"fill-opacity":op,stroke:css("--line"),"stroke-width":1});}
+rect(10,20,E0,AM,css("--hl"),0.35); rect(E0,20,V0,AM,css("--grid"),0.6); rect(V1,20,E1,AM,css("--grid"),0.6);
+rect(V0,20,V1,AM,css("--bg"),1); rect(E1,20,30,AM,css("--hl2"),0.35); rect(10,AM,30,50,css("--hl2"),0.35);
+el("rect",{x:X(V0),y:Y(AM),width:X(V1)-X(V0),height:Y(20)-Y(AM),fill:"none",stroke:css("--line"),"stroke-width":3});
+[[13,28,"túrós"],[19,23,"jó"],[26,28,"folyós"],[20,43,"túl meleg alap: folyós"]].forEach(t=>el("text",{x:X(t[0]),y:Y(t[1]),"font-size":13,"text-anchor":"middle","font-weight":"bold"},t[2]));
+for(let t=10;t<=30;t+=2){el("text",{x:X(t),y:R.y+R.h+16,"font-size":11,"text-anchor":"middle"},t);}
+for(let T=20;T<=50;T+=5){el("text",{x:R.x-6,y:Y(T)+4,"font-size":11,"text-anchor":"end"},T);}
+el("text",{x:R.x+R.w/2,y:R.y+R.h+34,"font-size":12,"text-anchor":"middle"},"vaj (°C)");
+el("text",{x:16,y:R.y+R.h/2,"font-size":12,"text-anchor":"middle",transform:"rotate(-90 16 "+(R.y+R.h/2)+")"},"alap (°C)");
+el("circle",{cx:X(v.vaj),cy:Y(v.alap),r:8,fill:css("--fg"),stroke:css("--bg"),"stroke-width":2});
+const z=zone(v.vaj,v.alap);
+const fix={turos:"<span class='bad'>Túrós, kicsapódott.</span> A vaj túl hideg (kemény): nem emulgeálódik. Javítás: alacsony fokozaton, meleg vizes tál fölött (nem lángon) keverjük, hogy a zsír lágyuljon.",
+ jo:"<span class='ok'>Jó emulzió várható.</span> Vaj 18–20 °C (képlékeny), alap 35 °C alatt; a vajat apránként, 3–4 részletben adjuk hozzá.",
+ hatar:"Határeset: a vaj "+(v.vaj<V0?"kissé hideg – lassan, kis adagokban dolgozzuk be, szükség esetén enyhe melegítés.":"lágyul – figyeljük az állagot; ha folyik, 10–15 perc hűtés."),
+ folyos:"<span class='bad'>Lágy, folyós</span> (a vaj megolvad, a krém szét is válhat). "+(v.alap>AM?"Az alap 35 °C fölött van: előbb hűtsük tovább. ":"A vaj túl meleg. ")+"Javítás: 10–15 perc hűtés, majd alacsony fokozaton átkeverés."};
+status("<b>"+lab[z]+"</b> – vaj "+fmt(v.vaj,0)+" °C, alap "+fmt(v.alap,0)+" °C. "+fix[z]+" <span class='small'>(Szemléltető modell; ellenőrizendő: receptúra.)</span>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

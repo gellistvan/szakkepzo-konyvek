@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konyhabútor függőleges metszete</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="lab">Lábmagasság</label><input id="lab" type="range" min="100" max="150" step="5" value="120" aria-label="Lábmagasság"><output id="lab_o" for="lab"></output></div>
+<div class="row"><label for="lap">Munkalapvastagság</label><input id="lap" type="range" min="28" max="40" step="1" value="38" aria-label="Munkalapvastagság"><output id="lap_o" for="lap"></output></div>
+<div class="row"><label for="fh">Hézag a felső elemig</label><input id="fh" type="range" min="450" max="600" step="10" value="550" aria-label="Hézag a felső elemig"><output id="fh_o" for="fh"></output></div>
+<div class="row"><label for="hz">Gépészeti hézag</label><input id="hz" type="range" min="50" max="80" step="5" value="50" aria-label="Gépészeti hézag"><output id="hz_o" for="hz"></output></div>
+<div class="row"><label for="gep">Gépészeti hézag kiemelése</label><input id="gep" type="checkbox" checked aria-label="Gépészeti hézag kiemelése"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 800 500" role="img" aria-label="Konyhabútor függőleges metszete állítható lábmagassággal és munkalapvastagsággal, élő munkalapmagassággal."></svg>
+<p class="small">Szemléltető, tájékoztató méretek (korpusz 720 × 560 mm, ajtó 19 mm, munkalap 600 mm mély); a láb- és vasalatrendszert, a munkalapgyártói előírást ellenőrizni kell.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"lab":"mm", "lap":"mm", "fh":"mm", "hz":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const lab=v.lab, lap=v.lap, fh=v.fh, hz=v.hz, K=720, KD=560, AJ=19, MD=600, FD=320, FH=720;
+const sc=0.21, X0=230, Y0=470;   // mm -> px, Y0 a padló
+const X=x=>X0+x*sc, Y=y=>Y0-y*sc;
+function R(x,y,w,h,f,dash){el("rect",{x:X(x),y:Y(y+h),width:w*sc,height:h*sc,fill:f||"#fff",stroke:"#000","stroke-width":1.2,"stroke-dasharray":dash||"0"});}
+el("rect",{x:0,y:0,width:800,height:500,fill:"#fff"});
+R(-120,0,120,2150,"#ddd");
+el("line",{x1:X(-120),y1:Y0,x2:X(900),y2:Y0,stroke:"#000","stroke-width":2});
+R(40,0,40,lab,"#888");R(480,0,40,lab,"#888");
+R(0,lab,KD,K);
+if(v.gep){R(0,lab+18,hz,K-18,"#eef","4 3");}
+R(hz,lab+18,4,K-18,"#ccc");
+R(KD,lab+2,AJ,K-4,"#f4f4f4");
+const ym=lab+K; R(0,ym,MD,lap,"#e6e6e6");
+const yf=ym+lap+fh; R(0,yf,FD,FH);R(FD,yf+2,AJ,FH-4,"#f4f4f4");
+function dimv(x,y1,y2,t){el("line",{x1:X(x),x2:X(x),y1:Y(y1),y2:Y(y2),stroke:"#000"});
+ [y1,y2].forEach(y=>el("line",{x1:X(x)-5,x2:X(x)+5,y1:Y(y),y2:Y(y),stroke:"#000"}));
+ el("text",{x:X(x)+6,y:(Y(y1)+Y(y2))/2+4,"font-size":12,fill:"#000"},t);}
+dimv(640,0,lab,fmt(lab,0));dimv(640,lab,ym,"720");dimv(640,ym,ym+lap,fmt(lap,0));
+dimv(780,0,ym+lap,fmt(ym+lap,0)+" mm");dimv(360,ym+lap,yf,fmt(fh,0));
+if(v.gep)el("text",{x:X(hz)+16,y:Y(lab+60),"font-size":11,fill:"#000",transform:"rotate(-90 "+(X(hz)+16)+" "+Y(lab+60)+")"},"gépészeti hézag "+fmt(hz,0));
+const H=ym+lap, ok=H>=860&&H<=910;
+status("Munkalapmagasság = láb + korpusz + munkalap = "+fmt(lab,0)+" + 720 + "+fmt(lap,0)+" = <b>"+fmt(H,0)+" mm</b> "+
+ (ok?"<span class='ok'>(a tájékoztató 860–910 mm-es sávban)</span>":"<span class='bad'>(a 860–910 mm-es tájékoztató sávon kívül)</span>")+
+ "; felső elem alsó éle "+fmt(yf,0)+" mm-en.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

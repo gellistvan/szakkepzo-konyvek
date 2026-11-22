@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fűrészfogazat és terpesztés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="tip">Fogazat</label><select id="tip" aria-label="Fogazat"><option value="h" selected>hasító</option><option value="d">daraboló</option></select></div>
+<div class="row"><label for="e">Terpesztés oldalanként e</label><input id="e" type="range" min="0" max="0.3" step="0.01" value="0.15" aria-label="Terpesztés oldalanként e"><output id="e_o" for="e"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Hasító vagy daraboló fogsor oldalnézetben és a terpesztett fogak élnézete a vágási réssel"></svg>
+<p class="small">s = 0,9 mm-es lap (a fejezet példája). A szögek tájékoztatók (ellenőrizendő: gyártói adat); a daraboló fog negatív homlokszöge a T-J5-020 szerinti javítás.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"e":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(!window._run){window._run=1;window._t0=performance.now();(function L(){draw();requestAnimationFrame(L);})();}
+const w=values(), d=w.tip=="h"?{t:5,g:0,b:60}:{t:3.125,g:-15,b:60}, al=90-d.b-d.g, s=0.9, e=w.e, Bv=s+2*e;
+el("rect",{x:0,y:0,width:560,height:320,fill:"#fff"});
+// oldalnézet (bal): 1 mm = 18 px
+const k=11, X0=30, Y0=150, T=(performance.now()-window._t0)/1000, sh=(T*40)%(d.t*k);
+const g=d.g*Math.PI/180, a=al*Math.PI/180, f=[Math.sin(g),Math.cos(g)], b=[Math.cos(a),Math.sin(a)];
+const det=b[0]*(-f[1])-b[1]*(-f[0]), sv=(d.t*(-f[1]))/det, gx=sv*b[0], gy=sv*b[1];
+let p="M"+(X0-sh)+" "+(Y0-(gy+2)*k);
+for(let i=0;i<10;i++){const x=X0+i*d.t*k-sh;p+=" L"+x+" "+Y0+" L"+(x+gx*k)+" "+(Y0-gy*k);}
+p+=" L"+(X0+10*d.t*k-sh)+" "+(Y0-(gy+2)*k)+" Z";
+el("path",{d:p,fill:"#eee",stroke:"#000","stroke-width":2});
+el("rect",{x:0,y:0,width:X0,height:320,fill:"#fff"});el("rect",{x:X0+300,y:0,width:560,height:320,fill:"#fff"});
+el("rect",{x:X0,y:Y0,width:300,height:50,fill:"#f2f2f2",stroke:"#000"});
+el("text",{x:X0,y:Y0+75,"font-size":12,fill:"#000"},"oldalnézet (mozog: a fűrész tolásra balra vág)");
+el("text",{x:X0,y:24,"font-size":13,fill:"#000"},(w.tip=="h"?"hasító":"daraboló")+" fogazat: t = "+fmt(d.t,1)+" mm, α = "+al+"°, β = "+d.b+"°, γ = "+d.g+"°");
+// élnézet (jobb): vágási rés, 1 mm = 70 px
+const m=70, cx=440, ytop=60;
+el("rect",{x:cx-Bv/2*m,y:ytop+120,width:Bv*m,height:110,fill:"#fff",stroke:"#000","stroke-dasharray":"4 3"});
+el("rect",{x:cx-s/2*m,y:ytop,width:s*m,height:180,fill:"#ddd",stroke:"#000","stroke-width":2});
+el("polygon",{points:[[cx-s/2*m,ytop+180],[cx+s/2*m,ytop+180],[cx+(s/2+2*e)*m,ytop+225],[cx+(-s/2+2*e)*m,ytop+225]].map(q=>q.join(",")).join(" "),fill:"#fff",stroke:"#000"});
+el("polygon",{points:[[cx-s/2*m,ytop+180],[cx+s/2*m,ytop+180],[cx+(s/2-2*e)*m,ytop+225],[cx+(-s/2-2*e)*m,ytop+225]].map(q=>q.join(",")).join(" "),fill:"#bbb",stroke:"#000","stroke-dasharray":"3 2"});
+el("text",{x:cx,y:ytop-10,"text-anchor":"middle","font-size":12,fill:"#000"},"élnézet (nagyítva)");
+el("text",{x:cx,y:310,"text-anchor":"middle","font-size":12,fill:"#000"},"vágási rés B = "+fmt(Bv,2)+" mm");
+if(e<0.05){const on=Math.floor(T*6)%2; if(on){el("text",{x:cx-s/2*m-28,y:ytop+150,"font-size":20,fill:"#b71c1c"},"✶");el("text",{x:cx+s/2*m+10,y:ytop+150,"font-size":20,fill:"#b71c1c"},"✶");}}
+status("B = s + 2e = 0,9 + 2·"+fmt(e,2)+" = <b>"+fmt(Bv,2)+" mm</b>. "+(e<0.05?"<span class='bad'>Terpesztés nélkül a lap oldala súrlódik a résben: szorul, melegszik, elhúz.</span>":(e>0.25?"<span class='bad'>Túl nagy terpesztés: széles, durva vágás, a fűrész lötyög.</span>":"<span class='ok'>A lap szabadon fut a résben.</span>")));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

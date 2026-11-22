@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Felmérés: mérési helyek gyakorló</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="s1">Sz1 felül</label><input id="s1" type="range" min="880" max="920" step="1" value="902" aria-label="Sz1 felül"><output id="s1_o" for="s1"></output></div>
+<div class="row"><label for="s2">Sz2 középen</label><input id="s2" type="range" min="880" max="920" step="1" value="899" aria-label="Sz2 középen"><output id="s2_o" for="s2"></output></div>
+<div class="row"><label for="s3">Sz3 alul</label><input id="s3" type="range" min="880" max="920" step="1" value="904" aria-label="Sz3 alul"><output id="s3_o" for="s3"></output></div>
+<div class="row"><label for="m1">M1 bal</label><input id="m1" type="range" min="2080" max="2120" step="1" value="2101" aria-label="M1 bal"><output id="m1_o" for="m1"></output></div>
+<div class="row"><label for="m2">M2 közép</label><input id="m2" type="range" min="2080" max="2120" step="1" value="2098" aria-label="M2 közép"><output id="m2_o" for="m2"></output></div>
+<div class="row"><label for="m3">M3 jobb</label><input id="m3" type="range" min="2080" max="2120" step="1" value="2103" aria-label="M3 jobb"><output id="m3_o" for="m3"></output></div>
+<div class="row"><label for="d1">Á1 átló</label><input id="d1" type="range" min="2260" max="2320" step="1" value="2287" aria-label="Á1 átló"><output id="d1_o" for="d1"></output></div>
+<div class="row"><label for="d2">Á2 átló</label><input id="d2" type="range" min="2260" max="2320" step="1" value="2293" aria-label="Á2 átló"><output id="d2_o" for="d2"></output></div>
+<div class="row"><label for="tol">Átló-tűrés</label><input id="tol" type="range" min="1" max="10" step="1" value="3" aria-label="Átló-tűrés"><output id="tol_o" for="tol"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 430" role="img" aria-label="Falnyílás három szélességi, három magassági és két átlós mérési helyével; a beírt értékekből a legkisebb méret és az átlókülönbség."></svg>
+<p class="small">Gyakorló adatok (nem mérés): egy kb. 900 × 2100 mm-es nyílás. Az átló-tűrés tájékoztató, a termék és a szerelési útmutató szerint ellenőrizendő.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"s1":"mm", "s2":"mm", "s3":"mm", "m1":"mm", "m2":"mm", "m3":"mm", "d1":"mm", "d2":"mm", "tol":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const sz=[v.s1,v.s2,v.s3], m=[v.m1,v.m2,v.m3], smin=Math.min(...sz), mmin=Math.min(...m), dd=Math.abs(v.d1-v.d2);
+const X=170,Y=30,W=300,H=300;
+el("rect",{x:X,y:Y,width:W,height:H,fill:"none",stroke:css("--line"),"stroke-width":2.5});
+const yS=[Y+25,Y+H/2,Y+H-25], xM=[X+25,X+W/2,X+W-25];
+sz.forEach((q,i)=>{const lo=q==smin;el("line",{x1:X,x2:X+W,y1:yS[i],y2:yS[i],stroke:lo?css("--hl2"):css("--muted"),"stroke-width":lo?4:1.5});
+ el("text",{x:X+W+10,y:yS[i]+5,"font-size":13,style:lo?"font-weight:bold":""},`Sz${i+1} = ${q}`+(lo?"  ← legkisebb":""));});
+m.forEach((q,i)=>{const lo=q==mmin;el("line",{x1:xM[i],x2:xM[i],y1:Y,y2:Y+H,stroke:lo?css("--hl2"):css("--muted"),"stroke-width":lo?4:1.5});
+ el("text",{x:xM[i]-12,y:Y+H+22+i*16,"font-size":13,style:lo?"font-weight:bold":""},`M${i+1} = ${q}`+(lo?" ← legkisebb":""));});
+el("line",{x1:X,y1:Y+H,x2:X+W,y2:Y,stroke:css("--muted"),"stroke-dasharray":"6 4"});
+el("line",{x1:X,y1:Y,x2:X+W,y2:Y+H,stroke:css("--muted"),"stroke-dasharray":"6 4"});
+const ok=dd<=v.tol;
+status(`Beépítési méret: legkisebb szélesség <b>${smin} mm</b>, legkisebb magasság <b>${mmin} mm</b> (ebből vonjuk le a szerelési hézagot). `+
+ `Átlókülönbség |Á1 − Á2| = <b>${dd} mm</b> → `+(ok?`<span class="ok">a nyílás derékszögűnek tekinthető (tűrés ${v.tol} mm).</span>`:`<span class="bad">a nyílás nem derékszögű – a terméket a legkisebb méretre és hézaggal kell tervezni.</span>`));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

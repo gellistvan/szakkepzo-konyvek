@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szárazanyag-mérleg és bepárlás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="m">Péptömeg</label><input id="m" type="range" min="0.5" max="5" step="0.1" value="2.0" aria-label="Péptömeg"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="p">Pép oldható szárazanyaga</label><input id="p" type="range" min="5" max="20" step="0.5" value="10" aria-label="Pép oldható szárazanyaga"><output id="p_o" for="p"></output></div>
+<div class="row"><label for="c">Hozzáadott cukor</label><input id="c" type="range" min="0" max="3" step="0.05" value="1.6" aria-label="Hozzáadott cukor"><output id="c_o" for="c"></output></div>
+<div class="row"><label for="ev">Elpárologtatott víz</label><input id="ev" type="range" min="0" max="3" step="0.05" value="0.8" aria-label="Elpárologtatott víz"><output id="ev_o" for="ev"></output></div>
+<div class="row"><label for="pc">Célkoncentráció</label><input id="pc" type="range" min="55" max="70" step="1" value="60" aria-label="Célkoncentráció"><output id="pc_o" for="pc"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Rétegzett oszlopok: a bepárlás csak a víz arányát csökkenti, a cukor és a gyümölcs-szárazanyag tömege változatlan; csúszkákkal állítható péptömeg, szárazanyag, cukor, bepárlás és célkoncentráció."></svg>
+<p class="small">A fejezet példái: 2,0 kg pép, 10 %, 1,6 kg cukor, 0,8 kg bepárlás (kész 2,8 kg) → 64,3 %; 1,0 kg lé, 8 %, cél 60 % → 1,3 kg cukor bepárlás nélkül. Az oldható szárazanyag közelítő (refrakciós) érték; a tartósításhoz szükséges koncentráció termékspecifikus (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m":"kg", "p":"%", "c":"kg", "ev":"kg", "pc":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const fr=v.m*v.p/100, w0=v.m-fr, ev=Math.min(v.ev,w0), mk=v.m+v.c-ev, msz=fr+v.c, pk=msz/mk*100;
+const pc=v.pc/100, xneed=(pc*v.m-v.m*v.p/100)/(1-pc), evneed=v.m+v.c-msz/pc;
+const H=215, top=55, base=top+H, MX=Math.max(1,v.m+v.c), k=H/MX;
+function bar(x,lab,w,evap){let y=base;
+  [[w,css("--bg"),"víz"],[fr,css("--grid"),"gyümölcs-sz."],[v.c,css("--hl"),"cukor"]].forEach(q=>{const h=q[0]*k;y-=h;
+    el("rect",{x:x,y:y,width:90,height:Math.max(h,0),fill:q[1],stroke:css("--line"),"stroke-width":1.2});
+    if(h>14)el("text",{x:x+45,y:y+h/2+4,"font-size":11,"text-anchor":"middle",fill:q[1]===css("--hl")?css("--bg"):css("--fg")},q[2]+" "+fmt(q[0],2));});
+  if(evap>0){const h=evap*k;el("rect",{x:x,y:y-h,width:90,height:h,fill:"none",stroke:css("--line"),"stroke-dasharray":"5 4"});
+    el("text",{x:x+96,y:y-h/2+4,"font-size":11},"−"+fmt(evap,2)+" kg víz");y-=h;}
+  el("text",{x:x+45,y:base+16,"font-size":12,"text-anchor":"middle"},lab);}
+bar(70,"bepárlás előtt",w0,0);
+bar(280,"bepárlás után",w0-ev,ev);
+const pb=msz/(v.m+v.c)*100;
+el("text",{x:115,y:base-(v.m+v.c)*k-8,"font-size":13,"text-anchor":"middle","font-weight":"bold"},fmt(pb,1)+" %");
+el("text",{x:325,y:base-(v.m+v.c)*k-8,"font-size":13,"text-anchor":"middle","font-weight":"bold"},fmt(pk,1)+" %");
+el("line",{x1:20,y1:base,x2:540,y2:base,stroke:css("--line")});
+const ok=pk>=v.pc;
+status("m<sub>sz</sub> = "+fmt(v.m,2)+"·"+fmt(v.p/100,3)+" + "+fmt(v.c,2)+" = <b>"+fmt(msz,2)+" kg</b>; m<sub>kész</sub> = "+fmt(mk,2)+
+ " kg → p<sub>kész</sub> = <b>"+fmt(pk,1)+" %</b> <span class='"+(ok?"ok":"bad")+"'>"+(ok?"eléri":"nem éri el")+" a "+fmt(v.pc,0)+" %-os célt</span>.<br>"+
+ "Cél bepárlás nélkül: x = (p<sub>c</sub>·m − m·p)/(1 − p<sub>c</sub>) = <b>"+fmt(Math.max(0,xneed),2)+" kg cukor</b>. "+
+ "A beállított cukorral a célhoz "+(evneed>0?(evneed<=w0?"<b>"+fmt(evneed,2)+" kg víz</b> elpárologtatása kell.":"több víz kellene, mint amennyi van."):"nem kell bepárlás.")+
+ (ev<v.ev?" (Az elpárologtatás a pép víztartalmára korlátozva.)":""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

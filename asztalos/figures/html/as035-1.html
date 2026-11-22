@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rajzlap, keret és szövegmező</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="lap">Lapméret</label><select id="lap" aria-label="Lapméret"><option value="A4" selected>A4</option><option value="A3">A3</option></select></div>
+<div class="row"><label for="all">Állás</label><select id="all" aria-label="Állás"><option value="allo" selected>álló</option><option value="fekvo">fekvő</option></select></div>
+<div class="row"><label for="konv">Keret a többi oldalon</label><select id="konv" aria-label="Keret a többi oldalon"><option value="10" selected>10 mm (MSZ EN ISO 5457, ellenőrizendő)</option><option value="5">5 mm (iskolai sablon)</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 380" role="img" aria-label="Rajzlap kerettel, szövegmezővel és a hat vonalfajta mintájával; a rajzmező mérete kiszámolódik."></svg>
+<p class="small">A bal oldali 20 mm-es fűzőszél minden esetben; a többi margó a választott konvenció szerint. Mindig az intézményi sablon az irányadó.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const sz={A4:[210,297],A3:[297,420]}[v.lap], r=+v.konv;
+let W=sz[0],H=sz[1]; if(v.all=="fekvo"){W=sz[1];H=sz[0];}
+const b=W-20-r, h=H-2*r, sc=Math.min(520/W,360/H), ox=20, oy=10;
+const X=x=>ox+x*sc, Y=y=>oy+(H-y)*sc, L=css("--line");
+el("rect",{x:X(0),y:Y(H),width:W*sc,height:H*sc,fill:"#fff",stroke:"#000","stroke-width":0.8});
+el("rect",{x:X(20),y:Y(H-r),width:b*sc,height:h*sc,fill:"none",stroke:"#000","stroke-width":2.4});
+el("rect",{x:X(W-r-180),y:Y(r+27),width:180*sc,height:27*sc,fill:"none",stroke:"#000","stroke-width":1.8});
+el("text",{x:X(W-r-90),y:Y(r+12),"text-anchor":"middle","font-size":10,fill:"#000"},"szövegmező 180 × 27");
+const LN=[["Folytonos vastag", "0,5", "látható élek, körvonalak", "", 2.4], ["Folytonos vékony", "0,25", "méret- és segédvonal, anyagjelölés", "", 0.9], ["Szaggatott (vékony)", "0,25", "takart élek", "6 3", 1.1], ["Vékony pontvonal", "0,25", "tengely, szimmetriatengely", "16 3 2 3", 0.9], ["Vastag pontvonal", "0,5", "metszősík nyoma (végeken)", "16 3 2 3", 2.4], ["Szabadkézi vékony", "0,25", "törésvonal", "free", 1]];
+LN.forEach((q,i)=>{const yy=Y(H-r-15-i*Math.min(16,(h-60)/7)), x1=X(30), x2=X(30)+100*sc;
+  const g=el("g",{style:"cursor:pointer"}); const e=(t,a)=>{const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);g.appendChild(n);return n;};
+  e("rect",{x:x1-4,y:yy-7,width:100*sc+8,height:14,fill:"#fff",opacity:0});
+  if(q[3]=="free"){let d="M"+x1+" "+yy;for(let k=1;k<=40;k++){const x=x1+k*(x2-x1)/40;d+=" L"+x+" "+(yy+2*Math.sin(k*0.9)+Math.sin(k*2.3));}e("path",{d:d,fill:"none",stroke:"#000","stroke-width":1});}
+  else e("line",{x1:x1,y1:yy,x2:x2,y2:yy,stroke:"#000","stroke-width":q[4],"stroke-dasharray":q[3]});
+  g.addEventListener("click",()=>status("<b>"+q[0]+"</b> ("+q[1]+" mm): "+q[2]));});
+status("Rajzmező: b = "+W+" − 20 − "+r+" = <b>"+b+" mm</b>, h = "+H+" − 2 · "+r+" = <b>"+h+" mm</b>. "+
+ "<span class='small'>Kattints egy vonalmintára a nevéért és alkalmazásáért.</span>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

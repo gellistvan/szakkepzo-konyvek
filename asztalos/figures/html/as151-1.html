@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szabástérkép és anyagszükséglet</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="TL">Tábla hossza</label><input id="TL" type="range" min="1200" max="3000" step="10" value="2800" aria-label="Tábla hossza"><output id="TL_o" for="TL"></output></div>
+<div class="row"><label for="TW">Tábla szélessége</label><input id="TW" type="range" min="600" max="2200" step="10" value="2070" aria-label="Tábla szélessége"><output id="TW_o" for="TW"></output></div>
+<div class="row"><label for="pa">Alkatrész hossza</label><input id="pa" type="range" min="100" max="1200" step="10" value="400" aria-label="Alkatrész hossza"><output id="pa_o" for="pa"></output></div>
+<div class="row"><label for="pb">Alkatrész szélessége</label><input id="pb" type="range" min="100" max="900" step="10" value="300" aria-label="Alkatrész szélessége"><output id="pb_o" for="pb"></output></div>
+<div class="row"><label for="kerf">Fűrészrés</label><input id="kerf" type="range" min="2" max="6" step="0.5" value="3" aria-label="Fűrészrés"><output id="kerf_o" for="kerf"></output></div>
+<div class="row"><label for="trim">Szélezés (táblaszél)</label><input id="trim" type="range" min="0" max="20" step="1" value="0" aria-label="Szélezés (táblaszél)"><output id="trim_o" for="trim"></output></div>
+<div class="row"><label for="N">Darabszám</label><input id="N" type="range" min="1" max="120" step="1" value="36" aria-label="Darabszám"><output id="N_o" for="N"></output></div>
+<div class="row"><label for="loss">Vágási veszteség</label><input id="loss" type="range" min="0" max="30" step="1" value="12" aria-label="Vágási veszteség"><output id="loss_o" for="loss"></output></div>
+<div class="row"><label for="edges">Zárt (hosszú) élek darabonként</label><input id="edges" type="range" min="0" max="2" step="1" value="1" aria-label="Zárt (hosszú) élek darabonként"><output id="edges_o" for="edges"></output></div>
+<div class="row"><label for="g">Hot-melt ragasztó</label><input id="g" type="range" min="0" max="60" step="1" value="25" aria-label="Hot-melt ragasztó"><output id="g_o" for="g"></output></div>
+<div class="row"><label for="lr">Lakkrétegek</label><input id="lr" type="range" min="0" max="3" step="1" value="0" aria-label="Lakkrétegek"><output id="lr_o" for="lr"></output></div>
+<div class="row"><label for="lq">Fajlagos felhordás</label><input id="lq" type="range" min="50" max="200" step="10" value="100" aria-label="Fajlagos felhordás"><output id="lq_o" for="lq"></output></div>
+<div class="row"><label for="lv">Lakkveszteség</label><input id="lv" type="range" min="0" max="40" step="1" value="10" aria-label="Lakkveszteség"><output id="lv_o" for="lv"></output></div>
+<div class="row"><label for="pt">Tábla ára</label><input id="pt" type="range" min="5000" max="40000" step="500" value="12500" aria-label="Tábla ára"><output id="pt_o" for="pt"></output></div>
+<div class="row"><label for="pe">Élzáró ára</label><input id="pe" type="range" min="50" max="800" step="10" value="280" aria-label="Élzáró ára"><output id="pe_o" for="pe"></output></div>
+<div class="row"><label for="pg">Ragasztó ára</label><input id="pg" type="range" min="500" max="6000" step="100" value="2200" aria-label="Ragasztó ára"><output id="pg_o" for="pg"></output></div>
+<div class="row"><label for="pl">Lakk ára</label><input id="pl" type="range" min="1000" max="8000" step="100" value="3200" aria-label="Lakk ára"><output id="pl_o" for="pl"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 260" role="img" aria-label="Két szabástérkép egy forgácslap-táblán: elforgatott polcokkal 45 darab fér el 36 helyett; anyagszükséglet és költség."></svg>
+<p class="small">Alapértékek a Szemléletes kép polcpéldája (36 vagy elforgatva 45 db/tábla); a mintaárak az éjjeliszekrény-feladatból. A táblaszámot a szabástérkép után véglegesítsd; a táblaméretek gyártónként eltérhetnek (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"TL":"mm", "TW":"mm", "pa":"mm", "pb":"mm", "kerf":"mm", "trim":"mm", "N":"db", "loss":"%", "edges":"db", "g":"g/fm", "lr":"db", "lq":"g/m²", "lv":"%", "pt":"Ft", "pe":"Ft/fm", "pg":"Ft/kg", "pl":"Ft/l"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const s=v.kerf, tr=v.trim, L=v.TL-2*tr, W=v.TW-2*tr;
+function fitn(a,b){return [Math.max(0,Math.floor((L+s)/(a+s))),Math.max(0,Math.floor((W+s)/(b+s)))];}
+const A=fitn(v.pa,v.pb), B=fitn(v.pb,v.pa), nA=A[0]*A[1], nB=B[0]*B[1], best=nB>nA?1:0, per=Math.max(nA,nB);
+const tableA=v.TL*v.TW/1e6, part=v.pa*v.pb/1e6;
+function draw1(x0,lay,a,b,n,hl,title){const k=250/v.TL;
+  el("rect",{x:x0,y:40,width:v.TL*k,height:v.TW*k,fill:css("--grid"),stroke:css("--line"),"stroke-width":hl?3:1});
+  for(let i=0;i<lay[0];i++)for(let j=0;j<lay[1];j++)el("rect",{x:x0+(tr+i*(a+s))*k,y:40+(tr+j*(b+s))*k,width:a*k,height:b*k,fill:"none",stroke:hl?css("--hl"):css("--line")});
+  el("text",{x:x0,y:30,"font-size":13,"font-weight":hl?"bold":"normal"},title+": "+lay[0]+" × "+lay[1]+" = "+n+" db ("+fmt(100*n*part/tableA,1)+" %)");}
+draw1(10,A,v.pa,v.pb,nA,best==0,"álló");
+draw1(290,B,v.pb,v.pa,nB,best==1,"elforgatott");
+const tables=per>0?Math.ceil(v.N/per):Infinity;
+const net=v.N*part, gross=net*(1+v.loss/100);
+const edge=v.N*(v.edges*Math.max(v.pa,v.pb)/1000)*1.05+v.N*v.edges*0.01;   // a hosszabb élek zárva, 5 % + 10 mm/él
+const glue=edge*v.g/1000;                                                    // hot-melt, g/fm → kg
+const lak=net*2*v.lr*v.lq/1000*(1+v.lv/100)/1.2;                             // két oldal, l (ρ = 1,2 kg/l)
+const cost=tables*v.pt+edge*v.pe+glue*v.pg+lak*v.pl;
+status("Táblánként <b>"+per+" db</b> ("+(best?"elforgatva":"állóan")+"); "+v.N+" db-hoz <b>"+tables+" tábla</b> kell (nettó "+fmt(net,2)+" m², bruttó "+fmt(gross,2)+" m²). "+
+ "Élzáró: "+fmt(edge,2)+" fm; ragasztó: "+fmt(glue*1000,0)+" g; lakk: "+fmt(lak,2)+" l. <b>Anyagköltség: "+Math.round(cost).toLocaleString("hu-HU")+" Ft</b> (mintaárak).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

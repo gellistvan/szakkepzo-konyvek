@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vetületi kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="L">Hossz</label><input id="L" type="range" min="40" max="160" step="5" value="80" aria-label="Hossz"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="H">Magasság</label><input id="H" type="range" min="24" max="80" step="2" value="40" aria-label="Magasság"><output id="H_o" for="H"></output></div>
+<div class="row"><label for="D">Mélység (vastagság)</label><input id="D" type="range" min="12" max="50" step="2" value="20" aria-label="Mélység (vastagság)"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="hx">Furat helye (bal éltől)</label><input id="hx" type="range" min="6" max="154" step="1" value="40" aria-label="Furat helye (bal éltől)"><output id="hx_o" for="hx"></output></div>
+<div class="row"><label for="rend">Vetítési rend</label><select id="rend" aria-label="Vetítési rend"><option value="E" selected>E – európai (a könyv rendje)</option><option value="A">A – amerikai (csak összehasonlításul)</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 360" role="img" aria-label="Bükk léc térbeli képe és három nézete európai vagy amerikai vetítési rendben, vetítővonalakkal."></svg>
+<p class="small">Ø10 átmenő furat (tengelye előre–hátra), a felső lapon 6 × 5-ös horony. Látható él: vastag, takart él: szaggatott, tengely: pontvonal. A magyar rajzokon az E rend kötelező; az A rend csak külföldi dokumentációban fordul elő.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"L":"mm", "H":"mm", "D":"mm", "hx":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const L=v.L, H=v.H, D=v.D, hx=Math.min(Math.max(v.hx,6),L-6), hz=H/2, HR=5, GW=6, GD=Math.min(5,H/2-HR-1), GAP=22, A=v.rend=="A";
+const y1=D/2-GW/2, y2=D/2+GW/2;
+const W=L+GAP+D+20, Hh=H+GAP+D+20, sc=Math.min(330/W, 330/Hh), ox=210, oy=20+(A?(D+GAP)*sc:0)+H*sc;
+const X=x=>ox+x*sc, Y=z=>oy-z*sc, LN=css("--line");
+function pl(pts,o){o=o||{};el("polyline",{points:pts.map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:o.fill||"none",stroke:o.c||LN,"stroke-width":o.w||2,"stroke-dasharray":o.d||""});}
+const HID="5 3", CEN="12 3 2 3";
+// helyek: E – felülnézet alatta, bal oldalnézet jobbra; A – felülnézet fölötte, jobb oldalnézet jobbra
+const vt=y=>A?(H+GAP+y):(-GAP-(D-y)), us=y=>A?(L+GAP+y):(L+GAP+(D-y));
+const sel=FIG.sel||"";
+function hlr(x0,z0,x1,z1,k){const r=el("rect",{x:X(Math.min(x0,x1))-4,y:Y(Math.max(z0,z1))-4,width:Math.abs(x1-x0)*sc+8,height:Math.abs(z1-z0)*sc+8,
+  fill:sel==k?css("--hl"):"transparent","fill-opacity":0.15,stroke:"none",style:"cursor:pointer"});r.addEventListener("click",()=>{FIG.sel=k;draw();});}
+hlr(0,0,L,H,"F"); hlr(0,vt(0),L,vt(D),"T"); hlr(us(0),0,us(D),H,"S");
+// elölnézet
+pl([[0,0],[L,0],[L,H],[0,H],[0,0]]);
+let c="";for(let k=0;k<=40;k++){const a=k/40*2*Math.PI;c+=(k?" L":"M")+X(hx+HR*Math.cos(a))+" "+Y(hz+HR*Math.sin(a));}
+el("path",{d:c,fill:"none",stroke:LN,"stroke-width":2});
+pl([[hx-HR-3,hz],[hx+HR+3,hz]],{w:1,d:CEN}); pl([[hx,hz-HR-3],[hx,hz+HR+3]],{w:1,d:CEN});
+pl([[0,H-GD],[L,H-GD]],{w:1.2,d:HID});
+// felülnézet
+pl([[0,vt(0)],[L,vt(0)],[L,vt(D)],[0,vt(D)],[0,vt(0)]]);
+[y1,y2].forEach(y=>pl([[0,vt(y)],[L,vt(y)]]));
+[hx-HR,hx+HR].forEach(x=>pl([[x,vt(0)],[x,vt(D)]],{w:1.2,d:HID}));
+// oldalnézet
+pl([[us(0),0],[us(D),0],[us(D),H],[us(y2),H],[us(y2),H-GD],[us(y1),H-GD],[us(y1),H],[us(0),H],[us(0),0]]);
+[hz-HR,hz+HR].forEach(z=>pl([[us(0),z],[us(D),z]],{w:1.2,d:HID}));
+// vetítővonalak + 45°-os segédvonal
+const M=css("--muted");
+[0,H,H-GD,hz-HR,hz+HR].forEach(z=>pl([[L+1,z],[L+GAP-1,z]],{w:0.6,c:M,d:"2 2"}));
+[0,L,hx-HR,hx+HR].forEach(x=>pl([[x,A?H+1:-1],[x,A?H+GAP-1:-GAP+1]],{w:0.6,c:M,d:"2 2"}));
+[0,y1,y2,D].forEach(y=>{pl([[L+1,vt(y)],[us(y),vt(y)],[us(y),A?H+1:-1]],{w:0.6,c:M,d:"2 2"});});
+pl(A?[[L+GAP,H+GAP],[L+GAP+D+6,H+GAP+D+6]]:[[L+GAP,-GAP],[L+GAP+D+6,-GAP-D-6]],{w:1,c:M});
+const t=(x,z,s)=>el("text",{x:X(x),y:Y(z),"text-anchor":"middle","font-size":12},s);
+t(L/2,H+3,"elölnézet"); t(L/2,A?vt(D)+3:vt(0)-8,"felülnézet"); t(us(D/2),H+3,A?"jobb oldalnézet":"bal oldalnézet");
+// térbeli kép (izometrikus), a kiválasztott lap kiemelve
+const c30=Math.cos(Math.PI/6), k=Math.min(1.3,175/((L+D)*c30)), IX=(x,y,z)=>15+ (x-y+D)*c30*k, IY=(x,y,z)=>330-(z+(x+y)*0.5)*k;
+function ip(pts,o){o=o||{};el("polygon",{points:pts.map(p=>IX(...p)+","+IY(...p)).join(" "),fill:o.f||"none",stroke:LN,"stroke-width":1.4});}
+const F1=css("--hl");
+ip([[0,0,0],[L,0,0],[L,0,H],[0,0,H]],{f:sel=="F"?F1:"none"});
+ip([[0,0,0],[0,D,0],[0,D,H],[0,0,H]],{f:(sel=="S"&&!A)?F1:"none"});
+ip([[0,0,H],[L,0,H],[L,D,H],[0,D,H]],{f:sel=="T"?F1:"none"});
+ip([[0,y1,H],[L,y1,H],[L,y1,H-GD],[0,y1,H-GD]]); ip([[0,y2,H-GD],[L,y2,H-GD],[L,y2,H],[0,y2,H]]);
+let e="";for(let q=0;q<=40;q++){const a=q/40*2*Math.PI;e+=(q?" L":"M")+IX(hx+HR*Math.cos(a),0,hz+HR*Math.sin(a))+" "+IY(hx+HR*Math.cos(a),0,hz+HR*Math.sin(a));}
+el("path",{d:e,fill:"none",stroke:LN,"stroke-width":1.2});
+el("text",{x:15,y:345,"font-size":11},sel=="S"&&A?"(a jobb oldallap a képen hátul, nem látszik)":"térbeli kép");
+const nm={F:"elölnézet – a test elülső lapja (a furat itt kör)",T:"felülnézet – a felső lap (a horony két látható vonal, a furat szaggatott vonalpár)",S:A?"jobb oldalnézet – a jobb oldallap":"bal oldalnézet – a bal oldallap (a horony a kontúr bemélyedése)"};
+status((A?"<b>A (amerikai) rend</b>: a felülnézet az elölnézet fölött, a jobb oldalnézet jobbra. ":"<b>E (európai) rend</b>: a felülnézet az elölnézet alatt, a bal oldalnézet jobbra. ")+
+ (sel?"Kiválasztva: "+nm[sel]+".":"Kattints egy nézetre: a térbeli képen kiemelődik a hozzá tartozó lap."));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

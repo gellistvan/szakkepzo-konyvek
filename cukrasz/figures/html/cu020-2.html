@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hígításkalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pre">előbeállítás</label><select id="pre" aria-label="előbeállítás"><option value="0">saját értékek</option><option value="1" selected>5 % hipoklorit → 200 ppm, 10 l (40 ml)</option><option value="2">0,5 % mosogatószer, 30 l (150 ml)</option><option value="3">0,75 % zsíroldó, 8 l (60 ml)</option><option value="4">5 % hipoklorit → 200 ppm, 5 l (20 ml)</option></select></div>
+<div class="row"><label for="mode">célkoncentráció</label><select id="mode" aria-label="célkoncentráció"><option value="ppm" selected>ppm aktív hatóanyag (mg/l)</option><option value="pct">% (ml / 100 ml)</option></select></div>
+<div class="row"><label for="c">törzsoldat / koncentrátum</label><input id="c" type="range" min="0.5" max="100" step="0.5" value="5" aria-label="törzsoldat / koncentrátum"><output id="c_o" for="c"></output></div>
+<div class="row"><label for="t">cél (ppm-módban)</label><input id="t" type="range" min="10" max="1000" step="10" value="200" aria-label="cél (ppm-módban)"><output id="t_o" for="t"></output></div>
+<div class="row"><label for="tp">cél (%-módban)</label><input id="tp" type="range" min="0.05" max="5" step="0.05" value="0.5" aria-label="cél (%-módban)"><output id="tp_o" for="tp"></output></div>
+<div class="row"><label for="V">céltérfogat</label><input id="V" type="range" min="0.5" max="50" step="0.5" value="10" aria-label="céltérfogat"><output id="V_o" for="V"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 270" role="img" aria-label="Kalkulátor: a törzsoldat koncentrációjából, a célkoncentrációból és a céltérfogatból kiszámolja a szükséges törzsoldat mennyiségét."></svg>
+<p class="small">V<sub>törzs</sub> = c<sub>cél</sub> · V<sub>cél</sub> / c<sub>törzs</sub>. A fejezet példái: 40 ml, 150 ml, 20 ml, 60 ml. Tájékoztató értékek; a koncentrációt és a hatóidőt mindig a gyártói adatlap adja (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"c":"%", "t":"ppm", "tp":"%", "V":"l"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const PRE={1:{mode:"ppm",c:5,t:200,V:10},2:{mode:"pct",c:100,tp:0.5,V:30},3:{mode:"pct",c:100,tp:0.75,V:8},4:{mode:"ppm",c:5,t:200,V:5}};
+function setv(id,x){const e=document.getElementById(id);e.value=x;}
+let w=v;
+if(v.pre!==FIG.lp){FIG.lp=v.pre;const P=PRE[v.pre];
+  if(P){setv("mode",P.mode);setv("c",P.c);setv("V",P.V);if(P.t!==undefined)setv("t",P.t);if(P.tp!==undefined)setv("tp",P.tp);w=values();}}
+const ppm=(w.mode==="ppm");
+let ml, steps, warn="";
+if(ppm){
+  ml=w.t*w.V/(10*w.c);
+  const g=w.t*w.V/1000;
+  steps="Hatóanyag: "+fmt(w.t,0)+" mg/l × "+fmt(w.V,1)+" l = <b>"+fmt(g,2)+" g</b> aktív anyag; "+
+        "törzsoldat: "+fmt(w.c,1)+" % = "+fmt(w.c,1)+" g / 100 ml → "+fmt(g,2)+" g / ("+fmt(w.c/100,3)+" g/ml) = <b>"+fmt(ml,0)+" ml</b>.";
+  if(w.t/10000>=w.c) warn='<br><span class="bad">A célkoncentráció nem lehet nagyobb a törzsoldaténál!</span>';
+}else{
+  ml=w.tp*w.V*1000/w.c;
+  steps="V<sub>törzs</sub> = "+fmt(w.tp,2)+" % × "+fmt(w.V*1000,0)+" ml / "+fmt(w.c,1)+" % = <b>"+fmt(ml,0)+" ml</b> koncentrátum.";
+  if(w.tp>=w.c) warn='<br><span class="bad">A célkoncentráció nem lehet nagyobb a törzsoldaténál!</span>';
+}
+status("Szükséges törzsoldat: <b>"+fmt(ml,0)+" ml</b>, víz: "+fmt(Math.max(0,w.V*1000-ml),0)+" ml (összesen "+fmt(w.V,1)+" l). "+steps+warn);
+// sáv: oldat összetétele
+const X=40,Y=60,W=520,H=60, f=Math.min(1,ml/(w.V*1000)), fw=Math.max(3,W*f);
+el("rect",{x:X,y:Y,width:W,height:H,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+el("rect",{x:X,y:Y,width:fw,height:H,fill:css("--hl2")});
+el("text",{x:X,y:Y-10,"font-size":13},"a kész oldat ("+fmt(w.V,1)+" l): törzsoldat + víz");
+el("text",{x:X+fw+6,y:Y+H/2+5,"font-size":13},fmt(ml,0)+" ml törzsoldat ("+fmt(100*f,2)+" %)");
+// mérőhenger
+const cx=X+60, cy=160, ch=90, maxml=Math.max(50,Math.ceil(ml/50)*50), hh=ch*Math.min(1,ml/maxml);
+el("rect",{x:cx,y:cy,width:40,height:ch,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+el("rect",{x:cx,y:cy+ch-hh,width:40,height:hh,fill:css("--hl2")});
+for(let k=0;k<=5;k++){const yy=cy+ch-ch*k/5;el("line",{x1:cx+40,y1:yy,x2:cx+48,y2:yy,stroke:css("--line")});
+  el("text",{x:cx+52,y:yy+4,"font-size":11},fmt(maxml*k/5,0)+" ml");}
+el("text",{x:cx+150,y:cy+40,"font-size":13},ppm?"1 ppm = 1 mg/l; 1 % (m/V) = 10 g/l = 10 000 ppm":"% = ml koncentrátum / 100 ml oldat");
+el("text",{x:cx+150,y:cy+62,"font-size":12,fill:css("--muted")},"Tájékoztató számítás – a gyártói adatlap az irányadó.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

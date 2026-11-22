@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fejelőléces lap: fanedvesség és csavarmozgás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="u">Fanedvesség</label><input id="u" type="range" min="6" max="16" step="0.5" value="14" aria-label="Fanedvesség"><output id="u_o" for="u"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 760 330" role="img" aria-label="Fejelőléces asztallap felülnézete; a csúszkával a fanedvesség változtatható, a lap szélessége és a szélső csavarok helyzete a hosszított furatban változik."></svg>
+<p class="small">Tájékoztató modell: szélességváltozás 0,3 % / 1 % fanedvesség-változás (húr- és sugárirány átlaga, fafajtól függ – ellenőrizendő); szerelési fanedvesség 10 %. A középső csavar kerek furatban ül (rögzített pont), a szélsők 15 mm hosszú furatban (5 mm-es csavar: ±5 mm játék).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"u":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const K=0.003,U0=10,B=600,SL=15,DS=5,scr=[90,300,510];
+const du=v.u-U0, db=B*K*du, half=(SL-DS)/2;
+const ex=12; // a méretváltozást a rajzon 12-szeresen nagyítva mutatjuk
+const sc=0.42, ox=40, oy=40;
+const bw=(B+db*ex)*sc, top=oy+(B*sc-bw)/2;
+// fejelőlécek (változatlan 600 mm – hosszirányban alig dolgozik)
+el("rect",{x:ox,y:oy,width:80*sc,height:B*sc,fill:"none",stroke:css("--line"),"stroke-width":2});
+el("rect",{x:ox+1120*sc,y:oy,width:80*sc,height:B*sc,fill:"none",stroke:css("--line"),"stroke-width":2});
+// táblásított mező (szélessége a nedvességgel változik)
+el("rect",{x:ox+80*sc,y:top,width:1040*sc,height:bw,fill:"none",stroke:css("--hl"),"stroke-width":2});
+for(let k=1;k<5;k++)el("line",{x1:ox+80*sc,x2:ox+1120*sc,y1:top+bw*k/5,y2:top+bw*k/5,stroke:css("--muted"),"stroke-width":1});
+el("line",{x1:ox,x2:ox+1200*sc,y1:oy+B*sc/2,y2:oy+B*sc/2,stroke:css("--muted"),"stroke-dasharray":"8 3 2 3"});
+let ok=true,txt=[];
+scr.forEach((y,i)=>{const d=(y-B/2)*K*du; // a csavar elmozdulása a laphoz kötött ponttal
+  const yy=oy+(y+d*ex+ (B*sc-B*sc)/2)*sc;
+  [0,1].forEach(side=>{const x=ox+(side?1160:40)*sc;
+   el("line",{x1:x-7,x2:x+7,y1:oy+y*sc,y2:oy+y*sc,stroke:css("--muted")});
+   el("circle",{cx:x,cy:oy+(y)*sc+d*ex*sc,r:3.2,fill:Math.abs(d)>half&&i!=1?css("--bad"):css("--hl")});});
+  if(i!=1){if(Math.abs(d)>half)ok=false;txt.push(fmt(d,1)+" mm");}});
+// nagyított részlet: a szélső csavar a hosszított furatban (5-szörös lépték)
+const dx=560,dy=60,z=6, d0=(scr[2]-B/2)*K*du;
+el("text",{x:dx,y:dy-14,"font-size":13},"Részlet: szélső csavar a furatban (5:1)");
+el("rect",{x:dx+40,y:dy,width:DS*z,height:SL*z,rx:DS*z/2,fill:"none",stroke:css("--line"),"stroke-width":2});
+el("circle",{cx:dx+40+DS*z/2,cy:dy+SL*z/2+d0*z,r:DS*z/2,fill:Math.abs(d0)>half?css("--bad"):css("--hl"),opacity:0.8});
+el("line",{x1:dx+20,x2:dx+90,y1:dy+SL*z/2,y2:dy+SL*z/2,stroke:css("--muted"),"stroke-dasharray":"4 3"});
+el("text",{x:dx+100,y:dy+SL*z/2+4,"font-size":12},"szerelési helyzet");
+el("text",{x:ox,y:oy+B*sc+30,"font-size":12},"A szélességváltozás a rajzon 12-szeresen nagyítva látszik; a vízszintes jel a csavar szerelési helyzete; a fejelőléc hossza (600 mm) gyakorlatilag nem változik.");
+status(`Fanedvesség: <b>${fmt(v.u,1)} %</b> (szerelés: ${U0} %) → a 600 mm-es lap szélességváltozása Δb ≈ 600 · 0,003 · ${fmt(du,1)} = <b>${fmt(db,1)} mm</b>. `+
+ `A szélső csavarok elmozdulása a laphoz képest: ${txt.join(" / ")}; a hosszított furatban ±${fmt(half,1)} mm a játék: `+
+ (ok?'<span class="ok">a lap szabadon dolgozik.</span>':'<span class="bad">a csavar a furat végére ér – a lap feszül, repedhet.</span>'));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

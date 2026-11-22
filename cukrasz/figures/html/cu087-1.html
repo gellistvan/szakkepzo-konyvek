@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cukor, só, zsiradék és a kelés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="c">Cukor (liszt %)</label><input id="c" type="range" min="0" max="30" step="1" value="12" aria-label="Cukor (liszt %)"><output id="c_o" for="c"></output></div>
+<div class="row"><label for="s">Só (liszt %)</label><input id="s" type="range" min="0" max="3.5" step="0.1" value="1.8" aria-label="Só (liszt %)"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="f">Zsiradék (liszt %)</label><input id="f" type="range" min="0" max="30" step="1" value="0" aria-label="Zsiradék (liszt %)"><output id="f_o" for="f"></output></div>
+<div class="row"><label for="y">Friss élesztő (liszt %)</label><input id="y" type="range" min="1" max="6" step="0.1" value="3" aria-label="Friss élesztő (liszt %)"><output id="y_o" for="y"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 250" role="img" aria-label="A gáztermelés kevés cukornál nő, 8% fölött a cukor ozmotikus hatása miatt csökken; a só és a zsiradék lassítja a kelést."></svg>
+<p class="small">Szemléltető modell a cu087 állításaiból (5–8% cukor serkent, nagy cukortartalom gátol; só 1,5–2%; zsiradék lassít; 12% cukorhoz 4,5% élesztő). Nem mért érték; ellenőrizendő: sütőipari szakirodalom.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"c":"%", "s":"%", "f":"%", "y":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+function fs(c){ if(c<5) return 70+30*(c/5)*(2-c/5); if(c<=8) return 100; return 100/(1+Math.pow((c-8)/12,2)); }
+function fsa(s){ if(s<=1.5) return 1.1-s/15; if(s<=2) return 1.0; return 1.0-0.25*(s-2); }
+function ff(f){ return 1/(1+f/40); }
+const r=fs(v.c)*fsa(v.s)*ff(v.f)*(v.y/3), t=100*100/Math.max(r,1);
+// sávok
+const X0=170, W=360;
+function bar(y,label,val,max,txt){ el("text",{x:10,y:y+15,"font-size":13},label);
+  el("rect",{x:X0,y:y,width:W,height:20,fill:"none",stroke:css("--line")});
+  el("rect",{x:X0,y:y,width:Math.min(W,val/max*W),height:20,fill:css("--hl"),"fill-opacity":0.55});
+  el("text",{x:X0+W+8,y:y+15,"font-size":13},txt); }
+bar(20,"cukorhatás",fs(v.c),100,fmt(fs(v.c),0)+"%");
+bar(50,"sóhatás",fsa(v.s)*100,110,fmt(fsa(v.s)*100,0)+"%");
+bar(80,"zsiradékhatás",ff(v.f)*100,100,fmt(ff(v.f)*100,0)+"%");
+bar(110,"élesztő (3% = 100)",v.y/3*100,200,fmt(v.y/3*100,0)+"%");
+el("line",{x1:10,y1:145,x2:550,y2:145,stroke:css("--grid")});
+bar(160,"CO₂-termelés",r,200,fmt(r,0)+"%");
+bar(190,"kelési idő",t,400,fmt(t,0)+"%");
+el("text",{x:10,y:240,"font-size":12,fill:css("--muted")},"100% = alaptészta: 3% élesztő, 5–8% cukor, 1,5–2% só, zsiradék nélkül (szemléltető modell)");
+let w=[];
+if(v.s>2.5) w.push("<span class='bad'>Sok só (> 2,5%):</span> erősen gátolja az élesztőt; a sót a liszthez keverjük, ne közvetlenül az élesztőre.");
+if(v.c>15 && v.y<=3) w.push("<span class='bad'>Sok cukor (> 15%) élesztőemelés nélkül:</span> lassú kelés – emeljük az élesztőt (pl. 4–5%), a cukor egy részét később adagoljuk.");
+if(v.f>=15) w.push("Sok zsiradék: lassabb kelés, lágyabb háló – a vajat fokozatosan, a kialakult tésztához adjuk.");
+status("<b>Becsült relatív kelési idő: "+fmt(t,0)+"%</b> (CO₂-termelés "+fmt(r,0)+"%). "+(w.length?w.join(" "):"<span class='ok'>Nincs külön figyelmeztetés.</span>")+" <span class='small'>Szemléltető modell, ellenőrizendő: sütőipari szakirodalom.</span>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

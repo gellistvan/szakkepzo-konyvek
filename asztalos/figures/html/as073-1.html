@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ollós csap harmadolása</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="lepes">Lépés</label><input id="lepes" type="range" min="1" max="5" step="1" value="1" aria-label="Lépés"><output id="lepes_o" for="lepes"></output></div>
+<div class="row"><label for="vast">Lécvastagság v</label><input id="vast" type="range" min="15" max="40" step="1" value="20" aria-label="Lécvastagság v"><output id="vast_o" for="vast"></output></div>
+<div class="row"><label for="b">Lécszélesség b</label><input id="b" type="range" min="40" max="100" step="5" value="60" aria-label="Lécszélesség b"><output id="b_o" for="b"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Ollós csapos sarokkötés: a vízszintes léc középső harmada csap, a függőleges léc villás végébe illeszkedik; lépésenként."></svg>
+<p class="small">Harmadolási szabály: csap = villaág = v/3 (ellenőrizendő: szerkezettani szakkönyv). Sraffozott/szaggatott = hulladék, szürke = villás léc.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"lepes":"", "vast":"mm", "b":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const vv=v.vast, b=v.b, k=v.lepes, t=vv/3, sc=Math.min(6, 150/vv);
+const names=["","1. Felrajzolás: vállvonal körbe, csap- és villavonalak (v/3)","2. A csappofák fűrészelése a hulladékoldalon",
+ "3. A vállak levágása: a pofák leesnek, marad a csap","4. A villa kifűrészelése és kivésése mindkét oldalról félig",
+ "5. Összeillesztés: a csap a villában, a sarok kívül síkban zár"];
+el("text",{x:20,y:24,"font-size":14,"font-weight":"bold"},names[k]);
+function strip(x,y,w,h,kind){const a={x:x,y:y,width:w,height:h,stroke:css("--line"),"stroke-width":1.4};
+  if(kind==="waste"){a.fill="none";a["stroke-dasharray"]="5 3";}
+  else if(kind==="v"){a.fill=css("--grid");}
+  else a.fill="none";
+  if(kind!=="gone")el("rect",a);}
+// csapos léc homlokvége (bütü) balra, villás léc vége jobbra
+const ox=60, oy=60, H=b*1.6;
+el("text",{x:ox+vv*sc/2,y:oy+H+22,"text-anchor":"middle","font-size":12},"csapos léc bütüje");
+el("text",{x:330+vv*sc/2,y:oy+H+22,"text-anchor":"middle","font-size":12},"villás léc bütüje");
+if(k<5){
+  for(let i=0;i<3;i++){const kind = i===1 ? "h" : (k>=3 ? "gone" : "waste"); strip(ox+i*t*sc,oy,t*sc,H,kind);}
+  if(k>=2&&k<3){for(const i of [1,2])el("line",{x1:ox+i*t*sc,y1:oy-8,x2:ox+i*t*sc,y2:oy+H+8,stroke:css("--hl2"),"stroke-width":3});}
+  for(let i=0;i<3;i++){const kind = i===1 ? (k>=4 ? "gone" : "waste") : "v"; strip(330+i*t*sc,oy,t*sc,H,kind);}
+  if(k===1){for(const i of [1,2]){el("line",{x1:ox+i*t*sc,y1:oy,x2:ox+i*t*sc,y2:oy+H,stroke:css("--hl"),"stroke-width":2});
+    el("line",{x1:330+i*t*sc,y1:oy,x2:330+i*t*sc,y2:oy+H,stroke:css("--hl"),"stroke-width":2});}}
+} else {
+  // összeillesztve: felülnézet
+  const X=200, Y=oy;
+  strip(X,Y,t*sc,H,"v"); strip(X+t*sc,Y,t*sc,H,"h"); strip(X+2*t*sc,Y,t*sc,H,"v");
+  el("text",{x:X+1.5*t*sc,y:Y+H+22,"text-anchor":"middle","font-size":12},"felülnézet: ág – csap – ág");
+}
+status("Lécvastagság v = "+fmt(vv,0)+" mm → csapvastagság = villaág = v/3 = <b>"+fmt(t,1)+" mm</b> (a vésőmérethez kerekítve, pl. "+
+ (Math.round(t/2)*2)+" mm); csaphossz = a villás léc szélessége = <b>"+fmt(b,0)+" mm</b>, villamélység = "+fmt(b,0)+" mm.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

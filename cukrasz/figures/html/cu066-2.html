@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tápérték-kalkulátor receptúrából</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="preset">Kiinduló receptúra</label><select id="preset" aria-label="Kiinduló receptúra"><option value="1" selected>1. példa: vajas piskóta</option><option value="2">2. példa: diós sütemény</option></select></div>
+<div class="row"><label for="loss">Sütési veszteség</label><input id="loss" type="range" min="0" max="25" step="1" value="10" aria-label="Sütési veszteség"><output id="loss_o" for="loss"></output></div>
+<div class="row"><label for="n">Adagszám</label><input id="n" type="range" min="1" max="24" step="1" value="12" aria-label="Adagszám"><output id="n_o" for="n"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 210" role="img" aria-label="Tápérték-kalkulátor: nyersanyagsorok tömeggel és 100 g-os adatokkal, sütési veszteség, adagszám; eredmény 100 g-ra és adagra"></svg>
+<p class="small">A tápanyagadatok a fejezet tanulási példái; valódi jelöléshez gyártói adatlap és hiteles tápanyagtáblázat kell, az átváltási tényezők és kerekítési szabályok az 1169/2011/EU rendelet szerint ellenőrizendők. Az 1. példa (10 %): 378 g, 1319 kJ / 315 kcal, 9,8 / 10,3 / 45,4 g; a 2. példa (12 %): 708,4 g, 2293 kJ, 8,2 / 33,7 / 53,1 / 0,4 g.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"loss":"%", "n":"db"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P={1:[["Tojás",200,12.5,10.5,0.7,0],["Búzaliszt",100,12,1.5,70,0],["Kristálycukor",100,0,0,100,0],["Vaj",20,0.5,82,0.5,0],["",0,0,0,0,0],["",0,0,0,0,0]],
+ 2:[["Liszt",300,12,1.5,70,0],["Vaj",200,0.5,82,0.5,0],["Cukor",150,0,0,100,0],["Tojás",50,12.5,10.5,0.7,0],["Dióbél",100,15,65,15,3],["Sütőpor",5,0,0,0,0]]};
+const H=["nyersanyag","g","fehérje","zsír","szénhidrát","rost"];
+if(!window.TB){window.TB=document.createElement("table");TB.style.cssText="border-collapse:collapse;font-size:13px;margin:6px 0";
+ let h="<tr>"+H.map((x,j)=>'<th style="text-align:left;padding:0 4px">'+x+(j>1?" (g/100 g)":"")+"</th>").join("")+"</tr>";
+ for(let i=0;i<6;i++){h+="<tr>"+H.map((x,j)=>'<td><input id="c'+i+'_'+j+'" '+(j?'type="number" step="0.1" min="0" style="width:72px"':'style="width:120px"')+' aria-label="'+(i+1)+'. sor '+x+'"></td>').join("")+"</tr>";}
+ TB.innerHTML=h;document.body.insertBefore(TB,document.getElementById("status"));
+ TB.querySelectorAll("input").forEach(x=>x.addEventListener("input",draw));window.LASTP=null;}
+if(window.LASTP!==v.preset){P[v.preset].forEach((r,i)=>r.forEach((x,j)=>{document.getElementById("c"+i+"_"+j).value=(j&&!r[0])?"":x;}));window.LASTP=v.preset;}
+const rows=[];for(let i=0;i<6;i++){const r=[0,1,2,3,4,5].map(j=>document.getElementById("c"+i+"_"+j).value);if(r[0].trim()&&+r[1]>0)rows.push([r[0],...r.slice(1).map(x=>+x||0)]);}
+const m=rows.reduce((a,r)=>a+r[1],0), kesz=m*(1-v.loss/100);
+const t=[2,3,4,5].map(k=>rows.reduce((a,r)=>a+r[1]*r[k]/100,0));
+const e=17*t[0]+37*t[1]+17*t[2]+8*t[3], per=t.map(x=>x/kesz*100), e100=e/kesz*100, adag=kesz/v.n;
+const names=["energia","fehérje","zsír","szénhidrát","rost"];
+const vals100=[e100,...per], valsA=[e100*adag/100,...per.map(x=>x*adag/100)];
+el("text",{x:10,y:20,"font-size":13,"font-weight":"bold"},"nyers "+fmt(m,1)+" g → késztermék "+fmt(kesz,1)+" g; "+v.n+" adag, 1 adag "+fmt(adag,1)+" g");
+el("text",{x:170,y:46,"font-size":12,"font-weight":"bold"},"100 g-ban");el("text",{x:370,y:46,"font-size":12,"font-weight":"bold"},"1 adagban");
+names.forEach((nm,i)=>{const y=70+i*30;el("text",{x:10,y:y,"font-size":13},nm);
+ const u=i?" g":" kJ";el("text",{x:170,y:y,"font-size":13},fmt(vals100[i],i?1:0)+u+(i?"":" / "+fmt(vals100[0]/4.184,0)+" kcal"));
+ el("text",{x:370,y:y,"font-size":13},fmt(valsA[i],i?1:0)+u+(i?"":" / "+fmt(valsA[0]/4.184,0)+" kcal"));});
+status("Tápanyag = Σ m·c/100; késztömeg = "+fmt(m,1)+" g · (1 − "+fmt(v.loss,0)+" %) = <b>"+fmt(kesz,1)+" g</b>; energia: 17 kJ/g fehérje és szénhidrát, 37 kJ/g zsír, 8 kJ/g rost; kcal = kJ / 4,184. Összes energia: "+fmt(e,1)+" kJ.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

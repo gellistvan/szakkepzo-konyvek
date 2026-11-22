@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szaporodási görbe és generációs idő</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="tg">Generációs idő</label><input id="tg" type="range" min="15" max="60" step="5" value="20" aria-label="Generációs idő"><output id="tg_o" for="tg"></output></div>
+<div class="row"><label for="lag">Lappangási idő</label><input id="lag" type="range" min="0" max="120" step="10" value="60" aria-label="Lappangási idő"><output id="lag_o" for="lag"></output></div>
+<div class="row"><label for="n0">Kezdeti sejtszám (10^x)</label><input id="n0" type="range" min="1" max="4" step="0.5" value="2" aria-label="Kezdeti sejtszám (10^x)"><output id="n0_o" for="n0"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Baktériumpopuláció növekedése: lappangási, exponenciális, stacionárius és pusztulási szakasz; csúszkák a generációs időhöz és a kezdeti sejtszámhoz"></svg>
+<p class="small">Szemléltetés (cu007): a lépésenkénti duplázódás N = N0·2^(τ/tg); a fejezet példája N0 = 100, tg = 20 perc, 2 óra → 6400. A telítési szint (10^9) és a pusztulás üteme szemléltető érték, nem mért adat.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"tg":"perc", "lag":"perc", "n0":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+function mk(R,xmin,xmax,ymin,ymax){return {sx:v=>R.x+(v-xmin)/(xmax-xmin)*R.w, sy:v=>R.y+R.h-(v-ymin)/(ymax-ymin)*R.h};}
+function axes(R,m,xt,yt,xl,yl){
+  el("line",{x1:R.x,y1:R.y+R.h,x2:R.x+R.w,y2:R.y+R.h,stroke:css("--line"),"stroke-width":1.5});
+  el("line",{x1:R.x,y1:R.y,x2:R.x,y2:R.y+R.h,stroke:css("--line"),"stroke-width":1.5});
+  xt.forEach(t=>{el("line",{x1:m.sx(t[0]),y1:R.y,x2:m.sx(t[0]),y2:R.y+R.h,stroke:css("--grid"),"stroke-width":0.6});
+    el("text",{x:m.sx(t[0]),y:R.y+R.h+14,"font-size":11,"text-anchor":"middle"},t[1]);});
+  yt.forEach(t=>{el("line",{x1:R.x,y1:m.sy(t[0]),x2:R.x+R.w,y2:m.sy(t[0]),stroke:css("--grid"),"stroke-width":0.6});
+    el("text",{x:R.x-6,y:m.sy(t[0])+4,"font-size":11,"text-anchor":"end"},t[1]);});
+  el("text",{x:R.x+R.w/2,y:R.y+R.h+32,"font-size":12,"text-anchor":"middle"},xl);
+  el("text",{x:12,y:R.y+R.h/2,"font-size":12,"text-anchor":"middle",transform:"rotate(-90 12 "+(R.y+R.h/2)+")"},yl);}
+function line(m,pts,o){el("polyline",Object.assign({points:pts.map(p=>m.sx(p[0])+","+m.sy(p[1])).join(" "),fill:"none",stroke:css("--line"),"stroke-width":2.2},o||{}));}
+
+const LOGK=9, N0=Math.pow(10,v.n0), L=v.lag, tg=v.tg;
+const tsat=L+(LOGK-v.n0)*tg/Math.log10(2), tdec=tsat+300, TM=Math.max(1100,tdec+600);
+function lg(t){let e=v.n0+Math.max(0,t-L)/tg*Math.log10(2);return Math.min(e,LOGK)-Math.max(0,t-tdec)/240*3;}
+const R={x:60,y:15,w:480,h:215}, m=mk(R,0,TM,0,10);
+const bs=[0,L,tsat,tdec,TM], nm=["lappangás","exponenciális","stacionárius","pusztulás"];
+for(let i=0;i<4;i++){el("rect",{x:m.sx(bs[i]),y:R.y,width:m.sx(bs[i+1])-m.sx(bs[i]),height:R.h,fill:css("--grid"),opacity:i%2?0.55:0.2});
+ el("text",{x:(m.sx(bs[i])+m.sx(bs[i+1]))/2,y:R.y+R.h-8,"font-size":10,"text-anchor":"middle"},nm[i]);}
+const xt=[];for(let t=0;t<=TM;t+=Math.round(TM/6/60)*60||60)xt.push([t,String(t)]);
+axes(R,m,xt,[[0,"0"],[2,"2"],[4,"4"],[6,"6"],[8,"8"],[10,"10"]],"idő (perc, szemléltető)","log10 baktériumszám");
+const pts=[];for(let t=0;t<=TM;t+=TM/300)pts.push([t,lg(t)]);line(m,pts);
+const tau=120, n=tau/tg;
+status("<b>N = N<sub>0</sub>·2<sup>n</sup></b>, n = τ/t<sub>g</sub>. A lappangás után "+tau+" perc alatt n = "+fmt(n,1)+" generáció, a szám "+fmt(Math.pow(2,n),1)+"-szeresére nő (N<sub>0</sub> = "+fmt(N0,0)+" esetén kb. "+fmt(N0*Math.pow(2,n),0)+"). A telítés és a pusztulás ütemét a görbe szemléltetően mutatja.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

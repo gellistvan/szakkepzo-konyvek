@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tolóajtó sínhossza és laptömege</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="B">Nyílásszélesség</label><input id="B" type="range" min="800" max="3000" step="10" value="1800" aria-label="Nyílásszélesség"><output id="B_o" for="B"></output></div>
+<div class="row"><label for="n">Lapok száma</label><select id="n" aria-label="Lapok száma"><option value="1">1 lap</option><option value="2" selected>2 lap</option></select></div>
+<div class="row"><label for="t">Takarás (szélenként)</label><input id="t" type="range" min="10" max="60" step="5" value="30" aria-label="Takarás (szélenként)"><output id="t_o" for="t"></output></div>
+<div class="row"><label for="d">Lapvastagság</label><input id="d" type="range" min="16" max="40" step="1" value="19" aria-label="Lapvastagság"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="rho">Sűrűség</label><input id="rho" type="range" min="400" max="900" step="10" value="650" aria-label="Sűrűség"><output id="rho_o" for="rho"></output></div>
+<div class="row"><label for="H">Lapmagasság</label><input id="H" type="range" min="2000" max="2800" step="10" value="2400" aria-label="Lapmagasság"><output id="H_o" for="H"></output></div>
+<div class="row"><label for="op">Nyitás</label><input id="op" type="range" min="0" max="100" step="1" value="0" aria-label="Nyitás"><output id="op_o" for="op"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 780 260" role="img" aria-label="Kétlapos felső függesztett tolóajtó felülnézetben: lapszélesség, sínhossz és laptömeg a nyílásból számolva, a lapok nyitásával."></svg>
+<p class="small">A 38.3 példája: 1800 mm-es nyílás, 2 lap, 30 mm takarás → 930 mm-es lapok, 3660 mm sín, 27,6 kg/lap. Sűrűség: tájékoztató anyagjellemző (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"B":"mm", "t":"mm", "d":"mm", "rho":"kg/m³", "H":"mm", "op":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const B=v.B, n=v.n, t=v.t, d=v.d, rho=v.rho, H=v.H, op=v.op/100;
+const Ba=(n==2)?B/2+t:B+2*t, Ls=B+n*Ba, m=Ba/1000*H/1000*d/1000*rho;
+const W=760, sc=W/(Ls+600), X0=(W-Ls*sc)/2+(Ls-B)/2*sc, X=x=>X0+x*sc;
+el("rect",{x:0,y:0,width:780,height:260,fill:"#fff"});
+el("rect",{x:X(-300),y:50,width:300*sc,height:40,fill:"#ddd",stroke:"#000"});
+el("rect",{x:X(B),y:50,width:300*sc,height:40,fill:"#ddd",stroke:"#000"});
+el("rect",{x:X(-(Ls-B)/2),y:100,width:Ls*sc,height:10,fill:"#bbb",stroke:"#000"});
+if(n==2){const xl=-t-op*(Ba-t), xr=B-Ba+t+op*(Ba-t);
+ el("rect",{x:X(xl),y:140,width:Ba*sc,height:12,fill:"#e8e8e8",stroke:"#000","stroke-width":1.4});
+ el("rect",{x:X(xr),y:156,width:Ba*sc,height:12,fill:"#e8e8e8",stroke:"#000","stroke-width":1.4});}
+else{const xl=-t+op*(B+t-0)*1; el("rect",{x:X(xl),y:148,width:Ba*sc,height:12,fill:"#e8e8e8",stroke:"#000","stroke-width":1.4});}
+el("text",{x:X(B/2),y:30,"text-anchor":"middle","font-size":13,fill:"#000"},"sín "+fmt(Ls,0)+" mm");
+el("text",{x:X(B/2),y:200,"text-anchor":"middle","font-size":13,fill:"#000"},"nyílás "+fmt(B,0)+" mm");
+status("Lapszélesség: "+(n==2?"B/2 + takarás = "+fmt(B/2,0)+" + "+fmt(t,0):"B + 2 · takarás = "+fmt(B,0)+" + 2 · "+fmt(t,0))+" = <b>"+fmt(Ba,0)+" mm</b>; sínhossz: B + "+n+" · "+fmt(Ba,0)+" = <b>"+fmt(Ls,0)+" mm</b>; laptömeg: "+fmt(Ba/1000,3)+" · "+fmt(H/1000,3)+" · "+fmt(d/1000,3)+" · "+fmt(rho,0)+" = <b>"+fmt(m,1)+" kg</b>/lap. A görgőterhelést a vasalat adatlapjával kell egyeztetni (ellenőrizendő).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

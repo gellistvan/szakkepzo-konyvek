@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polclehajlás-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="l">Támaszköz l</label><input id="l" type="range" min="400" max="1500" step="10" value="800" aria-label="Támaszköz l"><output id="l_o" for="l"></output></div>
+<div class="row"><label for="b">Szélesség b</label><input id="b" type="range" min="150" max="400" step="5" value="200" aria-label="Szélesség b"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="vt">Vastagság v</label><input id="vt" type="range" min="12" max="40" step="1" value="18" aria-label="Vastagság v"><output id="vt_o" for="vt"></output></div>
+<div class="row"><label for="m">Terhelés m</label><input id="m" type="range" min="0" max="60" step="1" value="20" aria-label="Terhelés m"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="mat">Anyag (E, N/mm²)</label><select id="mat" aria-label="Anyag (E, N/mm²)"><option value="9000" selected>fenyő, E = 9000 (fejezet)</option><option value="10000">E = 10 000 (4. feladat)</option><option value="12000">tölgy/bükk, E ≈ 12 000*</option><option value="3000">forgácslap/MDF, E ≈ 3000*</option></select></div>
+<div class="row"><label for="korlat">Lehajlási korlát</label><select id="korlat" aria-label="Lehajlási korlát"><option value="300" selected>l/300</option><option value="500">l/500</option></select></div>
+<div class="row"><label for="kusz">Kúszási szorzó</label><select id="kusz" aria-label="Kúszási szorzó"><option value="1" selected>1 (rövid idejű)</option><option value="1.5">1,5</option><option value="2">2 (tartós terhelés)</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 520 330" role="img" aria-label="Polclehajlás a támaszköz, a méretek, a terhelés és az anyag függvényében"></svg>
+<p class="small">Szemléltető méretezés (nem helyettesíti a szabvány szerinti ellenőrzést). *Tájékoztató E-értékek, ellenőrizendők; a korlát és a kúszási szorzó tájékoztató. Ellenőrzés: példa 800/200/18 mm, 20 kg → 1,49 mm; 6. feladat 1200 mm, 30 kg: 18 mm → 7,6 mm, 30 mm → 1,6 mm.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"l":"mm", "b":"mm", "vt":"mm", "m":"kg"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const g=9.81, l=v.l, b=v.b, t=v.vt, m=v.m, E=v.mat, k=v.kusz, lim=v.korlat;
+const q=m*g/l, I=b*t**3/12, f=k*5*q*l**4/(384*E*I), fl=l/lim;
+const vreq=Math.cbrt(k*5*q*l**4*12/(384*E*b*fl));
+const ok=f<=fl;
+status("q = "+fmt(m*g,0)+" N / "+l+" mm = <b>"+fmt(q,3)+" N/mm</b>; I = "+b+"·"+t+"³/12 = <b>"+fmt(I,0)+" mm⁴</b><br>"+
+ "f = "+(k!=1?fmt(k,1)+" · ":"")+"5·q·l⁴ / (384·E·I) = <b>"+fmt(f,2)+" mm</b>; megengedett (l/"+lim+"): "+fmt(fl,2)+" mm → "+
+ (ok?"<span class='ok'>megfelel</span>":"<span class='bad'>nem felel meg</span>")+"; szükséges vastagság: <b>"+fmt(vreq,1)+" mm</b>");
+// meghajlott polc (eltúlzott)
+const X0=40,Y0=40,W=440, sc=Math.min(40,8*f);
+el("polygon",{points:X0+","+(Y0+60)+" "+(X0-10)+","+(Y0+80)+" "+(X0+10)+","+(Y0+80),fill:css("--muted")});
+el("polygon",{points:(X0+W)+","+(Y0+60)+" "+(X0+W-10)+","+(Y0+80)+" "+(X0+W+10)+","+(Y0+80),fill:css("--muted")});
+let p="";for(let i=0;i<=40;i++){const x=i/40, w=16*x*(1-2*x*x+x*x*x)/(5); p+=(i?"L":"M")+(X0+x*W)+" "+(Y0+60-t*0.6+w*sc*5);}
+let p2="";for(let i=40;i>=0;i--){const x=i/40, w=16*x*(1-2*x*x+x*x*x)/(5); p2+="L"+(X0+x*W)+" "+(Y0+60+w*sc*5);}
+el("path",{d:p+p2+"Z",fill:css("--grid"),stroke:css("--line")});
+for(let i=1;i<10;i++)el("line",{x1:X0+i*W/10,x2:X0+i*W/10,y1:Y0+20,y2:Y0+48,stroke:css("--hl2"),"marker-end":""});
+el("text",{x:X0+W/2,y:Y0+14,"text-anchor":"middle","font-size":12},"egyenletes terhelés: "+m+" kg; a lehajlás eltúlozva");
+// f–v görbe
+const GX=60,GY=290,GW=420,GH=130, fv=tt=>k*5*q*l**4*12/(384*E*b*tt**3);
+const fmax=Math.max(3*fl,Math.min(fv(12),60)), px=tt=>GX+(tt-12)/28*GW, py=ff=>GY-Math.min(ff,fmax)/fmax*GH;
+el("line",{x1:GX,y1:GY,x2:GX+GW,y2:GY,stroke:css("--line")});el("line",{x1:GX,y1:GY,x2:GX,y2:GY-GH,stroke:css("--line")});
+let c="";for(let tt=12;tt<=40;tt+=0.5)c+=(tt==12?"M":"L")+px(tt)+" "+py(fv(tt));
+el("path",{d:c,fill:"none",stroke:css("--hl"),"stroke-width":2});
+el("line",{x1:GX,x2:GX+GW,y1:py(fl),y2:py(fl),stroke:css("--bad"),"stroke-dasharray":"5 4"});
+el("text",{x:GX+GW,y:py(fl)-4,"text-anchor":"end","font-size":11},"l/"+lim+" = "+fmt(fl,1)+" mm");
+el("circle",{cx:px(t),cy:py(f),r:5,fill:css("--hl2"),stroke:css("--line")});
+for(let tt=12;tt<=40;tt+=4)el("text",{x:px(tt),y:GY+14,"text-anchor":"middle","font-size":11},String(tt));
+el("text",{x:GX+GW/2,y:GY+30,"text-anchor":"middle","font-size":12},"vastagság v (mm)");
+el("text",{x:GX-8,y:GY-GH+10,"text-anchor":"end","font-size":11},fmt(fmax,1));
+el("text",{x:GX-8,y:GY,"text-anchor":"end","font-size":11},"0");
+el("text",{x:14,y:GY-GH/2,"font-size":12,transform:"rotate(-90 14 "+(GY-GH/2)+")","text-anchor":"middle"},"f (mm)");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

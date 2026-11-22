@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Falnyílás és tokméret</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="b1">Szélesség – felül</label><input id="b1" type="range" min="880" max="930" step="1" value="904" aria-label="Szélesség – felül"><output id="b1_o" for="b1"></output></div>
+<div class="row"><label for="b2">Szélesség – középen</label><input id="b2" type="range" min="880" max="930" step="1" value="903" aria-label="Szélesség – középen"><output id="b2_o" for="b2"></output></div>
+<div class="row"><label for="b3">Szélesség – alul</label><input id="b3" type="range" min="880" max="930" step="1" value="902" aria-label="Szélesség – alul"><output id="b3_o" for="b3"></output></div>
+<div class="row"><label for="h1">Magasság – bal</label><input id="h1" type="range" min="2080" max="2130" step="1" value="2106" aria-label="Magasság – bal"><output id="h1_o" for="h1"></output></div>
+<div class="row"><label for="h2">Magasság – közép</label><input id="h2" type="range" min="2080" max="2130" step="1" value="2105" aria-label="Magasság – közép"><output id="h2_o" for="h2"></output></div>
+<div class="row"><label for="h3">Magasság – jobb</label><input id="h3" type="range" min="2080" max="2130" step="1" value="2107" aria-label="Magasság – jobb"><output id="h3_o" for="h3"></output></div>
+<div class="row"><label for="ho">Oldalsó hézag</label><input id="ho" type="range" min="5" max="20" step="1" value="10" aria-label="Oldalsó hézag"><output id="ho_o" for="ho"></output></div>
+<div class="row"><label for="hf">Felső hézag</label><input id="hf" type="range" min="5" max="20" step="1" value="10" aria-label="Felső hézag"><output id="hf_o" for="hf"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 330" role="img" aria-label="Falnyílás vízszintes metszete: a három mért szélesség és magasság legkisebb értékéből számolt tokméret."></svg>
+<p class="small">A 37.1 példája: 902 × 2105 → tok 882 × 2095, tok belső szélessége 822 mm. A hézagokat a beépítési útmutató adja (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"b1":"mm", "b2":"mm", "b3":"mm", "h1":"mm", "h2":"mm", "h3":"mm", "ho":"mm", "hf":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const B=Math.min(v.b1,v.b2,v.b3), H=Math.min(v.h1,v.h2,v.h3), ho=v.ho, hf=v.hf, O=30;
+const Bt=B-2*ho, Ht=H-hf, Bb=Bt-2*O;
+const sc=0.42, X0=110, Y0=200, X=x=>X0+x*sc, Y=y=>Y0-y*sc;
+el("rect",{x:0,y:0,width:640,height:330,fill:"#fff"});
+el("rect",{x:X(-220),y:Y(300),width:220*sc,height:300*sc,fill:"#ddd",stroke:"#000"});
+el("rect",{x:X(B),y:Y(300),width:220*sc,height:300*sc,fill:"#ddd",stroke:"#000"});
+[ho, B-ho-O].forEach(x=>el("rect",{x:X(x),y:Y(200),width:O*sc,height:140*sc,fill:"#f2e8d8",stroke:"#000","stroke-width":1.4}));
+[0,B-ho].forEach(x=>el("rect",{x:X(x),y:Y(200),width:ho*sc,height:140*sc,fill:"#fff",stroke:"#000","stroke-dasharray":"2 2"}));
+function dim(x1,x2,y,t){el("line",{x1:X(x1),x2:X(x2),y1:Y(y),y2:Y(y),stroke:"#000"});[x1,x2].forEach(x=>el("line",{x1:X(x),x2:X(x),y1:Y(y)-5,y2:Y(y)+5,stroke:"#000"}));
+ el("text",{x:(X(x1)+X(x2))/2,y:Y(y)-6,"text-anchor":"middle","font-size":13,fill:"#000"},t);}
+dim(0,B,360,"falnyílás (legkisebb) "+fmt(B,0)); dim(ho,B-ho,250,"tok "+fmt(Bt,0)); dim(ho+O,B-ho-O,20,"tok belső "+fmt(Bb,0));
+el("text",{x:20,y:300,"font-size":13,fill:"#000"},"Magasság: nyílás (legkisebb) "+fmt(H,0)+" − felső hézag "+fmt(hf,0)+" = tok "+fmt(Ht,0)+" mm");
+status("A legkisebb mért szélesség <b>"+fmt(B,0)+" mm</b>, magasság <b>"+fmt(H,0)+" mm</b>. B<sub>tok</sub> = "+fmt(B,0)+" − 2 · "+fmt(ho,0)+" = <b>"+fmt(Bt,0)+" mm</b>; H<sub>tok</sub> = "+fmt(H,0)+" − "+fmt(hf,0)+" = <b>"+fmt(Ht,0)+" mm</b>; tok belső szélessége "+fmt(Bt,0)+" − 2 · 30 = "+fmt(Bb,0)+" mm.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

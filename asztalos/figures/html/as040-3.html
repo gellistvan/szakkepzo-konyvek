@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kétiránypontos perspektíva</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="eye">Szemmagasság (horizont)</label><input id="eye" type="range" min="0" max="3000" step="50" value="1600" aria-label="Szemmagasság (horizont)"><output id="eye_o" for="eye"></output></div>
+<div class="row"><label for="f">Iránypontok távolsága</label><input id="f" type="range" min="40" max="160" step="5" value="100" aria-label="Iránypontok távolsága"><output id="f_o" for="f"></output></div>
+<div class="row"><label for="th">A szekrény elfordítása</label><input id="th" type="range" min="15" max="75" step="1" value="35" aria-label="A szekrény elfordítása"><output id="th_o" for="th"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 340" role="img" aria-label="Kétszárnyú szekrény kétiránypontos perspektívája; a horizont és az iránypontok állíthatók."></svg>
+<p class="small">Szekrény 1000 × 600 × 2000 mm, a legközelebbi sarokél 3,2 m-re (tanulási adat). A vízszintes élek az iránypontokba tartanak, a függőlegesek függőlegesek maradnak.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"eye":"mm", "f":"%", "th":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const WID=1000, DEP=600, HEI=2000, DIST=3200, th=v.th*Math.PI/180, f=v.f/100, eye=v.eye;
+function pr(a,b,z){const X=a*Math.cos(th)-b*Math.sin(th), Y=DIST+a*Math.sin(th)+b*Math.cos(th); return [f*X/Y*1000, f*(z-eye)/Y*1000];}
+const VP1=[-f*Math.tan(th)*1000,0], VP2=[f/Math.tan(th)*1000,0];
+const sc=Math.min(500/(VP2[0]-VP1[0]+200), 1), X=x=>280+(x-(VP1[0]+VP2[0])/2)*sc, hy=40+260*(1-eye/3000), Y=y=>hy-y*sc;
+el("line",{x1:0,y1:Y(0),x2:560,y2:Y(0),stroke:css("--line"),"stroke-width":1});
+el("text",{x:6,y:Y(0)-6,"font-size":12},"H");
+[[VP1,"VP1"],[VP2,"VP2"]].forEach(([V,n])=>{el("circle",{cx:X(V[0]),cy:Y(0),r:4,fill:css("--hl2")});el("text",{x:X(V[0]),y:Y(0)+18,"text-anchor":"middle","font-size":12},n);});
+const C=(a,b,z)=>pr(a,b,z), L=(p,q,o)=>{o=o||{};el("line",{x1:X(p[0]),y1:Y(p[1]),x2:X(q[0]),y2:Y(q[1]),stroke:o.c||css("--line"),"stroke-width":o.w||2.4,"stroke-dasharray":o.d||""});};
+[0,HEI].forEach(z=>{[C(0,0,z),C(WID,0,z)].forEach(p=>L(p,VP1,{c:css("--muted"),w:0.6,d:"3 3"}));[C(0,0,z),C(0,DEP,z)].forEach(p=>L(p,VP2,{c:css("--muted"),w:0.6,d:"3 3"}));});
+const E=[[[0,0,0],[WID,0,0]],[[0,0,HEI],[WID,0,HEI]],[[0,0,0],[0,DEP,0]],[[0,0,HEI],[0,DEP,HEI]],[[0,0,0],[0,0,HEI]],[[WID,0,0],[WID,0,HEI]],[[0,DEP,0],[0,DEP,HEI]]];
+if(eye<HEI){E.push([[WID,0,HEI],[WID,DEP,HEI]],[[0,DEP,HEI],[WID,DEP,HEI]]);}
+E.forEach(([p,q])=>L(C(...p),C(...q)));
+L(C(WID/2,0,0),C(WID/2,0,HEI),{w:1.2});
+const w1=Math.hypot(...[0,1].map(i=>C(WID/2,0,0)[i]-C(0,0,0)[i])), w2=Math.hypot(...[0,1].map(i=>C(WID,0,0)[i]-C(WID/2,0,0)[i]));
+const view = eye<200?"Békatávlat (alulnézet)":(eye>HEI?"Madártávlat (a teteje látszik)":"A szemmagasság a szekrény magasságán belül van");
+status(view+". A két ajtó valódi szélessége egyaránt 500 mm, a képen mérve: <b>"+fmt(w1*sc,0)+"</b> és <b>"+fmt(w2*sc,0)+
+ " képpont</b> – ezért a perspektív képről méretet levenni nem szabad.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

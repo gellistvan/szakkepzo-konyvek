@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Köldökcsap-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="vv">Oldallap vastagsága v</label><input id="vv" type="range" min="12" max="30" step="1" value="18" aria-label="Oldallap vastagsága v"><output id="vv_o" for="vv"></output></div>
+<div class="row"><label for="d">Csapátmérő d</label><input id="d" type="range" min="5" max="12" step="1" value="8" aria-label="Csapátmérő d"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="L">Csaphossz L</label><input id="L" type="range" min="20" max="60" step="1" value="40" aria-label="Csaphossz L"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="h1">Lapfurat mélysége h₁</label><input id="h1" type="range" min="5" max="25" step="1" value="12" aria-label="Lapfurat mélysége h₁"><output id="h1_o" for="h1"></output></div>
+<div class="row"><label for="b">Polcszélesség b</label><input id="b" type="range" min="100" max="800" step="10" value="300" aria-label="Polcszélesség b"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="e">Szélső távolság e</label><input id="e" type="range" min="10" max="40" step="1" value="25" aria-label="Szélső távolság e"><output id="e_o" for="e"></output></div>
+<div class="row"><label for="t">Osztás t</label><input id="t" type="range" min="30" max="100" step="1" value="50" aria-label="Osztás t"><output id="t_o" for="t"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 200" role="img" aria-label="Köldökcsapos polc–oldallap kötés metszete és csapkiosztása; a furatmélységek, a maradékfal és a csapszám kalkulátora."></svg>
+<p class="small">Tanulási példa (tájékoztató, ellenőrizendő: gyártói adatlap). Lapfurat: h₁ ≤ v − 5 mm; a két furat együtt 1 mm-rel mélyebb a csapnál.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"vv":"mm", "d":"mm", "L":"mm", "h1":"mm", "b":"mm", "e":"mm", "t":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const vv=v.vv, d=v.d, L=v.L, h1=v.h1, b=v.b, e=v.e, t=v.t;
+const fal=vv-h1, h2=L-h1+1, n=Math.floor((b-2*e)/t)+1, last=e+(n-1)*t;
+// metszet
+const s=2.6, X0=40, Y0=40;
+el("rect",{x:X0,y:Y0,width:vv*s,height:110,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+el("rect",{x:X0+vv*s,y:Y0+40,width:150,height:vv*s,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+const yc=Y0+40+vv*s/2;
+el("rect",{x:X0+(vv-h1)*s,y:yc-d*s/2,width:(h1+h2)*s,height:d*s,fill:css("--grid"),stroke:css("--line")});
+el("text",{x:X0+vv*s/2,y:Y0-8,"text-anchor":"middle","font-size":12},"oldallap");
+el("text",{x:X0+vv*s+75,y:Y0+40+vv*s+16,"text-anchor":"middle","font-size":12},"polc");
+el("text",{x:X0,y:Y0+130,"font-size":12},"h₁ = "+fmt(h1,0)+" mm, maradékfal = "+fmt(fal,0)+" mm, h₂ = "+fmt(h2,0)+" mm");
+// kiosztás
+const sx=Math.min(1.2, 300/b), X1=250, Y1=60;
+el("rect",{x:X1,y:Y1,width:b*sx,height:36,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+for(let i=0;i<n;i++){const x=e+i*t; el("circle",{cx:X1+x*sx,cy:Y1+18,r:Math.max(3,d*sx*0.9),fill:css("--hl")});}
+el("text",{x:X1,y:Y1-10,"font-size":12},"polcél felülről, "+n+" db csap");
+el("text",{x:X1,y:Y1+56,"font-size":12},"utolsó csap: "+fmt(last,0)+" mm, jobb szélső távolság: "+fmt(b-last,0)+" mm");
+let msg="h₁ + h₂ = L + 1 mm → h₂ = "+fmt(L,0)+" − "+fmt(h1,0)+" + 1 = <b>"+fmt(h2,0)+" mm</b>; maradékfal <b>"+fmt(fal,0)+" mm</b>; "+
+ "n = ⌊("+b+" − 2·"+e+")/"+t+"⌋ + 1 = <b>"+n+" db</b>";
+if(fal<5) msg+='<br><span class="bad">A maradékfal 5 mm alatti: a furat átüthet – csökkentsd h₁-et.</span>';
+if(e<15||b-last<15) msg+='<br><span class="bad">A szélső csap 15 mm-nél közelebb van a szélhez: a perem kireped.</span>';
+if(h1<1.5*d) msg+='<br><span class="small">Rövid lapfurat: a csap kevésbé tart (tájékoztató).</span>';
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

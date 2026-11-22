@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szíjhajtás és szalaghossz</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="n1">Motor n₁</label><input id="n1" type="range" min="700" max="3000" step="10" value="2800" aria-label="Motor n₁"><output id="n1_o" for="n1"></output></div>
+<div class="row"><label for="D1">Hajtó tárcsa D₁</label><input id="D1" type="range" min="50" max="250" step="5" value="80" aria-label="Hajtó tárcsa D₁"><output id="D1_o" for="D1"></output></div>
+<div class="row"><label for="D2">Hajtott tárcsa D₂</label><input id="D2" type="range" min="50" max="250" step="5" value="100" aria-label="Hajtott tárcsa D₂"><output id="D2_o" for="D2"></output></div>
+<div class="row"><label for="nmax">n_max (szerszám)</label><input id="nmax" type="range" min="1000" max="7000" step="100" value="5000" aria-label="n_max (szerszám)"><output id="nmax_o" for="nmax"></output></div>
+<div class="row"><label for="D">Szalagtárcsa D</label><input id="D" type="range" min="250" max="800" step="10" value="400" aria-label="Szalagtárcsa D"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="a">Tengelytáv a</label><input id="a" type="range" min="300" max="1200" step="10" value="600" aria-label="Tengelytáv a"><output id="a_o" for="a"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 330" role="img" aria-label="Animált szíjhajtás két tárcsával és szalagfűrész-hurok"></svg>
+<p class="small">A szíj csúszása elhanyagolva; a szalaghossz tájékoztató kiindulás, a feszítéshez a gépkönyv adata kell (ellenőrizendő). Alapbeállítás: a fejezet példái (2800 · 80/100 = 2240 1/min; 2 · 600 + π · 400 ≈ 2457 mm).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n1":"1/min", "D1":"mm", "D2":"mm", "nmax":"1/min", "D":"mm", "a":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(!window._run){window._run=1;window._t0=performance.now();(function L(){draw();requestAnimationFrame(L);})();}
+const w=values(), i=w.D2/w.D1, n2=w.n1/i, T=(performance.now()-window._t0)/1000;
+el("rect",{x:0,y:0,width:600,height:330,fill:"#fff"});
+// (a) szíjhajtás – 1 mm = 0,6 px; a forgás 1/400-ra lassítva
+const k=0.6, c1=[70,110], c2=[260,110], r1=w.D1/2*k, r2=w.D2/2*k;
+function tg(sg){const dx=c2[0]-c1[0],d=dx,s=(r2-r1)/d,c=Math.sqrt(1-s*s),nx=-s,ny=sg*c;return [[c1[0]+r1*nx,c1[1]-r1*ny],[c2[0]+r2*nx,c2[1]-r2*ny]];}
+[1,-1].forEach(sg=>{const t=tg(sg);el("line",{x1:t[0][0],y1:t[0][1],x2:t[1][0],y2:t[1][1],stroke:"#000","stroke-width":3});});
+[[c1,r1,w.n1],[c2,r2,n2]].forEach(q=>{const c=q[0],r=q[1],ph=2*Math.PI*q[2]/60/400*T;
+ el("circle",{cx:c[0],cy:c[1],r:r,fill:"#eee",stroke:"#000","stroke-width":2});
+ for(let j=0;j<3;j++){const a=ph+j*2*Math.PI/3;el("line",{x1:c[0],y1:c[1],x2:c[0]+r*Math.cos(a),y2:c[1]+r*Math.sin(a),stroke:"#000","stroke-width":2});}
+ el("circle",{cx:c[0],cy:c[1],r:4,fill:"#000"});});
+el("text",{x:c1[0],y:200,"text-anchor":"middle","font-size":12,fill:"#000"},"D₁ = "+w.D1+" mm");
+el("text",{x:c2[0],y:200,"text-anchor":"middle","font-size":12,fill:"#000"},"D₂ = "+w.D2+" mm");
+el("text",{x:c1[0],y:218,"text-anchor":"middle","font-size":12,fill:"#000"},"n₁ = "+w.n1);
+el("text",{x:c2[0],y:218,"text-anchor":"middle","font-size":12,fill:"#000"},"n₂ = "+fmt(n2,0));
+el("text",{x:165,y:22,"text-anchor":"middle","font-size":13,fill:"#000"},"szíjhajtás (forgás lassítva)");
+// (b) szalaghurok – a lépték a hurok méretéhez igazodik
+const s=Math.min(0.2,240/(w.a+w.D)), R=w.D/2*s, A=w.a*s, cx=480, yb=310-R, yt=yb-A, L=2*w.a+Math.PI*w.D;
+el("path",{d:"M"+(cx-R)+" "+yt+" A"+R+" "+R+" 0 0 1 "+(cx+R)+" "+yt,fill:"none",stroke:"#000","stroke-width":3,"stroke-dasharray":"7 4"});
+el("path",{d:"M"+(cx-R)+" "+yb+" A"+R+" "+R+" 0 0 0 "+(cx+R)+" "+yb,fill:"none",stroke:"#000","stroke-width":3,"stroke-dasharray":"7 4"});
+el("line",{x1:cx-R,x2:cx-R,y1:yt,y2:yb,stroke:"#000","stroke-width":3});el("line",{x1:cx+R,x2:cx+R,y1:yt,y2:yb,stroke:"#000","stroke-width":3});
+el("circle",{cx:cx,cy:yt,r:3,fill:"#000"});el("circle",{cx:cx,cy:yb,r:3,fill:"#000"});
+el("text",{x:cx,y:22,"text-anchor":"middle","font-size":13,fill:"#000"},"szalaghurok");
+el("text",{x:cx+R+6,y:(yt+yb)/2,"font-size":12,fill:"#000"},"a");
+let m="i = D₂/D₁ = "+fmt(i,2)+" → n₂ = n₁·D₁/D₂ = <b>"+fmt(n2,0)+" 1/min</b> ("+(i>1?"lassítás":(i<1?"gyorsítás":"azonos fordulatszám"))+"). ";
+m+=(n2>w.nmax)?"<span class='bad'>n₂ nagyobb a szerszámra megengedett n_max = "+w.nmax+" 1/min értéknél!</span>":"<span class='ok'>n₂ ≤ n_max.</span>";
+m+="<br>Szalaghossz: L = 2a + πD = 2·"+w.a+" + π·"+w.D+" = <b>"+fmt(L,0)+" mm</b> (egyenesek "+fmt(2*w.a,0)+" mm + két félkör "+fmt(Math.PI*w.D,0)+" mm).";
+status(m);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kosárív szerkesztése</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Háromközéppontos kosárív szerkesztése lépésenként: fesztáv, magasság, E pont, felező merőleges, O₁, O₂, O₃ középpontok és az érintőleges ívek."></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">f = 1200 mm, m = 400 mm. Szemléltető; a sablont mindig méretarányos rajzon ellenőrizd.</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "1. Fesztáv AB = f = 1200, a felezőpontban (C) merőleges, rajta CD = m = 400.", "k": 0}, {"msg": "2. Kösd össze A-t és D-t.", "k": 1}, {"msg": "3. D-ből mérd fel az AD szakaszra a DE = f/2 − m = 200 mm távolságot: E pont.", "k": 2}, {"msg": "4. Az AE szakasz felező merőlegese az AB-t O₁-ben, a CD egyenes meghosszabbítását O₂-ben metszi (O₁ a C-től 287 mm-re, O₂ a C alatt 430 mm-re).", "k": 3}, {"msg": "5. O₁ tükörképe a függőlegesre: O₃. Az O₂O₁ és O₂O₃ egyenesek meghosszabbításán lesznek az érintési pontok.", "k": 4}, {"msg": "6. O₁ és O₃ körül r₁ = O₁A ≈ 313 mm-rel a két kis ív, O₂ körül R₂ = O₂D ≈ 830 mm-rel a nagy ív; a T₁, T₂ pontokban érintőlegesen csatlakoznak.", "k": 5}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+const ELEMS=[{"t": "l", "p": [[-600.0, 0.0], [600.0, 0.0]], "st": "thin", "s": 0}, {"t": "l", "p": [[0.0, 0.0], [0.0, 400.0]], "st": "thin", "s": 0}, {"t": "p", "x": -600.0, "y": 0.0, "lab": "A", "dx": -30, "dy": -25, "s": 0}, {"t": "p", "x": 600.0, "y": 0.0, "lab": "B", "dx": 30, "dy": -25, "s": 0}, {"t": "p", "x": 0, "y": 0, "lab": "C", "dx": 25, "dy": -25, "s": 0}, {"t": "p", "x": 0, "y": 400, "lab": "D", "dx": 0, "dy": 30, "s": 0}, {"t": "l", "p": [[-600.0, 0.0], [0.0, 400.0]], "st": "thin", "s": 1}, {"t": "a", "c": [0, 400], "r": 200.0, "a1": -158.30993247402023, "a2": -134.30993247402023, "st": "dash", "s": 2}, {"t": "p", "x": -166.41005886756875, "y": 289.0599607549542, "lab": "E", "dx": 10, "dy": 35, "s": 2}, {"t": "x", "x": -123.20502943378438, "y": 389.5299803774771, "txt": "DE = f/2 − m", "ha": "right", "s": 2}, {"t": "l", "p": [[-338.82901373576607, 77.96595683044963], [33.282011773513744, -480.20058143347006]], "st": "dash", "s": 3}, {"t": "p", "x": -286.85170918213294, "y": 0.0, "lab": "O₁", "dx": 0, "dy": -30, "s": 3}, {"t": "p", "x": 0.0, "y": -430.27756377319946, "lab": "O₂", "dx": 40, "dy": 0, "s": 3}, {"t": "l", "p": [[0.0, 0.0], [0.0, -430.27756377319946]], "st": "dash", "s": 3}, {"t": "p", "x": 286.85170918213294, "y": 0.0, "lab": "O₃", "dx": 0, "dy": -30, "s": 4}, {"t": "l", "p": [[0.0, -430.27756377319946], [-460.5551275463989, 260.5551275463989]], "st": "cen", "s": 4}, {"t": "l", "p": [[0.0, -430.27756377319946], [460.5551275463989, 260.5551275463989]], "st": "cen", "s": 4}, {"t": "a", "c": [-286.85170918213294, 0.0], "r": 313.14829081786706, "a1": 123.6900675259798, "a2": 180, "st": "thick", "s": 5}, {"t": "a", "c": [286.85170918213294, 0.0], "r": 313.14829081786706, "a1": 0, "a2": 56.30993247402021, "st": "thick", "s": 5}, {"t": "a", "c": [0.0, -430.27756377319946], "r": 830.2775637731995, "a1": 56.309932474020215, "a2": 123.6900675259798, "st": "thick", "s": 5}, {"t": "p", "x": -460.5551275463989, "y": 260.5551275463989, "lab": "T₁", "dx": -45, "dy": 10, "s": 5}, {"t": "p", "x": 460.5551275463989, "y": 260.5551275463989, "lab": "T₂", "dx": 45, "dy": 10, "s": 5}], BOX=[-680, -490.27756377319946, 780, 480];
+function render(s){
+ const B=s.box||BOX; const W=B[2]-B[0], Hh=B[3]-B[1]; const sc=Math.min(540/W, 330/Hh);
+ svg.setAttribute("viewBox","0 0 "+(W*sc+20)+" "+(Hh*sc+20)); svg.innerHTML="";
+ const X=x=>10+(x-B[0])*sc, Y=y=>10+(B[3]-y)*sc;
+ const ST={thick:[2.6,""],thin:[1,""],dash:[1.2,"5 3"],cen:[1,"12 3 2 3"],ref:[1.4,"2 2"]};
+ ELEMS.forEach(e=>{if(e.s>s.k)return; const on=e.s==s.k, c=on?css("--hl2"):css("--line"), st=ST[e.st||"thin"];
+  const w=st[0]+(on?0.8:0);
+  if(e.t=="l") el("polyline",{points:e.p.map(q=>X(q[0])+","+Y(q[1])).join(" "),fill:"none",stroke:c,"stroke-width":w,"stroke-dasharray":st[1]});
+  else if(e.t=="a"){const r=e.r*sc, a1=e.a1*Math.PI/180, a2=e.a2*Math.PI/180;
+    const x1=X(e.c[0]+e.r*Math.cos(a1)), y1=Y(e.c[1]+e.r*Math.sin(a1)), x2=X(e.c[0]+e.r*Math.cos(a2)), y2=Y(e.c[1]+e.r*Math.sin(a2));
+    let d=e.a2-e.a1; while(d<0)d+=360; if(d>=359.9){el("circle",{cx:X(e.c[0]),cy:Y(e.c[1]),r:r,fill:"none",stroke:c,"stroke-width":w,"stroke-dasharray":st[1]});}
+    else el("path",{d:"M"+x1+" "+y1+" A"+r+" "+r+" 0 "+(d>180?1:0)+" 0 "+x2+" "+y2,fill:"none",stroke:c,"stroke-width":w,"stroke-dasharray":st[1]});}
+  else if(e.t=="p"){el("circle",{cx:X(e.x),cy:Y(e.y),r:on?4.5:3.2,fill:c});
+    if(e.lab)el("text",{x:X(e.x)+(e.dx||0)*sc,y:Y(e.y)-(e.dy||0)*sc+4,"text-anchor":e.ha=="left"?"start":(e.ha=="right"?"end":"middle"),"font-size":13,fill:c},e.lab);}
+  else if(e.t=="x")el("text",{x:X(e.x),y:Y(e.y)+4,"text-anchor":e.ha=="left"?"start":(e.ha=="right"?"end":"middle"),"font-size":12,fill:c},e.txt);
+ });}
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.innerHTML = s.msg || "";   // a lépésszöveg saját, megbízható HTML-t (<b>, <i>) tartalmazhat
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 1400);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

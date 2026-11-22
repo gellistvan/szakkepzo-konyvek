@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Száradási alakváltozás a rönkbeli helyzet szerint</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="u">Fanedvesség</label><input id="u" type="range" min="6" max="30" step="1" value="30" aria-label="Fanedvesség"><output id="u_o" for="u"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Rönk keresztmetszete öt darabbal, csúszkával állítható fanedvesség és alakváltozás"></svg>
+<p class="small">Szemléltető modell a fejezet bükk-értékeivel (β_húr = 0,30 %/%, β_sug = 0,18 %/%, rosttelítettségi határ 30 %, tájékoztató); az alakváltozás 4× nagyítva.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"u":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P=[{"n": "1 béles deszka", "p": [[-128.0, -20.0], [-121.4, -20.0], [-114.9, -20.0], [-108.3, -20.0], [-101.7, -20.0], [-95.2, -20.0], [-88.6, -20.0], [-82.1, -20.0], [-75.5, -20.0], [-68.9, -20.0], [-62.4, -20.0], [-55.8, -20.0], [-49.2, -20.0], [-42.7, -20.0], [-36.1, -20.0], [-29.5, -20.0], [-23.0, -20.0], [-16.4, -20.0], [-9.8, -20.0], [-3.3, -20.0], [3.3, -20.0], [9.8, -20.0], [16.4, -20.0], [23.0, -20.0], [29.5, -20.0], [36.1, -20.0], [42.7, -20.0], [49.2, -20.0], [55.8, -20.0], [62.4, -20.0], [68.9, -20.0], [75.5, -20.0], [82.1, -20.0], [88.6, -20.0], [95.2, -20.0], [101.7, -20.0], [108.3, -20.0], [114.9, -20.0], [121.4, -20.0], [128.0, -20.0], [128.0, -20.0], [128.0, -16.7], [128.0, -13.3], [128.0, -10.0], [128.0, -6.7], [128.0, -3.3], [128.0, 0.0], [128.0, 3.3], [128.0, 6.7], [128.0, 10.0], [128.0, 13.3], [128.0, 16.7], [128.0, 20.0], [128.0, 20.0], [121.4, 20.0], [114.9, 20.0], [108.3, 20.0], [101.7, 20.0], [95.2, 20.0], [88.6, 20.0], [82.1, 20.0], [75.5, 20.0], [68.9, 20.0], [62.4, 20.0], [55.8, 20.0], [49.2, 20.0], [42.7, 20.0], [36.1, 20.0], [29.5, 20.0], [23.0, 20.0], [16.4, 20.0], [9.8, 20.0], [3.3, 20.0], [-3.3, 20.0], [-9.8, 20.0], [-16.4, 20.0], [-23.0, 20.0], [-29.5, 20.0], [-36.1, 20.0], [-42.7, 20.0], [-49.2, 20.0], [-55.8, 20.0], [-62.4, 20.0], [-68.9, 20.0], [-75.5, 20.0], [-82.1, 20.0], [-88.6, 20.0], [-95.2, 20.0], [-101.7, 20.0], [-108.3, 20.0], [-114.9, 20.0], [-121.4, 20.0], [-128.0, 20.0], [-128.0, 20.0], [-128.0, 16.7], [-128.0, 13.3], [-128.0, 10.0], [-128.0, 6.7], [-128.0, 3.3], [-128.0, 0.0], [-128.0, -3.3], [-128.0, -6.7], [-128.0, -10.0], [-128.0, -13.3], [-128.0, -16.7], [-128.0, -20.0]], "pith": true}, {"n": "2 húros (fladeres) deszka", "p": [[-92.0, 70.0], [-86.7, 70.0], [-81.5, 70.0], [-76.2, 70.0], [-71.0, 70.0], [-65.7, 70.0], [-60.5, 70.0], [-55.2, 70.0], [-49.9, 70.0], [-44.7, 70.0], [-39.4, 70.0], [-34.2, 70.0], [-28.9, 70.0], [-23.7, 70.0], [-18.4, 70.0], [-13.1, 70.0], [-7.9, 70.0], [-2.6, 70.0], [2.6, 70.0], [7.9, 70.0], [13.1, 70.0], [18.4, 70.0], [23.7, 70.0], [28.9, 70.0], [34.2, 70.0], [39.4, 70.0], [44.7, 70.0], [49.9, 70.0], [55.2, 70.0], [60.5, 70.0], [65.7, 70.0], [71.0, 70.0], [76.2, 70.0], [81.5, 70.0], [86.7, 70.0], [92.0, 70.0], [92.0, 70.0], [92.0, 72.7], [92.0, 75.5], [92.0, 78.2], [92.0, 80.9], [92.0, 83.6], [92.0, 86.4], [92.0, 89.1], [92.0, 91.8], [92.0, 94.5], [92.0, 97.3], [92.0, 100.0], [92.0, 100.0], [86.7, 100.0], [81.5, 100.0], [76.2, 100.0], [71.0, 100.0], [65.7, 100.0], [60.5, 100.0], [55.2, 100.0], [49.9, 100.0], [44.7, 100.0], [39.4, 100.0], [34.2, 100.0], [28.9, 100.0], [23.7, 100.0], [18.4, 100.0], [13.1, 100.0], [7.9, 100.0], [2.6, 100.0], [-2.6, 100.0], [-7.9, 100.0], [-13.1, 100.0], [-18.4, 100.0], [-23.7, 100.0], [-28.9, 100.0], [-34.2, 100.0], [-39.4, 100.0], [-44.7, 100.0], [-49.9, 100.0], [-55.2, 100.0], [-60.5, 100.0], [-65.7, 100.0], [-71.0, 100.0], [-76.2, 100.0], [-81.5, 100.0], [-86.7, 100.0], [-92.0, 100.0], [-92.0, 100.0], [-92.0, 97.3], [-92.0, 94.5], [-92.0, 91.8], [-92.0, 89.1], [-92.0, 86.4], [-92.0, 83.6], [-92.0, 80.9], [-92.0, 78.2], [-92.0, 75.5], [-92.0, 72.7], [-92.0, 70.0]], "pith": false}, {"n": "3 tükrös deszka", "p": [[-12.0, -140.0], [-7.2, -140.0], [-2.4, -140.0], [2.4, -140.0], [7.2, -140.0], [12.0, -140.0], [12.0, -140.0], [12.0, -104.0], [12.0, -68.0], [12.0, -32.0], [12.0, -32.0], [7.2, -32.0], [2.4, -32.0], [-2.4, -32.0], [-7.2, -32.0], [-12.0, -32.0], [-12.0, -32.0], [-12.0, -68.0], [-12.0, -104.0], [-12.0, -140.0]], "pith": false}, {"n": "4 átlós négyzetes léc", "p": [[-86.0, -86.0], [-80.3, -86.0], [-74.6, -86.0], [-68.9, -86.0], [-63.1, -86.0], [-57.4, -86.0], [-51.7, -86.0], [-46.0, -86.0], [-46.0, -86.0], [-46.0, -72.7], [-46.0, -59.3], [-46.0, -46.0], [-46.0, -46.0], [-51.7, -46.0], [-57.4, -46.0], [-63.1, -46.0], [-68.9, -46.0], [-74.6, -46.0], [-80.3, -46.0], [-86.0, -46.0], [-86.0, -46.0], [-86.0, -59.3], [-86.0, -72.7], [-86.0, -86.0]], "pith": false}, {"n": "5 kör keresztmetszetű rúd", "p": [[100.0, -72.0], [99.9, -69.7], [99.5, -67.3], [98.9, -65.1], [98.0, -62.9], [97.0, -60.8], [95.7, -58.9], [94.2, -57.1], [92.5, -55.4], [90.6, -54.0], [88.7, -52.8], [86.6, -51.7], [84.4, -50.9], [82.1, -50.4], [79.8, -50.1], [77.4, -50.0], [75.1, -50.2], [72.8, -50.6], [70.5, -51.3], [68.4, -52.2], [66.3, -53.3], [64.4, -54.7], [62.7, -56.2], [61.1, -58.0], [59.7, -59.8], [58.5, -61.9], [57.5, -64.0], [56.8, -66.2], [56.3, -68.5], [56.0, -70.8], [56.0, -73.2], [56.3, -75.5], [56.8, -77.8], [57.5, -80.0], [58.5, -82.1], [59.7, -84.2], [61.1, -86.0], [62.7, -87.8], [64.4, -89.3], [66.3, -90.7], [68.4, -91.8], [70.5, -92.7], [72.8, -93.4], [75.1, -93.8], [77.4, -94.0], [79.8, -93.9], [82.1, -93.6], [84.4, -93.1], [86.6, -92.3], [88.7, -91.2], [90.6, -90.0], [92.5, -88.6], [94.2, -86.9], [95.7, -85.1], [97.0, -83.2], [98.0, -81.1], [98.9, -78.9], [99.5, -76.7], [99.9, -74.3], [100.0, -72.0]], "pith": false}], BT=0.30, BR=0.18, MAG=4, UF=30, u=v.u;
+const du=Math.max(0,UF-u), eT=MAG*BT*du/100, eR=MAG*BR*du/100;
+const k=0.72, cx=280, cy=160, X=x=>cx+x*k, Y=y=>cy-y*k;
+el("circle",{cx:cx,cy:cy,r:150*k,fill:"#f7f7f7",stroke:"#000","stroke-width":2});
+for(let r=12;r<144;r+=12)el("circle",{cx:cx,cy:cy,r:r*k,fill:"none",stroke:"#999","stroke-width":0.5});
+el("circle",{cx:cx,cy:cy,r:3,fill:"#000"});
+function dry(p,pith){if(pith)return p.map(q=>{const r=Math.max(Math.hypot(q[0],q[1]),1e-9),ey=eR*(q[1]/r)**2+eT*(q[0]/r)**2;return [q[0]*(1-eR),q[1]*(1-ey)];});
+ const c=[0,0];p.forEach(q=>{c[0]+=q[0]/p.length;c[1]+=q[1]/p.length;});const t0c=Math.atan2(c[1],c[0]);
+ let o=p.map(q=>{const r=Math.hypot(q[0],q[1]),th=Math.atan2(q[1],q[0]);const t0=pith?(q[0]>=0?0:Math.PI):t0c;
+  let d=((th-t0+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;const r2=r*(1-eR),th2=t0+d*(1-eT)/(1-eR);return [r2*Math.cos(th2),r2*Math.sin(th2)];});
+ if(!pith){const m=[0,0];o.forEach(q=>{m[0]+=q[0]/o.length;m[1]+=q[1]/o.length;});o=o.map(q=>[q[0]+c[0]-m[0],q[1]+c[1]-m[1]]);}
+ return o;}
+const pts=a=>a.map(q=>X(q[0]).toFixed(1)+","+Y(q[1]).toFixed(1)).join(" ");
+P.forEach(o=>{el("polygon",{points:pts(o.p),fill:"none",stroke:"#000","stroke-dasharray":"5 3"});
+ el("polygon",{points:pts(dry(o.p,o.pith)),fill:"#c8c8c8","fill-opacity":0.9,stroke:"#000","stroke-width":1.6});});
+[["1",-128,30],["2",0,112],["3",22,-140],["4",-100,-95],["5",108,-72]].forEach(a=>el("text",{x:X(a[1]),y:Y(a[2]),"font-size":13,"font-weight":"bold","text-anchor":"middle"},a[0]));
+status("Fanedvesség: <b>"+u+" %</b> (Δu = "+(-du)+" százalékpont a 30 %-os rosttelítettségi határtól). Húrirányú zsugorodás: "+fmt(BT*du,1)+" %, sugárirányú: "+fmt(BR*du,1)+" % – a rajzon 4× nagyítva. "+
+ "1 béles, 2 húros (a kéreg felőli oldal homorú), 3 tükrös deszka, 4 átlós négyzet, 5 kör.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fedezetipont-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="eset">Fejezet esetei</label><select id="eset" aria-label="Fejezet esetei"><option value="sajat">saját beállítás</option><option value="p1" selected>1–3. példa (900 000 / 720 / 270)</option><option value="valos">valós példa (1 100 000 / 850 / 340)</option><option value="valos2">valós példa, csökkentett F (1 050 000)</option><option value="f5a">5. feladat, jelenlegi (1 200 000 / 950 / 570)</option><option value="f5b">5. feladat, prémium (1 200 000 / 1 150 / 740)</option></select></div>
+<div class="row"><label for="F">Állandó költség F</label><input id="F" type="range" min="300" max="2000" step="10" value="900" aria-label="Állandó költség F"><output id="F_o" for="F"></output></div>
+<div class="row"><label for="p">Nettó egységár p</label><input id="p" type="range" min="300" max="1500" step="10" value="720" aria-label="Nettó egységár p"><output id="p_o" for="p"></output></div>
+<div class="row"><label for="vk">Változó költség v</label><input id="vk" type="range" min="100" max="1200" step="10" value="270" aria-label="Változó költség v"><output id="vk_o" for="vk"></output></div>
+<div class="row"><label for="Qt">Tervezett mennyiség</label><input id="Qt" type="range" min="0" max="5000" step="50" value="2600" aria-label="Tervezett mennyiség"><output id="Qt_o" for="Qt"></output></div>
+<div class="row"><label for="E">Célnyereség (adózás előtt)</label><input id="E" type="range" min="0" max="600" step="10" value="450" aria-label="Célnyereség (adózás előtt)"><output id="E_o" for="E"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 330" role="img" aria-label="Fedezetipont-kalkulátor: csúszkák az állandó költségre, az egységárra, a fajlagos változó költségre, a tervezett mennyiségre és a célnyereségre; a diagram az árbevétel- és az összköltség-egyenest, a fedezeti pontot és a biztonsági tartalékot mutatja"></svg>
+<p class="small">A fejezet képletei: Q* = F/(p − v), Á* = F/h, biztonsági tartalék = Q_terv − Q*, Q_cél = (F + E_cél)/(p − v). A legördülő lista a fejezet példáit tölti be (2 000; 2 157; 2 059; 3 158 / 2 927 adag). Szemléltető, egytermékes modell; a valós üzemben a vegyes termékszerkezet és a nem lineáris költségek eltérést okoznak.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"F":"ezer Ft", "p":"Ft", "vk":"Ft", "Qt":"adag", "E":"ezer Ft"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const PRESET={p1:[900,720,270,2600,450],valos:[1100,850,340,2500,0],valos2:[1050,850,340,2500,0],
+  f5a:[1200,950,570,3200,0],f5b:[1200,1150,740,3200,0]};
+if(FIG.lastEset!==v.eset){FIG.lastEset=v.eset;
+  if(PRESET[v.eset]){["F","p","vk","Qt","E"].forEach((k,i)=>{document.getElementById(k).value=PRESET[v.eset][i];});
+    Object.assign(v,values());}}
+const sep=x=>Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g," ");
+const F=v.F*1000,p=v.p,vv=v.vk,Qt=v.Qt,E=v.E*1000;
+const X0=60,Y0=290,W=480,H=260;
+el("line",{x1:X0,y1:Y0,x2:X0+W,y2:Y0,stroke:css("--line")});el("line",{x1:X0,y1:Y0,x2:X0,y2:Y0-H,stroke:css("--line")});
+el("text",{x:X0+W,y:Y0+28,"font-size":12,"text-anchor":"end"},"Q (adag/hó)");
+el("text",{x:X0-6,y:Y0-H-8,"font-size":12},"ezer Ft/hó");
+if(vv>=p){status('<span class="bad">Nincs fedezeti pont:</span> a változó költség ('+sep(vv)+' Ft) nem kisebb az egységárnál ('+sep(p)+' Ft), így minden eladott adag növeli a veszteséget.');
+  const xm=5000,ym=Math.max(F+vv*xm,p*xm)/1000*1.05;const sx=q=>X0+q/xm*W,sy=y=>Y0-y/ym*H;
+  el("line",{x1:sx(0),y1:sy(0),x2:sx(xm),y2:sy(p*xm/1000),stroke:css("--hl"),"stroke-width":2.5});
+  el("line",{x1:sx(0),y1:sy(F/1000),x2:sx(xm),y2:sy((F+vv*xm)/1000),stroke:css("--hl2"),"stroke-width":2.5,"stroke-dasharray":"7 4"});return;}
+const fed=p-vv,h=fed/p,Qs=F/fed,As=Qs*p,Qc=(F+E)/fed;
+const xm=Math.max(1000,Math.ceil(Math.max(Qs*1.6,Qt*1.15,Qc*1.1)/1000)*1000);
+const ym=Math.ceil(Math.max(p*xm,F+vv*xm)/1000/400)*400;
+const sx=q=>X0+q/xm*W,sy=y=>Y0-y/ym*H;
+for(let i=1;i<=4;i++){const q=xm*i/4,y=ym*i/4;
+  el("line",{x1:sx(q),y1:Y0,x2:sx(q),y2:Y0-H,stroke:css("--grid")});el("text",{x:sx(q),y:Y0+14,"font-size":11,"text-anchor":"middle"},sep(q));
+  el("line",{x1:X0,y1:sy(y),x2:X0+W,y2:sy(y),stroke:css("--grid")});el("text",{x:X0-4,y:sy(y)+4,"font-size":11,"text-anchor":"end"},sep(y));}
+el("polygon",{points:[[sx(0),sy(0)],[sx(0),sy(F/1000)],[sx(Qs),sy(As/1000)]].join(" "),fill:css("--bad"),"fill-opacity":0.18});
+el("polygon",{points:[[sx(Qs),sy(As/1000)],[sx(xm),sy(p*xm/1000)],[sx(xm),sy((F+vv*xm)/1000)]].join(" "),fill:css("--ok"),"fill-opacity":0.18});
+el("line",{x1:sx(0),y1:sy(F/1000),x2:sx(xm),y2:sy(F/1000),stroke:css("--muted"),"stroke-dasharray":"2 4"});
+el("line",{x1:sx(0),y1:sy(0),x2:sx(xm),y2:sy(vv*xm/1000),stroke:css("--muted"),"stroke-width":1.5,"stroke-dasharray":"2 3"});
+el("line",{x1:sx(0),y1:sy(0),x2:sx(xm),y2:sy(p*xm/1000),stroke:css("--hl"),"stroke-width":2.5});
+el("line",{x1:sx(0),y1:sy(F/1000),x2:sx(xm),y2:sy((F+vv*xm)/1000),stroke:css("--hl2"),"stroke-width":2.5,"stroke-dasharray":"7 4"});
+el("line",{x1:sx(Qs),y1:Y0,x2:sx(Qs),y2:sy(As/1000),stroke:css("--line"),"stroke-dasharray":"4 3"});
+el("circle",{cx:sx(Qs),cy:sy(As/1000),r:5,fill:css("--bg"),stroke:css("--line"),"stroke-width":2});
+el("text",{x:sx(Qs)-8,y:sy(As/1000)-12,"font-size":12,"font-weight":"bold","text-anchor":"end"},"Q* = "+sep(Qs));
+if(Qt>0){el("line",{x1:sx(Qt),y1:Y0,x2:sx(Qt),y2:sy(p*Qt/1000),stroke:css("--muted"),"stroke-dasharray":"1 3"});
+  el("rect",{x:sx(Qt)-4,y:sy(p*Qt/1000)-4,width:8,height:8,fill:css("--line")});
+  el("line",{x1:sx(Math.min(Qs,Qt)),y1:Y0-14,x2:sx(Math.max(Qs,Qt)),y2:Y0-14,stroke:Qt>=Qs?css("--ok"):css("--bad"),"stroke-width":3});
+  el("text",{x:(sx(Qs)+sx(Qt))/2,y:Y0-20,"font-size":11,"text-anchor":"middle"},"tartalék");}
+if(E>0){el("line",{x1:sx(Qc),y1:Y0,x2:sx(Qc),y2:Y0-H*0.15,stroke:css("--hl"),"stroke-width":2});el("text",{x:sx(Qc),y:Y0-H*0.15-4,"font-size":11,"text-anchor":"middle"},"Q cél");}
+el("text",{x:X0+8,y:Y0-H+12,"font-size":11},"— árbevétel   - - összes költség   ··· változó / állandó költség");
+const bt=Qt-Qs,btp=Qt>0?bt/Qt*100:0;
+status("Fajlagos fedezet p − v = <b>"+sep(fed)+" Ft/adag</b>; fedezeti hányad h = "+fmt(h*100,1)+" %.<br>"+
+ "Fedezeti pont: <b>Q* = "+sep(Qs)+" adag/hó</b>, Á* = "+sep(As)+" Ft/hó.<br>"+
+ (Qt>0?("Biztonsági tartalék: "+(bt>=0?'<span class="ok">':'<span class="bad">')+sep(bt)+" adag</span>, "+sep(bt*p)+" Ft, "+fmt(btp,1)+" %. "):"")+
+ (E>0?("Célnyereség "+sep(E)+" Ft → szükséges mennyiség Q<sub>cél</sub> = "+sep(Qc)+" adag/hó."):""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

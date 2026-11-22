@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szabástérkép-rajzoló</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 780 360" role="img" aria-label="Bútorlaptábla szabástérképe sávos kiosztással, szélezéssel, vágásszélességgel, maradéklappal és kihozatallal; a darablista szerkeszthető."></svg>
+<p class="small">Egyszerű sávos (guillotine) kirakó: a darabok a szálirány menti hosszukkal a tábla hosszában, a sávszélesség csökkenő sorrendjében kerülnek a táblára; nem optimális, de ellenőrizhető. Valós szabásnál a lapszabász optimalizáló szoftvere és a dekor iránya dönt.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const PR={"pelda": {"L": 2800, "W": 2070, "e": 15, "k": 3, "parts": [[1, "Oldallap", 4, 720, 560, false], [2, "Ajtólap", 4, 720, 350, false], [3, "Fix polc", 6, 1000, 330, false], [4, "Fiók homloklap", 2, 250, 500, false], [5, "Fiók oldal", 4, 400, 150, false]]}, "sz400": {"L": 2800, "W": 2070, "e": 15, "k": 3, "parts": [[1, "polc (400-as sáv)", 20, 600, 400, false]]}, "sz600": {"L": 2800, "W": 2070, "e": 15, "k": 3, "parts": [[1, "polc (600-as sáv)", 20, 400, 600, false]]}, "f3": {"L": 2500, "W": 1250, "e": 10, "k": 3, "parts": [[1, "HDF elem 500 × 300", 18, 500, 300, true]]}};
+function pack(parts,L,W,edge,kerf){const Lu=L-2*edge,Wu=W-2*edge,items=[];
+ parts.forEach(p=>{let [t,nm,n,l,w,rot]=p;for(let i=0;i<n;i++){let a=l,b=w;if(rot&&b>a){[a,b]=[b,a];}items.push([b,a,t,rot]);}});
+ items.sort((A,B)=>B[0]-A[0]||B[1]-A[1]);const sheets=[];let lost=0;
+ for(const [w,l,t,rot] of items){let placed=false;
+  for(const sh of sheets){for(const st of sh.strips){for(const [ll,ww] of (rot?[[l,w],[w,l]]:[[l,w]])){
+     const x=st.used+(st.pcs.length?kerf:0);if(ww<=st.w&&x+ll<=Lu){st.pcs.push([x,ll,ww,t]);st.used=x+ll;placed=true;break;}}
+    if(placed)break;}
+   if(placed)break;const y=sh.usedw+(sh.strips.length?kerf:0);
+   if(y+w<=Wu&&l<=Lu){sh.strips.push({y:y,w:w,used:l,pcs:[[0,l,w,t]]});sh.usedw=y+w;placed=true;break;}}
+  if(!placed){if(w>Wu||l>Lu){lost++;continue;}sheets.push({usedw:w,strips:[{y:0,w:w,used:l,pcs:[[0,l,w,t]]}]});}}
+ return [sheets,lost];}
+if(!window.UI){window.UI=1;const box=document.createElement("div");box.id="ui";
+ box.innerHTML=`<div style="margin:4px 0">Előbeállítás: <select id="pre"><option value="pelda">konyhaszekrény-sor (12.3.9)</option><option value="sz400">szemléletes kép: 400-as sávok</option><option value="sz600">szemléletes kép: 600-as sávok</option><option value="f3">3. feladat (HDF)</option></select>
+ Tábla <input id="L" type=number style="width:5em"> × <input id="W" type=number style="width:5em"> mm, szélezés <input id="e" type=number style="width:3.5em"> mm, vágásszélesség <input id="k" type=number style="width:3.5em"> mm</div>
+ <table id="pl" style="border-collapse:collapse;font-size:13px"><thead><tr><th>Tétel</th><th>Megnevezés</th><th>Db</th><th>Hossz (szálirány)</th><th>Szélesség</th><th>Forgatható</th></tr></thead><tbody></tbody></table>`;
+ FIG.svg.parentNode.insertBefore(box,FIG.svg);
+ window.load=function(k){const p=PR[k];["L","W","e","k"].forEach(i=>document.getElementById(i).value=p[i]);
+  document.querySelector("#pl tbody").innerHTML=p.parts.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><input type=number value=${r[2]} style="width:4em"></td><td><input type=number value=${r[3]} style="width:5em"></td><td><input type=number value=${r[4]} style="width:5em"></td><td><input type=checkbox ${r[5]?"checked":""}></td></tr>`).join("");
+  box.querySelectorAll("input").forEach(i=>i.addEventListener("input",draw));};
+ document.getElementById("pre").addEventListener("change",e=>{load(e.target.value);draw();});load("pelda");}
+const L=+document.getElementById("L").value,W=+document.getElementById("W").value,E=+document.getElementById("e").value,KF=+document.getElementById("k").value;
+const parts=[...document.querySelectorAll("#pl tbody tr")].map(tr=>{const c=tr.querySelectorAll("td"),i=tr.querySelectorAll("input");
+ return [+c[0].textContent,c[1].textContent,+i[0].value,+i[1].value,+i[2].value,i[3].checked];});
+const [S,lost]=pack(parts,L,W,E,KF);
+const n=Math.max(1,S.length),gap=20,sc=Math.min((760-gap*(n-1))/n/L,300/W);
+let tot=0,cnt=0;
+S.forEach((sh,k)=>{const X=k*(L*sc+gap),Y=10;
+ el("rect",{x:X,y:Y,width:L*sc,height:W*sc,fill:"#cfcfcf",stroke:"#000"});
+ el("rect",{x:X+E*sc,y:Y+E*sc,width:(L-2*E)*sc,height:(W-2*E)*sc,fill:"#fff",stroke:"#888"});
+ let a=0;sh.strips.forEach(st=>st.pcs.forEach(([x,l,w,t])=>{a+=l*w;cnt++;
+  el("rect",{x:X+(E+x)*sc,y:Y+(E+st.y)*sc,width:l*sc,height:w*sc,fill:["#fff","#e8eef7","#f7e9dc","#e6f2e6","#efe6f5","#eeeeee"][t%6],stroke:"#000"});
+  if(l*sc>14&&w*sc>12)el("text",{x:X+(E+x+l/2)*sc,y:Y+(E+st.y+w/2)*sc+4,"text-anchor":"middle","font-size":11,style:"fill:#111"},String(t));}));
+ tot+=a;el("text",{x:X+L*sc/2,y:Y+W*sc+18,"text-anchor":"middle","font-size":12},`${k+1}. tábla: ${fmt(a/(L*W)*100,1)} %`);});
+status(`<b>${cnt} db</b> ${S.length} táblán`+(lost?`, <span class="bad">${lost} db nem fér el</span>`:``)+`; nettó felület ${fmt(tot/1e6,3)} m², `+
+ `kihozatal <b>${fmt(tot/(S.length*L*W)*100,1)} %</b>. Maradék: a fehér (nem kiosztott) mezők; a szürke keret a szélezés.`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

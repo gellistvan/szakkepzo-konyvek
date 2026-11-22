@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asztallap mozgása és rögzítése</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="u">Fanedvesség</label><input id="u" type="range" min="8" max="14" step="0.5" value="14" aria-label="Fanedvesség"><output id="u_o" for="u"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 720 380" role="img" aria-label="Asztallap-rögzítés három módja; a fanedvesség csúszkájával a lap szélességváltozása és a rögzítőelemek elmozdulása látható."></svg>
+<p class="small">Tájékoztató modell: 0,3 % szélességváltozás 1 % fanedvesség-változásra (fafajtól és évgyűrűállástól függ – ellenőrizendő); szerelési fanedvesség 11 %. 8–14 % között a 600 mm-es lap kb. ±5 mm-t változik.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"u":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const K=0.003,U0=11,B=600,du=v.u-U0,db=B*K*du,half=db/2;
+const cx=360, y0=40, hs=160/600, ex=10;
+const h=160+db*ex*hs;
+el("rect",{x:cx-280,y:y0+80-h/2,width:560,height:h,fill:"none",stroke:css("--hl"),"stroke-width":2.5});
+el("rect",{x:cx-280,y:y0,width:560,height:160,fill:"none",stroke:css("--muted"),"stroke-dasharray":"6 4"});
+el("text",{x:cx,y:y0+85,"text-anchor":"middle","font-size":13},"asztallap felülnézetben (600 mm széles; a változás 10-szeres nagyítással)");
+el("text",{x:cx,y:y0+103,"text-anchor":"middle","font-size":12},"kék: aktuális, szaggatott: szerelési állapot");
+const fixes=[["lapgomb a horonyban",cx-230,8],["csavar a 20 mm-es furatban",cx,6],["fém fül a vágatban",cx+230,8]];
+const yy=y0+230;
+fixes.forEach(([t,x,play])=>{
+ el("rect",{x:x-60,y:yy,width:120,height:22,rx:11,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+ el("line",{x1:x,x2:x,y1:yy-6,y2:yy+28,stroke:css("--muted"),"stroke-dasharray":"3 3"});
+ const m=Math.max(-play,Math.min(play,half)), px=x+m*6;
+ el("circle",{cx:px,cy:yy+11,r:9,fill:Math.abs(half)>play?css("--bad"):css("--hl")});
+ el("text",{x:x,y:yy+50,"text-anchor":"middle","font-size":13},t);});
+const rigid=Math.abs(du)>0.5;
+el("text",{x:cx,y:yy+90,"text-anchor":"middle","font-size":13,style:"fill:"+(rigid?css("--bad"):css("--ok"))},
+ rigid?"ellenpélda – merev csavarozás: a lap nem mozoghat → feszültség, repedés, a káva elhúzódik":"merev csavarozás: szerelési nedvességen még nincs feszültség");
+status(`Fanedvesség <b>${fmt(v.u,1)} %</b> (szerelés: ${U0} %) → a 600 mm-es lap szélességváltozása Δb ≈ 600 · 0,003 · ${fmt(du,1)} = <b>${fmt(db,1)} mm</b>; `+
+ `a lap széle oldalanként <b>${fmt(half,1)} mm</b>-t mozdul. A jelölő a rögzítőelem helyzete a hornyában/furatában (6-szoros nagyítás).`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Excenteres kötő működése</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="a">Excenter elfordítása</label><input id="a" type="range" min="0" max="180" step="5" value="0" aria-label="Excenter elfordítása"><output id="a_o" for="a"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 330" role="img" aria-label="Excenteres kötő metszete: a fedőlapban az excenterház, az élfuraton át az oldallapba csavart kötőcsap; az excenter elfordítása összehúzza a sarkot."></svg>
+<p class="small">Sematikus metszet, a hézag nagyítva. A méretek (Ø15 × 13 mm ház, 34 mm, Ø8 élfurat, Ø5 csapfurat) és a szükséges elfordulás (gyakran 180–270°) gyártónként eltér – ellenőrizendő: vasalatgyártói katalógus.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"a":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const ang=v.a, gap=2*(1-ang/180), g=gap*6, k=3, X=40, Y=40, yt=Y+18*k, yc=yt-9*k;
+const L=css("--line"), M=css("--muted");
+const R=(x,y,w,h,f,dash)=>el("rect",{x:x,y:y,width:w,height:h,fill:f,stroke:L,"stroke-width":1.4,"stroke-dasharray":dash||"0"});
+// oldallap (függőleges), fedőlap (vízszintes) – metszet, 3-szoros nagyítás
+R(X,Y,18*k,200,"none"); el("text",{x:X+27,y:Y+215,"text-anchor":"middle","font-size":12},"oldallap");
+const x0=X+18*k+g;
+R(x0,Y,110*k>420?420:110*k,18*k,"none"); el("text",{x:x0+300,y:Y-8,"font-size":12},"fedőlap");
+R(x0,yc-4*k,34*k,8*k,"none","4 3");                                  // élfurat Ø8
+const hx=x0+34*k; R(hx-7.5*k,Y+5*k,15*k,13*k,css("--grid"));          // excenterház (alulról fúrva)
+// kötőcsap: az oldallaphoz rögzített, feje a házban
+const hd=X+18*k+30*k;
+el("rect",{x:X+6*k,y:yc-2.5*k,width:12*k,height:5*k,fill:M});
+el("rect",{x:X+18*k,y:yc-1.8*k,width:hd-X-18*k,height:3.6*k,fill:M});
+el("circle",{cx:hd,cy:yc,r:3.4*k,fill:M,stroke:L});
+// excenter alulnézete (forgatható tárcsa)
+const cx=hx, cy=Y+150, r=45, t=ang*Math.PI/180;
+el("circle",{cx:cx,cy:cy,r:r,fill:"none",stroke:L,"stroke-width":2});
+el("line",{x1:cx-12*Math.cos(t),y1:cy-12*Math.sin(t),x2:cx+12*Math.cos(t),y2:cy+12*Math.sin(t),stroke:L,"stroke-width":4});
+let d="";for(let i=0;i<=40;i++){const u=t+Math.PI*i/40, rr=r-6-14*i/40;d+=(i?"L":"M")+(cx+rr*Math.cos(u))+" "+(cy+rr*Math.sin(u));}
+el("path",{d:d,fill:"none",stroke:css("--hl"),"stroke-width":3});
+el("text",{x:cx,y:cy+r+18,"text-anchor":"middle","font-size":12},"excenter alulnézetben: "+ang+"°");
+el("text",{x:X,y:Y+240,"font-size":12},"hézag (nagyítva): "+fmt(gap,1)+" mm");
+status("Excenter elfordítva <b>"+ang+"°</b>: a csigavonalas horony a csapfejet a ház felé húzza, a fedőlap az oldallaphoz szorul. Hézag: <b>"+fmt(gap,1)+" mm</b>"+(gap<0.05?" – <span class='ok'>a sarok zár</span>.":"."));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

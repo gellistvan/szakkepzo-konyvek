@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Csokoládétorta árazás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="choc">Étcsokoládé egységára</label><input id="choc" type="range" min="5000" max="12000" step="100" value="8000" aria-label="Étcsokoládé egységára"><output id="choc_o" for="choc"></output></div>
+<div class="row"><label for="hours">Munkaidő</label><input id="hours" type="range" min="1" max="4" step="0.25" value="2" aria-label="Munkaidő"><output id="hours_o" for="hours"></output></div>
+<div class="row"><label for="over">Rezsikulcs</label><input id="over" type="range" min="0" max="60" step="1" value="30" aria-label="Rezsikulcs"><output id="over_o" for="over"></output></div>
+<div class="row"><label for="h">Haszonkulcs</label><input id="h" type="range" min="0" max="150" step="1" value="80" aria-label="Haszonkulcs"><output id="h_o" for="h"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 280" role="img" aria-label="Interaktív kalkulátor: csúszkák az étcsokoládé árához, munkaidőhöz, rezsikulcshoz és haszonkulcshoz; kijelzés az önköltségről, nettó és bruttó árról és a szeletárról"></svg>
+<p class="small">A fejezet példáiból: anyag 4 980 Ft + 0,34 kg étcsokoládé, bér 2 óra × 2 200 Ft, rezsi az anyag- és bérköltség arányában. Illusztratív árak, üzemenként ellenőrizendők.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"choc":"Ft/kg", "hours":"óra", "over":"%", "h":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const mat=4980+0.34*v.choc, wage=v.hours*2200, cost=(mat+wage)*(1+v.over/100), net=cost*(1+v.h/100), br=net*1.27, sl=br/16;
+const B=[["Önköltség",cost],["Nettó ár",net],["Bruttó ár",br]], mx=Math.max(br,1);
+B.forEach((b,i)=>{const y=14+i*52;el("text",{x:20,y:y+22,"font-size":14},b[0]);
+ el("rect",{x:150,y:y,width:b[1]/mx*270,height:32,fill:css("--hl"),opacity:0.3+0.25*i,stroke:css("--line"),"stroke-width":1.4});
+ el("text",{x:430,y:y+22,"font-size":14,"font-weight":"bold"},fmt(b[1],0)+" Ft");});
+el("text",{x:20,y:200,"font-size":16,"font-weight":"bold"},"Szeletár (16 szelet): "+fmt(br/16,0)+" Ft");
+el("text",{x:20,y:230,"font-size":12,fill:css("--muted")},"Anyag "+fmt(mat,0)+" + bér "+fmt(wage,0)+" Ft, rezsi "+fmt(v.over,0)+" % → önköltség");
+status("Alapérték: csokoládé 8 000 Ft/kg, 2 óra, rezsi 30 %, haszonkulcs 80 % → önköltség 15 730 Ft, nettó 28 314 Ft, bruttó ≈ 35 960 Ft (a fejezet példája). ÁFA 27 %.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

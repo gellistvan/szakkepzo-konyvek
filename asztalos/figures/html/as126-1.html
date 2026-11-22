@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Csészés pánt felfekvési változatai</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="typ">Változat</label><select id="typ" aria-label="Változat"><option value="ratet" selected>teljes rátét</option><option value="felratet">félrátét</option><option value="betet">betét</option></select></div>
+<div class="row"><label for="a">Nyitásszög</label><input id="a" type="range" min="0" max="110" step="1" value="0" aria-label="Nyitásszög"><output id="a_o" for="a"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 400" role="img" aria-label="A csészés pánt három felfekvési változata metszetben: teljes rátét, félrátét és betét ajtó a takarási méretekkel, nyitással."></svg>
+<p class="small">Vízszintes metszet felülről; a szaggatott téglalap a zárt helyzet. Tájékoztató méretek, gyártói adatlap szerint.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"a":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const typ=v.typ, a=v.a*Math.PI/180, T=19, sc=1.9, X0=330, Y0=290;
+const tak={"ratet":18,"felratet":8,"betet":0}[typ];
+const X=x=>X0+x*sc, Y=y=>Y0-y*sc;
+function poly(P,f,dash){el("polygon",{points:P.map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:f||"#fff",stroke:"#000","stroke-width":1.4,"stroke-dasharray":dash||"0"});}
+el("rect",{x:0,y:0,width:620,height:400,fill:"#fff"});
+poly([[0,-50],[T,-50],[T,0],[0,0]],"#e8e8e8");
+el("text",{x:X(-6),y:Y(-35),"font-size":12,fill:"#000","text-anchor":"end"},"oldallap 19");
+let x0,y0,px,py;
+if(typ=="betet"){x0=T+2;y0=-T;px=x0;py=0;}else{x0=T-tak;y0=0;px=x0;py=0;}
+if(typ=="felratet")poly([[-120+tak,0],[tak,0],[tak,T],[-120+tak,T]],"#f2f2f2","5 3");
+const W=120, rot=(x,y)=>{const dx=x-px,dy=y-py;return [px+dx*Math.cos(a)-dy*Math.sin(a), py+dx*Math.sin(a)+dy*Math.cos(a)];};
+poly([[x0,y0],[x0+W,y0],[x0+W,y0+T],[x0,y0+T]],"none","3 3");
+poly([[x0,y0],[x0+W,y0],[x0+W,y0+T],[x0,y0+T]].map(p=>rot(p[0],p[1])),"#dcdcdc");
+const c=[x0+21.5-17.5,y0],c2=[x0+21.5+17.5,y0+12];
+poly([[c[0],c[1]],[c2[0],c[1]],[c2[0],c2[1]],[c[0],c2[1]]].map(p=>rot(p[0],p[1])),"#fff");
+el("circle",{cx:X(px),cy:Y(py),r:4,fill:"#000"});
+const deg=v.a, txt={"ratet":"Teljes rátét: takarás 16–19 mm","felratet":"Félrátét: ajtónként 7–9 mm, két ajtó egy közös oszlopon","betet":"Betét: takarás 0, az ajtó a nyílásban, erősebben ívelt kar"}[typ];
+status(txt+" (rajzon "+tak+" mm). Nyitásszög: <b>"+deg+"°</b>. "+(deg>110?"":"")+"Sematikus forgatás a jelölt pont körül; a valós pánt több csuklóval mozog, a pontos geometriát a gyártói adatlap adja (ellenőrizendő).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

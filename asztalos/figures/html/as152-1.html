@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Önköltség- és árkalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mode">Nézet</label><select id="mode" aria-label="Nézet"><option value="0" selected>Előkalkuláció</option><option value="1">Utókalkuláció (összevetés)</option></select></div>
+<div class="row"><label for="mat">Anyagköltség</label><input id="mat" type="range" min="0" max="300000" step="500" value="92000" aria-label="Anyagköltség"><output id="mat_o" for="mat"></output></div>
+<div class="row"><label for="h">Munkaidő</label><input id="h" type="range" min="1" max="40" step="0.5" value="12" aria-label="Munkaidő"><output id="h_o" for="h"></output></div>
+<div class="row"><label for="w">Béróradíj</label><input id="w" type="range" min="2000" max="8000" step="100" value="4000" aria-label="Béróradíj"><output id="w_o" for="w"></output></div>
+<div class="row"><label for="j">Járulékkulcs</label><input id="j" type="range" min="0" max="30" step="0.5" value="13" aria-label="Járulékkulcs"><output id="j_o" for="j"></output></div>
+<div class="row"><label for="o">Egyéb közvetlen</label><input id="o" type="range" min="0" max="30000" step="100" value="3500" aria-label="Egyéb közvetlen"><output id="o_o" for="o"></output></div>
+<div class="row"><label for="r">Rezsióradíj</label><input id="r" type="range" min="0" max="6000" step="100" value="1800" aria-label="Rezsióradíj"><output id="r_o" for="r"></output></div>
+<div class="row"><label for="p">Haszonkulcs</label><input id="p" type="range" min="0" max="40" step="1" value="15" aria-label="Haszonkulcs"><output id="p_o" for="p"></output></div>
+<div class="row"><label for="t">ÁFA-kulcs</label><input id="t" type="range" min="0" max="27" step="1" value="27" aria-label="ÁFA-kulcs"><output id="t_o" for="t"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 580 300" role="img" aria-label="Vízesésdiagram: a konyhaszekrény-sor költségei önköltséggé, majd nyereséggel és ÁFA-val bruttó árrá adódnak össze."></svg>
+<p class="small">Mintaértékek a kidolgozott példából. Utókalkulációs nézethez állítsd be a tényleges adatokat (anyag 96 500 Ft, 13 h, 4 200 Ft/h, egyéb 4 100 Ft) – az eredmény 185 698 Ft, +14 358 Ft (+8,4 %). Az ÁFA- és járulékkulcs ellenőrizendő.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"mat":"Ft", "h":"h", "w":"Ft/h", "j":"%", "o":"Ft", "r":"Ft/h", "p":"%", "t":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const pre=v.mode==0;
+function c(mat,h,w,j,o,r,p,t){const b=h*w, ja=Math.round(b*j/100), re=h*r, on=mat+b+ja+o+re, ny=Math.round(on*p/100), net=on+ny, af=Math.round(net*t/100);return {mat,b,ja,o,re,on,ny,net,af,br:net+af};}
+const P=c(v.mat,v.h,v.w,v.j,v.o,v.r,v.p,v.t);
+const S=[["Anyag",P.mat,0],["Bér",P.b,0],["Járulék",P.ja,0],["Egyéb",P.o,0],["Rezsi",P.re,0],["Önköltség",P.on,1],["Nyereség",P.ny,0],["Nettó",P.net,1],["ÁFA",P.af,0],["Bruttó",P.br,1]];
+const X=40, Y=280, k=240/Math.max(P.br,1); let cum=0;
+S.forEach((s,i)=>{const x=X+i*52, h=s[1]*k; let y0;
+  if(s[2]){y0=Y-h;cum=s[1];el("rect",{x:x,y:y0,width:40,height:h,fill:css("--hl"),stroke:css("--line")});}
+  else{y0=Y-(cum+s[1])*k;el("rect",{x:x,y:y0,width:40,height:h,fill:i==6||i==8?"none":css("--grid"),stroke:css("--line"),"stroke-dasharray":i==6||i==8?"4 3":"0"});cum+=s[1];}
+  el("text",{x:x+20,y:Y+16,"text-anchor":"middle","font-size":11},s[0]);
+  el("text",{x:x+20,y:y0-4,"text-anchor":"middle","font-size":10},Math.round(s[1]/1000)+"e");});
+let msg="Önköltség: <b>"+P.on.toLocaleString("hu-HU")+" Ft</b>, nettó ár: <b>"+P.net.toLocaleString("hu-HU")+" Ft</b>, bruttó ár: <b>"+P.br.toLocaleString("hu-HU")+" Ft</b>.";
+if(!pre){const plan=171340, priceNet=197041, d=P.on-plan, real=priceNet-P.on;
+  msg="Utókalkuláció: tényleges önköltség <b>"+P.on.toLocaleString("hu-HU")+" Ft</b>, eltérés a tervezett 171 340 Ft-tól: <b>"+(d>=0?"+":"")+d.toLocaleString("hu-HU")+" Ft ("+fmt(100*d/plan,1)+" %)</b>. A 197 041 Ft-os nettó árral a tényleges haszon "+real.toLocaleString("hu-HU")+" Ft = "+fmt(100*real/P.on,1)+" % (tervezett "+v.p+" %).";}
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

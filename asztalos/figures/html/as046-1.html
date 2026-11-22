@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fogazás: típus és hajlás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="t">Típus</label><select id="t" aria-label="Típus"><option value="nyílt">nyílt fecskefarkú</option><option value="takart" selected>félig takart fecskefarkú</option><option value="egyenes">egyenes</option></select></div>
+<div class="row"><label for="n">Hajlás 1:n</label><input id="n" type="range" min="5" max="8" step="1" value="6" aria-label="Hajlás 1:n"><output id="n_o" for="n"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 760 430" role="img" aria-label="Fogazás elölnézete, oldalnézete és vízszintes metszete; a típus és a fecskefarok-hajlás állítható."></svg>
+<p class="small">Előlap 18, oldal 12, magasság 140 mm; 3 fecskefarok, félcsap 10, csap 8 mm (a fecskefarok széles végénél). Hajlás tájékoztató: puhafa ≈ 1:6, keményfa ≈ 1:8 (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const k=v.t, n=v.n, FT=18, ST=12, C=6, H=140, HALF=10, PIN=8, NT=3;
+const L=(k=="takart")?FT-C:FT, sh=L/n, w=(H-2*HALF-(NT-1)*PIN)/NT;
+const tl=[];let z=HALF;for(let i=0;i<NT;i++){tl.push([z,z+w]);z+=w+PIN;}
+const s=2.6, X=30, Y=40, line=css("--line"), g="#bbbbbb";
+const R=(x,y,ww,hh,f)=>el("rect",{x:x,y:y,width:ww,height:hh,fill:f||"none",stroke:line,"stroke-width":1.4});
+const P=(pts,f)=>el("polygon",{points:pts.map(p=>p.join(",")).join(" "),fill:f||"none",stroke:line,"stroke-width":1.2});
+// elölnézet
+R(X,Y,50*s,H*s);el("text",{x:X+25*s,y:Y+H*s+20,"text-anchor":"middle","font-size":13},"elölnézet");
+if(k=="nyílt")tl.forEach(t=>R(X,Y+t[0]*s,ST*s,(t[1]-t[0])*s,g));
+if(k=="egyenes")for(let i=1;i<7;i+=2)R(X,Y+i*20*s,ST*s,20*s,g);
+// oldalnézet
+const Xs=X+70*s;R(Xs,Y,60*s,H*s);el("text",{x:Xs+30*s,y:Y+H*s+20,"text-anchor":"middle","font-size":13},"oldalnézet");
+if(k=="egyenes"){for(let i=0;i<7;i+=2)R(Xs,Y+i*20*s,FT*s,20*s,g);}
+else{const y0=(k=="nyílt")?0:C;if(k=="takart")R(Xs,Y,C*s,H*s,g);
+ const zs=[0];tl.forEach(t=>{zs.push(t[0]);zs.push(t[1]);});zs.push(H);
+ for(let i=0;i<zs.length;i+=2){const a=zs[i],b=zs[i+1],pa=a+(i?sh:0),pb=b-(i<zs.length-2?sh:0);
+  P([[Xs+y0*s,Y+a*s],[Xs+FT*s,Y+pa*s],[Xs+FT*s,Y+pb*s],[Xs+y0*s,Y+b*s]],g);}
+ tl.forEach(t=>P([[Xs+y0*s,Y+t[0]*s],[Xs+FT*s,Y+(t[0]+sh)*s],[Xs+FT*s,Y+(t[1]-sh)*s],[Xs+y0*s,Y+t[1]*s]],"none"));}
+// metszet (egy fecskefarok magasságában)
+const Xm=Xs+80*s, Ym=Y+20, y0=(k=="takart")?C:0;
+el("text",{x:Xm,y:Ym-8,"font-size":13},"A–A vízszintes metszet");
+if(y0)P([[Xm,Ym],[Xm+60*s,Ym],[Xm+60*s,Ym+FT*s],[Xm+ST*s,Ym+FT*s],[Xm+ST*s,Ym+y0*s],[Xm,Ym+y0*s]]);
+else R(Xm+ST*s,Ym,(60-ST)*s,FT*s);
+P([[Xm,Ym+y0*s],[Xm+ST*s,Ym+y0*s],[Xm+ST*s,Ym+60*s],[Xm,Ym+60*s]],g);
+el("text",{x:Xm+62*s,y:Ym+12*s,"font-size":12},"előlap 18");el("text",{x:Xm+14*s,y:Ym+55*s,"font-size":12},"oldal 12 (fecskefarok)");
+const deg=Math.atan(1/n)*180/Math.PI;
+status(k=="egyenes"?`<b>Egyenes fogazás:</b> derékszögű ujjak (7 × 20 mm); húzásra csak a ragasztás tart.`:
+ `<b>${k=="nyílt"?"Nyílt":"Félig takart"} fecskefarkú fogazás</b>, hajlás 1:${n} → α = arctan(1/${n}) = <b>${fmt(deg,1)}°</b>; `+
+ `a fecskefarok hossza ${L} mm, oldalanként ${fmt(sh,1)} mm-t szűkül. `+(k=="takart"?"Elölről nem látszik (6 mm takaró réteg).":"Elölről a fecskefarkak bütüje látszik (szürke)."));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

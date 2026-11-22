@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fűrészáru-fajták keresztmetszet szerint</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="tipus">Példa</label><select id="tipus" aria-label="Példa"><option value="szelezett" selected>szélezett fenyő deszka 4000 × 100 × 22</option><option value="szelezetlen">szélezetlen tölgy deszka (középszélesség 240) × 30</option><option value="pallo">tölgy palló 2500 × 150 × 48</option><option value="gerenda">gerenda 4000 × 100 × 100</option><option value="lec">léc 3000 × 48 × 24</option></select></div>
+<div class="row"><label for="bm">szélesség b</label><input id="bm" type="range" min="20" max="300" step="2" value="100" aria-label="szélesség b"><output id="bm_o" for="bm"></output></div>
+<div class="row"><label for="vm">vastagság v</label><input id="vm" type="range" min="10" max="160" step="1" value="22" aria-label="vastagság v"><output id="vm_o" for="vm"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 340" role="img" aria-label="Fűrészáru keresztmetszete a szélesség és a vastagság csúszkájával, besorolás deszka, palló, léc, gerenda szerint"></svg>
+<p class="small">A besorolás a 7.1.1 tájékoztató határait követi (deszka 18–38 mm, palló kb. 40–80 mm, gerenda legalább 100 × 100 mm); a pontos választékhatárt a hatályos termékszabvány adja (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"bm":"mm", "vm":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(window._t!==v.tipus){window._t=v.tipus;const P={'szelezett': [100, 22], 'szelezetlen': [240, 30], 'pallo': [150, 48], 'gerenda': [100, 100], 'lec': [48, 24]}[v.tipus];
+ document.getElementById("bm").value=P[0];document.getElementById("vm").value=P[1];Object.assign(v,values());}
+const b=v.bm, t=v.vm;
+let c; if(b>=100&&t>=100)c="gerenda"; else if(t>=40&&t<=80)c="palló"; else if(t>=18&&t<=38&&b>=2*t&&b>48)c="deszka";
+ else if(b<=48&&t<=38)c="léc"; else c="átmeneti (a termékszabvány dönt)";
+const D={"deszka":"vékonyabb, szélesebb fűrészáru: v ≈ 18–38 mm, b ≥ 2·v","palló":"vastagabb, teherbíróbb: v ≈ 40–80 mm",
+ "gerenda":"nagy keresztmetszetű, teherviselő: legalább 100 × 100 mm","léc":"keskeny, vékony darab (pl. 24 × 48)"};
+status("Keresztmetszet: <b>"+b+" × "+t+" mm</b> (b × v), b/v = "+fmt(b/t,2)+" → <b>"+c+"</b>"+(D[c]?": "+D[c]:"")+". Tájékoztató határok, ellenőrizendő.");
+const k=Math.min(1.6, 330/Math.max(b,t,120)), x0=40, y0=300;
+el("rect",{x:x0,y:y0-t*k,width:b*k,height:t*k,fill:"none",stroke:css("--line"),"stroke-width":2});
+for(let r=0.4;r<2.4;r+=0.18){const R=Math.max(b,t)*r*k;
+ el("path",{d:`M ${x0+b*k/2-R} ${y0+Math.max(b,t)*0.45*k} A ${R} ${R} 0 0 1 ${x0+b*k/2+R} ${y0+Math.max(b,t)*0.45*k}`,fill:"none",stroke:css("--grid"),"clip-path":"url(#cp)"});}
+const cp=el("clipPath",{id:"cp"});const cr=document.createElementNS(NS,"rect");
+cr.setAttribute("x",x0);cr.setAttribute("y",y0-t*k);cr.setAttribute("width",b*k);cr.setAttribute("height",t*k);cp.appendChild(cr);
+el("text",{x:x0+b*k/2,y:y0+20,"text-anchor":"middle","font-size":13},"b = "+b+" mm");
+el("text",{x:x0+b*k+8,y:y0-t*k/2,"font-size":13},"v = "+t+" mm");
+el("text",{x:420,y:40,"font-size":16,"font-weight":"bold",fill:css("--hl")},c);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

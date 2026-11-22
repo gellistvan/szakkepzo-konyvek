@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fiókcsúszók kihúzása</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="typ">Csúszótípus</label><select id="typ" aria-label="Csúszótípus"><option value="gorgos">görgős</option><option value="golyos_r" selected>golyós, részleges</option><option value="golyos_t">golyós, teljes</option><option value="rejtett">rejtett (aláépített)</option></select></div>
+<div class="row"><label for="k">Kihúzás</label><input id="k" type="range" min="0" max="100" step="1" value="100" aria-label="Kihúzás"><output id="k_o" for="k"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 820 300" role="img" aria-label="Görgős, golyós és rejtett fiókcsúszó: kihúzható fiók oldalnézetben a részleges és a teljes kihúzással."></svg>
+<p class="small">Sematikus oldalnézet; a kihúzási arányok tájékoztatók (részleges ≈ 3/4), a pontos adat a vasalat adatlapja (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"k":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const t=v.typ, L=500, kmax={"gorgos":0.75,"golyos_r":0.75,"golyos_t":1,"rejtett":1}[t], ext=L*kmax*v.k/100;
+const sc=0.7, X0=440, Y0=230, X=x=>X0+x*sc, Y=y=>Y0-y*sc;
+el("rect",{x:0,y:0,width:820,height:300,fill:"#fff"});
+el("rect",{x:X(0),y:Y(150),width:L*sc+20,height:170*sc,fill:"#f2f2f2",stroke:"#000"});
+el("text",{x:X(250),y:Y(158),"text-anchor":"middle","font-size":12,fill:"#000"},"korpusz");
+if(t!="rejtett"){el("rect",{x:X(0),y:Y(30),width:L*sc,height:12*sc,fill:"#999",stroke:"#000"});}
+else{el("rect",{x:X(0),y:Y(12),width:L*sc,height:10*sc,fill:"#999",stroke:"#000"});}
+el("rect",{x:X(-ext),y:Y(130),width:L*sc,height:100*sc,fill:"#fff",stroke:"#000","stroke-width":1.6});
+el("rect",{x:X(-ext)-10,y:Y(140),width:10,height:125*sc,fill:"#ddd",stroke:"#000"});
+el("rect",{x:X(-ext),y:Y(t=="rejtett"?24:44),width:L*sc,height:10*sc,fill:"#fff",stroke:"#000"});
+if(t=="gorgos"){[X(L-25),X(-ext+25)].forEach(x=>el("circle",{cx:x,cy:Y(36),r:7,fill:"#fff",stroke:"#000"}));}
+if(t.startsWith("golyos")){for(let i=0;i<9;i++)el("circle",{cx:X(-ext/2+40)+i*14,cy:Y(36),r:3.5,fill:"#fff",stroke:"#000"});}
+el("line",{x1:X(0),x2:X(0),y1:Y(170),y2:Y(-10),stroke:"#000","stroke-dasharray":"6 3"});
+el("text",{x:X(-ext/2),y:Y(-25),"text-anchor":"middle","font-size":12,fill:"#000"},"kihúzás "+fmt(ext,0)+" mm");
+const name={"gorgos":"Görgős – részleges kihúzás (≈ 3/4)","golyos_r":"Golyós – részleges kihúzás (≈ 3/4)","golyos_t":"Golyós – teljes kihúzás","rejtett":"Rejtett, aláépített – teljes kihúzás, a sín a fiók alatt"}[t];
+status(name+": a fiók most <b>"+fmt(ext,0)+" mm</b>-re van kihúzva (legfeljebb "+fmt(L*kmax,0)+" mm, azaz a 500 mm-es fiók "+fmt(100*kmax,0)+" %-a). "+(t=="rejtett"?"Oldalról nem látható, a fiókoldal sima.":"Oldalra szerelt sín: oldalhézag tájékoztatóan 12–13 mm (vasalat adatlapja szerint)."));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

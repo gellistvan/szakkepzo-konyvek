@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zsinóros ellipszis</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="a">Fél nagytengely a</label><input id="a" type="range" min="200" max="1000" step="10" value="600" aria-label="Fél nagytengely a"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="b">Fél kistengely b</label><input id="b" type="range" min="100" max="1000" step="10" value="400" aria-label="Fél kistengely b"><output id="b_o" for="b"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 380" role="img" aria-label="Zsinóros ellipszis két szeggel a fókuszokban; a ceruzapont húzható."></svg>
+<p class="small">Húzd a ceruzát körbe: a zsinór feszes marad, a két szakasz összege mindig 2a. A zsinór nyúlása és a szegek vastagsága a valóságban kis eltérést okoz.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"a":"mm", "b":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const a=v.a, b=Math.min(v.b, v.a), c=Math.sqrt(a*a-b*b);
+FIG.t = (FIG.t===undefined)?0.9:FIG.t; FIG.a=a; FIG.b=b;
+const sc=Math.min(240/a,160/b), cx=280, cy=190, X=x=>cx+x*sc, Y=y=>cy-y*sc, t=FIG.t;
+const P=[a*Math.cos(t), b*Math.sin(t)];
+el("line",{x1:X(-a-40),y1:Y(0),x2:X(a+40),y2:Y(0),stroke:css("--muted"),"stroke-dasharray":"12 3 2 3"});
+el("line",{x1:X(0),y1:Y(-b-30),x2:X(0),y2:Y(b+30),stroke:css("--muted"),"stroke-dasharray":"12 3 2 3"});
+el("ellipse",{cx:cx,cy:cy,rx:a*sc,ry:b*sc,fill:"none",stroke:css("--muted"),"stroke-dasharray":"3 3"});
+let d="M"+X(a)+" "+Y(0); for(let k=1;k<=60;k++){const u=t*k/60; d+=" L"+X(a*Math.cos(u))+" "+Y(b*Math.sin(u));}
+el("path",{d:d,fill:"none",stroke:css("--line"),"stroke-width":3});
+el("polyline",{points:X(-c)+","+Y(0)+" "+X(P[0])+","+Y(P[1])+" "+X(c)+","+Y(0),fill:"none",stroke:css("--hl2"),"stroke-width":2});
+[-1,1].forEach(s=>{el("circle",{cx:X(s*c),cy:Y(0),r:5,fill:css("--line")});el("text",{x:X(s*c),y:Y(0)+20,"text-anchor":"middle","font-size":13},s<0?"F₁":"F₂");});
+const h=el("circle",{cx:X(P[0]),cy:Y(P[1]),r:9,fill:css("--hl"),style:"cursor:grab"});
+el("text",{x:X(P[0])+12,y:Y(P[1])-10,"font-size":13},"ceruza (húzd)");
+const d1=Math.hypot(P[0]+c,P[1]), d2=Math.hypot(P[0]-c,P[1]);
+status("c = √(a² − b²) = √("+a+"² − "+b+"²) = <b>"+fmt(c,1)+" mm</b>; PF₁ + PF₂ = "+fmt(d1,1)+" + "+fmt(d2,1)+" = <b>"+fmt(d1+d2,1)+" mm = 2a</b> (zsinórhossz).");
+if(!FIG.drag){FIG.drag=true; let on=false;
+ const pos=e=>{const r=FIG.svg.getBoundingClientRect(), vb=FIG.svg.viewBox.baseVal; return [(e.clientX-r.left)*vb.width/r.width,(e.clientY-r.top)*vb.height/r.height];};
+ FIG.svg.addEventListener("pointerdown",e=>{on=true;FIG.svg.setPointerCapture(e.pointerId);});
+ FIG.svg.addEventListener("pointerup",()=>on=false);
+ FIG.svg.addEventListener("pointermove",e=>{if(!on)return;const q=pos(e);const A=FIG.a,B=FIG.b;
+   const s2=Math.min(240/A,160/B); let u=Math.atan2(-(q[1]-190)/s2/B,(q[0]-280)/s2/A); if(u<0)u+=2*Math.PI; FIG.t=u; draw();});}
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

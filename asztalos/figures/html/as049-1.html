@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szabásjegyzék-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="h">Hulladék h</label><input id="h" type="range" min="0" max="50" step="1" value="25" aria-label="Hulladék h"><output id="h_o" for="h"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 260" role="img" aria-label="Szabásjegyzék-kalkulátor: kész, nyers és bruttó térfogat oszlopdiagramja a keretszerkezetű asztal példáján."></svg>
+<p class="small">Előtöltés: a 12.2.7 keretszerkezetű asztal tételei (a láb 720 × 60 × 60 sorrendben). A ráhagyások és a hulladékszázalék tájékoztatók (ellenőrizendő: üzemi anyagnorma). A táblázat mezői szerkeszthetők.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"h":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(!window.TBL){window.TBL=1;
+ const D=[["A1", "Asztallap palló", 3, 800, 200, 40, 15, 8, 3], ["A2", "Keretléc hosszú", 2, 800, 40, 20, 15, 8, 3], ["A3", "Keretléc rövid", 2, 560, 40, 20, 15, 8, 3], ["B1", "Láb", 4, 720, 60, 60, 15, 4, 4]];
+ const t=document.createElement("table");t.id="tbl";t.style.cssText="border-collapse:collapse;width:100%;font-size:13px;margin:6px 0";
+ const hd=["Tétel","Db","Kész h","Kész sz","Kész v","Ráh. h","Ráh. sz","Ráh. v","Nyers (mm)","V nyers (m³)"];
+ t.innerHTML="<thead><tr>"+hd.map(h=>"<th style='border:1px solid #999;padding:2px 4px'>"+h+"</th>").join("")+"</tr></thead><tbody></tbody>";
+ const tb=t.querySelector("tbody");
+ D.forEach(r=>{const tr=document.createElement("tr");
+  tr.innerHTML="<td style='border:1px solid #999;padding:2px 4px'>"+r[0]+" "+r[1]+"</td>"+[2,3,4,5,6,7,8].map(i=>"<td style='border:1px solid #999'><input type=number min=0 value='"+r[i]+"' style='width:4.2em;font:inherit' aria-label='"+r[0]+" "+hd[i-1]+"'></td>").join("")+"<td class=ny style='border:1px solid #999;padding:2px 4px'></td><td class=vn style='border:1px solid #999;padding:2px 4px;text-align:right'></td>";
+  tb.appendChild(tr);});
+ FIG.svg.parentNode.insertBefore(t,FIG.svg);
+ t.querySelectorAll("input").forEach(i=>i.addEventListener("input",draw));}
+let VK=0,VN=0;const det=[];
+document.querySelectorAll("#tbl tbody tr").forEach(tr=>{const x=[...tr.querySelectorAll("input")].map(i=>+i.value||0);
+ const [n,h,s,w,a,b,c]=x, vk=n*h*s*w/1e9, vn=n*(h+a)*(s+b)*(w+c)/1e9;VK+=vk;VN+=vn;
+ tr.querySelector(".ny").textContent=(h+a)+" × "+(s+b)+" × "+(w+c);tr.querySelector(".vn").textContent=fmt(vn,4);});
+const VB=VN*(1+v.h/100), eta=VB>0?VK/VB*100:0;
+const vals=[VK,VN,VB],labs=["kész (nettó)","nyers (szabási)","bruttó"],cols=["none",css("--grid"),css("--muted")];
+const top=Math.max(VB,0.001)*1.18, x0=70, y0=230, hh=200;
+el("line",{x1:x0,x2:x0+520,y1:y0,y2:y0,stroke:css("--line")});
+vals.forEach((q,i)=>{const h=q/top*hh,x=x0+30+i*170;
+ el("rect",{x:x,y:y0-h,width:110,height:h,fill:cols[i],stroke:css("--line"),"stroke-width":1.5});
+ el("text",{x:x+55,y:y0-h-8,"text-anchor":"middle","font-size":14},fmt(q,4)+" m³");
+ el("text",{x:x+55,y:y0+20,"text-anchor":"middle","font-size":13},labs[i]);});
+status(`1) V<sub>kész</sub> = Σ db · h · sz · v = <b>${fmt(VK,4)} m³</b>; 2) V<sub>nyers</sub> = Σ db · (h+r<sub>h</sub>)(sz+r<sub>sz</sub>)(v+r<sub>v</sub>) = <b>${fmt(VN,4)} m³</b>; `+
+ `3) V<sub>bruttó</sub> = V<sub>nyers</sub> · (1 + ${v.h}/100) = <b>${fmt(VB,4)} m³</b>; 4) η = V<sub>kész</sub> / V<sub>bruttó</sub> = <b>${fmt(eta,1)} %</b>.`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

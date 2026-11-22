@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poliolkeverék-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="C">helyettesítendő cukor</label><input id="C" type="range" min="50" max="500" step="10" value="200" aria-label="helyettesítendő cukor"><output id="C_o" for="C"></output></div>
+<div class="row"><label for="s1">1. édesítő</label><select id="s1" aria-label="1. édesítő"><option value="0">nincs</option><option value="0.9" selected>maltit (0,9)</option><option value="0.7">eritrit (0,7)</option><option value="1.0">xilit (1,0)</option><option value="0.5">izomalt (0,5)</option></select></div>
+<div class="row"><label for="r1">1. arány</label><input id="r1" type="range" min="0" max="100" step="1" value="60" aria-label="1. arány"><output id="r1_o" for="r1"></output></div>
+<div class="row"><label for="s2">2. édesítő</label><select id="s2" aria-label="2. édesítő"><option value="0">nincs</option><option value="0.9">maltit (0,9)</option><option value="0.7" selected>eritrit (0,7)</option><option value="1.0">xilit (1,0)</option><option value="0.5">izomalt (0,5)</option></select></div>
+<div class="row"><label for="r2">2. arány</label><input id="r2" type="range" min="0" max="100" step="1" value="40" aria-label="2. arány"><output id="r2_o" for="r2"></output></div>
+<div class="row"><label for="s3">3. édesítő (maradék)</label><select id="s3" aria-label="3. édesítő (maradék)"><option value="0" selected>nincs</option><option value="0.9">maltit (0,9)</option><option value="0.7">eritrit (0,7)</option><option value="1.0">xilit (1,0)</option><option value="0.5">izomalt (0,5)</option></select></div>
+<div class="row"><label for="M">késztermék tömege</label><input id="M" type="range" min="200" max="3000" step="50" value="1000" aria-label="késztermék tömege"><output id="M_o" for="M"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 190" role="img" aria-label="Kalkulátor: a helyettesítendő cukor tömegéből és a poliolok arányából kiszámolja a szükséges keverék tömegét és komponenseit."></svg>
+<p class="small">m = C / Σ(p<sub>i</sub>·s<sub>i</sub>). A relatív édességek tanulási értékek (ellenőrizendő: gyártói adatlap); a késztermék tömege szemléltető bemenet a polioltartalom becsléséhez. A fejezet példái: 200 g → 243,9 g; 300 g → 365,9 g.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"C":"g", "r1":"%", "r2":"%", "M":"g"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const NM={"0.9":"maltit","0.7":"eritrit","1":"xilit","0.5":"izomalt","0":"–"};
+let r1=v.r1, r2=Math.min(v.r2,100-r1); const r3=100-r1-r2;
+if(r2!==v.r2){document.getElementById("r2").value=r2;document.getElementById("r2_o").textContent=fmt(r2,0)+" %";}
+const parts=[[v.s1,r1/100],[v.s2,r2/100],[v.s3,r3/100]];
+const eq=parts.reduce((a,p)=>a+p[0]*p[1],0);
+const bad=parts.some(p=>p[1]>0&&p[0]===0);
+if(bad||eq<=0){status('<span class="bad">Minden 0 %-nál nagyobb arányú komponenshez válassz édesítőt!</span>');return;}
+const m=v.C/eq, more=m-v.C, pol=100*m/v.M;
+let rows="";parts.forEach(p=>{if(p[1]>0)rows+=NM[String(p[0])]+": <b>"+fmt(m*p[1],1)+" g</b> ("+fmt(100*p[1],0)+" %), ";});
+const chk=parts.reduce((a,p)=>a+p[0]*m*p[1],0);
+status("Keverék: <b>"+fmt(m,1)+" g</b> – "+rows+"tömegtöbblet a cukorhoz képest: "+fmt(more,1)+" g ("+fmt(100*more/v.C,1)+" %). "+
+  "Ellenőrzés: Σ s·m = "+fmt(chk,1)+" g cukoregyenérték."+
+  (pol>10?'<br><span class="bad">A késztermék polioltartalma kb. '+fmt(pol,1)+' % &gt; 10 %: címkén hashajtó hatásra figyelmeztetni kell (ellenőrizendő: 1169/2011/EU).</span>'
+          :'<br>A késztermék polioltartalma kb. '+fmt(pol,1)+' % (a 10 %-os figyelmeztetési küszöb alatt; ellenőrizendő).'));
+const X=40,W=500,Y=40,H=46, sc=W/Math.max(m,v.C)/1.05;
+el("text",{x:X,y:Y-8,"font-size":13},"cukor");
+el("rect",{x:X,y:Y,width:v.C*sc,height:H,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+el("text",{x:X+v.C*sc+6,y:Y+H/2+5,"font-size":13},fmt(v.C,0)+" g");
+let x=X;const fills=[css("--hl"),css("--hl2"),css("--muted")];
+el("text",{x:X,y:Y+H+38,"font-size":13},"poliolkeverék");
+parts.forEach((p,i)=>{if(p[1]<=0)return;const w=m*p[1]*sc;
+  el("rect",{x:x,y:Y+H+46,width:w,height:H,fill:fills[i],stroke:css("--line")});
+  if(w>50)el("text",{x:x+w/2,y:Y+H+46+H/2+5,"font-size":12,"text-anchor":"middle",fill:"#fff"},NM[String(p[0])]);x+=w;});
+el("text",{x:x+6,y:Y+H+46+H/2+5,"font-size":13},fmt(m,1)+" g");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

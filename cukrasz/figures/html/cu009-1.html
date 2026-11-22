@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lappangási idők – mikor jelentkeznek a tünetek?</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="lg">Tünetek kezdete (log₁₀ óra)</label><input id="lg" type="range" min="-0.3" max="3.2" step="0.02" value="0.48" aria-label="Tünetek kezdete (log₁₀ óra)"><output id="lg_o" for="lg"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 330" role="img" aria-label="Lappangási idők logaritmikus tengelyen: a toxinos mérgezések órákon belül, a fertőzések napok–hetek alatt jelentkeznek; a csúszkával kijelölt időponthoz illő kórokozók kiemelődnek."></svg>
+<p class="small">Tájékoztató értékek a cu009 táblázatából (ellenőrizendő: járványügyi szakirodalom). A lappangási idő önmagában nem diagnózis; a pontos azonosítást laborvizsgálat adja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"lg":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P=[{"n": "Staphylococcus aureus", "t": "toxin", "s": [[0.5, 6]], "x": "30 perc – 6 óra"}, {"n": "Bacillus cereus – hánytató", "t": "toxin", "s": [[1, 6]], "x": "1–6 óra"}, {"n": "Bacillus cereus – hasmenéses", "t": "toxin", "s": [[8, 16]], "x": "8–16 óra"}, {"n": "Salmonella", "t": "fert", "s": [[6, 72]], "x": "6–72 óra"}, {"n": "Norovírus", "t": "fert", "s": [[12, 48]], "x": "12–48 óra"}, {"n": "Hepatitis A vírus", "t": "fert", "s": [[360.0, 1200.0]], "x": "15–50 nap"}, {"n": "Listeria monocytogenes", "t": "fert", "s": [[168.0, 672.0], [672.0, 1680.0]], "x": "1–4 hét, akár 70 nap"}];
+const h=Math.pow(10,v.lg), X0=Math.log10(0.25), X1=Math.log10(2400), L=190, R=600;
+const sx=t=>L+(Math.log10(t)-X0)/(X1-X0)*(R-L);
+const lab=h<1?fmt(h*60,0)+" perc":(h<48?fmt(h,1)+" óra":(h<24*21?fmt(h/24,1)+" nap":fmt(h/168,1)+" hét"));
+[[1,"1 óra"],[6,"6 óra"],[24,"1 nap"],[168,"1 hét"],[720,"1 hónap"]].forEach(g=>{
+  el("line",{x1:sx(g[0]),y1:22,x2:sx(g[0]),y2:285,stroke:css("--grid"),"stroke-dasharray":"3 3"});
+  el("text",{x:sx(g[0]),y:16,"font-size":11,"text-anchor":"middle"},g[1]);});
+const hits=[];
+P.forEach((p,i)=>{const y=34+i*36, on=p.s.some(s=>s[0]<=h&&h<=s[1]); if(on)hits.push(p.n);
+  el("text",{x:L-8,y:y+14,"font-size":12,"text-anchor":"end","font-weight":on?"bold":"normal",fill:on?css("--hl2"):css("--fg")},p.n);
+  p.s.forEach((s,k)=>{el("rect",{x:sx(s[0]),y:y,width:Math.max(2,sx(s[1])-sx(s[0])),height:20,
+    fill:p.t==="toxin"?css("--muted"):"none",stroke:on?css("--hl2"):css("--line"),"stroke-width":on?3:1.2,
+    "stroke-dasharray":k?"5 3":"none",opacity:k?0.6:1});});});
+el("line",{x1:sx(h),y1:22,x2:sx(h),y2:290,stroke:css("--hl"),"stroke-width":2.5});
+el("text",{x:sx(h),y:305,"font-size":12,"text-anchor":"middle","font-weight":"bold"},lab);
+el("text",{x:20,y:325,"font-size":10.5},"tömör: toxin (ételmérgezés) · üres: élő kórokozó (ételfertőzés) · szaggatott: ritka kiterjesztés");
+status("A tünetek <b>"+lab+"</b> után jelentkeztek. "+(hits.length?"Ehhez illő lappangási idő: <b>"+hits.join(", ")+"</b>.":"Ehhez az időponthoz a táblázat egyik kórokozója sem illik.")+
+  (h>=2&&h<=4?" (A hibakeresési eset: 2–4 óra, láz nélkül → toxinos ételmérgezés gyanúja.)":""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

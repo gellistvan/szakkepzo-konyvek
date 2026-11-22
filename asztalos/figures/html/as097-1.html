@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ragasztószükséglet és keverék</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="A">Ragasztott felület A (m²)</label><input id="A" type="range" min="0.1" max="20" step="0.01" value="1.0" aria-label="Ragasztott felület A (m²)"><output id="A_o" for="A"></output></div>
+<div class="row"><label for="o">Felhordás</label><select id="o" aria-label="Felhordás"><option value="1" selected>egyoldali (×1)</option><option value="2">kétoldali (×2)</option></select></div>
+<div class="row"><label for="q">Fajlagos felhordás q (g/m²)</label><input id="q" type="range" min="50" max="300" step="5" value="140" aria-label="Fajlagos felhordás q (g/m²)"><output id="q_o" for="q"></output></div>
+<div class="row"><label for="vv">Veszteség v (%)</label><input id="vv" type="range" min="0" max="30" step="1" value="10" aria-label="Veszteség v (%)"><output id="vv_o" for="vv"></output></div>
+<div class="row"><label for="a">Keverési arány: gyanta (tömegrész)</label><input id="a" type="range" min="1" max="200" step="1" value="100" aria-label="Keverési arány: gyanta (tömegrész)"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="b">Keverési arány: edző (tömegrész)</label><input id="b" type="range" min="1" max="100" step="1" value="20" aria-label="Keverési arány: edző (tömegrész)"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="rho">Sűrűség ρ (kg/l, tájékoztató)</label><input id="rho" type="range" min="1.0" max="1.4" step="0.01" value="1.2" aria-label="Sűrűség ρ (kg/l, tájékoztató)"><output id="rho_o" for="rho"></output></div>
+<div class="row"><label for="pa">Gyanta egységára (Ft/kg)</label><input id="pa" type="range" min="0" max="10000" step="100" value="0" aria-label="Gyanta egységára (Ft/kg)"><output id="pa_o" for="pa"></output></div>
+<div class="row"><label for="pb">Edző egységára (Ft/kg)</label><input id="pb" type="range" min="0" max="10000" step="100" value="0" aria-label="Edző egységára (Ft/kg)"><output id="pb_o" for="pb"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 270" role="img" aria-label="Ragasztószükséglet-kalkulátor: felület, fajlagos felhordás, veszteség és keverési arány alapján számolja a gyanta és edző tömegét"></svg>
+<p class="small">A q, a veszteség, a keverési arány és a sűrűség a ragasztó adatlapjáról olvasandó (tájékoztató alapértékek). A komponenseket tömegre mérjük, felfelé kerekítve.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"A":"m²", "q":"g/m²", "vv":"%", "a":"rész", "b":"rész", "rho":"kg/l", "pa":"Ft/kg", "pb":"Ft/kg"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const side=+v.o, A=v.A*side, me=v.q*A, mg=me*(1+v.vv/100), s=v.a+v.b, ga=mg*v.a/s, ed=mg*v.b/s, V=mg/v.rho, cost=(ga*v.pa+ed*v.pb)/1000;
+const L=[["1. felület", fmt(v.A,2)+" m² × "+side+" = "+fmt(A,2)+" m²"],
+ ["2. elméleti tömeg", "m_elm = q · A = "+fmt(v.q,0)+" · "+fmt(A,2)+" = "+fmt(me,1)+" g"],
+ ["3. veszteséggel", "m_gyak = m_elm · (1 + "+fmt(v.vv,0)+"/100) = "+fmt(mg,1)+" g"],
+ ["4. komponensek", "gyanta = m · "+fmt(v.a,0)+"/"+fmt(s,0)+" = "+fmt(ga,1)+" g (kimérve: "+Math.ceil(ga)+" g)"],
+ ["", "edző = m · "+fmt(v.b,0)+"/"+fmt(s,0)+" = "+fmt(ed,1)+" g (kimérve: "+Math.ceil(ed)+" g)"],
+ ["5. térfogat, költség", "V = m/ρ = "+fmt(V,0)+" ml; költség ≈ "+fmt(cost,0)+" Ft"]];
+L.forEach((r,i)=>{el("text",{x:10,y:28+i*30,"font-size":14,"font-weight":"bold"},r[0]);el("text",{x:175,y:28+i*30,"font-size":14},r[1]);});
+// arányos oszlop: gyanta + edző
+const W=600, x0=10, y0=205, wg=W*ga/mg;
+el("rect",{x:x0,y:y0,width:wg,height:34,fill:"#bbbbbb",stroke:css("--fg")});
+el("rect",{x:x0+wg,y:y0,width:W-wg,height:34,fill:"none",stroke:css("--fg"),"stroke-dasharray":"5 3"});
+el("text",{x:x0+wg/2,y:y0+22,"text-anchor":"middle","font-size":13,fill:"#000"},"gyanta "+fmt(ga,0)+" g");
+el("text",{x:x0+wg+(W-wg)/2,y:y0+52,"text-anchor":"middle","font-size":13},"edző "+fmt(ed,0)+" g");
+status("Keverék összesen <b>"+fmt(mg,1)+" g</b>: gyanta <b>"+fmt(ga,1)+" g</b>, edző <b>"+fmt(ed,1)+" g</b>, térfogat ≈ "+fmt(V,0)+" ml.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

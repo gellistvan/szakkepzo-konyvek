@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uzsonnasütemény-sorozat kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--bad:#b71c1c;--cell:#f2f2f2;--line:#999}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--bad:#ef9a9a;--cell:#2a2a2a;--line:#555}}
+body{margin:0;padding:10px;font:14px/1.4 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.wrap{overflow-x:auto} table{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:3px 5px;text-align:right;white-space:nowrap} th{background:var(--cell);font-size:12px}
+td.out{background:var(--cell)} td:first-child,th:first-child{text-align:left}
+input{font:inherit;font-size:13px;width:4.6em;background:var(--bg);color:var(--fg);border:1px solid var(--line)} input.name{width:9em}
+.f{display:block;font-size:11px;color:var(--muted);text-align:right} tr.sum td{font-weight:bold}
+.warn{color:var(--bad);font-weight:bold} button{font:inherit;padding:2px 10px;cursor:pointer;margin:4px 6px 4px 0}
+.small{font-size:12px;color:var(--muted)} #status{margin:6px 0;min-height:2.6em}</style></head>
+<body>
+<div><button id="add" type="button">+ Sor hozzáadása</button><button id="reset" type="button">Alapadatok (fejezet)</button>
+<label><input id="steps" type="checkbox" style="width:auto"> lépésenként (képletek a cellákban)</label></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap"><table aria-label="Sorozat anyaghányad-kalkulátor"><thead><tr>
+<th>Termék</th><th>db</th><th>nyers g/db</th><th>sütési veszt. %</th><th>töltelék %</th><th>tészta 1 kg lisztből (kg)</th><th>vaj a liszt %-ában</th>
+<th>nyers (g)</th><th>kész (g)</th><th>kész g/db</th><th>tészta (g)</th><th>töltelék (g)</th><th>liszt (g)</th><th>vaj (g)</th><th></th></tr></thead>
+<tbody id="tb"></tbody><tfoot id="tf"></tfoot></table></div>
+<p class="small">Bemenő adatok: fehér mezők; számolt értékek: szürke cellák, grammra kerekítve (a számítás a kerekítés előtti értékekkel fut).
+Alapadatok: a fejezet 27.7.5 tanulási értékei (ellenőrizendők az üzemi receptúra és a saját mérés alapján). Tizedesvessző és tizedespont is használható.</p>
+<script>
+const BASE=[["Sajtos pogácsa", 60, 45, 12, 0, 2.02, 40], ["Pozsonyi kifli", 48, 90, 12, 25, 2.175, 50], ["Diós beigli", 40, 350, 15, 40, 1.687, 22]];
+let rows=BASE.map(r=>r.slice());
+const tb=document.getElementById("tb"),tf=document.getElementById("tf"),st=document.getElementById("status"),stp=document.getElementById("steps");
+const g=x=>Math.round(x).toLocaleString("hu-HU"), d=(x,k)=>Number(x).toFixed(k).replace(".",",");
+const num=s=>parseFloat(String(s).replace(",","."));
+const KEYS=["n","g","v","f","k","b"];
+function calc(r){const [_,n,g0,v,f,k,b]=r;const ny=n*g0,ke=ny*(1-v/100),tl=ny*f/100,te=ny-tl,li=k>0?te/k:NaN,va=li*b/100;
+  return {ny,ke,db:n>0?ke/n:NaN,te,tl,li,va};}
+function cell(val,formula){return '<td class="out">'+val+(stp.checked?'<span class="f">'+formula+'</span>':'')+'</td>';}
+function build(){
+  tb.innerHTML="";
+  rows.forEach((r,i)=>{const tr=document.createElement("tr");
+    tr.innerHTML='<td><input class="name" data-i="'+i+'" data-c="0" value="'+r[0]+'" aria-label="termék"></td>'+
+      r.slice(1).map((v,j)=>'<td><input data-i="'+i+'" data-c="'+(j+1)+'" value="'+String(v).replace(".",",")+'" inputmode="decimal" aria-label="'+KEYS[j]+'"></td>').join("")+
+      '<td class="o"></td>'.repeat(7)+'<td><button type="button" data-del="'+i+'" title="Sor törlése">×</button></td>';
+    tb.appendChild(tr);});
+  tb.querySelectorAll("input").forEach(e=>e.addEventListener("input",()=>{const i=+e.dataset.i,c=+e.dataset.c;
+    rows[i][c]=c?num(e.value):e.value;update();}));
+  tb.querySelectorAll("button[data-del]").forEach(b=>b.onclick=()=>{rows.splice(+b.dataset.del,1);build();});
+  update();}
+function update(){
+  const T={ny:0,ke:0,te:0,tl:0,li:0,va:0};const warn=[];
+  [...tb.rows].forEach((tr,i)=>{const r=rows[i],c=calc(r);for(const k in T)T[k]+=isFinite(c[k])?c[k]:0;
+    if(!(r[4]>=0&&r[4]<=60))warn.push(r[0]+": a töltelékarány ("+d(r[4],0)+" %) nem 0–60 % közötti");
+    if(!(r[3]>=0&&r[3]<50))warn.push(r[0]+": a sütési veszteség nem reális");
+    const o=[...tr.querySelectorAll("td")].slice(7,14);
+    const F=[["n · g/db",g(c.ny)],["nyers · (1 − v/100)",g(c.ke)],["kész : n",d(c.db,1)],["nyers − töltelék",g(c.te)],
+             ["nyers · tölt.%/100",g(c.tl)],["tészta : "+d(r[5],3),g(c.li)],["liszt · "+d(r[6],0)+" %",g(c.va)]];
+    o.forEach((td,j)=>{td.outerHTML=cell(F[j][1],F[j][0]);});});
+  const loss=T.ny>0?(T.ny-T.ke)/T.ny*100:0;
+  tf.innerHTML='<tr class="sum"><td>Összesen</td><td colspan="6"></td><td>'+g(T.ny)+'</td><td>'+g(T.ke)+'</td><td></td><td>'+g(T.te)+
+    '</td><td>'+g(T.tl)+'</td><td>'+g(T.li)+'</td><td>'+g(T.va)+'</td><td></td></tr>';
+  st.innerHTML="Sorozat: nyers <b>"+d(T.ny/1000,3)+" kg</b> → kész <b>"+d(T.ke/1000,3)+" kg</b>; sorozatveszteség <b>"+d(loss,1)+
+    " %</b>, kihozatal "+d(100-loss,1)+" %. Lisztigény <b>"+d(T.li/1000,3)+" kg</b>, vajigény <b>"+d(T.va/1000,3)+" kg</b>."+
+    (warn.length?'<br><span class="warn">Figyelem: '+warn.join("; ")+'</span>':'');}
+document.getElementById("add").onclick=()=>{rows.push(["Új termék",10,50,12,0,2,40]);build();};
+document.getElementById("reset").onclick=()=>{rows=BASE.map(r=>r.slice());build();};
+stp.onchange=update;
+build();
+</script><script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body></html>

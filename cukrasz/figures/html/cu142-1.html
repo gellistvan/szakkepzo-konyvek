@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szegély- és feliratméretező</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="D">Átmérő D</label><input id="D" type="range" min="16" max="32" step="1" value="26" aria-label="Átmérő D"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="n">Osztásszám n</label><input id="n" type="range" min="6" max="24" step="1" value="12" aria-label="Osztásszám n"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="L">Felirat-szélesség L</label><input id="L" type="range" min="6" max="26" step="0.5" value="18" aria-label="Felirat-szélesség L"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="r">Sorok száma</label><input id="r" type="range" min="1" max="3" step="1" value="1" aria-label="Sorok száma"><output id="r_o" for="r"></output></div>
+<div class="row"><label for="txt">Felirat</label><input id="txt" type="text" value="BOLDOG" aria-label="Felirat szövege" style="font:inherit"><span></span></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 520 520" role="img" aria-label="Kerek torta felülnézete: a peremen egyenlő osztás, középen a felirat dobozával."></svg>
+<p class="small">Képletek a fejezetből: s = πD/n, α = 360°/n, h = L/[0,7n + 0,2(n − 1)] (betűszélesség 0,7h, betűköz 0,2h, tanulási arány). Használható terület: a 2,5 cm-es szegélygyűrűn belül 1 cm szabad sáv; többsoros feliratnál a sorköz 0,5h (szemléltető feltevés).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"D":"cm", "n":"db", "L":"cm", "r":"sor"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const D=v.D, n=v.n, L=v.L, r=v.r, RING=2.5, MARG=1.0;
+let txtv=(document.getElementById("txt")||{value:"BOLDOG"}).value.trim()||"BOLDOG";
+if(!window._tw){window._tw=1;const t=document.getElementById("txt");if(t)t.addEventListener("input",draw);}
+// sorokra bontás (szóhatáron, kb. egyenlő hosszra)
+const words=txtv.split(/\s+/);let rows=[];let per=Math.ceil(txtv.length/r);let cur="";
+words.forEach(w=>{if(cur&&(cur.length+1+w.length)>per&&rows.length<r-1){rows.push(cur);cur=w;}else cur=cur?cur+" "+w:w;});rows.push(cur);
+const nl=Math.max(...rows.map(x=>x.length)), a=0.7*nl+0.2*(nl-1), b=rows.length+0.5*(rows.length-1);
+const s=Math.PI*D/n, alpha=360/n, h=L/a, Hb=h*b, Ri=D/2-RING-MARG;
+const hmax=Ri/Math.sqrt((a/2)**2+(b/2)**2);
+const fits=Math.hypot(L/2,Hb/2)<=Ri+1e-9;
+const W=520, sc=W/2/(32/2+2), cx=W/2, cy=W/2;
+FIG.svg.setAttribute("viewBox","0 0 "+W+" "+W);
+const R=D/2*sc;
+el("circle",{cx:cx,cy:cy,r:R,fill:"none",stroke:css("--line"),"stroke-width":2.2});
+el("circle",{cx:cx,cy:cy,r:(D/2-RING)*sc,fill:"none",stroke:css("--line"),"stroke-width":1});
+el("circle",{cx:cx,cy:cy,r:Ri*sc,fill:"none",stroke:css("--line"),"stroke-width":1,"stroke-dasharray":"6 4"});
+for(let k=0;k<n;k++){const t=(90-k*alpha)*Math.PI/180;
+ el("line",{x1:cx+(D/2-RING)*sc*Math.cos(t),y1:cy-(D/2-RING)*sc*Math.sin(t),x2:cx+R*Math.cos(t),y2:cy-R*Math.sin(t),stroke:css("--line")});
+ const m=(90-(k+.5)*alpha)*Math.PI/180;el("circle",{cx:cx+(D/2-RING/2)*sc*Math.cos(m),cy:cy-(D/2-RING/2)*sc*Math.sin(m),r:Math.min(7,s*sc*0.25),fill:"none",stroke:css("--hl")});}
+const bx=cx-L/2*sc, by=cy-Hb/2*sc, col=fits?css("--hl"):css("--bad");
+el("rect",{x:bx,y:by,width:L*sc,height:Hb*sc,fill:"none",stroke:col,"stroke-width":fits?1.5:3,"stroke-dasharray":fits?"":"8 4"});
+rows.forEach((t,i)=>{const yb=by+(i*1.5*h+h)*sc;
+ el("line",{x1:bx-8,y1:yb,x2:bx+L*sc+8,y2:yb,stroke:css("--line"),"stroke-width":1.3});
+ el("line",{x1:bx-8,y1:yb-h*sc,x2:bx+L*sc+8,y2:yb-h*sc,stroke:css("--line"),"stroke-width":0.6});
+ el("text",{x:cx,y:yb-0.08*h*sc,"text-anchor":"middle","font-size":h*sc*1.0,"font-weight":"bold",textLength:Math.min(L*sc,t.length*(0.9)*h*sc),lengthAdjust:"spacingAndGlyphs"},t);});
+status("Osztásköz <b>s = "+fmt(s)+" cm</b>, középponti szög <b>α = "+fmt(alpha,1)+"°</b>; betűmagasság <b>h = "+fmt(h)+" cm</b> ("+rows.length+" sor, leghosszabb sor "+nl+" jel). "+
+ "A használható területen a legnagyobb h: <b>"+fmt(hmax)+" cm</b>. "+(fits?'<span class="ok">A felirat elfér.</span>':'<span class="bad">A felirat kilóg a használható területből: csökkentsd L-t vagy növeld a sorok számát!</span>')+
+ (s<3?' <span class="bad">Az osztásköz 3 cm alatti: a motívumok összeérhetnek.</span>':''));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

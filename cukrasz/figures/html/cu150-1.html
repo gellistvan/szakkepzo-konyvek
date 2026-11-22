@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kereslet, kínálat, egyensúly</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="p">Ár</label><input id="p" type="range" min="300" max="800" step="10" value="600" aria-label="Ár"><output id="p_o" for="p"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 540 290" role="img" aria-label="Keresleti és kínálati egyenes a Számítás 1 függvényeivel; a metszéspont 100 adag/nap és 500 Ft/adag."></svg>
+<p class="small">A Számítás 1 függvényei: Q_d = 200 − 0,2P, Q_s = 50 + 0,1P (tanulási példa). Egyensúly: 100 adag/nap és 500 Ft/adag; 600 Ft-nál 30 adag túlkínálat (Számítás 2).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"p":"Ft"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const p=v.p, qd=200-0.2*p, qs=50+0.1*p, R={x:70,y:20,w:440,h:230};
+const sx=q=>R.x+(q-50)/100*R.w, sy=P=>R.y+R.h-P/1000*R.h;
+for(let q=50;q<=150;q+=10){el("line",{x1:sx(q),y1:R.y,x2:sx(q),y2:R.y+R.h,stroke:css("--grid")});el("text",{x:sx(q),y:R.y+R.h+15,"font-size":11,"text-anchor":"middle"},q);}
+for(let P=0;P<=1000;P+=200){el("line",{x1:R.x,y1:sy(P),x2:R.x+R.w,y2:sy(P),stroke:css("--grid")});el("text",{x:R.x-6,y:sy(P)+4,"font-size":11,"text-anchor":"end"},P);}
+el("text",{x:R.x+R.w/2,y:R.y+R.h+32,"font-size":12,"text-anchor":"middle"},"Mennyiség (adag/nap)");
+el("text",{x:16,y:R.y+R.h/2,"font-size":12,"text-anchor":"middle",transform:"rotate(-90 16 "+(R.y+R.h/2)+")"},"Ár (Ft/adag)");
+el("line",{x1:sx(50),y1:sy(750),x2:sx(150),y2:sy(250),stroke:css("--line"),"stroke-width":2.5});
+el("line",{x1:sx(55),y1:sy(50),x2:sx(150),y2:sy(1000),stroke:css("--line"),"stroke-width":2.5,"stroke-dasharray":"8 5"});
+el("text",{x:sx(52),y:sy(760),"font-size":12},"kereslet");el("text",{x:sx(132),y:sy(860),"font-size":12},"kínálat");
+el("circle",{cx:sx(100),cy:sy(500),r:6,fill:css("--bg"),stroke:css("--line"),"stroke-width":2});
+el("line",{x1:R.x,y1:sy(p),x2:R.x+R.w,y2:sy(p),stroke:css("--muted"),"stroke-dasharray":"3 3"});
+const a=Math.min(qd,qs), b=Math.max(qd,qs);
+el("line",{x1:sx(Math.max(50,a)),y1:sy(p),x2:sx(Math.min(150,b)),y2:sy(p),stroke:qs>qd?css("--hl2"):css("--hl"),"stroke-width":8,opacity:0.7});
+const gap=Math.abs(qs-qd);
+status("Ár: <b>"+p+" Ft/adag</b> → keresett mennyiség <b>"+fmt(qd,0)+"</b>, kínált mennyiség <b>"+fmt(qs,0)+"</b> adag/nap. "+
+ (gap<0.5?'<span class="ok">Egyensúly: 100 adag/nap, 500 Ft/adag.</span>':(qs>qd?"<b>Túlkínálat: "+fmt(gap,0)+" adag</b> (eladatlan marad; az ár csökkenés felé mozdul).":"<b>Túlkereslet: "+fmt(gap,0)+" adag</b> (hiány; az ár emelkedés felé mozdul).")));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

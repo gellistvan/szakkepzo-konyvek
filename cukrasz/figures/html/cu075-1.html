@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Temperálási görbe</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="t">Csokoládéfajta</label><select id="t" aria-label="Csokoládéfajta"><option value="0" selected>Étcsokoládé</option><option value="1">Tejcsokoládé</option><option value="2">Fehércsokoládé</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="A temperálási görbe három szakasza étcsokoládéra, tej- és fehércsokoládéra, hőfokjelöléssel"></svg>
+<p class="small">A fejezet táblázata alapján; tájékoztató gyártói tartományok, nem hatósági előírás. Az időtengely szemléltető.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+const D=[[[45, 50], [27, 28], [31, 32]], [[40, 45], [26, 27], [29, 30]], [[40, 45], [26, 27], [28, 29]]];const N=["\u00c9tcsokol\u00e1d\u00e9", "Tejcsokol\u00e1d\u00e9", "Feh\u00e9rcsokol\u00e1d\u00e9"];
+const d=D[v.t], mid=r=>(r[0]+r[1])/2, a=mid(d[0]), b=mid(d[1]), c=mid(d[2]);
+const Rr={x:60,y:15,w:470,h:210}, X=t=>Rr.x+t/30*Rr.w, Y=T=>Rr.y+Rr.h-(T-15)/(55-15)*Rr.h;
+el("line",{x1:Rr.x,y1:Rr.y+Rr.h,x2:Rr.x+Rr.w,y2:Rr.y+Rr.h,stroke:css("--line"),"stroke-width":1.5});el("line",{x1:Rr.x,y1:Rr.y,x2:Rr.x,y2:Rr.y+Rr.h,stroke:css("--line"),"stroke-width":1.5});
+[20,30,40,50].forEach(T=>{el("line",{x1:Rr.x,y1:Y(T),x2:Rr.x+Rr.w,y2:Y(T),stroke:css("--grid"),"stroke-width":0.6});el("text",{x:Rr.x-6,y:Y(T)+4,"font-size":11,"text-anchor":"end"},T+" °C");});
+const P=[[0,20],[5,a],[10,a],[15,b],[20,b],[25,c],[30,c]];
+el("polyline",{points:P.map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"none",stroke:css("--line"),"stroke-width":2.4});
+[[5,a],[10,a],[15,b],[20,b],[25,c],[30,c]].forEach((p,i)=>{if([1,2,5].indexOf(i)>=0)el("circle",{cx:X(p[0]),cy:Y(p[1]),r:5,fill:css("--hl2"),stroke:css("--line")});});
+[[7.5,"1. olvasztás",d[0]],[17.5,"2. hűtés",d[1]],[27.5,"3. munkahőfok",d[2]]].forEach(s=>{el("text",{x:X(s[0]),y:Rr.y+Rr.h+16,"font-size":11,"text-anchor":"middle"},s[1]);
+ el("text",{x:X(s[0]),y:Y(mid(s[2]))-10,"font-size":12,"text-anchor":"middle","font-weight":"bold"},s[2][0]+"–"+s[2][1]+" °C");});
+el("text",{x:Rr.x+Rr.w/2,y:Rr.y+Rr.h+36,"font-size":12,"text-anchor":"middle"},"idő (szemléltető)");
+status("<b>"+N[v.t]+"</b>: olvasztás "+d[0][0]+"–"+d[0][1]+" °C, hűtés "+d[1][0]+"–"+d[1][1]+" °C, munkahőfok "+d[2][0]+"–"+d[2][1]+" °C. A görbe a tartományok közepét rajzolja; a gyártói adatlap az irányadó (ellenőrizendő).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

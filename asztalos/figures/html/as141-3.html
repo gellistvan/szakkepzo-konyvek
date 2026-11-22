@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nóniusz-gyakorló</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="task">Feladat</label><select id="task" aria-label="Feladat"><option value="35.2" selected>1. feladat</option><option value="12.7">2. feladat</option><option value="8.4">3. feladat</option><option value="47.9">4. feladat</option><option value="23.0">5. feladat</option><option value="5.6">6. feladat</option><option value="61.3">7. feladat</option></select></div>
+<div class="row"><label for="show">Leolvasás mutatása</label><input id="show" type="checkbox" aria-label="Leolvasás mutatása"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 250" role="img" aria-label="Tolómérő fő- és nóniuszskálája a kiválasztott mérethez; a leolvasás ellenőrizhető."></svg>
+<p class="small">0,1 mm-es nóniusz: a nóniusz 10 osztása 9 mm hosszú. Az első feladat a könyv példája (35,2 mm).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const fg=css("--fg"), hl=css("--hl2"), ok=css("--ok");
+const V=+v.task, s=14, x0=40, y0=150, start=Math.max(0,Math.floor(V)-6);
+for(let mm=start;mm<=start+36;mm++){const x=x0+(mm-start)*s;
+  el("line",{x1:x,y1:y0,x2:x,y2:y0-(mm%5===0?26:(mm%1===0?16:0)),stroke:fg,"stroke-width":1.2});
+  if(mm%10===0||mm%5===0)el("text",{x:x,y:y0-32,"text-anchor":"middle","font-size":13},String(mm));}
+el("line",{x1:x0-10,y1:y0+2,x2:x0+36*s+10,y2:y0+2,stroke:fg,"stroke-width":1});
+const k=Math.round((V-Math.floor(V))*10)%10;
+for(let i=0;i<=10;i++){const x=x0+(V+0.9*i-start)*s, on=(v.show&&i===k);
+  el("line",{x1:x,y1:y0+4,x2:x,y2:y0+((i%5===0)?30:22),stroke:on?hl:fg,"stroke-width":on?3.5:1.2});
+  if(i%5===0)el("text",{x:x,y:y0+46,"text-anchor":"middle","font-size":12},String(i));}
+el("text",{x:x0,y:y0+80,"font-size":13},"felül: főskála (mm) · alul: nóniusz (10 osztás 9 mm-en, 0,1 mm)");
+if(v.show){status(`Egész mm a nóniusz 0-vonala előtt: <b>${Math.floor(V)}</b>; egybeeső nóniuszvonal: <b>${k}</b> → 0,${k} mm. Leolvasás: <b class='ok'>${fmt(V,1)} mm</b>.`);}
+else status("Olvasd le a méretet, majd kapcsold be a „leolvasás mutatása” jelölőt az ellenőrzéshez.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

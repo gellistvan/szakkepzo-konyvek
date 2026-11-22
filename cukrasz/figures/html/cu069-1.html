@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cukorfőzési fok – hőmérséklet kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="use">Felhasználás</label><select id="use" aria-label="Felhasználás"><option value="0" selected>Fondán</option><option value="1">Olasz habcsók</option><option value="2">Vajkrém</option><option value="3">Grillázs (lágy törés)</option><option value="4">Karamell</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Interaktív ábra: a kiválasztott felhasználáshoz tartozó cukorfőzési fok, hőmérsékleti sáv és kézi próba"></svg>
+<p class="small">A fejezet táblázata alapján; tájékoztató hőfokok, a források eltérő sávokat adhatnak meg. Az olasz habcsók, vajkrém és fondán a lágy golyó fokhoz tartozik.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+const T=[["Szirup, vékony szál", 100, 105, "a csepp szétterül, nem formálható", "áztatószirup, likőrök"], ["Fonál", 102, 112, "vékony, majd hosszabb fonál húzható", "híg cukros áztatás, tojáshab stabilizálása"], ["Gyöngy", 110, 115, "apró, kemény gyönggyé hűl", "cukrozott gyümölcs, zselésített bonbon"], ["Lágy golyó", 113, 118, "puha, ujjal formálható golyó", "olasz habcsók, vajkrém, fondán, bonbontöltelék"], ["Kemény golyó", 118, 121, "a golyó nem lapul el, rugalmas", "keményebb bonbontöltelék, nyalókaalap"], ["Lágy törés", 121, 132, "hajlítható, hidegen pattan", "grillázs, ropogós bevonat, díszek"], ["Kemény törés", 149, 154, "üvegszerűen törik", "cukorfújás alapja, cukorkák, nyalókák"], ["Karamell", 160, 180, "sárgásbarnától mélybarnáig, kesernyés", "karamellöntet, grillázs, dobos cukor, díszek"]];const U=[3, 3, 3, 5, 7];
+const sel=T[U[v.use]], R={x:20,y:20,w:520,h:40}, X=t=>R.x+(t-95)/(185-95)*R.w;
+for(let t=100;t<=180;t+=20){el("line",{x1:X(t),y1:R.y+R.h,x2:X(t),y2:R.y+R.h+6,stroke:css("--line")});el("text",{x:X(t),y:R.y+R.h+20,"font-size":11,"text-anchor":"middle"},t+" °C");}
+T.forEach((t,i)=>{const on=t===sel;el("rect",{x:X(t[1]),y:R.y+(i%2)*0+2,width:X(t[2])-X(t[1]),height:R.h-4,fill:on?css("--hl"):"none",opacity:on?0.7:0.35,stroke:css("--line"),"stroke-width":on?2.5:1});});
+el("text",{x:20,y:120,"font-size":18,"font-weight":"bold"},sel[0]);
+el("text",{x:20,y:150,"font-size":15},"Hőmérséklet: "+sel[1]+"–"+sel[2]+" °C (tájékoztató)");
+el("text",{x:20,y:180,"font-size":14},"Kézi próba hideg vízben: "+sel[3]);
+el("text",{x:20,y:210,"font-size":14},"Felhasználás: "+sel[4]);
+el("text",{x:20,y:260,"font-size":12,fill:css("--hl2")},"Forró cukor súlyos égést okoz: hosszú ujjú ruha, védőkesztyű és -szemüveg.");
+status("<b>"+sel[0]+"</b>: "+sel[1]+"–"+sel[2]+" °C. A hőfokok tájékoztatók, az üzemi munkautasítás az irányadó (ellenőrizendő).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

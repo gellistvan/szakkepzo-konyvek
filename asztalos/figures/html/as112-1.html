@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ülésmagasság és asztalmagasság a testmagasságból</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="H">Testmagasság</label><input id="H" type="range" min="150" max="200" step="1" value="178" aria-label="Testmagasság"><output id="H_o" for="H"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 580 330" role="img" aria-label="Ülő ember oldalnézetben a térdhajlat-, ülés- és asztalmagasság méretvonalaival."></svg>
+<p class="small">Tájékoztató becslőképletek (tanulási példa, ellenőrizendő: ergonómiai táblázat, szabvány). Az ülésmagasságot egész cm-re kerekítjük, mint a kidolgozott példában (44,7 → 45 cm).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"H":"cm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const H=v.H, pop=0.24*H, raw=pop+2, s=Math.round(raw), d=s+27, th=0.085*H, sh=s+0.30*H;
+const k=2.05, X=x=>150+x*k, Y=y=>318-y*k;
+const fg=css("--fg"), mu=css("--muted");
+const P=(pts,a)=>el("polygon",Object.assign({points:pts.map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"none",stroke:fg,"stroke-width":1.4},a||{}));
+const Rr=(x,y,w,h,a)=>el("rect",Object.assign({x:X(x),y:Y(y+h),width:w*k,height:h*k,fill:"none",stroke:fg,"stroke-width":1.3},a||{}));
+const L=(x1,y1,x2,y2,a)=>el("line",Object.assign({x1:X(x1),y1:Y(y1),x2:X(x2),y2:Y(y2),stroke:fg,"stroke-width":1},a||{}));
+const T=(x,y,t,a)=>el("text",Object.assign({x:X(x),y:Y(y),"font-size":12},a||{}),t);
+function D(x,y0,y1,t,warn,left){L(x,y0,x,y1,{"stroke-width":1});L(x-1.5,y0,x+1.5,y0);L(x-1.5,y1,x+1.5,y1);
+  T(left?x-2:x+2,(y0+y1)/2,t,{"text-anchor":left?"end":"start","font-size":12,"font-weight":warn?"bold":"normal",fill:warn?css("--bad"):fg});}
+L(-40,0,135,0,{"stroke-width":2});
+Rr(-18,s-2,46,2,{fill:mu});Rr(-16,0,2.5,s-2);Rr(23,0,2.5,s-2);P([[-18,s],[-15.5,s],[-19,s+42],[-21.5,s+42]],{fill:mu});
+Rr(38,d-3,92,3,{fill:mu});Rr(52,d-12,48,9,{"stroke-dasharray":"4 3"});T(76,d-9,"fiók",{"text-anchor":"middle","font-size":10});Rr(124,0,3,d-3);
+const kx=43,hx=-2;
+P([[kx-5,0],[kx+14,0],[kx+14,3],[kx+4,4.5],[kx-4,4.5]],{fill:mu});Rr(kx-4,4.5,9,pop-2.5);
+P([[hx-6,s],[kx+6,s+2],[kx+6,s+th],[hx-6,s+th]]);P([[hx-8,s],[hx+10,s],[hx+12,sh],[hx-6,sh]]);
+el("circle",{cx:X(hx+4),cy:Y(sh+13),r:10*k,fill:"none",stroke:fg,"stroke-width":1.4});
+P([[hx+4,sh-2],[hx+10,sh-6],[hx+28,d+6],[hx+50,d+2],[hx+50,d+0.5],[hx+26,d+1.5],[hx+2,sh-12]]);
+const ws=s<43||s>47, wd=d<72||d>76;
+D(kx+20,0,pop,fmt(pop,1)+" cm (popl.)");
+D(-30,0,s,"ülés "+s+" cm",ws,1);
+D(103,s,d,"27 cm");
+D(130,0,d,"asztal "+d+" cm",wd);
+L(25,s,104,s,{"stroke-dasharray":"6 3 1 3","stroke-width":0.7});
+let msg="Popliteális magasság ≈ 0,24 · "+H+" = <b>"+fmt(pop,1)+" cm</b>; ülés ≈ "+fmt(pop,1)+" + 2 = "+fmt(raw,1)+
+  " → <b>"+s+" cm</b>; asztal ≈ "+s+" + 27 = <b>"+d+" cm</b>.";
+if(ws||wd) msg+="<br><b style='color:var(--bad)'>⚠ Kívül esik a táblázat tájékoztató tartományán</b> (ülés 430–470 mm, íróasztal 720–760 mm): állítható szék / lábtartó vagy egyedi méret kell.";
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

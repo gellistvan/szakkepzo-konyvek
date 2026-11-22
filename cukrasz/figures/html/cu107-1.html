@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A szimpla hajtás és a rétegszám</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Hajtogatott tészta metszete a vajbeburkolástól a harmadik szimpla hajtásig; a vajrétegek száma 1, 3, 9, 27, a tésztarétegeké 2, 4, 10, 28."></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">A szimpla hajtás minden lépésben megháromszorozza a vajrétegeket. Elvi rétegszám: a nyújtás során a nagyon vékony rétegek egy része összeolvad, ezért a látható rétegszám kisebb lehet.</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "Vajbeburkolás: tészta – vaj – tészta (T = 2, Z = 1, R = 3).", "phase": "state", "L": ["T", "V", "T"], "s": 0, "line": -1}, {"msg": "1. hajtás – harmadolás: a kinyújtott lapot gondolatban három egyenlő részre osztjuk.", "phase": "third", "L": ["T", "V", "T"], "s": 1, "line": -1}, {"msg": "1. hajtás – egymásra hajtás: a három rész egymásra kerül; a hajtásél mentén két-két tésztaréteg egybeolvad (2 összeolvadás).", "phase": "stack", "L": ["T", "V", "T"], "s": 1, "line": -1}, {"msg": "1. hajtás – kinyújtás: T = 3^1 + 1 = 4 tészta, Z = 3^1 = 3 vaj, R = 7 réteg.", "phase": "state", "L": ["T", "V", "T", "V", "T", "V", "T"], "s": 1, "line": -1}, {"msg": "2. hajtás – harmadolás: a kinyújtott lapot gondolatban három egyenlő részre osztjuk.", "phase": "third", "L": ["T", "V", "T", "V", "T", "V", "T"], "s": 2, "line": -1}, {"msg": "2. hajtás – egymásra hajtás: a három rész egymásra kerül; a hajtásél mentén két-két tésztaréteg egybeolvad (2 összeolvadás).", "phase": "stack", "L": ["T", "V", "T", "V", "T", "V", "T"], "s": 2, "line": -1}, {"msg": "2. hajtás – kinyújtás: T = 3^2 + 1 = 10 tészta, Z = 3^2 = 9 vaj, R = 19 réteg.", "phase": "state", "L": ["T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T"], "s": 2, "line": -1}, {"msg": "3. hajtás – harmadolás: a kinyújtott lapot gondolatban három egyenlő részre osztjuk.", "phase": "third", "L": ["T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T"], "s": 3, "line": -1}, {"msg": "3. hajtás – egymásra hajtás: a három rész egymásra kerül; a hajtásél mentén két-két tésztaréteg egybeolvad (2 összeolvadás).", "phase": "stack", "L": ["T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T"], "s": 3, "line": -1}, {"msg": "3. hajtás – kinyújtás: T = 3^3 + 1 = 28 tészta, Z = 3^3 = 27 vaj, R = 55 réteg.", "phase": "state", "L": ["T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T"], "s": 3, "line": -1}, {"msg": "4. hajtás – harmadolás: a kinyújtott lapot gondolatban három egyenlő részre osztjuk.", "phase": "third", "L": ["T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T"], "s": 4, "line": -1}, {"msg": "4. hajtás – egymásra hajtás: a három rész egymásra kerül; a hajtásél mentén két-két tésztaréteg egybeolvad (2 összeolvadás).", "phase": "stack", "L": ["T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T"], "s": 4, "line": -1}, {"msg": "4. hajtás – kinyújtás: T = 3^4 + 1 = 82 tészta, Z = 3^4 = 81 vaj, R = 163 réteg. (opcionális: túlhajtogatás – a túl vékony rétegek összeolvadnak, a termék kevésbé leveles)", "phase": "state", "L": ["T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T", "V", "T"], "s": 4, "line": -1}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+
+function strips(L, x, y, w, h, small){
+  const n=L.length, hh=h/n;
+  L.forEach((c,i)=>{el("rect",{x:x,y:y+i*hh,width:w,height:hh,fill:c==="T"?"#ffffff":"#404040",
+     stroke:"#000","stroke-width":n>40?0.2:(n>12?0.4:1)});});
+}
+function render(s){
+  svg.setAttribute("viewBox","0 0 600 320"); svg.innerHTML="";
+  const T=s.L.filter(c=>c==="T").length, Z=s.L.length-T;
+  if(s.phase==="state"){ strips(s.L,40,40,520,220); }
+  else if(s.phase==="third"){ strips(s.L,40,40,520,220);
+    [213,387].forEach(x=>el("line",{x1:x,y1:30,x2:x,y2:270,stroke:css("--hl2"),"stroke-width":3,"stroke-dasharray":"8 5"})); }
+  else { for(let k=0;k<3;k++){ strips(s.L,213,40+k*220/3,174,220/3); }
+    [40+220/3,40+2*220/3].forEach(y=>{el("line",{x1:395,y1:y,x2:430,y2:y,stroke:css("--hl2"),"stroke-width":3});
+      el("text",{x:436,y:y+5,"font-size":13,fill:css("--hl2")},"T + T egybeolvad");});
+    el("path",{d:"M 205 40 C 170 60, 170 110, 205 113",fill:"none",stroke:css("--line"),"stroke-width":2});
+    el("path",{d:"M 395 113 C 430 130, 430 170, 395 187",fill:"none",stroke:css("--line"),"stroke-width":2}); }
+  el("text",{x:40,y:24,"font-size":15,"font-weight":"bold"},
+     (s.s===0?"vajbeburkolás":s.s+". szimpla hajtás")+(s.phase==="state"?"":" – "+(s.phase==="third"?"harmadolás":"egymásra hajtás")));
+  el("text",{x:40,y:292,"font-size":14},(s.phase==="state"?"a köteg: ":"a hajtás előtti köteg: ")+"T = "+T+" tészta, Z = "+Z+" vaj, R = "+(T+Z)+" réteg");
+  el("text",{x:40,y:312,"font-size":12,fill:css("--muted")},"fehér: tészta, sötét: vaj · Z = 3^s, T = 3^s + 1");
+}
+
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.textContent = s.msg || "";
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 1800);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

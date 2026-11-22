@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lamellaosztás-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="H">szárnymagasság H</label><input id="H" type="range" min="600" max="2400" step="10" value="1200" aria-label="szárnymagasság H"><output id="H_o" for="H"></output></div>
+<div class="row"><label for="k">káva szélessége k</label><input id="k" type="range" min="40" max="120" step="1" value="68" aria-label="káva szélessége k"><output id="k_o" for="k"></output></div>
+<div class="row"><label for="b">lamellaszélesség b</label><input id="b" type="range" min="50" max="120" step="1" value="80" aria-label="lamellaszélesség b"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="al">dőlésszög α</label><input id="al" type="range" min="20" max="60" step="1" value="35" aria-label="dőlésszög α"><output id="al_o" for="al"></output></div>
+<div class="row"><label for="a">átfedés a</label><input id="a" type="range" min="0" max="30" step="1" value="15" aria-label="átfedés a"><output id="a_o" for="a"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 360" role="img" aria-label="Zsalugáter lamellasorának metszete a szárnymagasság, a káva, a lamellaszélesség, a dőlésszög és az átfedés függvényében."></svg>
+<p class="small">t = h_l − a; a dőlésszöget a vízszinteshez mérjük. Alapértékekkel: 34 lamella. A tényleges osztást a terv és a gyártmány adatlapja adja (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"H":"mm", "k":"mm", "b":"mm", "al":"°", "a":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const fg=css("--fg"), bad=css("--bad"), ok=css("--ok"), hl2=css("--hl2");
+const h=v.H-2*v.k, al=v.al*Math.PI/180, hl=v.b*Math.sin(al), t=hl-v.a;
+if(t<=0){status("<span class='bad'>Az átfedés nem lehet nagyobb a lamella függőleges vetületénél (t ≤ 0).</span>");return;}
+const n=Math.floor(h/t), r=h-n*t;
+status(`h = ${v.H} − 2·${v.k} = <b>${h} mm</b>; h<sub>l</sub> = ${v.b}·sin ${v.al}° = <b>${fmt(hl,1)} mm</b>; t = h<sub>l</sub> − a = <b>${fmt(t,1)} mm</b>; `+
+ `n = ⌊${h}/${fmt(t,1)}⌋ = <b>${n} lamella</b>, maradék ${fmt(r,1)} mm (a két szélső osztásra)`);
+// metszetrajz: a teljes lamellasor méretarányosan
+const sc=Math.min(300/v.H,1), X=300, Y0=20;
+el("rect",{x:X-60,y:Y0,width:120,height:v.H*sc,fill:"none",stroke:fg,"stroke-width":1});
+el("rect",{x:X-60,y:Y0,width:120,height:v.k*sc,fill:css("--grid"),stroke:fg});
+el("rect",{x:X-60,y:Y0+(v.H-v.k)*sc,width:120,height:v.k*sc,fill:css("--grid"),stroke:fg});
+const cx=Math.cos(al)*v.b*sc, sy=Math.sin(al)*v.b*sc;
+for(let i=0;i<n;i++){const yt=Y0+(v.k+r/2+i*t)*sc+ (0);
+  const x1=X+cx/2, x0=X-cx/2;
+  el("line",{x1:x1,y1:yt,x2:x0,y2:yt+sy,stroke:fg,"stroke-width":Math.max(1.2,18*sc)});}
+el("text",{x:X-75,y:Y0+v.H*sc/2,"text-anchor":"end","font-size":13},"kívül");
+el("text",{x:X+75,y:Y0+v.H*sc/2,"font-size":13},"belül");
+el("text",{x:X,y:Y0+v.H*sc+20,"text-anchor":"middle","font-size":13},`${n} lamella, t = ${fmt(t,1)} mm (metszet, kicsinyítve)`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

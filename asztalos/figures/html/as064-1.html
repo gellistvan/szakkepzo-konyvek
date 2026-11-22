@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kézi gyalugép: fogásmélység és falcolás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="h">fogásmélység h</label><input id="h" type="range" min="0" max="3" step="0.1" value="1.0" aria-label="fogásmélység h"><output id="h_o" for="h"></output></div>
+<div class="row"><label for="fd">falcmélység</label><input id="fd" type="range" min="2" max="20" step="1" value="10" aria-label="falcmélység"><output id="fd_o" for="fd"></output></div>
+<div class="row"><label for="fw">falcszélesség</label><input id="fw" type="range" min="5" max="35" step="1" value="20" aria-label="falcszélesség"><output id="fw_o" for="fw"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 680 300" role="img" aria-label="A kézi gyalugép első talpa a fogásmélységgel feljebb áll; a falc menetszáma."></svg>
+<p class="small">Szemléltető; a fogásmélység tájékoztató értékei a fejezetből (fenyő 0,5–1,5 mm), a géphez a gépkönyv az irányadó. A falcszélesség és -mélység határa gépfüggő (ellenőrizendő: gépkönyv).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"h":"mm", "fd":"mm", "fw":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const k=34, h=v.h, fd=v.fd, fw=v.fw;
+const line=css("--line")||"#000", fg=css("--fg")||"#111";
+// metszet: a kések körpályája, talpak, leválasztott réteg (1 mm = 34 px)
+const y0=200, cx=200, rk=70;
+el("rect",{x:20,y:y0,width:360,height:60,fill:"#e6e6e6",stroke:line});
+el("rect",{x:20,y:y0-h*k,width:150,height:h*k,fill:"#bdbdbd",stroke:line});
+el("circle",{cx:cx,cy:y0-rk,r:rk,fill:"none",stroke:line,"stroke-dasharray":"5 4"});
+el("line",{x1:cx,y1:y0-rk,x2:cx,y2:y0,stroke:line,"stroke-width":5});
+el("rect",{x:215,y:y0-12,width:165,height:12,fill:"#9e9e9e",stroke:line});
+el("rect",{x:20,y:y0-h*k-12,width:165,height:12,fill:"#ffffff",stroke:line});
+el("text",{x:100,y:y0-h*k-20,"text-anchor":"middle","font-size":13},"első talp");
+el("text",{x:300,y:y0-20,"text-anchor":"middle","font-size":13},"hátsó talp");
+el("line",{x1:10,y1:y0,x2:10,y2:y0-h*k,stroke:line,"stroke-width":2});
+el("text",{x:30,y:y0+22,"font-size":13},"h = "+fmt(h,1)+" mm");
+el("text",{x:200,y:290,"text-anchor":"middle","font-size":12},"metszet (1 mm ≈ 34 px, torzítva)");
+// falc: a munkadarab bütüje, menetek
+const n = h>0 ? Math.ceil(fd/h-1e-9) : 0, X=460, Y=60, sc=5;
+el("rect",{x:X,y:Y,width:40*sc,height:30*sc,fill:"#e6e6e6",stroke:line});
+el("rect",{x:X+40*sc-fw*sc,y:Y,width:fw*sc,height:fd*sc,fill:"#ffffff",stroke:line,"stroke-width":2});
+for(let i=1;i<n;i++){const yy=Y+i*h*sc; if(yy<Y+fd*sc) el("line",{x1:X+40*sc-fw*sc,y1:yy,x2:X+40*sc,y2:yy,stroke:line,"stroke-dasharray":"3 3"});}
+el("text",{x:X+100,y:Y+30*sc+22,"text-anchor":"middle","font-size":13},"falc a bütün: "+fmt(fw,0)+" × "+fmt(fd,0)+" mm");
+const warn = h>1.5 ? "<span class='bad'>1,5 mm fölött a fejezet szerint túl nagy fogás tömörfán; inkább több menet.</span>" :
+             (h<0.5 && h>0 ? "Finom simító fogás." : (h==0?"<span class='bad'>h = 0: a kés nem vesz le anyagot.</span>":"<span class='ok'>Tájékoztató tartomány (0,5–1,5 mm).</span>"));
+status("Az első talp <b>"+fmt(h,1)+" mm</b>-rel áll feljebb a hátsónál, ennyi a fogásmélység. "+warn+
+       "<br>Falc "+fmt(fd,0)+" mm mélyre ezzel a fogással: <b>"+n+" menet</b> (falcmélység / fogásmélység, felfelé kerekítve).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

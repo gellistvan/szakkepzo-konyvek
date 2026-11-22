@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oszlopos fúrógép: zsákfurat mélysége</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="hh">hengeres mélység</label><input id="hh" type="range" min="5" max="40" step="1" value="18" aria-label="hengeres mélység"><output id="hh_o" for="hh"></output></div>
+<div class="row"><label for="ht">fúróhegy hossza</label><input id="ht" type="range" min="0" max="5" step="0.5" value="2" aria-label="fúróhegy hossza"><output id="ht_o" for="ht"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="A mélységhatároló teljes fogása a hengeres mélység és a fúróhegy hosszának összege."></svg>
+<p class="small">A hegyhossz gyártó- és élezésfüggő; a beállítást próbafurattal kell ellenőrizni (a fejezet szerint).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"hh":"mm", "ht":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const line=css("--line")||"#000";
+const hh=v.hh, ht=v.ht, M=hh+ht, k=6, X=360, Y0=60;
+// furatmetszet
+el("rect",{x:X-90,y:Y0,width:180,height:50*k*0.8,fill:"#e6e6e6",stroke:line});
+const d=8*k*0.8, s=k*0.8;
+el("rect",{x:X-d/2,y:Y0,width:d,height:hh*s,fill:"#fff",stroke:line,"stroke-width":2});
+el("polygon",{points:(X-d/2)+","+(Y0+hh*s)+" "+(X+d/2)+","+(Y0+hh*s)+" "+(X+2)+","+(Y0+M*s)+" "+(X-2)+","+(Y0+M*s),fill:"#fff",stroke:line,"stroke-width":2});
+el("line",{x1:X+60,y1:Y0,x2:X+60,y2:Y0+hh*s,stroke:line});el("text",{x:X+66,y:Y0+hh*s/2+5,"font-size":13},"henger "+fmt(hh,0)+" mm");
+el("line",{x1:X+60,y1:Y0+hh*s,x2:X+60,y2:Y0+M*s,stroke:line,"stroke-width":3});el("text",{x:X+66,y:Y0+M*s+4,"font-size":13},"hegy "+fmt(ht,1)+" mm");
+el("line",{x1:X-60,y1:Y0,x2:X-60,y2:Y0+M*s,stroke:line});el("text",{x:X-66,y:Y0+M*s/2,"text-anchor":"end","font-size":13,"font-weight":"bold"},"M = "+fmt(M,1)+" mm");
+el("text",{x:X,y:Y0-10,"text-anchor":"middle","font-size":13},"zsákfurat metszete (Ø8 mm)");
+// mélységhatároló skála + ütköző
+const SX=80, SY=40, sk=4;
+el("rect",{x:SX,y:SY,width:14,height:50*sk,fill:"#fff",stroke:line});
+for(let i=0;i<=50;i+=5){el("line",{x1:SX+14,y1:SY+i*sk,x2:SX+24,y2:SY+i*sk,stroke:line});el("text",{x:SX+28,y:SY+i*sk+4,"font-size":11},String(i));}
+el("rect",{x:SX-10,y:SY+M*sk-6,width:34,height:12,fill:"#555",stroke:line});
+el("text",{x:SX+7,y:SY+50*sk+22,"text-anchor":"middle","font-size":13},"mélységhatároló");
+el("text",{x:SX+7,y:SY+50*sk+38,"text-anchor":"middle","font-size":13},"ütköző: "+fmt(M,1)+" mm");
+status("Teljes fogás a mélységhatárolón: M<sub>össz</sub> = h<sub>henger</sub> + h<sub>hegy</sub> = "+fmt(hh,0)+" + "+fmt(ht,1)+" = <b>"+fmt(M,1)+" mm</b>."+
+ (hh==18&&ht==2?" <span class='ok'>(16.2.7, 2. számítás)</span>":"")+(hh==23&&ht==3?" <span class='ok'>(3. feladat)</span>":"")+
+ " A beállítást próbadarabon ellenőrizd.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

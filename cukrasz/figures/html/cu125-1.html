@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nettó–bruttó visszaszámítás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pre">Példa</label><select id="pre" aria-label="Példa"><option value="1" selected>1. krémes (60 × 40 cm, 40 db)</option><option value="2">2. tejszínes torta (24 cm, 16 szelet)</option></select></div>
+<div class="row"><label for="n1">1. komponens nettó</label><input id="n1" type="range" min="0" max="3" step="0.01" value="1.2" aria-label="1. komponens nettó"><output id="n1_o" for="n1"></output></div>
+<div class="row"><label for="v1">1. komponens vesztesége</label><input id="v1" type="range" min="0" max="40" step="1" value="25" aria-label="1. komponens vesztesége"><output id="v1_o" for="v1"></output></div>
+<div class="row"><label for="n2">2. komponens nettó</label><input id="n2" type="range" min="0" max="3" step="0.01" value="1.2" aria-label="2. komponens nettó"><output id="n2_o" for="n2"></output></div>
+<div class="row"><label for="v2">2. komponens vesztesége</label><input id="v2" type="range" min="0" max="40" step="1" value="8" aria-label="2. komponens vesztesége"><output id="v2_o" for="v2"></output></div>
+<div class="row"><label for="n3">3. komponens nettó</label><input id="n3" type="range" min="0" max="3" step="0.01" value="0.6" aria-label="3. komponens nettó"><output id="n3_o" for="n3"></output></div>
+<div class="row"><label for="v3">3. komponens vesztesége</label><input id="v3" type="range" min="0" max="40" step="1" value="0" aria-label="3. komponens vesztesége"><output id="v3_o" for="v3"></output></div>
+<div class="row"><label for="n4">4. komponens nettó</label><input id="n4" type="range" min="0" max="3" step="0.01" value="0.05" aria-label="4. komponens nettó"><output id="n4_o" for="n4"></output></div>
+<div class="row"><label for="v4">4. komponens vesztesége</label><input id="v4" type="range" min="0" max="40" step="1" value="0" aria-label="4. komponens vesztesége"><output id="v4_o" for="v4"></output></div>
+<div class="row"><label for="db">Darabszám / szelet</label><input id="db" type="range" min="1" max="80" step="1" value="40" aria-label="Darabszám / szelet"><output id="db_o" for="db"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 660 320" role="img" aria-label="Oszloppárok a négy komponens nettó és bruttó tömegével; a bruttó a nettó osztva (1 − veszteség)."></svg>
+<p class="small">A fejezet 32.3.3 képletei: bruttó = nettó / (1 − v); a habosítás nem változtat a tömegen. A veszteségértékek tájékoztatók (ellenőrizendő). A „szorzásos” módszer (nettó · (1 + v)) mindig kevesebbet ad – ez a 3. tipikus hiba.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n1":"kg", "v1":"%", "n2":"kg", "v2":"%", "n3":"kg", "v3":"%", "n4":"kg", "v4":"%", "db":"db"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const PRE={1:{names:["Sült leveles tészta", "Sárgakrém", "Tejszínhab", "Porcukor"],vals:[[1.2, 25], [1.2, 8], [0.6, 0], [0.05, 0], [40]]},2:{names:["Piskóta", "Tejszínes krém", "Gyümölcsbetét", "Díszítés"],vals:[[0.45, 10], [0.85, 5], [0.2, 0], [0.2, 0], [16]]}};
+if(FIG.last!==v.pre){FIG.last=v.pre;const P=PRE[v.pre];
+  for(let i=0;i<4;i++){document.getElementById("n"+(i+1)).value=P.vals[i][0];document.getElementById("v"+(i+1)).value=P.vals[i][1];}
+  document.getElementById("db").value=P.vals[4][0]; Object.assign(v,values());}
+const names=PRE[v.pre].names;
+const C=[1,2,3,4].map(i=>({nm:names[i-1],n:v["n"+i],p:v["v"+i]}));
+C.forEach(c=>{c.b=c.p<100?c.n/(1-c.p/100):NaN;c.h=c.n*(1+c.p/100);});
+const net=C.reduce((a,c)=>a+c.n,0), br=C.reduce((a,c)=>a+c.b,0), hb=C.reduce((a,c)=>a+c.h,0);
+const X0=70,Y0=20,H=230,W=560,mx=Math.max(0.5,...C.map(c=>c.b))*1.15, sy=t=>Y0+H-t/mx*H, bw=36;
+el("line",{x1:X0,y1:Y0+H,x2:X0+W,y2:Y0+H,stroke:css("--line")});
+el("line",{x1:X0,y1:Y0,x2:X0,y2:Y0+H,stroke:css("--line")});
+for(let t=0;t<=mx;t+=mx>2?0.5:0.25){el("line",{x1:X0,y1:sy(t),x2:X0+W,y2:sy(t),stroke:css("--grid"),"stroke-width":0.6});
+  el("text",{x:X0-6,y:sy(t)+4,"text-anchor":"end","font-size":11},fmt(t,2));}
+el("text",{x:14,y:Y0+H/2,"font-size":12,"text-anchor":"middle",transform:`rotate(-90 14 ${Y0+H/2})`},"tömeg (kg)");
+C.forEach((c,i)=>{const cx=X0+70+i*135;
+  el("rect",{x:cx-bw,y:sy(c.n),width:bw,height:sy(0)-sy(c.n),fill:"none",stroke:css("--line"),"stroke-width":1.4});
+  el("rect",{x:cx,y:sy(c.n),width:bw,height:sy(0)-sy(c.n),fill:css("--grid"),stroke:css("--line"),"stroke-width":1.4});
+  if(c.b>c.n){el("rect",{x:cx,y:sy(c.b),width:bw,height:sy(c.n)-sy(c.b),fill:css("--hl2"),"fill-opacity":0.35,stroke:css("--line"),"stroke-width":1.4});}
+  if(c.p>0){el("line",{x1:cx-4,y1:sy(c.h),x2:cx+bw+4,y2:sy(c.h),stroke:css("--bad"),"stroke-width":2,"stroke-dasharray":"5 3"});}
+  el("text",{x:cx-bw/2,y:sy(c.n)-4,"text-anchor":"middle","font-size":11},fmt(c.n,2));
+  el("text",{x:cx+bw/2,y:sy(c.b)-4,"text-anchor":"middle","font-size":11},fmt(c.b,3));
+  el("text",{x:cx,y:Y0+H+16,"text-anchor":"middle","font-size":12},c.nm);
+  el("text",{x:cx,y:Y0+H+31,"text-anchor":"middle","font-size":11,fill:css("--muted")},"v = "+fmt(c.p,0)+" %");});
+el("text",{x:X0+W,y:Y0+H+50,"text-anchor":"end","font-size":11,fill:css("--muted")},"üres oszlop: nettó · szürke + színes: bruttó (a színes rész a veszteség) · piros szaggatott: hibás nettó·(1+v)");
+let rows=C.map(c=>`<tr><td>${c.nm}</td><td>${fmt(c.n,3)}</td><td>${fmt(c.p,0)} %</td><td><b>${fmt(c.b,3)}</b></td><td>${fmt(c.h,3)}</td><td class="bad">${fmt(c.h-c.b,3)}</td></tr>`).join("");
+status(`<table style="border-collapse:collapse;font-size:13px" cellpadding="3"><tr><th align=left>komponens</th><th>nettó (kg)</th><th>veszteség</th><th>bruttó = nettó/(1−v)</th><th>hibás: nettó·(1+v)</th><th>eltérés</th></tr>${rows}
+<tr><td><b>összesen</b></td><td><b>${fmt(net,3)}</b></td><td></td><td><b>${fmt(br,3)}</b></td><td>${fmt(hb,3)}</td><td class="bad">${fmt(hb-br,3)}</td></tr></table>
+Egy darab (szelet) nettó tömege: <b>${fmt(net*1000/v.db,0)} g</b> (${fmt(net,2)} kg / ${fmt(v.db,0)} db).`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

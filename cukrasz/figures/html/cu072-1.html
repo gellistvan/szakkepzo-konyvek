@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karamell színskála</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="t">Hőmérséklet</label><input id="t" type="range" min="150" max="210" step="1" value="175" aria-label="Hőmérséklet"><output id="t_o" for="t"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 140" role="img" aria-label="A karamell színe 160 °C-tól világos aranysárga, 170–180 °C-on aranybarna, 180–190 °C-on borostyán, 190–200 °C-on sötétbarna, 200 °C felett égett"></svg>
+<p class="small">A fejezet színfokozat-táblázatának tájékoztató értékei (ellenőrizendő: gyártói adatlap). A képernyő színe csak közelítés: a karamell készültségét a hőmérő és a valódi szín együtt mutatja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"t":"°C"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+const S=[["világos aranysárga", 160, 170, "#e9bd55", "karamellszósz, puha grillázs"], ["aranybarna", 170, 180, "#c98a2e", "dobos tető, kemény grillázs"], ["borostyán", 180, 190, "#99581c", "cukorfesték"], ["sötétbarna", 190, 200, "#5a3311", "korlátozottan, díszítő festés"], ["égett", 200, 210, "#1f130a", "nem felhasználható: selejt"]];
+const t=v.t, W=104, x0=20;
+let k=-1; S.forEach((s,i)=>{if(t>=s[1])k=i;});
+S.forEach((s,i)=>{const on=i===k;
+  el("rect",{x:x0+i*W,y:40,width:W,height:90,fill:s[3],stroke:css("--line"),"stroke-width":on?5:1});
+  el("text",{x:x0+i*W+W/2,y:80,"text-anchor":"middle","font-size":12,"font-weight":"bold",fill:i<2?"#000":"#fff"},s[0]);
+  el("text",{x:x0+i*W+W/2,y:104,"text-anchor":"middle","font-size":12,fill:i<2?"#000":"#fff"},i<4?s[1]+"–"+s[2]+" °C":"200 °C felett");});
+const px=x0+Math.max(0,Math.min(5*W,(t-160)/10*W));
+el("polygon",{points:(px-8)+",20 "+(px+8)+",20 "+px+",38",fill:css("--line")});
+el("text",{x:px,y:14,"text-anchor":"middle","font-size":12},t+" °C");
+let h;
+if(k<0) h="<b>"+t+" °C</b>: a karamellizáció még nem kezdődött el (a táblázat 160 °C-tól ad színfokozatot).";
+else h="<b>"+t+" °C → "+S[k][0]+"</b>; felhasználás: "+S[k][4]+".";
+if(t>=180) h+=' <span class="bad">180 °C fölött gyorsan ég, keserű lesz és akrilamid is képződhet: vedd le a tűzről, és azonnal használd fel!</span>';
+status(h);
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

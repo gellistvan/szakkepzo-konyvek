@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A simítógyalu beállítása</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="kia">Vaskiállás</label><input id="kia" type="range" min="0.02" max="1.0" step="0.01" value="0.3" aria-label="Vaskiállás"><output id="kia_o" for="kia"></output></div>
+<div class="row"><label for="szaj">Szájnyílás</label><input id="szaj" type="range" min="0.2" max="4.0" step="0.1" value="1.5" aria-label="Szájnyílás"><output id="szaj_o" for="szaj"></output></div>
+<div class="row"><label for="tor">Forgácstörő az éltől</label><input id="tor" type="range" min="0.1" max="2.5" step="0.1" value="0.5" aria-label="Forgácstörő az éltől"><output id="tor_o" for="tor"></output></div>
+<div class="row"><label for="fer">Vas ferdesége (két oldal különbsége)</label><input id="fer" type="range" min="0" max="0.3" step="0.01" value="0" aria-label="Vas ferdesége (két oldal különbsége)"><output id="fer_o" for="fer"></output></div>
+<div class="row"><label for="fa">Rostirány</label><select id="fa" aria-label="Rostirány"><option value="r" selected>egyenes rostú fa</option><option value="e">ellenszálas fa</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="A gyalu szájának nagyított metszete a beállított értékekkel"></svg>
+<p class="small">Tájékoztató szabályok (ellenőrizendő: gyártói adat): simításhoz kis kiállás, szűk száj, közeli forgácstörő; nagyoláshoz nagyobb kiállás és tágabb száj. A rajz nem méretarányos.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"kia":"mm", "szaj":"mm", "tor":"mm", "fer":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const w=v, k=w.kia, sz=w.szaj, tr=w.tor, el_=w.fer, fa=w.fa;
+el("rect",{x:0,y:0,width:560,height:300,fill:"#fff"});
+// metszet, 1 mm = 40 px (erősen nagyítva)
+const m=40, ox=300, oy=170;
+el("rect",{x:20,y:oy-40,width:ox-sz*m-20,height:40,fill:"#eee",stroke:"#000"});
+el("rect",{x:ox,y:oy-40,width:240,height:40,fill:"#eee",stroke:"#000"});el("text",{x:530,y:oy+18,"text-anchor":"end","font-size":12,fill:"#000"},"talpsík");
+const ex=ox, ey=oy+k*m;
+const ux=0.7071, uy=-0.7071;
+el("polygon",{points:[[ex,ey],[ex+200*ux,ey+200*uy],[ex+200*ux+10,ey+200*uy+10],[ex+30,ey-4]].map(p=>p.join(",")).join(" "),fill:"#f4f4f4",stroke:"#000","stroke-width":2});
+const cx=ex+tr*m*ux, cy=ey+tr*m*uy;
+el("polygon",{points:[[cx,cy],[cx-12,cy-10],[ex+180*ux-10,ey+180*uy-10],[ex+180*ux,ey+180*uy]].map(p=>p.join(",")).join(" "),fill:"#bbb",stroke:"#000","stroke-width":1.5});
+el("line",{x1:20,x2:540,y1:oy,y2:oy,stroke:"#000","stroke-dasharray":"8 3 2 3"});
+// forgács: közeli forgácstörő → megtört darabok; távoli + ellenszál → előrefutó hasadás
+const torik=tr<=Math.max(0.6,2*k);
+if(torik){for(let i=0;i<3;i++)el("rect",{x:ex-30-i*26,y:ey-26-i*16,width:20,height:8,fill:"#ddd",stroke:"#000",transform:"rotate("+(-30-i*25)+" "+(ex-20-i*26)+" "+(ey-22-i*16)+")"});}
+else{el("path",{d:"M"+ex+" "+ey+" C"+(ex-40)+" "+(ey-30)+" "+(ex-90)+" "+(ey-50)+" "+(ex-140)+" "+(ey-40),fill:"none",stroke:"#000","stroke-width":8});
+ if(fa=="e")el("line",{x1:ex,y1:ey,x2:ex-90,y2:ey+28,stroke:"#b71c1c","stroke-width":3});}
+el("text",{x:20,y:24,"font-size":13,fill:"#000"},"kiállás "+fmt(k,2)+" mm · száj "+fmt(sz,1)+" mm · forgácstörő "+fmt(tr,1)+" mm (nagyítva)");
+// végignézés a talpon
+const bx=40, by=250;
+el("rect",{x:bx,y:by,width:200,height:14,fill:"#ddd",stroke:"#000"});
+el("polygon",{points:[[bx+20,by],[bx+180,by],[bx+180,by-4-el_*60],[bx+20,by-4]].map(p=>p.join(",")).join(" "),fill:"#000"});
+el("text",{x:bx+220,y:by+10,"font-size":12,fill:"#000"},"a vas éle a talp felől nézve");
+let msg=[];
+msg.push("Forgácsvastagság ≈ vaskiállás: <b>"+fmt(k,2)+" mm</b> – "+(k>=0.3?"nagyoló fogás":(k<=0.1?"simító fogás":"közepes fogás"))+".");
+if(sz<k*2.5)msg.push("<span class='bad'>A száj túl szűk a fogáshoz: a forgács beszorul.</span>");
+else if(sz>2&&k<=0.1)msg.push("<span class='bad'>Simításhoz túl tág a száj: nő a kiszakadás veszélye.</span>");
+if(!torik)msg.push("<span class='bad'>A forgácstörő messze van: a forgács nem törik meg"+(fa=="e"?", ellenszálas fánál előrefut a hasadás – kiszakadás!":".")+"</span>");
+else msg.push("<span class='ok'>A forgácstörő közel van: a forgács megtörik.</span>");
+if(el_>0.05)msg.push("<span class='bad'>A vas ferdén áll ("+fmt(el_,2)+" mm különbség): állítsd az oldalállító karral.</span>");
+status(msg.join("<br>"));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

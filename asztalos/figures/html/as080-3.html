@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tolózárak és légsebesség</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="g1">1. gép tolózára nyitva</label><input id="g1" type="checkbox" checked aria-label="1. gép tolózára nyitva"></div>
+<div class="row"><label for="g2">2. gép tolózára nyitva</label><input id="g2" type="checkbox" aria-label="2. gép tolózára nyitva"></div>
+<div class="row"><label for="g3">3. gép tolózára nyitva</label><input id="g3" type="checkbox" aria-label="3. gép tolózára nyitva"></div>
+<div class="row"><label for="Q">Ventilátor légmennyisége Q</label><input id="Q" type="range" min="800" max="2400" step="50" value="1400" aria-label="Ventilátor légmennyisége Q"><output id="Q_o" for="Q"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 245" role="img" aria-label="Központi elszívás három géppel: a tolózárak kapcsolásával változik az ágankénti légsebesség."></svg>
+<p class="small">Egyszerűsített, szemléltető modell: a ventilátor légmennyiségét állandónak vesszük, és egyenlően oszlik meg a nyitott ágak között (a valóságban a ventilátor jelleggörbéje és a csőellenállás is változik). 1400 m³/h és 160 mm: egy nyitott ágnál 19,3 m/s, három nyitott ágnál 6,4 m/s.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"Q":"m³/h"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const Q=v.Q, D=160, A=Math.pow(D/1000,2)*Math.PI/4;
+const op=[v.g1,v.g2,v.g3], n=op.reduce((a,b)=>a+b,0);
+const vb = n ? Q/3600/n/A : 0;
+// főcső és ventilátor
+el("rect",{x:40,y:40,width:470,height:22,fill:"none",stroke:css("--line"),"stroke-width":2});
+el("rect",{x:510,y:22,width:80,height:60,fill:css("--grid"),stroke:css("--line"),"stroke-width":2});
+el("text",{x:550,y:100,"text-anchor":"middle","font-size":13},"ventilátor");
+el("text",{x:550,y:118,"text-anchor":"middle","font-size":13},"Q = "+Q+" m³/h");
+[0,1,2].forEach(i=>{const x=110+i*150;
+ el("rect",{x:x-11,y:62,width:22,height:110,fill:"none",stroke:css("--line"),"stroke-width":2});
+ const g=op[i];
+ el("polygon",{points:(x-16)+",100 "+(x+16)+",116 "+(x+16)+",100 "+(x-16)+",116",fill:g?"none":css("--line"),stroke:css("--line"),"stroke-width":1.5});
+ el("rect",{x:x-34,y:172,width:68,height:34,fill:css("--grid"),stroke:css("--line")});
+ el("text",{x:x,y:194,"text-anchor":"middle","font-size":13},(i+1)+". gép");
+ el("text",{x:x+22,y:96,"font-size":12},g?"nyitva":"zárva");
+ if(g){const col=vb<15?css("--bad"):css("--ok");
+   el("text",{x:x,y:232,"text-anchor":"middle","font-size":14,"font-weight":"bold",fill:col},"v ≈ "+fmt(vb,1)+" m/s");
+   el("line",{x1:x,x2:x,y1:160,y2:76,stroke:col,"stroke-width":3,"marker-end":"url(#ah)"});}
+});
+const d=el("defs",{});d.innerHTML='<marker id="ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="'+css("--line")+'"/></marker>';
+let s="Ágankénti légsebesség (D = 160 mm, egyenlő ágak): v = (Q / nyitott ágak száma) / A. ";
+if(!n) s+="<span class='bad'>Minden tolózár zárva – nincs elszívás; így ne indítsd a gépet.</span>";
+else if(vb<15) s+="<span class='bad'>v ≈ "+fmt(vb,1)+" m/s – túl kicsi: a por lerakódik a csőben. Zárd a nem használt ágakat!</span>";
+else if(vb>30) s+="<span class='bad'>v ≈ "+fmt(vb,1)+" m/s – túl nagy: zaj, koptatás.</span>";
+else s+="<span class='ok'>v ≈ "+fmt(vb,1)+" m/s – a tájékoztató 18–25 m/s körül.</span>";
+status(s);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

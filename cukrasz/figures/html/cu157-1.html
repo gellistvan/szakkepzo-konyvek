@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Árképzési kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mode">Bemenet</label><select id="mode" aria-label="Bemenet"><option value="h" selected>haszonkulcs</option><option value="a">árrésszint</option></select></div>
+<div class="row"><label for="K">Anyagköltség (nettó)</label><input id="K" type="range" min="50" max="2000" step="10" value="340" aria-label="Anyagköltség (nettó)"><output id="K_o" for="K"></output></div>
+<div class="row"><label for="p">Haszonkulcs / árrésszint</label><input id="p" type="range" min="0" max="200" step="1" value="90" aria-label="Haszonkulcs / árrésszint"><output id="p_o" for="p"></output></div>
+<div class="row"><label for="afa">ÁFA-kulcs</label><input id="afa" type="range" min="0" max="27" step="1" value="27" aria-label="ÁFA-kulcs"><output id="afa_o" for="afa"></output></div>
+<div class="row"><label for="eng">Engedmény (nettó árra)</label><input id="eng" type="range" min="0" max="30" step="1" value="0" aria-label="Engedmény (nettó árra)"><output id="eng_o" for="eng"></output></div>
+<div class="row"><label for="fel">Felár (bruttó)</label><input id="fel" type="range" min="0" max="1000" step="10" value="0" aria-label="Felár (bruttó)"><output id="fel_o" for="fel"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Árképzési kalkulátor: csúszkákkal állítható anyagköltség, haszonkulcs vagy árrésszint, ÁFA-kulcs, engedmény és felár; a kijelzés a nettó, bruttó árat és az árrést mutatja"></svg>
+<p class="small">A fejezet 1. és 2. példájával egyező képletek (ÁFA 27 %). Tanulási eszköz, az üzemi árképzést a saját költségszerkezetből kell végezni.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"K":"Ft", "p":"%", "afa":"%", "eng":"%", "fel":"Ft"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const p=v.p/100; let net,h,a;
+if(v.mode=="h"){h=p;net=v.K*(1+h);a=h/(1+h);} else {const pa=Math.min(p,0.95);a=pa;net=v.K/(1-a);h=a/(1-a);}
+const aKi=(net-v.K)/net, nettoEng=net*(1-v.eng/100), brutto=nettoEng*(1+v.afa/100), fiz=brutto+v.fel;
+const M=[["Árrés",fmt(net-v.K,1),"Ft"],["Nettó eladási ár",fmt(net,1),"Ft"],["Engedményes nettó",fmt(nettoEng,1),"Ft"],["Bruttó ár",fmt(brutto,1),"Ft"],["Fizetendő (felárral)",fmt(fiz,0),"Ft"],["Árrésszint / anyagfelhasználás",fmt(aKi*100,1)+" / "+fmt((1-aKi)*100,1),"%"]];
+M.forEach((m,i)=>{const y=14+i*44;el("rect",{x:20,y:y,width:520,height:36,fill:"none",stroke:css("--line"),"stroke-width":1.4,rx:6});
+ el("text",{x:34,y:y+23,"font-size":14},m[0]);el("text",{x:500,y:y+23,"font-size":16,"text-anchor":"end","font-weight":"bold"},m[1]+" "+m[2]);});
+status("Nettó = K·(1+h) = K/(1−a); bruttó = nettó·(1+ÁFA). Haszonkulcs "+fmt(h*100,1)+" % ↔ árrésszint "+fmt(a*100,1)+" %. Alappélda: K = 340 Ft, h = 90 % → nettó 646, bruttó 820 Ft.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

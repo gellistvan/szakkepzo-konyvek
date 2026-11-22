@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>13.2 CAD, látványtervezés, optimalizálás és CNC-adatátvitel –
+Asztalos – faanyagismeret, szakrajz, kötések, gépek és
+felületkezelés</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz3">III. RÉSZ – Faipari szakrajz és műszaki dokumentáció</a> › <a href="index.html#asch12">13 Számítástechnika a faiparban</a></p>
+<div class="links"><a class="prev" rel="prev" href="as054.html">← 13.1 Irodai szoftverek az asztalos munkájában</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="as056.html">14.1 A forgácsolás alapjai: szerszámél, szögek, mozgások és forgácsképződés →</a></div>
+</nav>
+<h2 data-number="13.2" id="as055"><span
+class="header-section-number">13.2</span> CAD, látványtervezés,
+optimalizálás és CNC-adatátvitel</h2>
+<h3 data-number="13.2.1" id="motiváció"><span
+class="header-section-number">13.2.1</span> Motiváció</h3>
+<p>Egy konyhabútor-rendelés tervezésekor a vevő először látványtervet
+szeretne látni, hogy eldöntse, tetszik-e neki a szín, a fogantyú, az
+ajtók elrendezése. Ha csak papíron rajzolunk, a változtatás lassú:
+minden módosításhoz új rajz kell. Ha viszont számítógéppel,
+<strong>CAD-programban</strong> dolgozunk, a 3D-modellen gyorsan
+cserélhetjük a színeket, az ajtót vagy a méretet, és a program azonnal
+frissíti a nézeteket, az alkatrészlistát és a szabásjegyzéket is.</p>
+<p>A második nehéz pillanat a gyártáskor jön: a rajzról a CNC-gép nem
+tud közvetlenül dolgozni. A tervből <strong>CAM-adatot</strong> kell
+készíteni, amely a gép nyelvén, koordinátákkal és szerszámparancsokkal
+írja le a megmunkálást. Ha ez a lánc helyesen épül fel, a tervtől a
+furatig és a szabásig kevesebb hibával, gyorsabban jutunk el. Ha bárhol
+elszakad az adatlánc, rossz méret, rossz furat vagy anyagpazarlás lehet
+a vége.</p>
+<h3 data-number="13.2.2" id="szemléletes-kép"><span
+class="header-section-number">13.2.2</span> Szemléletes kép</h3>
+<p>Képzeljünk el egy fiókos éjjeliszekrényt a képernyőn: a bal oldalon a
+<strong>3D-modell</strong> forgatható, jobbra a <strong>2D-s
+alkatrészrajzok</strong> nyílnak, alul pedig egy táblázat sorolja az
+alkatrészeket mérettel, anyaggal, furatokkal. Amikor a tervező a
+3D-modellen kicseréli a fiókelőlapot magasabbra, a alkatrészlista sora
+automatikusan frissül, és a szabásoptimalizáló újrarendezi a lapra a
+vágási képet. Ezután egy gombnyomással exportáljuk a furatok és a
+körvonalak adatait a CNC-gép számára.</p>
+<p>Az alábbi folyamatábra a teljes <strong>CAD–CAM adatláncot</strong>
+mutatja a tervtől a gépig:</p>
+<figure>
+<img src="assets/as055-diagram-1.png"
+alt="A CAD–CAM adatlánc a tervtől a CNC-gépig - Szemléltető folyamatábra; a lépések szoftverenként és gépenként eltérhetnek. A gyártói adatlap és a gépkönyv az irányadó." />
+<figcaption aria-hidden="true">A CAD–CAM adatlánc a tervtől a CNC-gépig
+- Szemléltető folyamatábra; a lépések szoftverenként és gépenként
+eltérhetnek. A gyártói adatlap és a gépkönyv az irányadó.</figcaption>
+</figure>
+<p>A lépések nem varázsütésre történnek: mindegyiknél ellenőrizni kell a
+méretet, az anyagot és a szerszámot. A folyamatábra inkább térkép, mint
+automata futószalag.</p>
+<h3 data-number="13.2.3" id="definíciók-és-szabályok"><span
+class="header-section-number">13.2.3</span> Definíciók és szabályok</h3>
+<p><strong>CAD (Computer Aided Design)</strong> – számítógéppel segített
+tervezés. A faiparban két fő fajtája van: a <strong>2D-s CAD</strong>,
+amely síkbeli rajzokat készít (vetület, méretezés, vonalak), és a
+<strong>3D-s CAD</strong>, amely térbeli modellt épít. A 3D-modellből
+általában 2D-s rajzok is előállíthatók.</p>
+<p><strong>CAM (Computer Aided Manufacturing)</strong> – számítógéppel
+segített gyártás. A CAM-program a CAD-ből kapott geometriából
+megmunkálási pályákat számol: furatok, marások, vágások, zsebek. A CAM
+kimenete gépi vezérlőkód, amelyet a CNC-gép értelmez.</p>
+<p><strong>CAD–CAM lánc</strong> – az a folyamat, amely a tervtől a kész
+alkatrészig viszi a digitális adatot: tervezés → 3D-modell →
+alkatrészlista → 2D-rajz / DXF → CAM-pálya → posztprocesszor →
+CNC-program → megmunkálás. A lánc minden lépésénél meg kell őrizni a
+méretek és a koordináták helyességét.</p>
+<p><strong>Réteg (layer)</strong> – a CAD-rajz rendezési eszköze. Egy
+rétegre kerülnek például a körvonalak, egy másikra a méretek, egy
+harmadikra a furatok. A rétegeket ki-be kapcsolhatjuk, zárolhatjuk,
+eltérő vonalszínnel vagy vonaltípussal jeleníthetjük meg. Faipari rajzon
+érdemes külön rétegre tenni a <strong>kontúrt</strong>, a
+<strong>furatokat</strong>, a <strong>méretezést</strong>, az
+<strong>élzárást</strong> és a <strong>segédvonalakat</strong>.</p>
+<p><strong>Blokk (block)</strong> – ismétlődő rajzi elemek csoportja.
+Például egy köldökcsap-ábrázolás, egy vasalat szimbóluma vagy egy
+fogantyú nézete. A blokkot egy helyen kell módosítani, és a rajz minden
+előfordulásán frissül. Faipari rajzokon a vasalatok, a furatjelölések és
+a címkék jellemző blokkok.</p>
+<p><strong>DXF (Drawing Exchange Format)</strong> – rajzcsere-formátum,
+amely gyakran használt a CAD-programok és a gyártógépek közötti 2D-s
+geometria átadására. Nem szabványos, hanem egy elterjedt gyártói
+formátum <strong>(ellenőrizendő: a pontos verzió és a célgép által
+elfogadott DXF-változat)</strong>. Emellett léteznek gyártói,
+gépspecifikus formátumok is.</p>
+<p><strong>Posztprocesszor</strong> – a CAM-program utolsó modulja,
+amely a géptől független szerszámpályát az adott CNC-gép nyelvére
+alakítja. Minden gépvezérlésnek megvan a maga dialektusa, ezért ugyanaz
+a furatpozíció más kódban jelenik meg egy asztali CNC-marónál, mint egy
+ipari megmunkálóközpontnál. A posztprocesszor kiválasztása ezért
+gépfüggő.</p>
+<p><strong>Szabály.</strong> A CAD-modell és a gyártási rajz akkor jó,
+ha a rajz minden mérete, furata és élzárása visszavezethető a
+3D-modellre. Ha a 3D-modell és a 2D-rajz között ellentmondás van, a gép
+rossz alkatrészt gyárt.</p>
+<h3 data-number="13.2.4"
+id="technológia-egy-bútor-2d-s-és-3d-s-cad-modellezése"><span
+class="header-section-number">13.2.4</span> Technológia: egy bútor 2D-s
+és 3D-s CAD-modellezése</h3>
+<h4 data-number="13.2.4.1" id="d-s-cad-rajz-készítése-lépésenként"><span
+class="header-section-number">13.2.4.1</span> 2D-s CAD-rajz készítése
+lépésenként</h4>
+<ol type="1">
+<li><strong>Rajzbeállítás:</strong> állítsuk be a mértékegységet (mm), a
+rajzterületet és a rajzfejet. Faipari rajzon a mm-t nem írjuk ki, a
+méretarányt a rajzfejben adjuk meg (például 1:1, 1:2, 1:5).</li>
+<li><strong>Rétegszerkezet:</strong> hozzuk létre a rétegeket, például
+<code>kontur</code>, <code>furat</code>, <code>meret</code>,
+<code>elzaras</code>, <code>segéd</code>. A rétegeket színnel és
+vonaltípussal különítsük el.</li>
+<li><strong>Kontúrok rajzolása:</strong> a bútorlap körvonalát zárt
+alakzatként rajzoljuk meg. Használjunk pontos koordinátákat vagy
+intelligens méretmegadást (például hossz 600 mm, szélesség 400 mm).</li>
+<li><strong>Furatok és vasalatjelek:</strong> a furatokat körrel
+jelöljük, és a furatátmérőt, mélységet, pozíciót a méretezésben adjuk
+meg. A vasalatokhoz használjunk blokkokat.</li>
+<li><strong>Méretezés:</strong> a méreteket a közös báziséltől indítsuk,
+hogy a hibák ne adódjanak össze. Tüntessük fel a hosszt, szélességet,
+furathelyeket, élzárás helyét.</li>
+<li><strong>Szabásjegyzék-ellenőrzés:</strong> ellenőrizzük, hogy a
+rajzon szereplő minden alkatrész szerepel-e a szabásjegyzékben, és a
+méretek egyeznek-e.</li>
+<li><strong>Nyomtatás vagy PDF-export:</strong> a rajzot PDF-be mentjük,
+vagy nyomtatjuk. A PDF/A formátum hosszú távú megőrzésre alkalmas
+<strong>(ellenőrizendő: az adott CAD-program PDF-export
+beállítása)</strong>.</li>
+</ol>
+<h4 data-number="13.2.4.2" id="d-s-cad-modellépítés-lépésenként"><span
+class="header-section-number">13.2.4.2</span> 3D-s CAD-modellépítés
+lépésenként</h4>
+<ol type="1">
+<li><strong>Alkatrész-modellek:</strong> minden bútoralkatrészt
+(oldallap, fiókelőlap, polc) külön 3D-testként modellezünk. A testet
+leggyakrabban egy 2D-s vázlat kihúzásával (extrudálással) hozzuk létre.
+Például rajzolunk egy téglalapot 600 × 400 mm, majd kihúzzuk 18 mm
+vastagságra.</li>
+<li><strong>Furatok és zsebek:</strong> a furatokat 3D-ben hengerként
+kivonjuk a testből. A zsebeket, nútokat és csapokat is 3D-s kivonással
+vagy összeadással hozzuk létre.</li>
+<li><strong>Összeállítás:</strong> az alkatrészeket kényszerekkel
+(együttálló, párhuzamos, távolság) illesztjük össze. A kényszerek
+segítenek a szerkezet helyes összeállításának ellenőrzésében.</li>
+<li><strong>Anyagmegjelenés:</strong> hozzárendeljük a faanyag
+textúráját, színét, a vasalat megjelenését. Ez a
+<strong>látványtervezés</strong> alapja.</li>
+<li><strong>Ellenőrzés:</strong> a 3D-modellt forgatva ellenőrizzük a
+kötéseket, a szerelvényhelyeket, a nyílások méretét. Keressünk metszési
+hibákat (például két alkatrész egymásba ér).</li>
+<li><strong>2D-rajzok generálása:</strong> a 3D-modellből automatikusan
+2D-s nézeteket és metszeteket készíthetünk. A generált rajzhoz
+méretezést és feliratokat adunk.</li>
+<li><strong>Szabásjegyzék-generálás:</strong> a CAD-program (vagy a
+faipari célszoftver) a modellből alkatrészlistát készít: megnevezés,
+darabszám, anyag, kész méret, furatok, élzárás.</li>
+</ol>
+<h3 data-number="13.2.5"
+id="kidolgozott-példa-fiókos-éjjeliszekrény-cad-modellje-és-szabásoptimalizálása"><span
+class="header-section-number">13.2.5</span> Kidolgozott példa: fiókos
+éjjeliszekrény CAD-modellje és szabásoptimalizálása</h3>
+<p><strong>Termék:</strong> egyszerű fiókos éjjeliszekrény. Méretek:
+szélesség 500 mm, mélység 400 mm, magasság 600 mm. Anyag: 18 mm vastag
+laminált forgácslap (a fiók oldalai 16 mm-es laminált forgácslapból).
+Szerkezet: két oldallap, egy fedőlap, egy fenéklap, egy hátlap
+(farostlemez), két polc, egy fiókelőlap, a fiók oldalai, hátlapja és
+belső eleje, valamint egy fiókfenék.</p>
+<h4 data-number="13.2.5.1" id="cad-modellezés-lépései"><span
+class="header-section-number">13.2.5.1</span> 1. CAD-modellezés
+lépései</h4>
+<p>A 3D-modellben minden alkatrészt külön testként hozunk létre:</p>
+<ul>
+<li><strong>Oldallap:</strong> téglalap 582 × 400 mm (a fedőlap az
+oldallapok tetején fekszik, ezért 600 − 18 = 582 mm), kihúzás 18 mm
+vastagságra. Furatok: 32-es rendszerű lyuksor a polctartókhoz, átmérő 5
+mm, mélység 8 mm, pozíciók a báziséltől mérve.</li>
+<li><strong>Fedőlap:</strong> téglalap 500 × 400 mm, kihúzás 18 mm. A
+két oldallap tetejére fektetjük.</li>
+<li><strong>Fenéklap:</strong> 464 × 400 mm (a két oldallap belső
+távolsága 500 − 2×18 = 464 mm), kihúzás 18 mm.</li>
+<li><strong>Polc:</strong> 464 × 380 mm, kihúzás 18 mm.</li>
+<li><strong>Fiókelőlap:</strong> 500 × 200 mm, kihúzás 18 mm, a fiók
+előlapja.</li>
+<li><strong>Fiók oldalai:</strong> két darab 350 × 120 mm, kihúzás 16 mm
+(a fiókvezető hosszához igazítva, ellenőrizendő: vasalatkatalógus; a
+fiók mélysége rövidebb a szekrény 400 mm-es mélységénél, hogy
+beleférjen).</li>
+<li><strong>Fiókhátlap és fiók-belső elő:</strong> két darab 406 × 120
+mm, kihúzás 16 mm (a fiókvezető oldalhézagával számolva: 464 − 2 · 13 −
+2 · 16 = 406 mm).</li>
+<li><strong>Fiókfenék:</strong> 430 × 350 mm, 3 mm HDF.</li>
+<li><strong>Hátlap:</strong> 468 × 550 mm, 3 mm vastag HDF, az
+oldallapok hátul marásába illesztve.</li>
+</ul>
+<p>A 3D-összeállításban az alkatrészeket kényszerekkel illesztjük: az
+oldallapok párhuzamosak, távolságuk 464 mm; a fedőlap az oldallapok
+tetején fekszik; a fiókelőlap a fiók oldalaira illeszkedik. Az
+összeállítás így megmutatja, hogy a fiók becsukott állapotban szorul-e,
+vagy a polcok elférnek-e.</p>
+<h4 data-number="13.2.5.2" id="alkatrészlista-generálása"><span
+class="header-section-number">13.2.5.2</span> 2. Alkatrészlista
+generálása</h4>
+<p>A CAD-program az alábbi szabásjegyzéket készíti (kivonat):</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tétel</th>
+<th>Megnevezés</th>
+<th>Db</th>
+<th>Anyag</th>
+<th>Kész méret h × sz × v (mm)</th>
+<th>Megjegyzés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Oldallap</td>
+<td>2</td>
+<td>Laminált forgácslap</td>
+<td>582 × 400 × 18</td>
+<td>32-es furatsor, élzárás elöl</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Fedőlap</td>
+<td>1</td>
+<td>Laminált forgácslap</td>
+<td>500 × 400 × 18</td>
+<td>élzárás 3 oldalon</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Fenéklap</td>
+<td>1</td>
+<td>Laminált forgácslap</td>
+<td>464 × 400 × 18</td>
+<td>élzárás elöl</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Polc</td>
+<td>2</td>
+<td>Laminált forgácslap</td>
+<td>464 × 380 × 18</td>
+<td>élzárás elöl</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Fiókelőlap</td>
+<td>1</td>
+<td>Laminált forgácslap</td>
+<td>500 × 200 × 18</td>
+<td>élzárás 4 oldalon</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Fiók oldallap</td>
+<td>2</td>
+<td>16 mm laminált forgácslap</td>
+<td>350 × 120 × 16</td>
+<td>élzárás felül</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Fiókhátlap, fiók-belső elő</td>
+<td>2</td>
+<td>16 mm laminált forgácslap</td>
+<td>406 × 120 × 16</td>
+<td>élzárás felül</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Fiókfenék</td>
+<td>1</td>
+<td>HDF</td>
+<td>430 × 350 × 3</td>
+<td>—</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Hátlap</td>
+<td>1</td>
+<td>HDF</td>
+<td>468 × 550 × 3</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ellenőrzés:</strong> a szélességi méretek összhangja: 2 × 18
+mm oldallap + 464 mm belső = 500 mm. A magassági méret: 582 mm oldallap
++ 18 mm fedőlap = 600 mm. A polcok állíthatók, ezért a belső szabad
+magasságot külön ellenőrizzük. A listát mindig a 3D-modellhez
+viszonyítva ellenőrizzük.</p>
+<h4 data-number="13.2.5.3" id="szabásoptimalizálás"><span
+class="header-section-number">13.2.5.3</span> 3.
+Szabásoptimalizálás</h4>
+<p>A laminált forgácslap táblamérete szabványosan <strong>2800 × 2070
+mm</strong> (tájékoztató, ellenőrizendő a beszállítónál). Az
+alkatrészeket ebből kell kiszabni. A <strong>szabásoptimalizáló
+program</strong> a táblára helyezi az alkatrészeket úgy, hogy a hulladék
+a lehető legkisebb legyen, figyelembe véve a fűrészvágás rést (például 4
+mm) és a szálirányt.</p>
+<p>Számítsuk ki a nettó anyagszükségletet:</p>
+<p>A nagy alkatrészek területe (a fűrészrést most elhanyagoljuk, csak a
+kihozatali arányt becsüljük):</p>
+<p>18 mm-es laminált forgácslap:</p>
+<ul>
+<li>Oldallap: 0,582 m × 0,400 m = 0,2328 m², 2 db → 0,4656 m²</li>
+<li>Fedőlap: 0,500 × 0,400 = 0,200 m²</li>
+<li>Fenéklap: 0,464 × 0,400 = 0,1856 m²</li>
+<li>Polc: 0,464 × 0,380 = 0,17632 m², 2 db → 0,35264 m²</li>
+<li>Fiókelőlap: 0,500 × 0,200 = 0,100 m²</li>
+<li>Összesen (18 mm): 0,4656 + 0,200 + 0,1856 + 0,35264 + 0,100 =
+<strong>1,30384 m²</strong></li>
+</ul>
+<p>16 mm-es laminált forgácslap (külön sor, külön anyag):</p>
+<ul>
+<li>Fiók oldallap: 0,350 × 0,120 = 0,042 m², 2 db → 0,084 m²</li>
+<li>Fiókhátlap és belső elő: 0,406 × 0,120 = 0,04872 m², 2 db → 0,09744
+m²</li>
+<li>Összesen (16 mm): <strong>0,18144 m²</strong></li>
+</ul>
+<p>HDF (3 mm): hátlap 0,468 × 0,550 = 0,2574 m², fiókfenék 0,430 × 0,350
+= 0,1505 m².</p>
+<p>Egy tábla: 2,800 m × 2,070 m = <strong>5,796 m²</strong></p>
+<p>Elméleti kihozatal a 18 mm-es anyagra: $ \frac{1{,}30384}{5{,}796}
+\cdot 100,% = 22{,}5,% $. Ez nem hulladékarány: egyetlen
+éjjeliszekrényhez a tábla kb. negyede kell, a tábla többi része
+<strong>maradéklapként</strong> más munkához (vagy több darab egyidejű
+gyártásához) használható. Az optimalizáló ezért a maradéklap méretét is
+kiírja; kihozatalt sorozatra vagy maradéklap-kezeléssel értelmes
+számolni. A 16 mm-es fiókelemek külön (16 mm-es) lapból vagy
+maradéklapból készülnek.</p>
+<p>A pontos számításhoz a szabásrészt is hozzá kell adni: ha minden
+vágás 4 mm-t vesz el, akkor a nettó méretekhez ráhagyást kell adni a
+szabásjegyzék nyers méreteinél. Ezt a <a href="as049.html">Szabásjegyzék
+és anyagnorma</a> és a <a href="as050.html">Szabásterv és szabástérkép,
+anyagkihozatal</a> alfejezetekben részletezzük.</p>
+<h4 data-number="13.2.5.4" id="adatátvitel-a-cnc-gépre"><span
+class="header-section-number">13.2.5.4</span> 4. Adatátvitel a
+CNC-gépre</h4>
+<p>A 2D-s gyártási rajzot <strong>DXF</strong> formátumban exportáljuk.
+A DXF-ben az alkatrész kontúrja, a furatok középpontja és átmérője,
+valamint a zsebek geometriája szerepel. Az export előtt
+ellenőrizzük:</p>
+<ul>
+<li>Minden méret milliméterben van-e.</li>
+<li>A furatok külön rétegen vannak-e.</li>
+<li>A körvonal zárt, nincs-e szakadás.</li>
+<li>Az élzárások jelölése nem keveredik-e a vágási kontúrral.</li>
+</ul>
+<figure id="fig-as055-1">
+<div class="fig-interactive"><iframe src="figures/html/as055-1.html" title="Oldallap CAD-rajza rétegenként (kontúr, furat, méret, élzárás) a CNC-nullponttal és a négy tipikus exporthiba kis képével." loading="lazy" style="width:100%;border:0;height:620px"></iframe><noscript><img src="figures/img/as055-1.png" style="width:90.0%"
+alt="Oldallap CAD-rajza rétegenként (kontúr, furat, méret, élzárás) a CNC-nullponttal és a négy tipikus exporthiba kis képével." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/as055-1.png" style="width:90.0%"
+alt="Oldallap CAD-rajza rétegenként (kontúr, furat, méret, élzárás) a CNC-nullponttal és a négy tipikus exporthiba kis képével." /></details></div>
+<figcaption>Az oldallap 2D-rajza DXF-rétegek szerint, a CNC-nullponttal
+és a négy tipikus exporthibával</figcaption>
+</figure>
+<p>Az ábrán az éjjeliszekrény 582 × 400 × 18 mm-es oldallapja látható (a
+fedőlap az oldallapok tetején fekszik, ezért az oldallap 600 − 18 = 582
+mm magas). A rétegeket vonaltípus különíti el: <code>kontur</code>
+vastag folytonos, <code>furat</code> kör, <code>meret</code> vékony,
+<code>elzaras</code> szaggatott. A nullpont (X0/Y0) a bal alsó
+bázissarok; a CAM-ban és a gépen ugyanennek kell lennie. Jobbra lent a
+négy tipikus hiba: rossz réteg, eltérő origó, robbantatlan blokk,
+nyitott kontúr. A HTML-változatban a rétegek ki-be kapcsolhatók, és az
+origó eltolásával látható, hova kerülnének a furatok.</p>
+<p>Egy rövid, magyarázott fúrási programrészlet (a pontos szintaxis
+vezérlőfüggő, <strong>ellenőrizendő: a gép vezérlőjének
+dokumentációja</strong>):</p>
+<pre class="text"><code>; Oldallap 582 x 400 x 18 – nullpont: bal alsó bázissarok (X0 Y0), Z0 a lap felső síkja
+T1 M6                  ; szerszámcsere: 5 mm-es fúró a 32-es sorhoz
+S4000 M3               ; orsó be, fordulatszám (szerszámadatlap szerint)
+G0 X37 Y96 Z5          ; gyorsmenet az első furat fölé, 5 mm biztonsági magasságba
+G81 Z-12 R2 F1500      ; fúróciklus: 12 mm mély furat, előtolás mm/min-ben
+Y128                   ; következő furat 32 mm-rel feljebb (a ciklus ismétlődik)
+G80 G0 Z50 M5          ; ciklus vége, kiemelés, orsó le</code></pre>
+<p>A CNC-gép CAM-programja beolvassa a DXF-et, a kezelő kiválasztja a
+szerszámokat (például 5 mm-es fúró, 8 mm-es maró), majd a
+posztprocesszor legenerálja a gépi programot. A program már
+koordinátákat, fordulatszámot, előtolást és szerszámcserét tartalmaz. A
+generált programot szimulációval ellenőrizzük, hogy ne legyen ütközés
+vagy rossz mélység.</p>
+<p><strong>Gépbiztonság.</strong> A CNC-gépen a programot csak
+betanított, felügyelt kezelő indíthatja. Indítás előtt ellenőrizd a
+munkadarab rögzítését (vákuum), a szerszámok befogását és megengedett
+fordulatszámát, a védőberendezéseket és a vészleállítót; az új programot
+először szimulációban, majd csökkentett előtolással, a gép mellett állva
+futtasd (ellenőrizendő: gépkönyv, MSZ EN ISO 19085 sorozat). A gép
+munkaterébe működés közben nem nyúlunk.</p>
+<h3 data-number="13.2.6" id="szabvány"><span
+class="header-section-number">13.2.6</span> Szabvány</h3>
+<p><strong>Szabvány.</strong> A CAD-adatok cseréjére nincs egyetlen
+kötelező faipari szabvány; a gyakorlatban a <strong>DXF</strong>
+formátum de facto szabvánnyá vált, de a verziószám és a célgép által
+elfogadott elemek eltérhetnek <strong>(ellenőrizendő: a CNC-gép gyártói
+dokumentációja)</strong>. A hosszú távú megőrzésre a
+<strong>PDF/A</strong> formátum (ISO 19005 sorozat) alkalmas
+<strong>(ellenőrizendő: a pontos szabványszám)</strong>. A
+termékmodell-adatok cseréjére az <strong>ISO 10303 (STEP)</strong>
+szolgál, de az asztalosüzemi gépek és a faipari szoftverek a
+gyakorlatban gyakran DXF-et vagy saját formátumot használnak. A rajzok
+szabványos vonalait, méretezését és rétegrendjét az MSZ EN ISO 128 és
+MSZ EN ISO 129 alapelvei szerint alakítjuk ki <strong>(ellenőrizendő: a
+hatályos szabványszámok)</strong>.</p>
+<h3 data-number="13.2.7" id="minőségellenőrzés"><span
+class="header-section-number">13.2.7</span> Minőségellenőrzés</h3>
+<p>A CAD-CAM láncban az ellenőrzés célja, hogy a gép ne gyártson rossz
+alkatrészt. Az ellenőrzési pontok:</p>
+<ol type="1">
+<li><strong>Modell ellenőrzése:</strong> a 3D-modellben minden alkatrész
+a helyén van, nincs átfedés, a furatok mélysége és pozíciója
+helyes.</li>
+<li><strong>Rajz ellenőrzése:</strong> a generált 2D-rajz méretei
+egyeznek a 3D-modellel; a méretarány és a rajzfej megfelelő.</li>
+<li><strong>Lista ellenőrzése:</strong> a szabásjegyzék darabszáma,
+anyaga és kész mérete megegyezik a modellel; a nyers méretek
+tartalmazzák a ráhagyást.</li>
+<li><strong>DXF ellenőrzése:</strong> a kontúr zárt, a furatok külön
+rétegen vannak, a mértékegység mm, nincs felesleges réteg.</li>
+<li><strong>CAM szimuláció:</strong> a generált szerszámpályát
+szimulációban ellenőrizzük ütközésre, rossz megmunkálási sorrendre, túl
+mély furatra.</li>
+<li><strong>Próbadarab:</strong> ha lehetséges, egy hulladéklapon vagy
+próbadarabon teszteljük a programot, mielőtt a teljes anyagot
+megmunkáljuk.</li>
+</ol>
+<p>Eltérés esetén a hibát a lánc legkorábbi pontján kell javítani:
+először a modellben, majd a rajzban, majd az exportban, végül a
+CAM-paraméterekben.</p>
+<h3 data-number="13.2.8" id="tipikus-hibák-és-okaik"><span
+class="header-section-number">13.2.8</span> Tipikus hibák és okaik</h3>
+<ol type="1">
+<li><p><strong>Hiba: a CNC-gép rossz helyre fúr.</strong> Ok: a
+DXF-exportnál a furatok másik rétegre kerültek, vagy a
+koordinátarendszer origója nem egyezik. <strong>Helyes
+gyakorlat:</strong> mindig ellenőrizzük a rétegeket és az origót; export
+előtt a rajzon rajzoltassuk ki a furatok középpontját.</p></li>
+<li><p><strong>Hiba: a generált szabásjegyzék darabszáma nem egyezik a
+rajzzal.</strong> Ok: a 3D-modellben egy alkatrész kétszer szerepel,
+vagy a blokkok beszámításra kerültek. <strong>Helyes gyakorlat:</strong>
+modellben minden alkatrészt egyedi, paraméterezett testként építsünk, ne
+blokkokból.</p></li>
+<li><p><strong>Hiba: a szabásoptimalizáló rosszul vág, és a táblán az
+alkatrészek nem férnek el.</strong> Ok: nem adtuk meg a fűrészrést vagy
+a tábla szegélyének levágását (ráhagyást). <strong>Helyes
+gyakorlat:</strong> az optimalizálóban állítsuk be a fűrészrés
+vastagságát, a tábla szegélyét, a szálirányt, és futtassuk
+újra.</p></li>
+<li><p><strong>Hiba: a CNC-program hibás szerszámot vagy fordulatot
+használ.</strong> Ok: rossz posztprocesszort választottunk.
+<strong>Helyes gyakorlat:</strong> mindig a gép típusának megfelelő
+posztprocesszort használjuk; a gépkönyvben ellenőrizzük a támogatott
+programnyelvet.</p></li>
+</ol>
+<h3 data-number="13.2.9" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">13.2.9</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy asztalos vállalkozó bevezette a CAD-CAM munkafolyamatot, hogy
+konyhabútorokat gyorsabban gyártson. Kezdetben a tervező a 3D-modellből
+csak látványtervet készített, a gyártáshoz viszont kézzel írta az
+alkatrészlistát, és a CNC-gépet is kézzel programozta. Az eredmény: a
+látványterv és a valódi bútor méretei eltértek, mert a kézi lista nem
+frissült, amikor a modellben megváltozott a fiókméret. Egy reklamáció
+után a cég áttért arra, hogy a CAD-program automatikusan generálja a
+szabásjegyzéket, és a DXF-et közvetlenül a CAM-ba küldi. Az új
+folyamattal a tervezésről a gyártásra fordított idő a felére csökkent,
+és a mérethibák megszűntek. A tanulság: <strong>a CAD-modell az egyetlen
+igazságforrás</strong>, a többi dokumentumot abból kell
+származtatni.</p>
+<h3 data-number="13.2.10" id="önellenőrzés"><span
+class="header-section-number">13.2.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A DXF fájl közvetlenül futtatható a CNC-gépen, mert
+az egy szabványos vezérlőkód. Indokold!</li>
+<li>Mi a különbség a 2D-s CAD és a 3D-s CAD között a faipari
+tervezésben?</li>
+<li>Miért van szükség posztprocesszorra a CAM és a CNC-gép között?</li>
+<li>Számolj: egy 600 × 400 mm-es bútorlap területe hány négyzetméter? Ha
+20 darabot kell gyártani, mennyi a nettó anyagigény?</li>
+<li>Mi a szerepe a rétegeknek a CAD-rajzon? Adj három példát faipari
+rétegre.</li>
+<li>Mi a hiba: a szabásoptimalizáló 3 darab 2800 × 2070 mm-es táblát
+jelez, de a nettó anyagszükséglet csak 4,2 m²?</li>
+</ol>
+<h3 data-number="13.2.11" id="feladatok"><span
+class="header-section-number">13.2.11</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong><br />
+Fogalmazd meg saját szavaiddal a CAD és a CAM fogalmát, majd rajzold le
+a CAD–CAM lánc lépéseit.</p>
+<p><strong>2. feladat (A)</strong><br />
+Sorolj fel három faipari réteget, amelyet egy 2D-s műhelyrajzon
+használnál, és írd le, mi kerül rájuk.</p>
+<p><strong>3. feladat (B)</strong><br />
+Egy 3D-s modellből generált szabásjegyzékben az oldallap mérete 800 ×
+600 × 19 mm, de a gyártási rajzon 800 × 600 × 18 mm szerepel. Mi lehet a
+probléma? Hogyan ellenőriznéd?</p>
+<p><strong>4. feladat (B)</strong><br />
+Számítsd ki a nettó anyagszükségletet: 4 db oldallap 700 × 500 mm, 2 db
+fedőlap 900 × 550 mm, 3 db polc 650 × 450 mm. Add meg az eredményt
+m²-ben, és becsüld meg, hány 2800 × 2070 mm-es tábla kell, ha a
+fűrészrés miatt 10% ráhagyást számolunk.</p>
+<p><strong>5. feladat (C)</strong><br />
+Egy CNC-gépre DXF-et exportálsz, de a gép a furatokat nem fúrja ki, csak
+a körvonalat marja. Mi lehet az ok? Sorolj fel legalább három lehetséges
+hibát, és mindegyikre add meg a javítást.</p>
+<p><strong>6. feladat (D)</strong><br />
+Készíts rövid technológiai leírást (számozott lépéseket) egy 3D-s
+bútormodell 2D-s gyártási rajzának előállításához. Használd a fiókos
+éjjeliszekrény példáját, és írd be az ellenőrzési pontokat minden
+lépéshez.</p>
+<h3 data-number="13.2.12" id="megoldások"><span
+class="header-section-number">13.2.12</span> Megoldások</h3>
+<h4 data-number="13.2.12.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">13.2.12.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li><p><strong>Hamis.</strong> A DXF geometriai adatokat tartalmaz, nem
+gépvezérlő kódot. A CNC-gép a CAM-programból posztprocesszálással
+előállított gépi programot futtatja.</p></li>
+<li><p>A 2D-s CAD síkbeli rajzokat készít (vetület, méretezés); a 3D-s
+CAD térbeli modellt épít, amelyből 2D nézetek és szabásjegyzék is
+származtatható. A 3D-modell a teljes termék szerkezetét mutatja, a 2D-s
+rajz egy-egy nézetet vagy metszetet.</p></li>
+<li><p>A posztprocesszor a CAM által generált általános szerszámpályát
+az adott CNC-gép vezérlésének nyelvére alakítja. Minden gépvezérlés
+eltérő dialektust használ, ezért gépfüggő.</p></li>
+<li><p>Terület:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mo>×</mo><mn>0</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mo>=</mo><mn>0</mn><mo>,</mo><mn>24</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">m</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">0{,}6\,\text{m} \times 0{,}4\,\text{m} = 0{,}24\,\text{m}^2</annotation></semantics></math>.
+20 darab:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mo>×</mo><mn>0</mn><mo>,</mo><mn>24</mn><mo>=</mo><mn>4</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">m</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">20 \times 0{,}24 = 4{,}8\,\text{m}^2</annotation></semantics></math>.</p></li>
+<li><p>Rétegek: <code>kontur</code> (alkatrész körvonala, vágási
+geometria), <code>furat</code> (furatok középpontja, átmérő),
+<code>meret</code> (méretvonalak és feliratok). A rétegek segítik a
+logikai csoportosítást, a megjelenítést és a gyártási adatok (pl.
+furatok) exportálását.</p></li>
+<li><p>A nettó anyag 4,2 m², egy tábla területe 5,796 m², tehát
+elméletileg 1 tábla elég lenne, ha a kihozatal 100% lenne, de a
+fűrészvágások, a szálirány és a darabok elrendezése miatt szükséges
+lehet 2 tábla. A 3 tábla viszont már anyagpazarlást jelez, vagy rosszul
+adtuk meg a darabokat / ráhagyást.</p></li>
+</ol>
+<h4 data-number="13.2.12.2" id="feladatok-megoldásai"><span
+class="header-section-number">13.2.12.2</span> Feladatok megoldásai</h4>
+<p><strong>1. feladat (A)</strong><br />
+CAD: számítógéppel segített tervezés, amely 2D-s rajzot vagy 3D-s
+modellt hoz létre. CAM: számítógéppel segített gyártás, amely a
+CAD-geometriából megmunkálási pályát és gépi kódot készít. A lánc:
+tervezés → 3D-modell → alkatrészlista → 2D-rajz / DXF → CAM-pálya →
+posztprocesszor → CNC-program → megmunkálás.</p>
+<p><strong>2. feladat (A)</strong><br />
+Lehetséges válasz:<br />
+- <code>kontur</code>: az alkatrész külső és belső körvonalai, vágási
+geometria.<br />
+- <code>furat</code>: furatok középpontja, átmérője, mélysége.<br />
+- <code>elzaras</code>: élzáró anyag jelölése, pl. az élzárás vastagsága
+és anyaga.<br />
+Ezek segítenek a rajz áttekinthetőségében és a gyártási adatok
+exportálásában.</p>
+<p><strong>3. feladat (B)</strong><br />
+Valószínűleg a 3D-modellben a lapvastagság 19 mm-re van paraméterezve,
+míg a rajzon kézzel átírták 18 mm-re, vagy a rajz sablonja 18 mm-ben
+rögzítve van. Ellenőrzés: nyisd meg a 3D-modellt, nézd meg az alkatrész
+vastagság-paraméterét; hasonlítsd össze a szabásjegyzék nyers és kész
+méretét. Ha a modellben 19 mm szerepel, akkor a rajz a hibás, javítsd a
+modellt vagy a rajzgenerálást. A vastagság eltérés a bútor illesztésénél
+problémát okoz.</p>
+<p><strong>4. feladat (B)</strong><br />
+Számolás:<br />
+- Oldallap: 0,7 × 0,5 = 0,35 m², 4 db → 1,40 m²<br />
+- Fedőlap: 0,9 × 0,55 = 0,495 m², 2 db → 0,99 m²<br />
+- Polc: 0,65 × 0,45 = 0,2925 m², 3 db → 0,8775 m²<br />
+- Nettó összesen: 1,40 + 0,99 + 0,8775 = <strong>3,2675
+m²</strong><br />
+10% ráhagyással:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>2675</mn><mo>×</mo><mn>1</mn><mo>,</mo><mn>10</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>59425</mn><mo>≈</mo><mn>3</mn><mo>,</mo><mn>594</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">m</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">3{,}2675 \times 1{,}10 = 3{,}59425 \approx 3{,}594\,\text{m}^2</annotation></semantics></math>.<br />
+Egy tábla: 5,796 m². A szükséges táblaszám:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>594</mn><mi>/</mi><mn>5</mn><mo>,</mo><mn>796</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>62</mn></mrow><annotation encoding="application/x-tex">3{,}594 / 5{,}796 = 0{,}62</annotation></semantics></math>,
+tehát 1 tábla elvileg elegendő. Az optimalizálónál ellenőrizni kell,
+hogy a darabok hogyan férnek el a táblán a vágásréssel és a
+száliránnyal.</p>
+<p><strong>5. feladat (C)</strong><br />
+Lehetséges okok és javítások:<br />
+- A furatok nem kerültek a megfelelő rétegre, ezért a CAM nem ismerte
+fel fúrásként. Javítás: tedd a furatokat külön <code>furat</code>
+rétegre, és ellenőrizd a CAM beállításait.<br />
+- A DXF-exportnál a furatjelek (körök) kimaradtak, mert a rajzon
+blokkként szerepeltek, és a blokk nem lett felrobbantva. Javítás:
+robbantsd fel a blokkokat exportálás előtt.<br />
+- A CAM-ban a megmunkálási művelet rossz, pl. a furat helyett
+kontúrmarást választottál. Javítás: a furat műveletet válaszd, és
+rendeld hozzá a fúrószerszámot.<br />
+- A posztprocesszor nem támogatja a fúrási ciklust, ezért marásként
+értelmezi. Javítás: ellenőrizd a posztprocesszort, vagy használj más,
+fúrást támogató stratégiát.</p>
+<p><strong>6. feladat (D)</strong><br />
+Technológiai leírás a 2D-s gyártási rajz előállításához a fiókos
+éjjeliszekrény példáján:</p>
+<ol type="1">
+<li>Nyisd meg a 3D-modellt, ellenőrizd az alkatrészeket (nincs hibás
+kényszer, a vastagságok 18/16/3 mm). – <strong>Ellenőrzés:</strong> az
+alkatrészfa tiszta, a méretek stimmelnek.</li>
+<li>Válassz ki egy alkatrészt, pl. oldallap. Készíts róla 2D-s
+rajzlapot, helyezz el nézetet (elölnézet, felülnézet) és metszetet, ha
+szükséges. – <strong>Ellenőrzés:</strong> a nézetarány 1:1 vagy 1:2, a
+nézet a lap közepén van.</li>
+<li>Adj hozzá méreteket: hossz, szélesség, furathelyek, furatátmérők,
+élzárás. – <strong>Ellenőrzés:</strong> a méretek a báziséltől indulnak,
+nincs hiányzó méret.</li>
+<li>Tedd a furatokat a <code>furat</code> rétegre, a kontúrt a
+<code>kontur</code> rétegre. – <strong>Ellenőrzés:</strong> a rétegek
+ki-be kapcsolásával a furatok megjelennek.</li>
+<li>Ha a rajzon blokkot használtál (vasalat), robbantsd fel a DXF-export
+előtt. – <strong>Ellenőrzés:</strong> a blokk már nem szerepel zárt
+csoportként.</li>
+<li>Exportálj DXF-et. – <strong>Ellenőrzés:</strong> a DXF-et megnyitva
+a kontúr zárt, a furatok körök.</li>
+<li>Nyomtasd vagy mentsd PDF-be a műhelyrajzot. –
+<strong>Ellenőrzés:</strong> a nyomtatás léptékhelyes, a rajzfej
+tartalmazza a megnevezést, anyagot, méretarányt.</li>
+</ol>
+<h3 data-number="13.2.13" id="rövid-összefoglaló"><span
+class="header-section-number">13.2.13</span> Rövid összefoglaló</h3>
+<p>A <strong>CAD</strong> (számítógéppel segített tervezés) és a
+<strong>CAM</strong> (számítógéppel segített gyártás) összekapcsolásával
+a tervtől a CNC-gépig egy <strong>adatlánc</strong> vezet. A folyamat
+lépései: 3D-modell → alkatrészlista → 2D-rajz / DXF → CAM-pálya →
+posztprocesszor → CNC-program → megmunkálás. A CAD-rajzok rétegekbe
+szervezik a kontúrokat, furatokat, méreteket és élzárásokat; a blokkok
+az ismétlődő elemeket fogják össze. A faipari célszoftverek a
+3D-modellből szabásjegyzéket és látványtervet generálnak, az
+optimalizáló programok pedig a táblára rendezik az alkatrészeket,
+csökkentve a hulladékot. Az adatátvitel gyakori formátuma a
+<strong>DXF</strong>, de a gép csak a saját vezérlőnyelvén dolgozik,
+ezért szükséges a <strong>CAM-posztprocesszor</strong>. A lánc minden
+lépésénél ellenőrizni kell a méreteket, rétegeket és szerszámokat.
+<strong>Továbbvitt eredmény:</strong> ezt a CAD–CAM láncot használja a
+<a href="as093.html">CNC-technika: vezérlés, koordináta-rendszer,
+megmunkálóközpont, programfelépítés</a> alfejezet, amikor a
+megmunkálóközpont vezérlését és a programfelépítést mutatja be.</p>
+<h3 data-number="13.2.14" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">13.2.14</span> Források és ellenőrzési
+hiányok</h3>
+<p>A fejezet a CAD-CAM alapfogalmakra, a hazai faipari gyakorlatra és a
+gyártói dokumentációk elveire épül. <strong>Ellenőrizendő:</strong> a
+DXF-verzió és a célgép által elfogadott formátum, a PDF/A
+szabványsorozat pontos száma, a CNC-gép posztprocesszorának elérhetősége
+és a gyártói CAM-beállítások. A szabásoptimalizálási példában szereplő
+táblaméret, fűrészrés és kihozatali értékek <strong>tanulási
+példák</strong>, a tényleges gyártás előtt a beszállító adatlapját és a
+gépkönyvet kell ellenőrizni. A fiókos éjjeliszekrény méretei és
+alkatrészlistája minta, nem tervezési előírás.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="as054.html">← 13.1 Irodai szoftverek az asztalos munkájában</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="as056.html">14.1 A forgácsolás alapjai: szerszámél, szögek, mozgások és forgácsképződés →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

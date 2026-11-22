@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anyagjelölés és lépték</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="M">Lépték 1 :</label><input id="M" type="range" min="1" max="20" step="1" value="1" aria-label="Lépték 1 :"><output id="M_o" for="M"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Furnérozott, élzárt forgácslap metszete változó léptékben: mikor válik a furnér kirajzolhatatlanná."></svg>
+<p class="small">A 0,35 mm-es határ a vékony rajzvonal vastagsága (tájékoztató). Rétegvastagságok: forgácslap 18, furnér 0,5, PVC élzáró 2 mm (a fejezet 3. feladatával egyező tanulási adatok).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"M":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const M=v.M, lap=18/M, fur=0.5/M, ez=2/M, MIN=0.35;
+const px=24, X0=40, Y0=150;  // 1 papír-mm = 24 px (nagyítva)
+const L=Math.min(20, 200/M+4);
+const showLayer = fur>=MIN;
+el("text",{x:10,y:24,"font-size":13},"A papíron (24-szeres nagyításban): M 1:"+M);
+const h=lap*px, f=(showLayer?fur:0)*px;
+el("rect",{x:X0,y:Y0-h/2-f,width:L*px,height:h+2*f,fill:"#fff",stroke:"#000","stroke-width":2});
+if(showLayer){[Y0-h/2,Y0+h/2].forEach(y=>el("line",{x1:X0,y1:y,x2:X0+L*px-ez*px,y2:y,stroke:"#000","stroke-width":1}));}
+el("rect",{x:X0+L*px-Math.max(ez*px,3),y:Y0-h/2-f,width:Math.max(ez*px,3),height:h+2*f,fill:"#000"});
+for(let k=0;k<140;k++){const x=X0+((k*53)%97)/97*(L*px-ez*px-4)+2, y=Y0-h/2+((k*31)%89)/89*h; if(h>4)el("circle",{cx:x,cy:y,r:1.1,fill:"#000"});}
+status("Rétegvastagság a papíron: lap "+fmt(lap,2)+" mm, furnér <b>"+fmt(fur,3)+" mm</b>, élzáró "+fmt(ez,2)+" mm. "+
+ (showLayer ? (M==1?"1:1-ben a furnér még kirajzolható, de jól láthatóan csak <b>túlzó vonalpárral</b> (kb. 1 mm) adjuk meg, a valós méret felirattal.":
+   "A furnér még éppen elkülöníthető, de a túlzó vonalpár olvashatóbb.") :
+   "<span class='bad'>A furnér vékonyabb, mint egy rajzvonal ("+fmt(MIN,2)+" mm):</span> a rajz <b>egyszerűsített jelre</b> vált, a rétegeket jelmagyarázat és felirat adja."));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

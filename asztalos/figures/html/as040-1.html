@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Axonometria-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="L">Hossz (X)</label><input id="L" type="range" min="10" max="1500" step="10" value="50" aria-label="Hossz (X)"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="D">Mélység (Y)</label><input id="D" type="range" min="10" max="1000" step="10" value="30" aria-label="Mélység (Y)"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="H">Magasság (Z)</label><input id="H" type="range" min="10" max="1500" step="10" value="20" aria-label="Magasság (Z)"><output id="H_o" for="H"></output></div>
+<div class="row"><label for="M">Lépték</label><select id="M" aria-label="Lépték"><option value="1" selected>1:1</option><option value="2">1:2</option><option value="5">1:5</option><option value="10">1:10</option></select></div>
+<div class="row"><label for="mod">Ábrázolás</label><select id="mod" aria-label="Ábrázolás"><option value="iso" selected>izometrikus</option><option value="front">frontális (1:2)</option><option value="cav">kavalier (1:1)</option></select></div>
+<div class="row"><label for="hom">Éjjeliszekrény-homlok (fiók + ajtó, gombok)</label><input id="hom" type="checkbox" aria-label="Éjjeliszekrény-homlok (fiók + ajtó, gombok)"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 340" role="img" aria-label="Téglatest izometrikus, frontális és kavalier axonometriában, állítható méretekkel."></svg>
+<p class="small">Izometrikus: X 30°-kal jobbra fel, Y 30°-kal balra fel, Z függőleges. Frontális: a homloklap torzítatlan, a mélység 45°-ban felezve. A kidolgozott példa (450 × 400 × 500, 1:10): izometrikus 45/40/50, frontális 45/20/50 mm.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"L":"mm", "D":"mm", "H":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const L=v.L, D=v.D, H=v.H, M=+v.M, kind=v.mod, k={iso:1,front:0.5,cav:1}[kind];
+const l=L/M, d=D/M*k, h=H/M, c30=Math.cos(Math.PI/6);
+const P=(x,y,z)=>kind=="iso"?[(x-y)*c30, z+(x+y)*0.5]:[x+y*Math.SQRT1_2, z+y*Math.SQRT1_2];
+const pts=[];for(const a of [0,1])for(const b of [0,1])for(const c of [0,1])pts.push([a,b,c]);
+const hidK=kind=="iso"?"1,1,0":"0,1,0";
+const Q=pts.map(([a,b,c])=>P(a*l,b*d,c*h));
+let mnx=Math.min(...Q.map(q=>q[0])),mxx=Math.max(...Q.map(q=>q[0])),mny=Math.min(...Q.map(q=>q[1])),mxy=Math.max(...Q.map(q=>q[1]));
+const sc=Math.min(440/(mxx-mnx||1),280/(mxy-mny||1),6), X=x=>60+(x-mnx)*sc, Y=y=>320-(y-mny)*sc;
+for(let i=0;i<8;i++)for(let j=i+1;j<8;j++){const di=pts[i].map((x,n)=>x!=pts[j][n]).filter(Boolean).length;if(di!=1)continue;
+  const hid=pts[i].join(",")==hidK||pts[j].join(",")==hidK;
+  el("line",{x1:X(Q[i][0]),y1:Y(Q[i][1]),x2:X(Q[j][0]),y2:Y(Q[j][1]),stroke:css("--line"),"stroke-width":hid?1.2:2.6,"stroke-dasharray":hid?"6 4":""});}
+if(v.hom){const zf=h-150/M, a=P(0,0,zf), b=P(l,0,zf);el("line",{x1:X(a[0]),y1:Y(a[1]),x2:X(b[0]),y2:Y(b[1]),stroke:css("--line"),"stroke-width":1.4});
+  [h-75/M, zf/2+60/M].forEach(zc=>{let p="";for(let q=0;q<=36;q++){const u=q/36*2*Math.PI, r=12/M, c=P(l/2+r*Math.cos(u),0,zc+r*Math.sin(u));p+=(q?" L":"M")+X(c[0])+" "+Y(c[1]);}
+  el("path",{d:p,fill:"none",stroke:css("--line"),"stroke-width":1.2});});}
+const o=P(0,0,0);el("circle",{cx:X(o[0]),cy:Y(o[1]),r:3.5,fill:css("--hl2")});
+const nm={iso:"izometrikus (30°/30°, 1:1:1)",front:"frontális (homlok torzítatlan, mélység 45°-ban 1:2)",cav:"kavalier (mélység 45°-ban 1:1 – mélyebbnek látszik)"}[kind];
+status("<b>"+nm+"</b>, M 1:"+M+". A rajzon: hossz "+fmt(l,1)+" mm, mélység "+fmt(d,1)+" mm, magasság "+fmt(h,1)+" mm. "+
+ "<span class='small'>Narancs pont: origó (elülső-alsó sarok); szaggatott: takart él.</span>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

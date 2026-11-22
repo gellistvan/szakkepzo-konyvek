@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nóniusz-leolvasó gyakorló</title><style>:root{--fg:#111;--bg:#fff;--muted:#555;--hl:#1f4e79;--ok:#2e7d32;--bad:#b71c1c;--panel:#fff;--bd:#bbb}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--ok:#81c784;--bad:#ef9a9a;--panel:#fff;--bd:#555}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.fig{background:var(--panel);border:1px solid var(--bd);border-radius:6px;padding:4px}
+.fig svg{width:100%;height:auto;display:block}
+.fig svg text{fill:#000}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+button.on{outline:2px solid var(--hl);font-weight:bold}
+#info{min-height:3em;margin:6px 0}
+.dim{opacity:.22;transition:opacity .15s}
+.small{font-size:12px;color:var(--muted)}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0}
+input[type=range]{flex:1;min-width:200px} input[type=number]{width:7em;font:inherit}
+select{font:inherit}</style></head><body>
+<div class="row"><label for="res">Felbontás</label><select id="res"><option value="0.1">0,1 mm</option>
+<option value="0.05">0,05 mm</option><option value="0.02">0,02 mm</option></select>
+<label><input type="checkbox" id="show" checked> egybeeső vonal kiemelése</label></div>
+<div class="row"><label for="m">Pofa helyzete (húzd)</label><input id="m" type="range" min="0" max="60" step="0.1" value="12.4"></div>
+<div class="row"><button id="ex">Gyakorlás: új méret</button><label for="ans">Leolvasott érték (mm):</label>
+<input id="ans" type="number" step="0.01"><button id="chk">Ellenőrzés</button></div>
+<div id="info" aria-live="polite"></div>
+<div class="fig"><svg id="v" viewBox="0 0 640 230" role="img" aria-label="Tolómérő főskálája és nóniusza"></svg></div>
+<p class="small">A nóniusz n osztása (n − 1) mm-en fekszik (0,1 mm: 10 osztás 9 mm-en; 0,05 mm: 20 osztás 19 mm-en;
+0,02 mm: 50 osztás 49 mm-en – típusonként eltérhet, ellenőrizendő). Leolvasás: egész mm a főskálán a 0-vonal előtt +
+az egybeeső nóniuszvonal sorszáma × felbontás.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", svg=document.getElementById("v");
+const VER={"0.1":[10,0.9],"0.05":[20,0.95],"0.02":[50,0.98]};
+function el(t,a,x){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(x!==undefined)e.textContent=x;svg.appendChild(e);return e;}
+const fmt=(x,d)=>Number(x).toFixed(d).replace(".",",");
+let practice=false;
+function cur(){const r=document.getElementById("res").value;const m=+document.getElementById("m").value;return {r:r,res:+r,m:m};}
+function draw(){svg.innerHTML="";const c=cur(),[n,sp]=VER[c.r],m=c.m,eg=Math.floor(m+1e-9),k=Math.round((m-eg)/c.res);
+ const ppm=c.res==0.02?11:(c.res==0.05?20:34), x0=Math.max(0,eg-3), X=x=>20+(x-x0)*ppm;
+ el("rect",{x:0,y:0,width:640,height:230,fill:"#fff"});
+ el("rect",{x:10,y:40,width:620,height:70,fill:"#fff",stroke:"#000"});
+ for(let t=Math.ceil(x0);X(t)<=630;t++){const L=t%10==0?36:(t%5==0?26:18);el("line",{x1:X(t),x2:X(t),y1:110,y2:110-L,stroke:"#000","stroke-width":1});
+  if(t%10==0)el("text",{x:X(t),y:64,"text-anchor":"middle","font-size":13,fill:"#000"},String(t/10));}
+ el("rect",{x:X(m)-30,y:110,width:n*sp*ppm+60,height:70,fill:"#eee",stroke:"#000"});
+ for(let j=0;j<=n;j++){const x=X(m+j*sp); if(x>632)break; const on=(j==k&&document.getElementById("show").checked&&!practice);
+  el("line",{x1:x,x2:x,y1:110,y2:110+(j%5==0?30:20),stroke:on?"#c00":"#000","stroke-width":on?3:(j==0?2:1)});
+  if(j%(c.res==0.02?10:5)==0)el("text",{x:x,y:158,"text-anchor":"middle","font-size":11,fill:"#000"},j==0?"0":fmt(j*c.res,c.res==0.1?1:2));}
+ el("text",{x:20,y:30,"font-size":13,fill:"#000"},"főskála (mm, a számok cm-t jelölnek)");
+ el("text",{x:20,y:210,"font-size":13,fill:"#000"},"nóniusz ("+fmt(c.res,2)+" mm)");
+ if(!practice)document.getElementById("info").innerHTML="Leolvasás: <b>"+eg+" mm</b> (főskála) + <b>"+k+"</b>. nóniuszvonal × "+fmt(c.res,2)+" mm = <b>"+fmt(eg+k*c.res,c.res==0.1?1:2)+" mm</b>.";}
+function snap(){const c=cur();const v=Math.round(c.m/c.res)*c.res;document.getElementById("m").step=c.res;document.getElementById("m").value=v.toFixed(2);}
+document.getElementById("res").addEventListener("change",()=>{snap();draw();});
+["m","show"].forEach(i=>document.getElementById(i).addEventListener("input",()=>{practice=false;draw();}));
+document.getElementById("ex").onclick=()=>{const c=cur();const steps=Math.round(1/c.res);const v=(5+Math.floor(Math.random()*45))+Math.floor(Math.random()*steps)*c.res;
+ document.getElementById("m").value=v.toFixed(2);practice=true;draw();document.getElementById("ans").value="";
+ document.getElementById("info").innerHTML="Olvasd le a méretet, írd be, és kattints az Ellenőrzés gombra.";};
+document.getElementById("chk").onclick=()=>{const c=cur();const a=+document.getElementById("ans").value;const ok=Math.abs(a-c.m)<c.res/2;
+ practice=false;draw();document.getElementById("info").innerHTML=(ok?"<span class='ok'>Helyes!</span> ":"<span class='bad'>Nem jó.</span> ")+document.getElementById("info").innerHTML;};
+snap();draw();
+</script><script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body></html>

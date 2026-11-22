@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forgácsolási kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="D">Szerszámátmérő D</label><input id="D" type="range" min="50" max="400" step="5" value="80" aria-label="Szerszámátmérő D"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="n">Fordulatszám n</label><input id="n" type="range" min="1000" max="9000" step="100" value="6000" aria-label="Fordulatszám n"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="z">Élek száma z</label><input id="z" type="range" min="1" max="60" step="1" value="3" aria-label="Élek száma z"><output id="z_o" for="z"></output></div>
+<div class="row"><label for="ve">Előtolás vₑ</label><input id="ve" type="range" min="1" max="40" step="0.1" value="6" aria-label="Előtolás vₑ"><output id="ve_o" for="ve"></output></div>
+<div class="row"><label for="nmax">n_max (szerszámra írva)</label><input id="nmax" type="range" min="1000" max="12000" step="100" value="7000" aria-label="n_max (szerszámra írva)"><output id="nmax_o" for="nmax"></output></div>
+<div class="row"><label for="ezk">Kívánt e_z (→ szükséges vₑ)</label><input id="ezk" type="range" min="0.01" max="1" step="0.01" value="0.3" aria-label="Kívánt e_z (→ szükséges vₑ)"><output id="ezk_o" for="ezk"></output></div>
+<div class="row"><label for="egy">egykéses simítás</label><input id="egy" type="checkbox" aria-label="egykéses simítás"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Forgácsolási sebesség, fogankénti előtolás és késnyomok"></svg>
+<p class="small">Alapbeállítás: a 4. példa (D = 80 mm, n = 6000 1/min, z = 3, vₑ = 6 m/min → a = 0,333 mm, h ≈ 0,35 µm). Az n_max a szerszámon és a gépkönyvben (ellenőrizendő); a képletek a fejezetéi.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"D":"mm", "n":"1/min", "z":"db", "ve":"m/min", "nmax":"1/min", "ezk":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const ze=w=>w.egy?1:w.z;
+const w=v, z=ze(w), vc=w.D*Math.PI*w.n/60000, a=w.ve*1000/(w.n*z), r=w.D/2, hm=a*a/(8*r)*1000;
+el("rect",{x:0,y:0,width:560,height:300,fill:"#fff"});
+// késnyomok rajza: 1 a = 60 px vízszintesen, a mélység úgy nagyítva, hogy jól látsszon
+const px=Math.max(12,Math.min(220,a*180)), base=200, amp=Math.min(90,Math.max(6,hm*25));
+let d="";
+for(let X=10;X<=550;X+=2){const t=(X-10)/px, k=Math.round(t), u=(t-k); d+=(X==10?"M":"L")+X+" "+(base-amp*4*u*u);}
+el("path",{d:d+" L550 280 L10 280 Z",fill:"#eee",stroke:"#000","stroke-width":2});
+for(let k=0;k*px<=540;k++){el("line",{x1:10+k*px,x2:10+k*px,y1:base+4,y2:base+14,stroke:"#000"});}
+el("line",{x1:10+px,x2:10+2*px,y1:base+30,y2:base+30,stroke:"#000"});
+el("text",{x:10+1.5*px,y:base+48,"text-anchor":"middle","font-size":12,fill:"#000"},"a = "+fmt(a,3)+" mm");
+el("text",{x:20,y:24,"font-size":13,fill:"#000"},"késnyomok (vízszintesen 1 mm = 180 px; a mélység erősen nagyítva)");
+el("text",{x:20,y:46,"font-size":13,fill:"#000"},"h ≈ a²/(8r) = "+fmt(hm,2)+" µm  (r = D/2 = "+fmt(r,0)+" mm)");
+let m="v = D·π·n/60 000 = <b>"+fmt(vc,1)+" m/s</b>; "+(w.egy?"egykéses simítás: z = 1; ":"")+"f<sub>z</sub> = a = v<sub>e</sub>·1000/(n·z) = <b>"+fmt(a,3)+" mm</b>; h ≈ "+fmt(hm,2)+" µm.";
+m+="<br>Kívánt e<sub>z</sub> = "+fmt(w.ezk,2)+" mm-hez v<sub>e</sub> = z·e<sub>z</sub>·n/1000 = <b>"+fmt(z*w.ezk*w.n/1000,1)+" m/min</b>.";
+if(w.n>w.nmax)m+="<br><span class='bad'>A fordulatszám nagyobb a szerszámon megadott n_max = "+w.nmax+" 1/min értéknél – TILOS!</span>";
+else m+="<br><span class='ok'>n ≤ n_max ("+w.nmax+" 1/min).</span>";
+status(m);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

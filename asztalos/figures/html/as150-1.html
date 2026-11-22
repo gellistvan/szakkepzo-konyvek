@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gantt-ütemezés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="m0">Szabás, darabolás</label><input id="m0" type="range" min="0" max="180" step="5" value="25" aria-label="Szabás, darabolás"><output id="m0_o" for="m0"></output></div>
+<div class="row"><label for="m1">Gyalulás, méretre munkálás</label><input id="m1" type="range" min="0" max="180" step="5" value="40" aria-label="Gyalulás, méretre munkálás"><output id="m1_o" for="m1"></output></div>
+<div class="row"><label for="m2">Csapozás, fészkelés</label><input id="m2" type="range" min="0" max="180" step="5" value="60" aria-label="Csapozás, fészkelés"><output id="m2_o" for="m2"></output></div>
+<div class="row"><label for="m3">Fiókgyártás</label><input id="m3" type="range" min="0" max="180" step="5" value="55" aria-label="Fiókgyártás"><output id="m3_o" for="m3"></output></div>
+<div class="row"><label for="m4">Próbaösszeállítás, igazítás</label><input id="m4" type="range" min="0" max="180" step="5" value="30" aria-label="Próbaösszeállítás, igazítás"><output id="m4_o" for="m4"></output></div>
+<div class="row"><label for="m5">Ragasztás</label><input id="m5" type="range" min="0" max="180" step="5" value="45" aria-label="Ragasztás"><output id="m5_o" for="m5"></output></div>
+<div class="row"><label for="m6">Préselési idő (várakozás)</label><input id="m6" type="range" min="0" max="600" step="5" value="120" aria-label="Préselési idő (várakozás)"><output id="m6_o" for="m6"></output></div>
+<div class="row"><label for="m7">Csiszolás</label><input id="m7" type="range" min="0" max="180" step="5" value="50" aria-label="Csiszolás"><output id="m7_o" for="m7"></output></div>
+<div class="row"><label for="m8">Felületkezelés</label><input id="m8" type="range" min="0" max="180" step="5" value="40" aria-label="Felületkezelés"><output id="m8_o" for="m8"></output></div>
+<div class="row"><label for="m9">Száradás (várakozás, szemléltető)</label><input id="m9" type="range" min="0" max="600" step="5" value="120" aria-label="Száradás (várakozás, szemléltető)"><output id="m9_o" for="m9"></output></div>
+<div class="row"><label for="m10">Vasalatszerelés, végellenőrzés</label><input id="m10" type="range" min="0" max="180" step="5" value="30" aria-label="Vasalatszerelés, végellenőrzés"><output id="m10_o" for="m10"></output></div>
+<div class="row"><label for="wage">Órabér (mintaár)</label><input id="wage" type="range" min="3000" max="9000" step="100" value="5500" aria-label="Órabér (mintaár)"><output id="wage_o" for="wage"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 900 330" role="img" aria-label="Gantt-diagram: a kétfiókos asztal műveletei munka- és várakozási sávokkal."></svg>
+<p class="small">Alapértékek a 44.1.7 időnorma-táblázatából (375 perc). A préselési idő a fejezet táblázatából, a száradás szemléltető – a ragasztó és a lakk gyártói adatlapja szerint ellenőrizendő.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m0":"min", "m1":"min", "m2":"min", "m3":"min", "m4":"min", "m5":"min", "m6":"min", "m7":"min", "m8":"min", "m9":"min", "m10":"min", "wage":"Ft/h"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const N=[["Szabás, darabolás", 25], ["Gyalulás, méretre munkálás", 40], ["Csapozás, fészkelés", 60], ["Fiókgyártás", 55], ["Próbaösszeállítás, igazítás", 30], ["Ragasztás", 45], ["Préselési idő (várakozás)", -120], ["Csiszolás", 50], ["Felületkezelés", 40], ["Száradás (várakozás, szemléltető)", -120], ["Vasalatszerelés, végellenőrzés", 30]], K=11; let t=0, w=0; const X=200, Y=20, H=24, sx=48;
+for(let h=0;h<=14;h++){el("line",{x1:X+h*sx,x2:X+h*sx,y1:Y,y2:Y+K*H,stroke:css("--grid")});el("text",{x:X+h*sx,y:Y+K*H+16,"text-anchor":"middle","font-size":11},String(h));}
+el("line",{x1:X+8*sx,x2:X+8*sx,y1:Y-6,y2:Y+K*H,stroke:css("--hl2"),"stroke-dasharray":"6 4","stroke-width":2});
+N.forEach((o,i)=>{const d=v["m"+i]/60, wait=o[1]<0;
+  el("text",{x:X-6,y:Y+i*H+16,"text-anchor":"end","font-size":12},o[0]);
+  el("rect",{x:X+t*sx,y:Y+i*H+4,width:Math.max(0,d*sx),height:H-8,fill:wait?"none":css("--hl"),stroke:css("--line"),"stroke-dasharray":wait?"4 3":"0"});
+  t+=d; if(!wait) w+=d;});
+el("text",{x:X+4*sx,y:Y+K*H+34,"text-anchor":"middle","font-size":12},"óra a kezdéstől (szaggatott: 8 órás munkanap vége)");
+status("Munkaidő: <b>"+fmt(w,2)+" óra</b>, átfutás a várakozással: "+fmt(t,2)+" óra ("+Math.ceil(t/8)+" munkanap). Bérköltség: "+fmt(w,2)+" h × "+v.wage+" Ft/h = <b>"+Math.round(w*v.wage).toLocaleString("hu-HU")+" Ft</b> (mintaár). A várakozás alatt a dolgozó más munkát végezhet.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

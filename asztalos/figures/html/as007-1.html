@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Napi zajexpozíció-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mode">Mód</label><select id="mode" aria-label="Mód"><option value="napi" selected>napi expozíció (LEX,8h)</option><option value="ketgep">két gép eredője</option></select></div>
+<div class="row"><label for="L1">1. zajszint</label><input id="L1" type="range" min="70" max="105" step="1" value="96" aria-label="1. zajszint"><output id="L1_o" for="L1"></output></div>
+<div class="row"><label for="t1">1. időtartam</label><input id="t1" type="range" min="0" max="8" step="0.5" value="2" aria-label="1. időtartam"><output id="t1_o" for="t1"></output></div>
+<div class="row"><label for="L2">2. zajszint</label><input id="L2" type="range" min="70" max="105" step="1" value="90" aria-label="2. zajszint"><output id="L2_o" for="L2"></output></div>
+<div class="row"><label for="t2">2. időtartam</label><input id="t2" type="range" min="0" max="8" step="0.5" value="3" aria-label="2. időtartam"><output id="t2_o" for="t2"></output></div>
+<div class="row"><label for="L3">3. zajszint</label><input id="L3" type="range" min="70" max="105" step="1" value="80" aria-label="3. zajszint"><output id="L3_o" for="L3"></output></div>
+<div class="row"><label for="t3">3. időtartam</label><input id="t3" type="range" min="0" max="8" step="0.5" value="3" aria-label="3. időtartam"><output id="t3_o" for="t3"></output></div>
+<div class="row"><label for="L4">4. zajszint</label><input id="L4" type="range" min="70" max="105" step="1" value="75" aria-label="4. zajszint"><output id="L4_o" for="L4"></output></div>
+<div class="row"><label for="t4">4. időtartam</label><input id="t4" type="range" min="0" max="8" step="0.5" value="0" aria-label="4. időtartam"><output id="t4_o" for="t4"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 250" role="img" aria-label="Napi zajexpozíció: 2 h 96 dB(A), 3 h 90 dB(A), 3 h 80 dB(A) eredője 91,5 dB(A), a felső beavatkozási határ (85 dB(A)) fölött."></svg>
+<p class="small">Alapérték: a 2. példa (91,5 dB(A)); a 3. feladat adataival (4 h 94, 2 h 87, 2 h 77 dB(A)) 91,4 dB(A). „Két gép” módban az 1. és 2. zajszint eredője (1. példa: 95 és 98 → 99,8 dB(A)). A 80/85/87 dB(A) tanulási érték, ellenőrizendő: hatályos zajrendelet.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"L1":"dB(A)", "t1":"h", "L2":"dB(A)", "t2":"h", "L3":"dB(A)", "t3":"h", "L4":"dB(A)", "t4":"h"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const mode=v.mode;
+const W=600,x0=150,x1=570,lo=70,hi=105, X=L=>x0+(Math.min(Math.max(L,lo),hi)-lo)/(hi-lo)*(x1-x0);
+const lim=[[80,"80 alsó","4 3"],[85,"85 felső","8 4"],[87,"87 határérték","10 3 2 3"]];
+let rows=[], res, txt="";
+if(mode==="napi"){
+  const P=[[v.L1,v.t1],[v.L2,v.t2],[v.L3,v.t3],[v.L4,v.t4]].filter(p=>p[1]>0);
+  const T=P.reduce((s,p)=>s+p[1],0);
+  const S=P.reduce((s,p)=>s+p[1]*Math.pow(10,(p[0]-90)/10),0);
+  res = S>0 ? 90+10*Math.log10(S/8) : 0;
+  P.forEach(p=>rows.push([fmt(p[1],1)+" h, "+fmt(p[0],0)+" dB(A)",p[0]]));
+  txt = "Lépések (viszonyszám 90 dB(A)-hez): "+P.map(p=>fmt(p[1],1)+"·10<sup>("+fmt(p[0],0)+"−90)/10</sup> = "+fmt(p[1]*Math.pow(10,(p[0]-90)/10),3)).join(" + ")
+      +" = "+fmt(S,3)+"; L<sub>EX,8h</sub> = 90 + 10·lg("+fmt(S,3)+"/8) = <b>"+fmt(res,1)+" dB(A)</b>.";
+  if(T>8.001) txt += " <span class='bad'>Figyelem: az időtartamok összege "+fmt(T,1)+" h, több mint 8 h.</span>";
+  else if(T<8) txt += " (A maradék "+fmt(8-T,1)+" h csendes időnek számít.)";
+} else {
+  res = 10*Math.log10(Math.pow(10,v.L1/10)+Math.pow(10,v.L2/10));
+  rows.push(["1. gép",v.L1]); rows.push(["2. gép",v.L2]);
+  txt = "Két gép együtt: L = 10·lg(10<sup>"+fmt(v.L1/10,1)+"</sup> + 10<sup>"+fmt(v.L2/10,1)+"</sup>) = <b>"+fmt(res,1)+" dB(A)</b> (nem a két szám összege!).";
+}
+rows.push([mode==="napi"?"eredő LEX,8h":"eredő zajszint",res]);
+const zone = res>=87?["a felső beavatkozási határ fölött; hallásvédő kötelező, és a hallásvédővel csökkentett expozíció sem érheti el a 87 dB(A)-t","bad"]:res>=85?["a felső beavatkozási határ fölött","bad"]:res>=80?["az alsó beavatkozási határ fölött","bad"]:["80 dB(A) alatt","ok"];
+status(txt+"<br>Értékelés: <span class='"+zone[1]+"'>"+fmt(res,1)+" dB(A) – "+zone[0]+"</span> (tanulási határértékek, ellenőrizendő).");
+const H=34;
+rows.forEach((r,i)=>{const y=34+i*H, last=i===rows.length-1;
+  el("text",{x:x0-6,y:y+H/2+4,"text-anchor":"end","font-size":12,"font-weight":last?"bold":"normal"},r[0]);
+  el("rect",{x:x0,y:y+5,width:Math.max(0,X(r[1])-x0),height:H-12,fill:last?css("--hl"):css("--grid"),stroke:css("--line")});
+  el("text",{x:X(r[1])+4,y:y+H/2+4,"font-size":12,"font-weight":last?"bold":"normal"},fmt(r[1],1)+" dB(A)");});
+const yb=34+rows.length*H+4;
+lim.forEach((l,i)=>{el("line",{x1:X(l[0]),x2:X(l[0]),y1:4+i*9,y2:yb,stroke:css("--line"),"stroke-dasharray":l[2]});
+  el("text",{x:X(l[0])+3,y:10+i*9,"font-size":10},l[1]);});
+for(let L=70;L<=105;L+=5){el("text",{x:X(L),y:yb+16,"text-anchor":"middle","font-size":11},String(L));}
+el("text",{x:(x0+x1)/2,y:yb+32,"text-anchor":"middle","font-size":11},"dB(A) – a skála 70-nél kezdődik");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Napi termelési terv – Gantt-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="F">Piskóta felverése (perc 6:00 után)</label><input id="F" type="range" min="30" max="210" step="5" value="140" aria-label="Piskóta felverése (perc 6:00 után)"><output id="F_o" for="F"></output></div>
+<div class="row"><label for="P">Pogácsa sütése (perc 6:00 után)</label><input id="P" type="range" min="90" max="210" step="5" value="110" aria-label="Pogácsa sütése (perc 6:00 után)"><output id="P_o" for="P"></output></div>
+<div class="row"><label for="TT">Túrós táska sütése (perc 6:00 után)</label><input id="TT" type="range" min="150" max="270" step="5" value="195" aria-label="Túrós táska sütése (perc 6:00 után)"><output id="TT_o" for="TT"></output></div>
+<div class="row"><label for="TIR">Tiramisu hűtőbe a poharazás után</label><input id="TIR" type="range" min="0" max="120" step="5" value="0" aria-label="Tiramisu hűtőbe a poharazás után"><output id="TIR_o" for="TIR"></output></div>
+<div class="row"><label for="PUF">Puffer</label><input id="PUF" type="range" min="0" max="30" step="1" value="15" aria-label="Puffer"><output id="PUF_o" for="PUF"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 580 250" role="img" aria-label="Napi termelési terv Gantt-diagramja két dolgozóval, a sütő és a hűtő foglaltságával; kiemelve a gyümölcstorta 184 perces kritikus útja."></svg>
+<p class="small">A javított idővonal (alapértékek: felverés 8:20, pogácsa 7:50, túrós táska 9:15, tiramisu azonnal hűtőbe). Ütközés: két eltérő sütőhőfok egyszerre, felvert tészta > 5 perc várakozás, tojásos krém > 30 perc hűtés nélkül (tanulási határ, ellenőrizendő: HACCP-terv). Az idők a fejezet tanulási értékei.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"F":"min", "P":"min", "TT":"min", "TIR":"min", "PUF":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const F=v.F, P=v.P, TT=v.TT, TIR=v.TIR, PUF=v.PUF;
+const hm=t=>{const m=Math.round(t);return (6+Math.floor(m/60))+":"+String(m%60).padStart(2,"0");};
+const oven=[["linzer",95,107,175],["pogácsa",P,P+20,190],["túrós táska",TT,TT+25,200]];
+let st=F+15; let moved=true; while(moved){moved=false;for(const o of oven){if(st<o[2]&&st+40>o[1]&&o[3]!==180){st=o[2];moved=true;}}}
+const wait=st-(F+15); oven.push(["piskóta",st,st+40,180]);
+const msgs=[];
+for(let i=0;i<oven.length;i++)for(let j=i+1;j<oven.length;j++){const a=oven[i],b=oven[j];if(a[1]<b[2]&&b[1]<a[2]&&a[3]!==b[3])msgs.push("sütő: "+a[0]+" ("+a[3]+" °C) és "+b[0]+" ("+b[3]+" °C) egyszerre");}
+if(wait>5)msgs.push("a felvert piskóta "+wait+" percet vár a sütőre (összeesik)");
+if(TIR>30)msgs.push("a tojásos tiramisukrém "+TIR+" percig áll hűtés nélkül (> 30 perc)");
+if(P<100)msgs.push("a pogácsa kelesztése 7:40-ig tart, előbb nem süthető");
+if(TT<195)msgs.push("a túrós táska kelesztése 9:15-ig tart, előbb nem süthető");
+const ready={"tiramisu":45+TIR+30,"linzer":155,"krémes":180,"pogácsa":P+40};
+const late=Object.keys(ready).filter(k=>ready[k]>180);
+const cpEnd=st+40+40+20+30+15, cpLen=cpEnd-F, cpBuf=Math.round(cpLen*(1+PUF/100));
+// rajz
+const X0=120, W=440, T1=390, sx=t=>X0+t/T1*W, rows=[["Tésztás–sütő",40],["Kikészítő–díszítő",80],["Sütő",120],["Hűtő",160],["Kritikus út",205]];
+rows.forEach(r=>el("text",{x:X0-6,y:r[1]+5,"font-size":12,"text-anchor":"end"},r[0]));
+for(let t=0;t<=T1;t+=30){el("line",{x1:sx(t),y1:20,x2:sx(t),y2:220,stroke:css("--grid")});el("text",{x:sx(t),y:238,"font-size":10,"text-anchor":"middle"},hm(t));}
+el("line",{x1:sx(180),y1:16,x2:sx(180),y2:222,stroke:css("--line"),"stroke-width":2,"stroke-dasharray":"8 3 2 3"});el("text",{x:sx(180)+3,y:14,"font-size":11},"nyitás 9:00");
+const bar=(row,a,b,lab,o)=>{el("rect",Object.assign({x:sx(a),y:rows[row][1]-11,width:Math.max(1,sx(b)-sx(a)),height:22,fill:css("--bg"),stroke:css("--line"),"stroke-width":1},o||{}));
+ if(lab&&sx(b)-sx(a)>34)el("text",{x:(sx(a)+sx(b))/2,y:rows[row][1]+4,"font-size":10,"text-anchor":"middle"},lab);};
+bar(0,15,45,"gyúrás");bar(0,45,85,"hajtog.");bar(0,85,105,"");bar(0,P,P+20,"pogácsa");bar(0,F,F+15,"",{stroke:css("--hl"),"stroke-width":3});bar(0,st,st+40,"piskóta",{stroke:css("--hl"),"stroke-width":3});bar(0,TT,TT+25,"túrós");
+bar(1,15,45,"tiramisu");bar(1,75,95,"");bar(1,125,155,"linzer");bar(1,155,180,"krémes");bar(1,st+40,st+80,"hűlés",{stroke:css("--hl"),"stroke-width":3});bar(1,st+80,st+100,"",{stroke:css("--hl"),"stroke-width":3});bar(1,st+130,st+145,"",{stroke:css("--hl"),"stroke-width":3});
+oven.forEach(o=>{const clash=oven.some(q=>q!==o&&q[1]<o[2]&&o[1]<q[2]&&q[3]!==o[3]);bar(2,o[1],o[2],o[3]+"°",{fill:clash?css("--bad"):css("--bg"),"stroke-width":clash?2.5:1});});
+bar(3,45+TIR,155,"tiramisu");bar(3,st+100,st+130,"derm.",{stroke:css("--hl"),"stroke-width":3});
+if(TIR>0)bar(3,45,45+TIR,"",{fill:TIR>30?css("--bad"):css("--grid"),"stroke-dasharray":"4 3"});
+bar(4,F,cpEnd,"kritikus út "+cpLen+" min",{stroke:css("--hl"),"stroke-width":3});bar(4,cpEnd,F+cpBuf,"",{"stroke-dasharray":"5 3"});
+status("Kritikus út (gyümölcstorta): <b>"+cpLen+" min</b> + "+PUF+" % puffer = <b>"+cpBuf+" min</b>, kész: <b>"+hm(F+cpBuf)+"</b>. "+
+ (msgs.length?'<span class="bad">Ütközés: '+msgs.join("; ")+".</span>":'<span class="ok">Nincs ütközés.</span>')+
+ (late.length?" Nyitás után elkészülő pulttermék: "+late.join(", ")+".":""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Egyengető: a leadó asztal beállítása</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="dl">Leadó asztal eltérése az érintőtől</label><input id="dl" type="range" min="-1" max="1" step="0.1" value="0" aria-label="Leadó asztal eltérése az érintőtől"><output id="dl_o" for="dl"></output></div>
+<div class="row"><label for="fm">Fogásmélység</label><input id="fm" type="range" min="0.5" max="3" step="0.1" value="1.5" aria-label="Fogásmélység"><output id="fm_o" for="fm"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 240" role="img" aria-label="A leadó asztal magasságának és a fogásmélységnek a hatása az egyengetett felületre."></svg>
+<p class="small">Szemléltető, függőlegesen erősen nagyított vázlat. A fogásmélység tájékoztató értékei: előnagyolás 2–3 mm, simítás 0,5–1 mm (gépkönyv szerint ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"dl":"mm", "fm":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const d=v.dl, a=v.fm, s=40;                 // s: px/mm függőleges nagyítás
+const cx=300, cy=150, R=60;
+const tan=cy-R;                              // késkör érintője (y)
+el("circle",{cx:cx,cy:cy,r:R,fill:"none",stroke:css("--line"),"stroke-dasharray":"5 4"});
+el("circle",{cx:cx,cy:cy,r:R-12,fill:css("--grid"),stroke:css("--line")});
+const yin=tan+a*s/4, yout=tan-d*s/4;
+el("rect",{x:20,y:yin,width:cx-R-24,height:22,fill:css("--grid"),stroke:css("--line")});
+el("rect",{x:cx+R+4,y:yout,width:240-(R-60)-4,height:22,fill:css("--grid"),stroke:css("--line")});
+el("line",{x1:20,x2:580,y1:tan,y2:tan,stroke:css("--line"),"stroke-dasharray":"2 4"});
+el("text",{x:580,y:tan-4,"text-anchor":"end","font-size":12},"késkör érintője");
+el("text",{x:30,y:yin+40,"font-size":12},"felvevő asztal (fogás: "+fmt(a,1)+" mm)");
+el("text",{x:cx+R+10,y:yout+40,"font-size":12},"leadó asztal ("+(d>0?"+":"")+fmt(d,1)+" mm)");
+// munkadarab
+const th=30;
+if(Math.abs(d)<0.05){
+  el("rect",{x:40,y:yin-th,width:cx-40,height:th,fill:"none",stroke:css("--hl"),"stroke-width":2});
+  el("rect",{x:cx,y:tan-th+a*s/4,width:220,height:th-a*s/4,fill:"none",stroke:css("--hl"),"stroke-width":2});
+} else if(d>0){
+  el("rect",{x:120,y:yin-th,width:cx+R-120,height:th,fill:"none",stroke:css("--bad"),"stroke-width":2});
+  el("text",{x:cx+R+2,y:yout-8,"font-size":20,"font-weight":"bold",fill:css("--bad")},"✗");
+} else {
+  el("path",{d:"M40 "+(yin-th)+" L"+cx+" "+(yin-th)+" L"+(cx+220)+" "+(yout-th+a*s/4)+" L"+(cx+220)+" "+yout+" L"+cx+" "+tan+" L40 "+yin+" Z",fill:"none",stroke:css("--bad"),"stroke-width":2});
+}
+let m="";
+if(Math.abs(d)<0.05) m="<span class='ok'>Helyes: a leadó asztal a késkör érintőjében. A gyalult felület sík, a darab "+fmt(a,1)+" mm-rel vékonyabb.</span>";
+else if(d>0) m="<span class='bad'>A leadó asztal "+fmt(d,1)+" mm-rel a késkör fölött: a darab eleje nekiütközik az asztal élének, fennakad; átemelve a felület ék alakú lesz.</span>";
+else m="<span class='bad'>A leadó asztal "+fmt(-d,1)+" mm-rel a késkör alatt: a darab a leadó oldalon lefelé hajlik, a felület íves; amikor a vége elhagyja a felvevő asztalt, lebukik – a végén kb. "+fmt(a-d,1)+" mm-es mélyebb fogás (beharapás).</span>";
+status(m);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

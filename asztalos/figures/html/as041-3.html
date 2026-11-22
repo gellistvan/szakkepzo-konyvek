@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vízszintes metszet magassága</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="z">A–A sík magassága</label><input id="z" type="range" min="0" max="800" step="2" value="650" aria-label="A–A sík magassága"><output id="z_o" for="z"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 360" role="img" aria-label="Fiókos-ajtós szekrény elölnézete állítható magasságú A–A metszősíkkal és a frissülő vízszintes metszettel."></svg>
+<p class="small">Állítsd a síkot a fiók, a köztes polc, az ajtó, a polc vagy a lábazat magasságába. A tipli és a sín hossztengelye mentén metszve sraffozatlan. Tanulási adatok; a gyártáshoz a gyártói és tervezői adatok mérvadók.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"z":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const HH=800,WW=600,DD=400,T=18,ML=28,PL=80, z=v.z;
+function secA(z){const o=[];if(z>=HH-ML)return [["munkalap",0,-20,WW,DD+20,"A",1]];
+ o.push(["bal oldalfal",0,0,T,DD-3,"A",1],["jobb oldalfal",WW-T,0,T,DD-3,"A",1],["hátfal (HDF 3)",0,DD-3,WW,3,"C",1]);
+ if(z>=610&&z<=766){o.push(["fiókhomlok",2,-T,WW-4,T,"B",1]);
+   if(z>=622&&z<=742){[T+13,WW-T-25].forEach(x0=>{o.push(["fiókoldal",x0,0,12,350,"B",1],["tipli",x0+2,-9,8,29,"N",0]);});o.push(["fiók hátlapja",T+25,338,WW-2*(T+25),12,"A",1]);}
+   [T,WW-T-13].forEach(x0=>o.push(["fióksín",x0,10,13,330,"R",0]));}
+ else if(z>=590&&z<610)o.push(["köztes polc",T,0,WW-2*T,DD-3,"B",1]);
+ else if(z>=PL+T&&z<590){o.push(["ajtó",2,-T,WW-4,T,"B",1]);if(z>=330&&z<=348)o.push(["polc",T,20,WW-2*T,DD-43,"B",1]);}
+ else if(z>=PL&&z<PL+T)o.push(["fenéklap",T,0,WW-2*T,DD-3,"B",1]);
+ else o.push(["lábazat",T,40,WW-2*T,T,"B",1]);
+ return o;}
+const LN=css("--line"), s=0.36, X=x=>20+x*s, Y=y=>330-y*s;
+const defs=el("defs",{});defs.innerHTML='<pattern id="pA" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="'+LN+'"/></pattern>'+
+ '<pattern id="pB" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="6" stroke="'+LN+'"/></pattern>'+
+ '<pattern id="pC" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.8" fill="'+LN+'"/></pattern>';
+const FL={A:"url(#pA)",B:"url(#pB)",C:"url(#pC)",R:css("--grid"),N:"none"};
+// elölnézet
+const r=(x,y,w,h,sw)=>el("rect",{x:X(x),y:Y(y+h),width:w*s,height:h*s,fill:"none",stroke:LN,"stroke-width":sw||2});
+r(0,0,WW,HH-ML);r(-20,HH-ML,WW+20,ML);r(2,610,WW-4,156,1);r(2,PL+T+4,WW-4,590-PL-T-8,1);
+el("line",{x1:X(-50),y1:Y(z),x2:X(WW+50),y2:Y(z),stroke:css("--hl2"),"stroke-width":1.5,"stroke-dasharray":"12 3 2 3"});
+[-50,WW+50].forEach(x=>{el("line",{x1:X(x),y1:Y(z),x2:X(x),y2:Y(z)+22,stroke:css("--hl2"),"stroke-width":1.6});el("text",{x:X(x)+(x<0?-14:6),y:Y(z)+20,"font-size":13,"font-weight":"bold"},"A");});
+el("text",{x:X(WW/2),y:Y(HH)-8,"text-anchor":"middle","font-size":12},"elölnézet");
+// A–A
+const ox=300, oy=60, sa=0.4, AX=x=>ox+x*sa, AY=y=>oy+(DD-y)*sa;   // elöl lent
+el("text",{x:AX(WW/2),y:oy-18,"text-anchor":"middle","font-size":15,"font-weight":"bold"},"A–A");
+const S2=secA(z);
+S2.forEach(([n,x0,y0,w,h,k,cut])=>el("rect",{x:AX(x0),y:AY(y0+h),width:w*sa,height:h*sa,fill:FL[k],stroke:LN,"stroke-width":cut?1.4:1}));
+el("text",{x:AX(WW/2),y:AY(-40)+14,"text-anchor":"middle","font-size":11},"elöl");
+const names=[...new Set(S2.map(e=>e[0]+(e[6]?"":" (nem metszett, körvonal)")))];
+status("A–A sík a padlótól <b>"+z+" mm</b> (a munkalap teteje alatt "+(HH-z)+" mm). A vágásban: "+names.join(", ")+".");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

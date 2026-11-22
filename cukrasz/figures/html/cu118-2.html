@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szeletelési alaprajz – darabszám</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="L">Keret hossza</label><input id="L" type="range" min="20" max="80" step="1" value="60" aria-label="Keret hossza"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="B">Keret szélessége</label><input id="B" type="range" min="20" max="60" step="1" value="40" aria-label="Keret szélessége"><output id="B_o" for="B"></output></div>
+<div class="row"><label for="l">Szelet hossza</label><input id="l" type="range" min="3" max="10" step="0.5" value="6" aria-label="Szelet hossza"><output id="l_o" for="l"></output></div>
+<div class="row"><label for="b">Szelet szélessége</label><input id="b" type="range" min="3" max="8" step="0.5" value="4" aria-label="Szelet szélessége"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="sz">Levágott szél oldalanként</label><input id="sz" type="range" min="0" max="3" step="0.5" value="1" aria-label="Levágott szél oldalanként"><output id="sz_o" for="sz"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 680 400" role="img" aria-label="Téglalap alakú szeletkeret felülnézetben, szeletrácsra osztva, a levágott szél és egy szelet méretei jelölve."></svg>
+<p class="small">A fejezet képlete: n = ⌊(L − 2·sz)/l⌋ · ⌊(B − 2·sz)/b⌋. Alapértékek: a 2. példa (60 × 40 cm, 1 cm szél, 6 × 4 cm → 81 db); szélvágás nélkül 100 db. A szürke sáv a levágott szél.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"L":"cm", "B":"cm", "l":"cm", "b":"cm", "sz":"cm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const L=v.L, B=v.B, l=v.l, b=v.b, sz=v.sz;
+const hl=L-2*sz, hb=B-2*sz;
+const o=Math.max(0,Math.floor(hl/l+1e-9)), r=Math.max(0,Math.floor(hb/b+1e-9)), n=o*r;
+const sc=Math.min(560/L, 330/B), X0=60, Y0=40, k=x=>X0+x*sc, m=y=>Y0+(B-y)*sc;
+const fg=css("--fg"), ln=css("--line"), mu=css("--muted");
+el("rect",{x:k(0),y:m(B),width:L*sc,height:B*sc,fill:"none",stroke:ln,"stroke-width":3});
+[[0,0,L,sz],[0,B-sz,L,sz],[0,0,sz,B],[L-sz,0,sz,B]].forEach(q=>el("rect",{x:k(q[0]),y:m(q[1]+q[3]),width:q[2]*sc,height:q[3]*sc,fill:css("--grid")}));
+for(let i=0;i<o;i++)for(let j=0;j<r;j++)
+  el("rect",{x:k(sz+i*l),y:m(sz+(j+1)*b),width:l*sc,height:b*sc,fill:(i+j)%2?"none":css("--grid"),"fill-opacity":0.35,stroke:ln,"stroke-width":0.8});
+el("text",{x:k(L/2),y:Y0-12,"text-anchor":"middle","font-size":13},"L = "+fmt(L,0)+" cm");
+el("text",{x:X0-12,y:m(B/2),"text-anchor":"middle","font-size":13,transform:"rotate(-90 "+(X0-12)+" "+m(B/2)+")"},"B = "+fmt(B,0)+" cm");
+const ok=n>0;
+status(`Hasznos méret: ${fmt(hl,0)} × ${fmt(hb,0)} cm → oszlopok ⌊${fmt(hl,0)}/${fmt(l,1)}⌋ = <b>${o}</b>, sorok ⌊${fmt(hb,0)}/${fmt(b,1)}⌋ = <b>${r}</b> → `+
+  `<span class="${ok?'ok':'bad'}">darabszám = ${o} · ${r} = ${n} db</span>. Kihasznált felület: ${fmt(100*o*l*r*b/(L*B),0)} %.`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Készletgörbe és forgási sebesség</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="T">Szállítási ciklus</label><input id="T" type="range" min="1" max="30" step="1" value="5" aria-label="Szállítási ciklus"><output id="T_o" for="T"></output></div>
+<div class="row"><label for="F">Havi termelési felhasználás</label><input id="F" type="range" min="600" max="6000" step="100" value="3600" aria-label="Havi termelési felhasználás"><output id="F_o" for="F"></output></div>
+<div class="row"><label for="B">Biztonsági készlet</label><input id="B" type="range" min="0" max="1000" step="50" value="300" aria-label="Biztonsági készlet"><output id="B_o" for="B"></output></div>
+<div class="row"><label for="sel">Selejt, romlás (a felhasználás %-ában)</label><input id="sel" type="range" min="0" max="20" step="1" value="0" aria-label="Selejt, romlás (a felhasználás %-ában)"><output id="sel_o" for="sel"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Készletgörbe-kalkulátor: csúszkák a szállítási ciklusra, a havi felhasználásra, a biztonsági készletre és a selejtre; a fűrészfog alakú görbe mellett az átlagkészlet és a forgási sebesség fordulatban és napban"></svg>
+<p class="small">Szemléltető fűrészfog-modell: egyenletes felhasználás, a szállítás a készlet biztonsági szintre csökkenésekor érkezik. Alapbeállítás = a fejezet 2. példája (3 600 ezer Ft/hó, átlagkészlet 600 ezer Ft, 6 fordulat, 5 nap); a 300 ezer Ft-os biztonsági készlet modellfeltevés. FS_ford = F/K̄, FS_nap = n/FS_ford.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"T":"nap", "F":"ezer Ft", "B":"ezer Ft", "sel":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const n=30,T=v.T,Fp=v.F,B=v.B,R=Fp*v.sel/100,Ft=Fp+R;      // ezer Ft/hó
+const Q=Ft*T/n,K=B+Q/2,ford=Ft/K,nap=n/ford,fordP=Fp/K;
+const X0=60,Y0=250,W=480,H=210,ym=Math.max(400,Math.ceil((B+Q)*1.15/200)*200);
+const sx=d=>X0+d/n*W,sy=y=>Y0-y/ym*H;
+for(let d=0;d<=n;d+=5){el("line",{x1:sx(d),y1:Y0,x2:sx(d),y2:Y0-H,stroke:css("--grid")});el("text",{x:sx(d),y:Y0+15,"font-size":11,"text-anchor":"middle"},d);}
+for(let i=1;i<=4;i++){const y=ym*i/4;el("line",{x1:X0,y1:sy(y),x2:X0+W,y2:sy(y),stroke:css("--grid")});el("text",{x:X0-4,y:sy(y)+4,"font-size":11,"text-anchor":"end"},Math.round(y));}
+el("line",{x1:X0,y1:Y0,x2:X0+W,y2:Y0,stroke:css("--line")});el("line",{x1:X0,y1:Y0,x2:X0,y2:Y0-H,stroke:css("--line")});
+el("text",{x:X0+W,y:Y0+32,"font-size":12,"text-anchor":"end"},"nap");el("text",{x:X0-50,y:Y0-H-10,"font-size":12},"készlet (ezer Ft)");
+if(B>0)el("rect",{x:X0,y:sy(B),width:W,height:Y0-sy(B),fill:css("--muted"),"fill-opacity":0.12});
+let pts=[];for(let s=0;s<n;s+=T){const e=Math.min(n,s+T),top=B+Q,end=top-(top-B)*(e-s)/T;pts.push([sx(s),sy(B)],[sx(s),sy(top)],[sx(e),sy(end)]);}
+el("polyline",{points:pts.join(" "),fill:"none",stroke:css("--hl"),"stroke-width":2.2});
+if(R>0){for(let s=0;s<n;s+=T){const e=Math.min(n,s+T);const top=B+Q,end=top-(top-B)*(e-s)/T;const fr=R/Ft;
+  el("polygon",{points:[[sx(s),sy(top)],[sx(e),sy(end)],[sx(e),sy(end+(top-end)*fr)]].join(" "),fill:css("--bad"),"fill-opacity":0.35});}}
+el("line",{x1:X0,y1:sy(K),x2:X0+W,y2:sy(K),stroke:css("--line"),"stroke-dasharray":"7 4","stroke-width":1.5});
+el("text",{x:X0+W-4,y:sy(K)-6,"font-size":12,"text-anchor":"end","font-weight":"bold"},"átlagkészlet "+Math.round(K));
+status("Szállítási tétel: "+fmt(Q,0)+" ezer Ft / "+T+" nap. Átlagkészlet K̄ = B + tétel/2 = <b>"+fmt(K,0)+" ezer Ft</b>.<br>"+
+ "Forgási sebesség (teljes csökkenésre, "+fmt(Ft,0)+" ezer Ft/hó): <b>"+fmt(ford,2)+" fordulat/hó = "+fmt(nap,1)+" nap</b>."+
+ (R>0?"<br>Csak a termelési felhasználásra ("+fmt(Fp,0)+" ezer Ft): "+fmt(fordP,2)+" fordulat/hó = "+fmt(n/fordP,1)+' nap; a <span class="bad">piros</span> rész a selejt, romlás.':""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szerszámszögek</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pre">Előbeállítás</label><select id="pre" aria-label="Előbeállítás"><option value="e">egyéni</option><option value="gyalu">gyaluvas (letört él lefelé)</option><option value="maro" selected>marókés (14.1.3 példa)</option><option value="kor">körfűrészfog</option></select></div>
+<div class="row"><label for="a">Hátszög α</label><input id="a" type="range" min="0" max="30" step="1" value="15" aria-label="Hátszög α"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="b">Ékszög β</label><input id="b" type="range" min="20" max="70" step="1" value="50" aria-label="Ékszög β"><output id="b_o" for="b"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 330" role="img" aria-label="Faforgácsoló ék a vágási síkon: hátszög, ékszög, homlokszög, vágószög"></svg>
+<p class="small">A szerszám jobbról balra halad; a szögeket a vágási síkhoz (pontvonal) és az arra állított merőlegeshez (pontozott) mérjük. Az előbeállítások tájékoztató szögek (gyaluvas: ágyazás 45°, β = 25°; ellenőrizendő: gyártói adat).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"a":"°", "b":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const PRE={gyalu:[20,25],maro:[15,50],kor:[15,55]};
+if(window._pre!==v.pre){window._pre=v.pre; if(PRE[v.pre]){document.getElementById("a").value=PRE[v.pre][0];document.getElementById("b").value=PRE[v.pre][1];}}
+const w=values();
+if(PRE[w.pre]&&(PRE[w.pre][0]!=w.a||PRE[w.pre][1]!=w.b)){document.getElementById("pre").value="e";window._pre="e";}
+const a=w.a,b=w.b,g=90-a-b,d=a+b, ox=230,oy=230,k=34, P=(r,deg)=>[ox+r*Math.cos(deg*Math.PI/180),oy-r*Math.sin(deg*Math.PI/180)];
+el("rect",{x:0,y:0,width:560,height:330,fill:"#fff"});
+el("rect",{x:20,y:oy,width:520,height:70,fill:"#f2f2f2",stroke:"#000"});
+el("rect",{x:20,y:oy-28,width:ox-20,height:28,fill:"#fafafa",stroke:"#000"});
+for(let i=1;i<5;i++)el("line",{x1:20,x2:540,y1:oy+i*14,y2:oy+i*14,stroke:"#aaa","stroke-width":0.6});
+const pc=P(6*k,a),pr=P(5.4*k,d),top=P(6.2*k,(a+d)/2+8);
+el("polygon",{points:[[ox,oy],pc,[pc[0]+10,pc[1]-60],[pr[0]+55,pr[1]-20],pr].map(p=>p.join(",")).join(" "),fill:"#e8e8e8",stroke:"#000","stroke-width":3});
+el("line",{x1:ox,y1:oy,x2:540,y2:oy,stroke:"#000","stroke-dasharray":"8 3 2 3"});
+el("line",{x1:ox,y1:oy,x2:ox,y2:20,stroke:"#000","stroke-dasharray":"2 3"});
+function arc(r,a0,a1,lab,lr){const p0=P(r,a0),p1=P(r,a1),la=Math.abs(a1-a0)>180?1:0,sw=a1>a0?0:1;
+ el("path",{d:"M"+p0[0]+" "+p0[1]+" A"+r+" "+r+" 0 "+la+" "+sw+" "+p1[0]+" "+p1[1],fill:"none",stroke:"#000"});
+ const m=P(r*lr,(a0+a1)/2);el("text",{x:m[0],y:m[1]+5,"text-anchor":"middle","font-size":16,fill:"#000"},lab);}
+arc(120,0,a,"α",1.15); arc(90,a,d,"β",1.22); arc(150,d,90,"γ",1.1); arc(50,0,d,"δ",1.4);
+el("line",{x1:150,y1:30,x2:60,y2:30,stroke:"#000","stroke-width":3});el("polygon",{points:"60,24 46,30 60,36",fill:"#000"});
+el("text",{x:100,y:52,"text-anchor":"middle","font-size":12,fill:"#000"},"haladási irány");
+el("text",{x:550,y:24,"text-anchor":"end","font-size":14,fill:"#000"},"γ = 90° − α − β = "+g+"°");
+el("text",{x:550,y:44,"text-anchor":"end","font-size":14,fill:"#000"},"δ = α + β = "+d+"°");
+let m="α = "+a+"°, β = "+b+"° → γ = <b>"+g+"°</b>, δ = <b>"+d+"°</b>. ";
+if(g<0)m+="<span class='bad'>Negatív homlokszög: a homlokfelület hátradől, az él inkább kapar, mint vág (pl. daraboló fűrészfog, fémes kaparás).</span>";
+else if(a<5)m+="<span class='bad'>Nagyon kicsi hátszög: a hátfelület súrolja a megmunkált felületet (égés).</span>";
+else m+="<span class='ok'>Érvényes ék: α + β + γ = 90°.</span>";
+status(m);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

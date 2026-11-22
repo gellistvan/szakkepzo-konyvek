@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajtó méretlánca</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="Bn">Nyílás szélessége</label><input id="Bn" type="range" min="700" max="1100" step="10" value="900" aria-label="Nyílás szélessége"><output id="Bn_o" for="Bn"></output></div>
+<div class="row"><label for="Hn">Nyílás magassága</label><input id="Hn" type="range" min="1950" max="2200" step="10" value="2050" aria-label="Nyílás magassága"><output id="Hn_o" for="Hn"></output></div>
+<div class="row"><label for="ho">Beépítési hézag oldalt</label><input id="ho" type="range" min="5" max="20" step="1" value="10" aria-label="Beépítési hézag oldalt"><output id="ho_o" for="ho"></output></div>
+<div class="row"><label for="hf">Beépítési hézag felül</label><input id="hf" type="range" min="5" max="20" step="1" value="10" aria-label="Beépítési hézag felül"><output id="hf_o" for="hf"></output></div>
+<div class="row"><label for="ha">Beépítési hézag alul (tok alatt)</label><input id="ha" type="range" min="0" max="10" step="1" value="0" aria-label="Beépítési hézag alul (tok alatt)"><output id="ha_o" for="ha"></output></div>
+<div class="row"><label for="tv">Tokvastagság</label><input id="tv" type="range" min="20" max="40" step="1" value="28" aria-label="Tokvastagság"><output id="tv_o" for="tv"></output></div>
+<div class="row"><label for="do">Ajtóhézag oldalt</label><input id="do" type="range" min="2" max="5" step="0.5" value="3" aria-label="Ajtóhézag oldalt"><output id="do_o" for="do"></output></div>
+<div class="row"><label for="df">Ajtóhézag felül</label><input id="df" type="range" min="2" max="5" step="0.5" value="3" aria-label="Ajtóhézag felül"><output id="df_o" for="df"></output></div>
+<div class="row"><label for="da">Ajtóhézag alul</label><input id="da" type="range" min="4" max="12" step="1" value="8" aria-label="Ajtóhézag alul"><output id="da_o" for="da"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 340" role="img" aria-label="Ajtónyílás elölnézete méretlánccal: nyílás, tok, belvilág és ajtólap méretei, hézagokkal."></svg>
+<p class="small">Irányértékek a fejezetből (ellenőrizendő: gyártói és beépítési előírás). A tok alatti beépítési hézagot 8 mm-re állítva a fejezet jelenlegi 3. feladatának esete látszik (2032 → 2004 → 1993 mm, a lap alja 16 mm-re a padlótól).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"Bn":"mm", "Hn":"mm", "ho":"mm", "hf":"mm", "ha":"mm", "tv":"mm", "do":"mm", "df":"mm", "da":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const Bt=v.Bn-2*v.ho, Ht=v.Hn-v.hf-v.ha, Bb=Bt-2*v.tv, Hb=Ht-v.tv, Bl=Bb-2*v.do, Hl=Hb-v.df-v.da, bottom=v.ha+v.da;
+const s=0.13, X=80, Y=320, L=css("--line");
+el("rect",{x:X,y:Y-v.Hn*s,width:v.Bn*s,height:v.Hn*s,fill:"none",stroke:L,"stroke-width":2});
+const tx=X+v.ho*s, ty=Y-v.ha*s;
+[[tx,ty-Ht*s,v.tv*s,Ht*s],[tx+Bt*s-v.tv*s,ty-Ht*s,v.tv*s,Ht*s],[tx,ty-Ht*s,Bt*s,v.tv*s]].forEach(r=>el("rect",{x:r[0],y:r[1],width:r[2],height:r[3],fill:css("--muted"),stroke:L}));
+el("rect",{x:tx+v.tv*s+v.do*s,y:Y-bottom*s-Hl*s,width:Bl*s,height:Hl*s,fill:css("--grid"),stroke:css("--hl"),"stroke-width":2});
+el("line",{x1:X-20,x2:X+v.Bn*s+20,y1:Y,y2:Y,stroke:L,"stroke-width":3});
+const rows=[["nyílás",v.Bn+" × "+v.Hn],["tok külső",Bt+" × "+Ht],["belvilág",Bb+" × "+Hb],["ajtólap",Bl+" × "+Hl],["lap alja a kész padlótól",bottom+" mm"]];
+rows.forEach((r,i)=>{el("text",{x:260,y:80+i*26,"font-size":14},r[0]+":");el("text",{x:450,y:80+i*26,"font-size":14,"font-weight":"bold"},r[1]);});
+const ok=bottom>=6&&bottom<=10;
+status("Belvilág magassága = tok külső − <b>egy</b> szemöldökfa: "+Ht+" − "+v.tv+" = "+Hb+" mm; ajtólap: "+Bl+" × "+Hl+" mm. "+
+ (ok?"<span class='ok'>Az ajtólap alja a kész padlótól "+bottom+" mm – a 6–10 mm-es irányértéken belül.</span>":"<span class='bad'>Az ajtólap alja a kész padlótól "+bottom+" mm – kívül esik a 6–10 mm-en (a tok alatti beépítési hézag is hozzáadódik!).</span>"));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

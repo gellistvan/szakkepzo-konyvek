@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontosztás és pántfészek</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="H">Nyílásmagasság H_ny</label><input id="H" type="range" min="300" max="900" step="1" value="600" aria-label="Nyílásmagasság H_ny"><output id="H_o" for="H"></output></div>
+<div class="row"><label for="n">Frontok száma n</label><input id="n" type="range" min="1" max="6" step="1" value="3" aria-label="Frontok száma n"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="g">Hézag</label><input id="g" type="range" min="1" max="6" step="0.5" value="3" aria-label="Hézag"><output id="g_o" for="g"></output></div>
+<div class="row"><label for="s">Pánt felfekvés s</label><input id="s" type="range" min="3" max="8" step="0.5" value="5" aria-label="Pánt felfekvés s"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="D">Fészekátmérő D</label><input id="D" type="range" min="26" max="40" step="1" value="35" aria-label="Fészekátmérő D"><output id="D_o" for="D"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 360" role="img" aria-label="Frontosztás-kalkulátor: nyílásmagasság, frontszám és hézag alapján a frontmagasság és az élmagasságok"></svg>
+<p class="small">Alapértékekkel a 41.3.4 táblázatát adja (196 mm; 3/199, 202/398, 401/597 mm). A 37 mm-es szerelővonal, a 32 mm-es raszter és a fészekméret tájékoztató – a vasalatgyártói útmutató szerint ellenőrizendő.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"H":"mm", "n":"db", "g":"mm", "s":"mm", "D":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const H=v.H, n=v.n, g=v.g, hf=(H-(n+1)*g)/n;
+const X0=40, Y0=330, k=0.42;
+el("rect",{x:X0,y:Y0-720*k,width:560*k,height:720*k,fill:"none",stroke:css("--line"),"stroke-width":1});
+el("line",{x1:X0,y1:Y0,x2:X0,y2:Y0-720*k,stroke:css("--line"),"stroke-width":4});
+el("line",{x1:X0,y1:Y0,x2:X0+560*k,y2:Y0,stroke:css("--line"),"stroke-width":4});
+let rows="", ok=hf>0;
+for(let i=0;i<n;i++){const lo=g+i*(hf+g), hi=lo+hf;
+  el("rect",{x:X0+4,y:Y0-hi*k,width:560*k-8,height:Math.max(0,hf*k),fill:i%2?css("--grid"):"none",stroke:css("--hl"),"stroke-dasharray":"5 3"});
+  el("text",{x:X0+560*k+6,y:Y0-(lo+hi)/2*k+4,"font-size":11},(i+1)+". front: "+fmt(lo,1)+" – "+fmt(hi,1));
+  rows+="<tr><td>"+(i+1)+".</td><td>"+fmt(lo,1)+"</td><td>"+fmt(hi,1)+"</td></tr>";}
+el("line",{x1:X0+37*k,y1:Y0,x2:X0+37*k,y2:Y0-720*k,stroke:css("--hl2"),"stroke-dasharray":"8 3 2 3"});
+el("text",{x:X0,y:Y0+18,"font-size":11},"nullpont · alsó bázisél → · szerelővonal 37 mm");
+el("text",{x:X0+560*k/2,y:Y0-720*k-8,"text-anchor":"middle","font-size":11},"jobb oldallap 560 × 720 mm, elülső él balra");
+// pántfészek
+const kk=v.s+v.D/2, PX=420, PY=60;
+el("rect",{x:PX,y:PY,width:140,height:200,fill:"none",stroke:css("--line")});
+el("circle",{cx:PX+kk*2,cy:PY+60,r:v.D,fill:"none",stroke:css("--hl"),"stroke-width":2});
+el("line",{x1:PX,y1:PY+60,x2:PX+kk*2,y2:PY+60,stroke:css("--hl2"),"stroke-width":2});
+el("text",{x:PX+70,y:PY+215,"text-anchor":"middle","font-size":11},"ajtó éle balra, k = s + D/2 (2:1 léptékkel)");
+status((ok?"":"<span class='bad'>A hézagok összege nagyobb a nyílásnál.</span> ")+
+ "h<sub>f</sub> = ("+H+" − ("+n+"+1)·"+fmt(g,1)+") / "+n+" = <b>"+fmt(hf,1)+" mm</b>; ellenőrzés: "+n+"·"+fmt(hf,1)+" + "+(n+1)+"·"+fmt(g,1)+" = "+fmt(n*hf+(n+1)*g,1)+" mm."+
+ "<br><table><tr><th>front</th><th>alsó él (mm)</th><th>felső él (mm)</th></tr>"+rows+"</table>"+
+ "Pántfészek középpontja: k = "+fmt(v.s,1)+" + "+fmt(v.D,0)+"/2 = <b>"+fmt(kk,1)+" mm</b> az ajtó élétől.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

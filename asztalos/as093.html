@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>25.2 CNC-technika: vezérlés, koordináta-rendszer,
+megmunkálóközpont, programfelépítés – Asztalos – faanyagismeret,
+szakrajz, kötések, gépek és felületkezelés</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz5">V. RÉSZ – Faipari gépek és gépbiztonság</a> › <a href="index.html#asch24">25 Gépi csiszolás és CNC-technika</a></p>
+<div class="links"><a class="prev" rel="prev" href="as092.html">← 25.1 Faipari csiszológépek: szalag-, henger-, kontakt-, széles szalagú, tárcsás és élcsiszolók</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="as094.html">26.1 A ragasztás alapfogalmai és a ragasztóanyagok →</a></div>
+</nav>
+<h2 data-number="25.2" id="as093"><span
+class="header-section-number">25.2</span> CNC-technika: vezérlés,
+koordináta-rendszer, megmunkálóközpont, programfelépítés</h2>
+<p>A CNC-megmunkálóközpont a lapszerkezetű bútorgyártás egyik
+leggyorsabb és legpontosabb gépe. A hagyományos alsómarón vagy fúrógépen
+minden furatot, hornyot és kontúrt külön, sablonnal, ütközőkkel, gyakran
+hosszadalmasan állítunk be. A CNC-gép ezt a munkát egyetlen rögzítéssel,
+számítógépes program alapján, ismételhető pontossággal végzi el. Ha egy
+vevő korpuszbútort vagy konyhaszekrényt rendel, a furatkiosztásnak
+milliméterre illeszkednie kell a vasalatokhoz. Itt jön be a CNC: a gép a
+programban megadott koordinátákra mozog, és a megfelelő szerszámmal
+dolgozik.</p>
+<h3 data-number="25.2.1" id="szemléletes-kép"><span
+class="header-section-number">25.2.1</span> Szemléletes kép</h3>
+<p>Képzeljünk el egy sík bútorlapot, például egy 720 mm széles, 500 mm
+magas szekrényoldalt. A lap a CNC-asztalra fekszik. A gép a lap bal alsó
+sarkától méri a koordinátákat. A vízszintes tengely az
+<strong>X</strong>, a mélységi tengely az <strong>Y</strong>, a
+függőleges, főorsó-irányú tengely a <strong>Z</strong>. Amikor a program
+azt mondja, hogy „menj X = 81 mm, Y = 37 mm pontra, és fúrj 5 mm mélyre
+(Z = −5 mm)”, a gép oda mozdul, leengedi a fúrót, és készíti a
+tiplifuratot. Ugyanezt a mozgást több százszor, pontosan ismétli.</p>
+<h3 data-number="25.2.2" id="nc-és-cnc-fogalma"><span
+class="header-section-number">25.2.2</span> NC és CNC fogalma</h3>
+<p><strong>Definíció.</strong> Az <strong>NC</strong> (numerikus
+vezérlés, numerical control) olyan gépvezérlés, amely számokkal megadott
+mozgáspályát hajt végre, program alapján. A régebbi NC gépek
+lyukszalagról vagy egyszerű elektronikáról olvasták a programot. A
+<strong>CNC</strong> (computer numerical control) már számítógépes
+vezérlőegységgel dolgozik, amely tárolja, megjeleníti, szimulálja és
+futtathatóvá teszi a programot. Ma a faiparban gyakorlatilag CNC-gépeket
+használunk.</p>
+<p><strong>Megjegyzés.</strong> A „CNC” kifejezést a műhelyben gyakran a
+teljes gépre is értik: CNC-megmunkálóközpont, CNC-maró. A programot
+többnyire <strong>CAM</strong>-rendszerrel készítik, vagy egyszerű
+esetben kézzel írják, vezérlőtől függő kódokkal.</p>
+<h3 data-number="25.2.3" id="koordináta-rendszer-és-tengelyek"><span
+class="header-section-number">25.2.3</span> Koordináta-rendszer és
+tengelyek</h3>
+<p>A CNC-gép munkaterét <strong>derékszögű
+koordináta-rendszerben</strong> írjuk le. A faipari
+megmunkálóközpontoknál a leggyakoribb a <strong>jobbsodrású</strong>
+rendszer:</p>
+<ul>
+<li><strong>X</strong>: hosszirányú mozgás, többnyire balról
+jobbra.</li>
+<li><strong>Y</strong>: keresztirányú mozgás, elölről hátra. A portálos
+gépeken a portál és a főorsó-egység mozog, az asztal áll.</li>
+<li><strong>Z</strong>: a főorsó tengelye; a +Z felfelé, a munkadarabtól
+el mutat, a munkadarabba hatolás negatív Z (ha a munkadarab-nullpont a
+lap felső síkján van).</li>
+</ul>
+<p>A koordináták <strong>mm</strong>-ben értendők. A forgástengelyeket
+(A, B, C) ebben a könyvben nem részletezzük, mert a síklap-megmunkálás
+általában 3 tengellyel történik.</p>
+<p><strong>Definíció.</strong> A <strong>gépi nullpont</strong> a gép
+referenciapontja, amelyhez a gép a bekapcsolás utáni referenciamenet
+során viszonyítja a tengelyeket. A <strong>munkadarab-nullpont</strong>
+(gyakran W-nullpont) a munkadarabon kijelölt pont, amelyből a program
+koordinátáit mérjük.</p>
+<p>A faiparban a munkadarab-nullpontot gyakran a <strong>lap bal alsó
+sarkába</strong>, a felső felületre vagy a vákuumasztal tetejére
+helyezzük. A program X, Y, Z koordinátái ehhez a nullponthoz képest
+értendők.</p>
+<p><strong>Példa.</strong> Egy szekrényoldalon a nullpont a bal alsó
+sarok. Az első tiplifurat középpontja <strong>X=37 mm, Y=37 mm</strong>.
+A gép a nullpontból 37 mm-t jobbra, 37 mm-t hátrafelé mozog, majd
+lefúr.</p>
+<p>A gép kezelőjének a <strong>nullpontfelvétel</strong> során meg kell
+mérnie és be kell állítania, hogy a munkadarab-nullpont a gépi
+koordináta-rendszerben hol helyezkedik el. Ez gépenként eltérő lehet, és
+a munkadarab befogása után mindig újra ellenőrizendő.</p>
+<figure id="fig-as093-1">
+<div class="fig-interactive"><iframe src="figures/html/as093-1.html" title="CNC-asztalon fekvő lap a munkadarab-nullponttal, X, Y és felfelé mutató +Z tengellyel; a fúró Z = 5 és Z = −5 helyzetben." loading="lazy" style="width:100%;border:0;height:760px"></iframe><noscript><img src="figures/img/as093-1.png" style="width:100.0%"
+alt="CNC-asztalon fekvő lap a munkadarab-nullponttal, X, Y és felfelé mutató +Z tengellyel; a fúró Z = 5 és Z = −5 helyzetben." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/as093-1.png" style="width:100.0%"
+alt="CNC-asztalon fekvő lap a munkadarab-nullponttal, X, Y és felfelé mutató +Z tengellyel; a fúró Z = 5 és Z = −5 helyzetben." /></details></div>
+<figcaption>A CNC-asztalon fekvő 720 × 500 × 18 mm-es lap a
+munkadarab-nullponttal (W, a lap bal elülső sarka a felső síkon), a gépi
+nullponttal (M) és a tengelyekkel: +X jobbra, +Y hátra, +Z felfelé, a
+munkadarabtól el. A nagyításon a fúró Z = 5 (a lap fölött) és Z = −5 (a
+lapban) helyzete.</figcaption>
+</figure>
+<p>Az ábra szerint az első furat X = 37 mm-re jobbra és Y = 37 mm-re
+hátra van a W-nullponttól. A programrészlet <code>Z5</code> mondata a
+lap felső síkja fölé, a <code>Z-5</code> mondata a lapba viszi a
+szerszámot, ezért a +Z irány felfelé, a munkadarabtól el mutat. A
+HTML-kiadásban a lenti programrészlet N40–N70 mondatai lépésenként
+lejátszhatók.</p>
+<h3 data-number="25.2.4" id="megmunkálóközpont-felépítése"><span
+class="header-section-number">25.2.4</span> Megmunkálóközpont
+felépítése</h3>
+<p>A faipari CNC-megmunkálóközpont fő részei:</p>
+<ul>
+<li><strong>Ágy és asztal</strong>: merev alapszerkezet; a munkadarabot
+ezen rögzítjük.</li>
+<li><strong>Vákuumos asztal</strong>: a lapokat vákuumtérrel szívja le.
+A vákuumzónák kapcsolhatók, így a kisebb munkadarabhoz kevesebb zóna is
+elég.</li>
+<li><strong>Portál vagy gém</strong>: az X-Y mozgást biztosítja.</li>
+<li><strong>Főorsó (maróorsó)</strong>: a forgó szerszámot hajtja.
+Gyakran 12 000–24 000 min⁻¹ fordulatszám-tartományban dolgozik
+(tájékoztató, gépkönyv szerint).</li>
+<li><strong>Szerszámtár</strong>: a gyakran használt maró- és
+fúrószerszámokat tárolja. A gép a program szerint cseréli a szerszámokat
+a főorsóban.</li>
+<li><strong>Lineáris vezetékek, golyósorsók</strong>: a pontos
+mozgatásért felelősek.</li>
+<li><strong>Vezérlőegység és kezelőpanel</strong>: a program betöltését,
+szimulációját és futtatását végzi.</li>
+<li><strong>Elszívás</strong>: a por és forgács elszívása a szerszám
+közeléből.</li>
+</ul>
+<figure id="fig-as093-2">
+<div class="fig-interactive"><iframe src="figures/html/as093-2.html" title="CNC-megmunkálóközpont számozott részekkel: főorsó, szerszámtár, vákuumos asztal, elszívó, védőberendezés és vezérlőpult." loading="lazy" style="width:100%;border:0;height:620px"></iframe><noscript><img src="figures/img/as093-2.png" style="width:100.0%"
+alt="CNC-megmunkálóközpont számozott részekkel: főorsó, szerszámtár, vákuumos asztal, elszívó, védőberendezés és vezérlőpult." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/as093-2.png" style="width:100.0%"
+alt="CNC-megmunkálóközpont számozott részekkel: főorsó, szerszámtár, vákuumos asztal, elszívó, védőberendezés és vezérlőpult." /></details></div>
+<figcaption>A faipari CNC-megmunkálóközpont fő részei számozva: gépágy
+és asztal, portál, főorsó, szerszámtár, vákuumos asztal, lineáris
+vezeték, elszívás, vezérlőegység, védőberendezések (fénykapu,
+nyomásérzékeny szőnyeg) és vészleállító; alul a CNC-marók élalakja
+(tájékoztató). Sematikus vonalrajz.</figcaption>
+</figure>
+<p>A munkadarab befogása faipari CNC-n:</p>
+<ul>
+<li><strong>Vákuum</strong>: lapoknál a leggyorsabb. A lap alá
+tömítőgumik vagy vákuumzónák kerülnek.</li>
+<li><strong>Mechanikus szorítás</strong>: kis alkatrésznél, íves
+darabnál, vagy ha a vákuum nem elég, szorítótalpak, csavarok.</li>
+<li><strong>Kombinált</strong>: vákuum + mechanikus biztosítás.</li>
+</ul>
+<p><strong>Gépbiztonság.</strong> A CNC-gépet csak betanított, felügyelt
+tanuló kezelheti; védőberendezés nélkül, egyedül, fáradtan ne végezd. A
+védőburkolatot, vészleállítót, fénykaput vagy nyomásérzékeny szőnyeget
+(ha van) soha ne iktasd ki. A gép automatikus szerszámcseréjét, mozgását
+mindig a védőtérből, lecsukott ajtó mellett figyeld. A forgó szerszámhoz
+ne nyúlj, amíg a főorsó teljesen meg nem állt.</p>
+<h3 data-number="25.2.5" id="cnc-program-felépítése"><span
+class="header-section-number">25.2.5</span> CNC-program felépítése</h3>
+<p>A CNC-program <strong>mondatokból</strong> (blokkokból) áll. Egy
+mondat egy mozgást vagy kapcsolási utasítást ír le. A mondat elején
+gyakran <strong>N</strong> sorszám áll, majd a <strong>G</strong>
+(előkészítő) és <strong>M</strong> (kiegészítő) kódok, koordináták,
+előtolás, fordulatszám és szerszámadatok.</p>
+<p>A G- és M-kódok <strong>vezérlőfüggők</strong>, azaz a konkrét
+gépkönyvben ellenőrizni kell őket. A faiparban gyakori alapparancsok
+(tájékoztató, nem szabvány):</p>
+<ul>
+<li><strong>G0</strong>: gyorsjárat pozicionálás.</li>
+<li><strong>G1</strong>: egyenes interpoláció, munkasebességgel.</li>
+<li><strong>G2/G3</strong>: körinterpoláció, óramutatóval
+egyező/ellentétes.</li>
+<li><strong>G90</strong>: abszolút méretmegadás (a nullponthoz
+képest).</li>
+<li><strong>G91</strong>: relatív (növekményes) méretmegadás.</li>
+<li><strong>M3</strong>: főorsó indítás óramutató szerint.</li>
+<li><strong>M5</strong>: főorsó leállítás.</li>
+<li><strong>M30</strong>: program vége, visszaállás.</li>
+</ul>
+<p>A faipari vezérlők gyakran <strong>saját egyszerűbb nyelvet</strong>
+is használnak (pl. párbeszédes felület, furatminták), ezért a kódokat
+mindig az adott géphez kell igazítani.</p>
+<p><strong>Szerszámkorrekció.</strong> A program a
+<strong>szerszámhossz-korrekcióval</strong> veszi figyelembe, hogy a
+főorsóba fogott szerszám milyen hosszú. A
+<strong>szerszámátmérő-korrekciót</strong> a maró kontúr melletti
+pályájánál használjuk. A korrekciós értéket a szerszámtáblázatban adjuk
+meg. A CAM-program ezt automatikusan kezeli, de a kezelőnek ellenőriznie
+kell, hogy a szerszámtáblázat a ténylegesen befogott szerszámhoz
+tartozik.</p>
+<p><strong>Példa programrészlet (text, vezérlőfüggő):</strong></p>
+<pre class="text"><code>N10 G90 (abszolút méret)
+N20 T1 M6 (1. szerszám befogása)
+N30 S18000 M3 (18 000 min^-1, forgás)
+N40 G0 X37 Y37 (gyorsjárat a furat fölé)
+N50 G0 Z5 (5 mm-rel a felület fölé)
+N60 G1 Z-5 F1200 (fúrás 5 mm-re, előtolás)
+N70 G0 Z10 (felemelés)
+N80 M5 (főorsó leállítás)
+N90 M30 (program vége)</code></pre>
+<p>Ez a részlet csak <strong>szemléltető példa</strong>, nem valós
+gépkód; a tényleges utasítások a célgép programozási kézikönyvéből
+valók.</p>
+<h3 data-number="25.2.6" id="cadcam-és-adatátvitel"><span
+class="header-section-number">25.2.6</span> CAD/CAM és adatátvitel</h3>
+<p>A faipari CNC-program leggyakrabban <strong>CAD/CAM-láncból</strong>
+készül, ahogyan a <a href="as055.html">CAD, látványtervezés,
+optimalizálás és CNC-adatátvitel</a> alfejezetben láttuk.</p>
+<p>A folyamat:</p>
+<ol type="1">
+<li><strong>CAD</strong>: megtervezzük az alkatrész kontúrját,
+furatait.</li>
+<li><strong>CAM</strong>: kiválasztjuk a szerszámot, megadjuk a
+fogásmélységeket, előtolást, és a szoftver legenerálja a
+szerszámpályát.</li>
+<li><strong>Posztprocesszor</strong>: a CAM-program a pályát a célgép
+által értelmezhető vezérlőnyelvre alakítja.</li>
+<li><strong>Adatátvitel</strong>: a CNC-programot USB-n, hálózaton vagy
+közvetlen kábeles kapcsolaton juttatjuk el a géphez.</li>
+<li><strong>Gépi betöltés és szimuláció</strong>: a program
+megtekintése, ütközésvizsgálat, majd próbafuttatás.</li>
+</ol>
+<p>A gyakori adatátviteli formátum a <strong>DXF</strong> a kontúrokhoz,
+de a fúrási és marási program már a gép saját formátuma. A CAM-rendszer
+<strong>posztprocesszora</strong> biztosítja a helyes kimenetet.</p>
+<p>A CAD–CAM–CNC lánc lépéseit az alábbi folyamatábra foglalja
+össze:</p>
+<figure>
+<img src="assets/as093-diagram-1.png"
+alt="A CAD–CAM–CNC lánc - Ha a szimuláció hibát jelez (ütközés, rossz szerszám, átmarás), a CAM-pályát kell javítani, majd újra posztprocesszálni. Szemléltető lépéssor; a formátumok vezérlőfüggők." />
+<figcaption aria-hidden="true">A CAD–CAM–CNC lánc - Ha a szimuláció
+hibát jelez (ütközés, rossz szerszám, átmarás), a CAM-pályát kell
+javítani, majd újra posztprocesszálni. Szemléltető lépéssor; a
+formátumok vezérlőfüggők.</figcaption>
+</figure>
+<h3 data-number="25.2.7"
+id="koordináta--és-furatkiosztás-számítása"><span
+class="header-section-number">25.2.7</span> Koordináta- és furatkiosztás
+számítása</h3>
+<p>A CNC megmunkálás előtt a furatokat, hornyokat a munkadarabon
+pontosan meg kell határozni. Jellemző a <strong>32-es rendszer</strong>:
+a bútorlapokon a vasalatok, tiplik, fiókvezetők furatai gyakran 32 mm-es
+raszterben helyezkednek el. A CNC könnyen kezeli ezt, mert a programban
+a koordinátákat 32-es vagy 16-os osztással adjuk meg.</p>
+<p><strong>Számítási példa 1: Kerületi (forgácsolási)
+sebesség</strong></p>
+<p>Adott egy 12 mm átmérőjű CNC-maró, a főorsó fordulatszáma 18 000
+min⁻¹. Mennyi a forgácsolási sebesség?</p>
+<p><strong>Összefüggés.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mfrac><mrow><mi>D</mi><mo>⋅</mo><mi>π</mi><mo>⋅</mo><mi>n</mi></mrow><mrow><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex">v = \frac{D \cdot \pi \cdot n}{60\,000}</annotation></semantics></math>,
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
+mm,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+1/min,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+m/s.</p>
+<p>Behelyettesítve:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mfrac><mrow><mn>12</mn><mo>⋅</mo><mi>π</mi><mo>⋅</mo><mn>18</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mrow><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>12</mn><mo>⋅</mo><mn>3</mn><mo>,</mo><mn>1416</mn><mo>⋅</mo><mn>18</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mrow><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow></mfrac><mo>≈</mo><mn>11</mn><mo>,</mo><mn>31</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">v = \frac{12 \cdot \pi \cdot 18\,000}{60\,000} = \frac{12 \cdot 3{,}1416 \cdot 18\,000}{60\,000} \approx 11{,}31\,\text{m/s}.</annotation></semantics></math></p>
+<p>Ellenőrzés: 12 mm-es maró 18 000 min⁻¹ fordulattal 11–12 m/s körüli
+sebességet ad, ez a faipari marásban elfogadható, de a gyártó adatlapját
+ellenőrizni kell.</p>
+<p><strong>Számítási példa 2: Előtoló sebesség</strong></p>
+<p>Ugyanaz a maró, két élű (z = 2). A gyártói ajánlás szerint fogankénti
+előtolás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>e</mi><mi>z</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">e_z = 0{,}3</annotation></semantics></math>
+mm. Mekkora lesz az előtoló sebesség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>e</mi></msub><annotation encoding="application/x-tex">v_e</annotation></semantics></math>
+m/min-ben?</p>
+<p><strong>Összefüggés.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mi>e</mi></msub><mo>=</mo><msub><mi>e</mi><mi>z</mi></msub><mo>⋅</mo><mi>z</mi><mo>⋅</mo><mi>n</mi></mrow><annotation encoding="application/x-tex">v_e = e_z \cdot z \cdot n</annotation></semantics></math>
+mm/min, majd átváltás m/min-re.</p>
+<p>Behelyettesítve:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mi>e</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mm</mtext><mo>⋅</mo><mn>2</mn><mo>⋅</mo><mn>18</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">min</mtext><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mn>800</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mm/min</mtext><mo>=</mo><mn>10</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/min</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">v_e = 0{,}3\,\text{mm} \cdot 2 \cdot 18\,000\,\text{min}^{-1} = 10\,800\,\text{mm/min} = 10{,}8\,\text{m/min}.</annotation></semantics></math></p>
+<p>Ellenőrzés: kisméretű, gyorsan forgó marónál 10 m/min körüli előtolás
+jellemző, de gépkönyv és adatlap szerint változhat.</p>
+<p><strong>Számítási példa 3: Szerelvényhelyek koordinátái a 32-es
+rendszerben</strong></p>
+<p>Egy szekrényoldal magassága 720 mm. A furatsor az élétől 37 mm-re
+húzódik. A furatok 32 mm-es raszterben kezdődnek; a függőleges raszter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>k</mi></msub><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mi>k</mi><mo>⋅</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">y_k = y_0 + k \cdot 32</annotation></semantics></math>,
+ahol az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mn>0</mn></msub><annotation encoding="application/x-tex">y_0</annotation></semantics></math>
+kezdőeltolást a vasalat- vagy rendszergyártó adja (ellenőrizendő); ebben
+a példában
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mn>0</mn></msub><mo>=</mo><mn>37</mn></mrow><annotation encoding="application/x-tex">y_0 = 37</annotation></semantics></math>
+mm. A polctartó csapok furatait fúrjuk. Adjuk meg az első három furat
+Y-koordinátáját, ha az X fix 37 mm.</p>
+<p>A nullpont a lap alsó széle. A furatok függőleges középpontjai:</p>
+<ul>
+<li>Első furat:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mn>1</mn></msub><mo>=</mo><mn>37</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mm</mtext></mrow><annotation encoding="application/x-tex">Y_1 = 37\,\text{mm}</annotation></semantics></math></li>
+<li>Második:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mn>2</mn></msub><mo>=</mo><mn>37</mn><mo>+</mo><mn>32</mn><mo>=</mo><mn>69</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mm</mtext></mrow><annotation encoding="application/x-tex">Y_2 = 37 + 32 = 69\,\text{mm}</annotation></semantics></math></li>
+<li>Harmadik:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mn>3</mn></msub><mo>=</mo><mn>37</mn><mo>+</mo><mn>2</mn><mo>⋅</mo><mn>32</mn><mo>=</mo><mn>101</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mm</mtext></mrow><annotation encoding="application/x-tex">Y_3 = 37 + 2 \cdot 32 = 101\,\text{mm}</annotation></semantics></math></li>
+</ul>
+<p>Általánosan:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mi>k</mi></msub><mo>=</mo><mn>37</mn><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">Y_k = 37 + (k-1) \cdot 32</annotation></semantics></math>
+mm, ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+a furat sorszáma.</p>
+<p>Ellenőrzés: 37, 69, 101 mm mind 32 mm távolságra vannak, a legalsó 37
+mm-re az élétől. A program ezeket a koordinátákat használja.</p>
+<h3 data-number="25.2.8"
+id="cnc-technológiai-lap-lapalkatrész-fúrása-marása"><span
+class="header-section-number">25.2.8</span> CNC-technológiai lap:
+lapalkatrész fúrása, marása</h3>
+<p><strong>Megmunkálandó:</strong> 720 × 500 × 18 mm-es MDF lap,
+polctartó furatsor 32-es rendszerben, valamint a szekrényoldal
+szerelőtalp-furatai (vasalatgyártói rajz szerint); a csészés pánt fészke
+az ajtólapba kerül, 35 mm-es, 12 mm mély (tájékoztató,
+ellenőrizendő).</p>
+<p><strong>Anyag:</strong> MDF lap, a furatokhoz 5 mm-es csigafúró, a
+pántfészekhez Ø 35 mm-es pántfúró (Forstner-fúró).</p>
+<p><strong>Gépek és eszközök:</strong> CNC-megmunkálóközpont vákuumos
+asztallal, elszívóberendezés, védőburkolat, vészleállító, derékszögelő,
+tolómérő.</p>
+<p><strong>Gépbiztonság.</strong> A művelet betanított, felügyelt
+tanulónak szól; védőberendezés nélkül, egyedül, fáradtan ne végezd.
+Viselj védőszemüveget, hallásvédőt és ha szükséges, FFP porálarcot. Ne
+nyúlj a munkatérbe, amíg a főorsó forog, és soha ne kapcsold ki a
+védőburkolat-reteszt.</p>
+<p><strong>Indítás előtti ellenőrzés:</strong></p>
+<ol type="1">
+<li>A szerszám befogása szorosan, a befogópatron tiszta és
+sértetlen.</li>
+<li>A szerszám hossza és átmérője megegyezik a szerszámtáblázattal.</li>
+<li>A vákuumzónák a munkadarab méretéhez igazítva működnek; a lap
+stabilan leszívható.</li>
+<li>A védőburkolat zárt, a vészleállító működik.</li>
+<li>A program szimulációja lefutott, nincs ütközésjelzés.</li>
+<li>Az elszívó bekapcsolva.</li>
+</ol>
+<p><strong>Lépések:</strong></p>
+<ol type="1">
+<li>Helyezd a lapot a vákuumasztalra, igazd a nullponthoz. – Ellenőrzés:
+a lap sarka egybeesik a nullpontütközővel, derékszög a
+derékszögelővel.</li>
+<li>Kapcsold be a vákuumot, ellenőrizd a szívást. – A lapot oldalirányú
+nyomással próbáld meg elmozdítani; nem szabad elcsúsznia.</li>
+<li>Vedd fel a nullpontot és ellenőrizd a szerszámhosszt a
+szerszámkorrekcióval. – A gépkönyv szerinti nullpontfelvételi eljárást
+használd, ne becsüld.</li>
+<li>Töltsd be a programot a vezérlőbe. – A képernyőn megjelenő
+alkatrésznév, méret egyezzen a munkadarabbal.</li>
+<li>Futtasd a szimulációt. – A pálya a munkadarabon belül marad, nincs
+túlfutás.</li>
+<li>Indítsd a programot, először csökkentett előtolással,
+próbafuttatással. – Figyeld az első furat pozícióját; ha eltér, állj
+le.</li>
+<li>A próbafuttatás után ellenőrizd a furatok méretét és pozícióját. –
+Tolómérővel ellenőrizd az első furat átmérőjét és a perem
+távolságát.</li>
+<li>Futtasd le a teljes programot a normál paraméterekkel. – A gépet ne
+hagyd felügyelet nélkül; a vészleállító legyen kéznél.</li>
+<li>Várd meg a program végét (M5, M30) és a főorsó teljes megállását,
+áramtalanítás után tisztítsd meg a munkateret. – A port és forgácsot
+elszívóval és kefével távolítsd el, soha ne kézzel a forgó szerszám
+közeléből.</li>
+</ol>
+<p><strong>Dokumentálás:</strong> munka- vagy gépnaplóban rögzítsd a
+program nevét, a munkadarab darabszámát, a beállított nullpontot, a
+szerszámokat, és az észlelt rendellenességeket.</p>
+<h3 data-number="25.2.9" id="minőségellenőrzés"><span
+class="header-section-number">25.2.9</span> Minőségellenőrzés</h3>
+<ul>
+<li><strong>Furatpozíció:</strong> tolómérővel mérjük a furat
+középpontjának távolságát a lap éleitől; a tűrés általában ±0,3–0,5 mm
+(tájékoztató, a rajz szerint).</li>
+<li><strong>Furatátmérő:</strong> 5 mm-es polctartó furatnál 5,0–5,1 mm
+(tájékoztató, vasalatfüggő).</li>
+<li><strong>Furatmélység:</strong> mélységmérővel ellenőrizhető; a rajz
+szerint kell teljesíteni.</li>
+<li><strong>Zsanérfészek:</strong> átmérő, mélység és pozíció a zsanér
+műszaki adatlapjához kötött.</li>
+<li><strong>Felület:</strong> a kontúrok széle roncsolásmentes, nem
+szakadt ki, nincs égésnyom.</li>
+<li><strong>Eltérésnél:</strong> ellenőrizzük a nullpontot, a
+szerszámkorrekciót, a munkadarab befogását és a programot. A hibás
+darabot ne javítsuk utólag a gépen, amíg az okot meg nem találtuk.</li>
+</ul>
+<h3 data-number="25.2.10" id="tipikus-hibák-és-okaik"><span
+class="header-section-number">25.2.10</span> Tipikus hibák és okaik</h3>
+<ol type="1">
+<li><strong>A furat a várt pozíciótól elcsúszik.</strong> Ok: rossz
+munkadarab-nullpont, elmozdult lap, hibás szerszámkorrekció. Javítás:
+nullpont újra felvétele, vákuum ellenőrzése, szerszámtáblázat
+frissítése.</li>
+<li><strong>A marószerszám túl mélyre süllyed, átmegy a lapon.</strong>
+Ok: rossz Z-nullpont, hibás szerszámhossz, programozott fogásmélység
+hiba. Veszélyes gépkár vagy anyaghiba. Javítás: Z-nullpont ellenőrzése,
+szerszámhosszmérés, szimuláció.</li>
+<li><strong>A munkadarab elmozdul megmunkálás közben.</strong> Ok: kevés
+vákuum, nincs elegendő zóna, sérült tömítőgumi, túl nagy előtolás.
+Javítás: zónák bekapcsolása, tömítés ellenőrzése, kisebb fogásmélység
+vagy előtolás.</li>
+<li><strong>Égés vagy szakadt él a marásnál.</strong> Ok: életlen
+szerszám, túl magas fordulatszám/alacsony előtolás, rossz
+forgácselszívás. Javítás: szerszámcsere, előtolás növelése, elszívás
+javítása.</li>
+<li><strong>A gép nem találja a szerszámot, vagy rossz szerszámot
+cserél.</strong> Ok: a szerszámtáblázat és a tárban lévő szerszám nem
+egyezik. Javítás: szerszámtár ellenőrzése, táblázat frissítése.</li>
+</ol>
+<h3 data-number="25.2.11" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">25.2.11</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy műhelyben korpuszbútor-oldalakat fúrtak CNC-n. A megrendelő
+reklamált, mert a fiókvezető furatai nem illeszkedtek a vasalathoz. A
+vizsgálat kiderítette, hogy a kezelő a programban a raszter kezdőpontját
+egy osztással feljebb adta meg, ezért minden furat 32 mm-rel eltolódott
+(a rossz élhez vett nullpont ennél nagyobb, a lapméret és az
+éltávolságok különbségével tükrözött/eltolt furatképet adna). A hibát a
+próbafuttatásnál nem ellenőrizték. A tanulság: a nullpont és az első
+furat ellenőrzése kötelező, mielőtt a teljes sorozat legyártásra kerül.
+A selejtet újra kellett gyártani, ami anyag- és időveszteséggel
+járt.</p>
+<h3 data-number="25.2.12" id="önellenőrzés"><span
+class="header-section-number">25.2.12</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Mi a különbség az NC és a CNC között?</li>
+<li>Melyik tengely a főorsó tengelye, és merre pozitív?</li>
+<li>Mi a funkciója a szerszámhossz-korrekciónak?</li>
+<li>Miért kell a CNC-programot szimulálni a valós futtatás előtt?</li>
+<li>Mit jelent a vákuumasztal célja, és mikor lehet szükség mechanikus
+szorításra is?</li>
+<li>Miért ellenőrizzük a 32-es rendszerű furatoknál az első furat
+pozícióját?</li>
+</ol>
+<h3 data-number="25.2.13" id="feladatok"><span
+class="header-section-number">25.2.13</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Határozd meg egy 16 mm átmérőjű
+CNC-maróval, 16 000 min⁻¹ fordulatszámon elérhető forgácsolási
+sebességet m/s-ban!</p>
+<p><strong>2. feladat (A)</strong> Egy kétélű marónál fogankénti
+előtolás 0,25 mm, fordulatszám 15 000 min⁻¹. Mennyi az előtoló sebesség
+m/min-ben?</p>
+<p><strong>3. feladat (B)</strong> Egy 800 mm magas szekrényoldalon a
+furatsor a lap alsó szélétől 37 mm-re kezdődik, 32 mm-es raszterben. Add
+meg az első öt furat Y-koordinátáját! Mekkora a legfelső furat távolsága
+az alsó éltől?</p>
+<p><strong>4. feladat (B)</strong> Magyarázd el, mi a különbség a gépi
+nullpont és a munkadarab-nullpont között, és miért kell mindkettőt
+ismerni a CNC-gépen!</p>
+<p><strong>5. feladat (C)</strong> Egy CNC-programban az egyik furat
+után a gép váratlanul gyorsjáratban a lap széléhez megy. Milyen
+hibalehetőségeket keresnél a programban, a szerszámbeállításban vagy a
+munkadarab befogásában?</p>
+<p><strong>6. feladat (D)</strong> Készíts rövid ellenőrzőlistát a
+CNC-gép indításához, amelyet a műhelyben ki lehet függeszteni!
+Tartalmazzon legalább hat pontot.</p>
+<h3 data-number="25.2.14" id="megoldások"><span
+class="header-section-number">25.2.14</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok:</strong></p>
+<ol type="1">
+<li>Az NC hagyományos, programot futtató vezérlés, gyakran
+lyukszalagról; a CNC számítógépes vezérlővel rendelkezik, amely
+programot tárol, szimulál és szerkeszt.</li>
+<li>A Z; felfelé, a munkadarabtól el.</li>
+<li>A szerszámhossz-korrekció azt adja meg a vezérlőnek, hogy a befogott
+szerszám a főorsó homlokától mérve milyen hosszú, így a Z-pozíciók a
+szerszámcsúcsra pontosan érvényesek.</li>
+<li>A szimuláció a pályát vizuálisan és ütközés szempontjából ellenőrzi,
+még mielőtt a gép mozogna, így elkerülhető a szerszámtörés és a hibás
+munkadarab.</li>
+<li>A vákuumasztal a sík lapokat szívja le a megmunkáláshoz; ha a lap
+kicsi, görbe vagy a vákuum nem elég, mechanikus szorítást is
+alkalmazunk, hogy a munkadarab ne mozduljon el.</li>
+<li>Az első furat pozíciója igazolja, hogy a nullpont, a raszter és a
+szerszámkorrekció együttesen helyes; ha az első jó, a sor többi furata
+is jó lesz.</li>
+</ol>
+<p><strong>Feladatok megoldása:</strong></p>
+<p><strong>1. feladat.</strong> Képlet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mfrac><mrow><mi>D</mi><mo>⋅</mo><mi>π</mi><mo>⋅</mo><mi>n</mi></mrow><mrow><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex">v = \frac{D \cdot \pi \cdot n}{60\,000}</annotation></semantics></math>.
+Behelyettesítve:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mfrac><mrow><mn>16</mn><mo>⋅</mo><mi>π</mi><mo>⋅</mo><mn>16</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><mrow><mn>60</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow></mfrac><mo>≈</mo><mn>13</mn><mo>,</mo><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext></mrow><annotation encoding="application/x-tex">v = \frac{16 \cdot \pi \cdot 16\,000}{60\,000} \approx 13{,}40\,\text{m/s}</annotation></semantics></math>.
+Ellenőrzés: 16 mm maró 16 000 min⁻¹ fordulattal 13–14 m/s, ami faipari
+maráshoz jellemző (tájékoztató).</p>
+<p><strong>2. feladat.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mi>e</mi></msub><mo>=</mo><msub><mi>e</mi><mi>z</mi></msub><mo>⋅</mo><mi>z</mi><mo>⋅</mo><mi>n</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>25</mn><mo>⋅</mo><mn>2</mn><mo>⋅</mo><mn>15</mn><mspace width="0.167em"></mspace><mn>000</mn><mo>=</mo><mn>7</mn><mspace width="0.167em"></mspace><mn>500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mm/min</mtext><mo>=</mo><mn>7</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/min</mtext></mrow><annotation encoding="application/x-tex">v_e = e_z \cdot z \cdot n = 0{,}25 \cdot 2 \cdot 15\,000 = 7\,500\,\text{mm/min} = 7{,}5\,\text{m/min}</annotation></semantics></math>.</p>
+<p><strong>3. feladat.</strong> Az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>-koordináták:
+37 mm; 69 mm; 101 mm; 133 mm; 165 mm. A legfelső, ötödik furat távolsága
+az alsó éltől 165 mm. (Általában:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mi>k</mi></msub><mo>=</mo><mn>37</mn><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">Y_k = 37 + (k-1)\cdot 32</annotation></semantics></math>
+mm.)</p>
+<p><strong>4. feladat.</strong> A gépi nullpont a gép referenciapontja,
+amelyhez a tengelyek a bekapcsolás utáni referenciamenet során
+viszonyulnak. A munkadarab-nullpont a munkadarabon van, a program ennek
+a koordinátáit használja. Ismernünk kell mindkettőt, mert a vezérlő a
+belső gépi koordinátákból számítja ki a munkadarab-nullponthoz
+viszonyított pozíciókat; ha bármelyik hibás, a megmunkálás
+eltolódik.</p>
+<p><strong>5. feladat.</strong> Lehetséges okok: (a) a programban rossz
+koordináta szerepel (pl. elmaradt G90, ezért G91-es relatív mozgásként
+értelmezi); (b) a munkadarab-nullpont nem a tényleges sarkon van; (c) a
+munkadarab elmozdult, ezért a sarkhoz képest a pálya a levegőbe vagy a
+lap szélére fut; (d) a szerszámkorrekció hibás, és a gép a pótlólagos
+mozgással kompenzál. A helyes sorrend: program szimulálása, nullpont
+ellenőrzése, befogás ellenőrzése, próbafuttatás csökkentett
+sebességgel.</p>
+<p><strong>6. feladat.</strong> Ellenőrzőlista (példa):</p>
+<ol type="1">
+<li>Védőburkolat zárt, reteszelt.</li>
+<li>Vészleállító működik, elérhető.</li>
+<li>Szerszám befogva, éles, a szerszámtáblázat egyezik.</li>
+<li>Vákuum/szorítás stabil, munkadarab nem mozdul.</li>
+<li>Program betöltve, szimulálva, nincs ütközés.</li>
+<li>Nullpont és szerszámhossz beállítva, elszívó működik.</li>
+</ol>
+<h3 data-number="25.2.15" id="rövid-összefoglaló"><span
+class="header-section-number">25.2.15</span> Rövid összefoglaló</h3>
+<p>A CNC-megmunkálóközpont a faipari lapszerkezet-gyártás kulcsgépe. A
+gép három tengellyel (X, Y, Z) dolgozik, és a munkadarabon kijelölt
+<strong>munkadarab-nullponttól</strong> mért mm-koordinátákra mozog. A
+<strong>gépi nullpont</strong> a gép referenciapontja, a
+<strong>szerszámkorrekció</strong> a befogott szerszám hosszát és
+átmérőjét juttatja érvényre. A CNC-program mondatokból áll, vezérlőfüggő
+<strong>G- és M-kódokkal</strong>, amelyek a mozgást, előtolást,
+fordulatszámot és szerszámcserét írják le. A programot CAM-rendszer
+készíti, posztprocesszor alakítja a célgép nyelvére, majd a gép
+szimulációval és próbafuttatással ellenőrzi. A biztonsági szabályok
+központi eleme a védőtér, a vészleállító, a vákuumos vagy mechanikus
+befogás, valamint a szerszám megállása előtti tiltott beavatkozás.
+<strong>Továbbvitt eredmény:</strong> a CNC-program elve, a nullpont, a
+szerszámkorrekció és a furatkiosztás arra való, hogy a <a
+href="as102.html">Lapszerkezetű termékek teljes gyártási folyamata</a>
+alfejezetben a korpuszbútorok és lapszerkezetű alkatrészek megmunkálását
+lépésről lépésre megtervezzük.</p>
+<h3 data-number="25.2.16" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">25.2.16</span> Források és ellenőrzési
+hiányok</h3>
+<p>Ez az alfejezet az általános faipari CNC-technológiai alapelvekre, a
+hazai felnőttképzési gyakorlatra és a gépkönyvek felépítésére
+támaszkodik. <strong>Ellenőrizendő:</strong> a faipari CNC-gépek
+biztonságára vonatkozó MSZ EN ISO 19085 sorozat hatályos, CNC-re
+alkalmazandó része; a munkavédelemre és egyéni védőeszközökre vonatkozó
+jogszabályok; a használt fordulatszám-, előtolás-, fogankénti előtolás
+és szerszám adatok mindig a szerszámgyártó és a gépkönyv szerint; a G-
+és M-kódok konkrét jelentése a célgép vezérlőkönyvéből; a 32-es
+rendszerű furatkiosztás és a polctartó vasalatok tényleges méretei. A
+példaként megadott programrészlet és a számítási értékek
+<strong>tanulási példák</strong>, nem kivitelezési előírások.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="as092.html">← 25.1 Faipari csiszológépek: szalag-, henger-, kontakt-, széles szalagú, tárcsás és élcsiszolók</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="as094.html">26.1 A ragasztás alapfogalmai és a ragasztóanyagok →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

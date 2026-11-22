@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faalapú lapok rétegfelépítése</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="tipus">Laptípus</label><select id="tipus" aria-label="Laptípus"><option value="ply" selected>rétegelt lemez</option><option value="bl">lécbetétes bútorlap</option><option value="gl">táblásított lap</option></select></div>
+<div class="row"><label for="n">rétegszám (rétegelt)</label><input id="n" type="range" min="3" max="9" step="1" value="7" aria-label="rétegszám (rétegelt)"><output id="n_o" for="n"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 680 280" role="img" aria-label="18 mm-es rétegelt lemez, lécbetétes bútorlap és táblásított lap rétegei; rétegszám-csúszka a rétegelt lemezhez"></svg>
+<p class="small">A rétegvastagságok tájékoztatók (a rétegelt lemezen a borító 1,5 mm, a többi egyenlő); a valós felépítést a gyártói adatlap adja (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n":"réteg"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const n=v.n, sym=(n%2===1), d=v.tipus;
+let L=[];
+if(d==="ply"){const tb=1.5, ti=(18-2*tb)/(n-2);for(let i=0;i<n;i++)L.push([i==0||i==n-1?"borító furnér":"belső furnér",i==0||i==n-1?tb:ti,i%2==0?"hossz":"kereszt"]);}
+else if(d==="bl"){L=[["borító",2,"kereszt"],["lécközép",14,"hossz (lécek)"],["borító",2,"kereszt"]];}
+else {L=[["lamellák (tömörfa)",18,"hossz"]];}
+const tot=L.reduce((a,b)=>a+b[1],0);
+let txt=L.map((l,i)=>(i+1)+". "+l[0]+": "+fmt(l[1],2)+" mm, rost: "+l[2]).join("<br>");
+if(d==="ply") txt="<b>"+n+" réteg</b> – "+(sym?"<span class='ok'>páratlan: a középső rétegre szimmetrikus, síkban marad</span>":"<span class='bad'>páros: nem szimmetrikus, vetemedésre hajlamos</span>")+"<br>"+txt;
+status(txt+"<br>Összesen: <b>"+fmt(tot,1)+" mm</b>");
+const k=12, x0=30, y0=20;let y=y0;
+L.forEach((l,i)=>{const h=l[1]*k;el("rect",{x:x0,y:y,width:420,height:h,fill:i%2? css("--grid"):"none",stroke:css("--line"),"stroke-width":i?2:1});
+ if(h>13)el("text",{x:x0+430,y:y+h/2+5,"font-size":13},l[0]+" – "+l[2]);y+=h;});
+el("text",{x:x0,y:y+22,"font-size":13},"18 mm-es lap, nagyítva; szürke = keresztirányú rost");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

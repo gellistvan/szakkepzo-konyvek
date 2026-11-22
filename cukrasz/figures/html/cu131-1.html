@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Túlfújás (overrun) kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="m">Keverék tömege</label><input id="m" type="range" min="1" max="15" step="0.5" value="12" aria-label="Keverék tömege"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="rho">Keverék sűrűsége</label><input id="rho" type="range" min="1.0" max="1.15" step="0.01" value="1.1" aria-label="Keverék sűrűsége"><output id="rho_o" for="rho"></output></div>
+<div class="row"><label for="ov">Túlfújás</label><input id="ov" type="range" min="0" max="100" step="1" value="28" aria-label="Túlfújás"><output id="ov_o" for="ov"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 330" role="img" aria-label="Két mérőedény: bal oldalon a folyékony keverék, jobb oldalon a nagyobb térfogatú fagylalt, a többletet a bevert levegő adja."></svg>
+<p class="small">A fejezet képlete: OV = (V(fagylalt) − V(keverék)) / V(keverék) · 100; 1. példa: 12,0 kg, 1,10 kg/l, 14,0 l → 28,3 %. A tartományok (kb. 20 %, ill. 60–80 %) tájékoztatók, ellenőrizendő: géptípus és termékkategória szerint.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m":"kg", "rho":"kg/l", "ov":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const Vk=v.m/v.rho, Vf=Vk*(1+v.ov/100), rf=v.m/Vf, air=v.ov/(100+v.ov)*100;
+const top=Math.max(20,Math.ceil(Vf/5)*5), Y=x=>290-x/top*260, Hh=x=>x/top*260;
+function cyl(x,lab){el("path",{d:"M"+x+","+(Y(top)-6)+" V290 H"+(x+110)+" V"+(Y(top)-6),fill:"none",stroke:css("--line"),"stroke-width":2.5});
+ for(let t=0;t<=top;t+=(top>20?5:2)){el("line",{x1:x,y1:Y(t),x2:x+12,y2:Y(t),stroke:css("--line")});el("text",{x:x+16,y:Y(t)+4,"font-size":10},t+" l");}
+ el("text",{x:x+55,y:312,"font-size":12,"text-anchor":"middle","font-weight":"bold"},lab);}
+el("rect",{x:60,y:Y(Vk),width:110,height:Hh(Vk),fill:css("--grid")});
+el("rect",{x:260,y:Y(Vk),width:110,height:Hh(Vk),fill:css("--grid")});
+el("rect",{x:260,y:Y(Vf),width:110,height:Hh(Vf-Vk),fill:css("--hl"),"fill-opacity":0.25});
+for(let i=0;i<80*Math.min(1,(Vf-Vk)/Math.max(Vf,0.01)*3);i++){el("circle",{cx:265+100*((Math.sin(i*12.9898)*43758.5453)%1+1)%1,cy:Y(Vf)+2+(Hh(Vf-Vk)-4)*((Math.sin(i*78.233)*12543.17)%1+1)%1,r:2,fill:css("--line")});}
+cyl(60,"keverék");cyl(260,"fagylalt");
+el("line",{x1:170,y1:Y(Vk),x2:260,y2:Y(Vk),stroke:css("--line"),"stroke-dasharray":"4 3"});
+el("text",{x:400,y:Y(Vf)+4,"font-size":12},"V(fagylalt) = "+fmt(Vf,2)+" l");
+el("text",{x:400,y:(Y(Vf)+Y(Vk))/2+4,"font-size":12},"levegő: "+fmt(Vf-Vk,2)+" l");
+el("text",{x:400,y:Y(Vk)+16,"font-size":12},"V(keverék) = "+fmt(Vk,2)+" l");
+status("V(keverék) = "+fmt(v.m,1)+" / "+fmt(v.rho,2)+" = <b>"+fmt(Vk,2)+" l</b>; "+fmt(v.ov,0)+" %-os túlfújásnál V(fagylalt) = <b>"+fmt(Vf,2)+" l</b>, sűrűsége "+fmt(rf,3)+" kg/l. A fagylalt térfogatának "+fmt(air,0)+" %-a levegő."+(v.ov<20?" <span class=bad>20 % alatt: tömör, nehéz fagylalt.</span>":v.ov>80?" <span class=bad>A jellemző felső határ (kb. 60–80 %) fölött: ízszegény, gyorsan olvad.</span>":""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

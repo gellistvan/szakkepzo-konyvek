@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Körpályás forgácsolás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="vf">Előtolás vf</label><input id="vf" type="range" min="2" max="30" step="1" value="6" aria-label="Előtolás vf"><output id="vf_o" for="vf"></output></div>
+<div class="row"><label for="n">Fordulatszám n</label><input id="n" type="range" min="3000" max="9000" step="100" value="6000" aria-label="Fordulatszám n"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="z">Késszám z</label><input id="z" type="range" min="1" max="6" step="1" value="3" aria-label="Késszám z"><output id="z_o" for="z"></output></div>
+<div class="row"><label for="egy">egyirányú forgatás</label><input id="egy" type="checkbox" aria-label="egyirányú forgatás"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Forgó késtengely a haladó munkadarab fölött, késnyom-ívekkel"></svg>
+<p class="small">Az animáció lassított, a késnyomok és a fogásmélység erősen nagyítva. Az fz és h a fejezet képleteivel számolt (as057), a hullámmagasság a 40 mm-es késélsugárra vonatkozik.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"vf":"m/min", "n":"1/min", "z":"db"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(!window._run){window._run=1;window._t0=performance.now();(function L(){draw();requestAnimationFrame(L);})();}
+const w=values(), fzm=w.vf*1000/(w.n*w.z), ccw=w.egy?-1:1;  // képernyő-koordinátában a növekvő szög az óramutató járása
+const T=(performance.now()-window._t0)/1000, pass=0.8;  // egy fogáthaladás 0,8 s (lassított)
+const sc=60, fzp=Math.min(60,Math.max(3,fzm*sc)), cx=230,cy=120,R=80,dep=26;
+const phi=ccw*2*Math.PI*T/(pass*w.z), shift=(T/pass)*fzp;
+el("rect",{x:0,y:0,width:560,height:300,fill:"#fff"});
+const yb=cy+R, top=yb-dep, xa=cx-Math.sqrt(R*R-(R-dep)*(R-dep));
+// munkadarab: balra a nyers vastagság, jobbra a megmunkált felület ívei
+el("rect",{x:10,y:yb,width:540,height:70,fill:"#f2f2f2",stroke:"#000"});
+el("rect",{x:10,y:top,width:xa-10,height:dep,fill:"#f2f2f2",stroke:"#000"});
+let d="M"+xa+" "+top;
+for(let x=xa;x<=550;x+=1){const k=Math.round((x-cx-(shift%fzp))/fzp), c=cx+(shift%fzp)+k*fzp; let y=cy+Math.sqrt(Math.max(R*R-(x-c)*(x-c),0)); if(x<cx)y=cy+Math.sqrt(Math.max(R*R-(x-cx)*(x-cx),0)); d+=" L"+x+" "+Math.min(y,top+dep);}
+d+=" L550 "+(yb+70)+" L"+xa+" "+(yb+70)+" Z";
+el("path",{d:d,fill:"#f2f2f2",stroke:"#000"});
+for(let i=0;i<5;i++){const xx=10+((i*120+shift*2)%540);el("line",{x1:xx,x2:xx+40,y1:yb+40,y2:yb+40,stroke:"#999"});}
+el("circle",{cx:cx,cy:cy,r:R,fill:"none",stroke:"#000","stroke-dasharray":"5 4"});
+el("circle",{cx:cx,cy:cy,r:28,fill:"#ddd",stroke:"#000","stroke-width":2});
+for(let i=0;i<w.z;i++){const a=phi+i*2*Math.PI/w.z, x1=cx+R*Math.cos(a), y1=cy+R*Math.sin(a);
+ el("line",{x1:cx+28*Math.cos(a),y1:cy+28*Math.sin(a),x2:x1,y2:y1,stroke:"#000","stroke-width":6});}
+const ar=ccw>0?"↻":"↺";
+el("text",{x:cx,y:cy-R-10,"text-anchor":"middle","font-size":14,fill:"#000"},ar+" késtengely ("+(w.egy?"egyirányú":"ellenirányú")+")");
+el("line",{x1:400,y1:yb+60,x2:500,y2:yb+60,stroke:"#000","stroke-width":3});el("polygon",{points:"500,"+(yb+54)+" 514,"+(yb+60)+" 500,"+(yb+66),fill:"#000"});
+el("text",{x:450,y:yb+52,"text-anchor":"middle","font-size":12,fill:"#000"},"előtolás vf");
+el("text",{x:550,y:20,"text-anchor":"end","font-size":11,fill:"#555"},"lassított, torzított");
+let m="fz = vf·1000/(n·z) = "+fmt(w.vf,0)+"·1000/("+w.n+"·"+w.z+") = <b>"+fmt(fzm,3)+" mm</b>; hullámmagasság r = 40 mm-nél h ≈ fz²/(8r) = "+fmt(fzm*fzm/320*1000,2)+" µm.<br>";
+m+=w.egy?"<span class='bad'>Egyirányú forgatás: a szerszám a munkadarabot behúzza, elrántja – kézi előtolásnál TILOS.</span>":"<span class='ok'>Ellenirányú forgatás: a szerszám a munkadarabot a kezelő felé nyomja – kézi előtolásnál csak így dolgozunk.</span>";
+status(m);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

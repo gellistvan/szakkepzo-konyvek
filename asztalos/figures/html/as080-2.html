@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elszívás: Q = A · v kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="alak">Keresztmetszet</label><select id="alak" aria-label="Keresztmetszet"><option value="kerek" selected>kerek cső</option><option value="teglalap">téglalap</option></select></div>
+<div class="row"><label for="D">Belső átmérő D</label><input id="D" type="range" min="80" max="250" step="5" value="120" aria-label="Belső átmérő D"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="a">Téglalap: szélesség</label><input id="a" type="range" min="100" max="400" step="10" value="200" aria-label="Téglalap: szélesség"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="b">Téglalap: magasság</label><input id="b" type="range" min="60" max="300" step="10" value="120" aria-label="Téglalap: magasság"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="mod">Mi adott?</label><select id="mod" aria-label="Mi adott?"><option value="v" selected>a légsebesség → Q</option><option value="Q">a légmennyiség (gyártói adat) → v</option></select></div>
+<div class="row"><label for="vl">Légsebesség v</label><input id="vl" type="range" min="10" max="35" step="0.5" value="22" aria-label="Légsebesség v"><output id="vl_o" for="vl"></output></div>
+<div class="row"><label for="Qh">Előírt légmennyiség Q</label><input id="Qh" type="range" min="200" max="4000" step="10" value="1400" aria-label="Előírt légmennyiség Q"><output id="Qh_o" for="Qh"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 660 230" role="img" aria-label="Kalkulátor: a cső keresztmetszetéből és a légsebességből a légmennyiség, vagy a légmennyiségből a légsebesség."></svg>
+<p class="small">Ellenőrző példák: 120 mm, 22 m/s → 896 m³/h; 140 mm, 1800 m³/h → 32,5 m/s; 100 mm / 160 mm, 1400 m³/h → 49,5 / 19,3 m/s; 200 × 120 mm, 18 m/s → 1555 m³/h. A sávok tájékoztatók (ellenőrizendő); a valós légsebességet a ventilátor jelleggörbéje, a szűrő állapota és a csőhálózat ellenállása határozza meg.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"D":"mm", "a":"mm", "b":"mm", "vl":"m/s", "Qh":"m³/h"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const round=v.alak==="kerek";
+const A= round ? Math.pow(v.D/1000,2)*Math.PI/4 : (v.a/1000)*(v.b/1000);
+let vel, Q;
+if(v.mod==="v"){ vel=v.vl; Q=A*vel; } else { Q=v.Qh/3600; vel=Q/A; }
+const Qh=Q*3600;
+// keresztmetszet
+const cx=100, cy=125, sc=0.55;
+if(round){ el("circle",{cx:cx,cy:cy,r:v.D/2*sc,fill:"none",stroke:css("--line"),"stroke-width":2});
+  el("text",{x:cx,y:cy+v.D/2*sc+18,"text-anchor":"middle","font-size":13},"D = "+v.D+" mm"); }
+else { el("rect",{x:cx-v.a/2*sc,y:cy-v.b/2*sc,width:v.a*sc,height:v.b*sc,fill:"none",stroke:css("--line"),"stroke-width":2});
+  el("text",{x:cx,y:cy+v.b/2*sc+18,"text-anchor":"middle","font-size":13},v.a+" × "+v.b+" mm"); }
+el("text",{x:cx,y:28,"text-anchor":"middle","font-size":13,"font-weight":"bold"},"keresztmetszet (léptékes)");
+// sebességskála 0–40 m/s, tájékoztató sávok
+const X0=220,W=300,px=u=>X0+Math.min(u,40)/40*W;
+el("text",{x:X0,y:28,"font-size":13,"font-weight":"bold"},"légsebesség v (m/s)");
+const bands=[[15,20,"csiszolópor"],[18,25,"fűrészpor, forgács"],[25,30,"nedves, nehéz por"]];
+bands.forEach((b,i)=>{const y=52+i*34;el("rect",{x:px(b[0]),y:y,width:px(b[1])-px(b[0]),height:18,fill:css("--grid"),stroke:css("--line")});
+  el("text",{x:px(b[1])+6,y:y+14,"font-size":11.5},b[0]+"–"+b[1]+": "+b[2]);});
+el("line",{x1:X0,x2:X0+W,y1:170,y2:170,stroke:css("--line")});
+for(let u=0;u<=40;u+=5){el("line",{x1:px(u),x2:px(u),y1:166,y2:174,stroke:css("--line")});el("text",{x:px(u),y:190,"text-anchor":"middle","font-size":11},String(u));}
+el("line",{x1:px(vel),x2:px(vel),y1:44,y2:176,stroke:css("--hl2"),"stroke-width":3});
+el("text",{x:px(vel),y:212,"text-anchor":"middle","font-size":13,"font-weight":"bold"},(vel>40?"> 40":fmt(vel,1))+" m/s");
+let w="";
+if(vel<15) w="<span class='bad'>15 m/s alatt: a por lerakódik a csőben, eltömődés és tűzveszély.</span>";
+else if(vel>30) w="<span class='bad'>30 m/s felett: nagy zaj, nyomásveszteség és koptatás – nagyobb cső kell.</span>";
+else w="<span class='ok'>A tájékoztató 15–30 m/s tartományon belül; a por fajtája szerinti sávot nézd meg.</span>";
+status("A = "+fmt(A,5)+" m² &nbsp; Q = "+fmt(Q,4)+" m³/s = <b>"+Math.round(Qh)+" m³/h</b> &nbsp; v = <b>"+fmt(vel,1)+" m/s</b><br>"+w);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tésztatömeg formára: m ≈ A · h · ρ</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="t">Forma</label><select id="t" aria-label="Forma"><option value="tegla" selected>téglalap (tepsi)</option><option value="kor">kör (tortaforma)</option></select></div>
+<div class="row"><label for="d">Átmérő d</label><input id="d" type="range" min="14" max="32" step="1" value="24" aria-label="Átmérő d"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="a">a</label><input id="a" type="range" min="10" max="60" step="1" value="30" aria-label="a"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="b">b</label><input id="b" type="range" min="10" max="60" step="1" value="40" aria-label="b"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="h">Vastagság h</label><input id="h" type="range" min="0.2" max="3" step="0.1" value="0.5" aria-label="Vastagság h"><output id="h_o" for="h"></output></div>
+<div class="row"><label for="r">Sűrűség ρ</label><input id="r" type="range" min="1.0" max="1.1" step="0.01" value="1.05" aria-label="Sűrűség ρ"><output id="r_o" for="r"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 660 300" role="img" aria-label="A forma felülnézete a területtel és a tésztaréteg oldalnézete a vastagsággal, mellette a számított tésztatömeg."></svg>
+<p class="small">A fejezet példája: 30 × 40 cm-es tepsi, h = 0,5 cm, ρ = 1,05 g/cm³ → 630 g. Kör alakú formánál A = π·d²/4 (a téglalap-méretek ekkor nem számítanak). Sűrűség: tanulási becslés, méréssel igazolandó.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"d":"cm", "a":"cm", "b":"cm", "h":"cm", "r":"g/cm³"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const A = v.t==="kor" ? Math.PI*v.d*v.d/4 : v.a*v.b;
+const V = A*v.h, m = V*v.r;
+// rajz: felülnézet + oldalnézet
+const sc = Math.min(5, 240/(v.t==="kor"?v.d:Math.max(v.a,v.b)));
+if(v.t==="kor") el("circle",{cx:140,cy:140,r:v.d/2*sc,fill:css("--grid"),stroke:css("--line"),"stroke-width":2});
+else el("rect",{x:140-v.a/2*sc,y:140-v.b/2*sc,width:v.a*sc,height:v.b*sc,fill:css("--grid"),stroke:css("--line"),"stroke-width":2});
+el("text",{x:140,y:285,"text-anchor":"middle","font-size":13},"felülnézet: A = "+fmt(A,0)+" cm²");
+const hw=Math.max(4,v.h*40);
+el("rect",{x:310,y:200-hw,width:330,height:hw,fill:css("--grid"),stroke:css("--line"),"stroke-width":1.5});
+el("line",{x1:300,y1:200,x2:650,y2:200,stroke:css("--line"),"stroke-width":3});
+el("text",{x:475,y:225,"text-anchor":"middle","font-size":13},"oldalnézet: h = "+fmt(v.h,1)+" cm");
+el("text",{x:310,y:60,"font-size":16,"font-weight":"bold"},"m ≈ A · h · ρ");
+el("text",{x:310,y:90,"font-size":14},fmt(A,0)+" cm² · "+fmt(v.h,1)+" cm · "+fmt(v.r,2)+" g/cm³");
+el("text",{x:310,y:120,"font-size":16,"font-weight":"bold"},"≈ "+fmt(m,0)+" g nyers tészta");
+status("Térfogat: V = A·h = "+fmt(V,0)+" cm³; nyers tészta ≈ <b>"+fmt(m,0)+" g</b>. A sűrűség becslés (1,0–1,1 g/cm³) – a pontos értéket méréssel igazold.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

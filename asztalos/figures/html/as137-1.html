@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lépcsőkalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="H">szintkülönbség H</label><input id="H" type="range" min="200" max="400" step="1" value="280" aria-label="szintkülönbség H"><output id="H_o" for="H"></output></div>
+<div class="row"><label for="mt">cél-fokmagasság</label><input id="mt" type="range" min="15" max="19" step="0.5" value="17" aria-label="cél-fokmagasság"><output id="mt_o" for="mt"></output></div>
+<div class="row"><label for="w">karszélesség</label><input id="w" type="range" min="80" max="120" step="5" value="100" aria-label="karszélesség"><output id="w_o" for="w"></output></div>
+<div class="row"><label for="ri">belső sugár</label><input id="ri" type="range" min="10" max="40" step="5" value="20" aria-label="belső sugár"><output id="ri_o" for="ri"></output></div>
+<div class="row"><label for="d">járóvonal a belső széltől</label><input id="d" type="range" min="30" max="50" step="5" value="40" aria-label="járóvonal a belső széltől"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="bal">kiegyenlítés</label><input id="bal" type="checkbox" checked aria-label="kiegyenlítés"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 960 420" role="img" aria-label="Egyenes lépcsőkar fokbeosztása és negyedfordulós lépcső alaprajzi fokbeosztása a járóvonalon, kiegyenlítéssel."></svg>
+<p class="small">2m + b = 63 cm (tapasztalati képlet). A határértékek (fokmagasság, belépő, legkisebb belső fokszélesség, korlát) tájékoztatók; ellenőrizendő: OTÉK és a hatályos előírások. A kiegyenlítés itt egyszerűsített, arányos osztással készül.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"H":"cm", "mt":"cm", "w":"cm", "ri":"cm", "d":"cm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const fg=css("--fg"), mu=css("--muted"), bad=css("--bad"), ok=css("--ok");
+const n=Math.max(2,Math.round(v.H/v.mt)), m=v.H/n, b=63-2*m, L=(n-1)*b, ang=Math.atan(m/b)*180/Math.PI;
+const okm=(m>=15&&m<=18), okb=(b>=26&&b<=32);
+const ri=v.ri, w=v.w, d=v.d, Rj=ri+d, A=3*b, S=2*A+Math.PI*Rj/2, U=2*A+Math.PI*ri/2;
+function pt(s,r,al){if(s<=A)return[r,-A+s];if(s<=A+al){const t=(s-A)/r;return[r*Math.cos(t),r*Math.sin(t)];}return[-(s-A-al),r];}
+const lines=[];for(let k=0;k*b<=S+1e-9;k++){const s=k*b, P=pt(s,Rj,Math.PI*Rj/2);let u;
+  if(s<=A)u=s;else if(s<=A+Math.PI*Rj/2)u=A+(s-A)/Rj*ri;else u=s-Math.PI*Rj/2+Math.PI*ri/2;
+  if(v.bal)u=s*U/S;const I=pt(u,ri,Math.PI*ri/2), dx=P[0]-I[0], dy=P[1]-I[1], ds=Math.hypot(dx,dy);
+  lines.push([I,[P[0]+dx/ds*(w-d),P[1]+dy/ds*(w-d)],P]);}
+let wmin=1e9;for(let i=0;i+1<lines.length;i++)wmin=Math.min(wmin,Math.hypot(lines[i][0][0]-lines[i+1][0][0],lines[i][0][1]-lines[i+1][0][1]));
+status(`n = ${v.H}/${fmt(v.mt,1)} ≈ <b>${n}</b> fellépés, m = <b>${fmt(m,1)} cm</b> ${okm?"":"<span class='bad'>(15–18 cm-en kívül)</span>"}; `+
+ `b = 63 − 2m = <b>${fmt(b,1)} cm</b> ${okb?"":"<span class='bad'>(26–32 cm-en kívül)</span>"}; ${n-1} belépő, L = <b>${fmt(L,0)} cm</b>, hajlásszög ≈ <b>${fmt(ang,0)}°</b>.<br>`+
+ `Forduló: L<sub>ív</sub> = π·${Rj}/2 = ${fmt(Math.PI*Rj/2,1)} cm → ${fmt(Math.PI*Rj/2/b,2)} belépő; legkisebb belső fokszélesség: `+
+ `<b class='${wmin>=10?"ok":"bad"}'>${fmt(wmin,1)} cm</b> ${v.bal?"(kiegyenlítve)":"(kiegyenlítés nélkül)"}.`);
+// alaprajz
+const sc=1.15, ox=230, oy=225, X=p=>ox+p[0]*sc, Y=p=>oy-p[1]*sc;
+const arc=(r,sty)=>el("path",{d:`M ${ox+r*sc} ${oy} A ${r*sc} ${r*sc} 0 0 0 ${ox} ${oy-r*sc}`,fill:"none",stroke:fg,"stroke-width":sty.w,"stroke-dasharray":sty.d||""});
+[ri,ri+w].forEach(r=>{arc(r,{w:2});el("line",{x1:X([r,-A]),y1:Y([r,-A]),x2:X([r,0]),y2:Y([r,0]),stroke:fg,"stroke-width":2});
+ el("line",{x1:X([0,r]),y1:Y([0,r]),x2:X([-A,r]),y2:Y([-A,r]),stroke:fg,"stroke-width":2});});
+arc(Rj,{w:1.3,d:"10 3 2 3"});
+el("line",{x1:X([Rj,-A]),y1:Y([Rj,-A]),x2:X([Rj,0]),y2:Y([Rj,0]),stroke:fg,"stroke-width":1.3,"stroke-dasharray":"10 3 2 3"});
+el("line",{x1:X([0,Rj]),y1:Y([0,Rj]),x2:X([-A,Rj]),y2:Y([-A,Rj]),stroke:fg,"stroke-width":1.3,"stroke-dasharray":"10 3 2 3"});
+lines.forEach(([I,O,P])=>{el("line",{x1:X(I),y1:Y(I),x2:X(O),y2:Y(O),stroke:v.bal?css("--hl"):fg,"stroke-width":2});
+ el("circle",{cx:X(P),cy:Y(P),r:2.5,fill:fg});});
+el("text",{x:10,y:20,"font-size":13},"alaprajz: pontvonal = járóvonal, pontok = osztáspontok");
+// oldalnézet
+const s2=Math.min(160/v.H,330/L), bx=560, by=380;
+let path=`M ${bx} ${by}`;for(let i=0;i<n;i++){path+=` l 0 ${-m*s2}`;if(i<n-1)path+=` l ${b*s2} 0`;}
+el("path",{d:path,fill:"none",stroke:fg,"stroke-width":2});
+el("text",{x:bx,y:by+20,"font-size":13},`egyenes kar: ${n} × ${fmt(m,1)} cm, ${n-1} × ${fmt(b,1)} cm`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

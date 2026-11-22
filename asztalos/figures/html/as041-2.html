@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metszősík és metszet</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="xa">Metszősík helye (bal éltől)</label><input id="xa" type="range" min="0" max="900" step="5" value="230" aria-label="Metszősík helye (bal éltől)"><output id="xa_o" for="xa"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 360" role="img" aria-label="Szekrény elölnézete húzható A–A metszősíkkal és az élőben frissülő metszettel."></svg>
+<p class="small">Húzd a metszősíkot az elölnézeten (vagy a csúszkával): fiók, ajtó és polc, illetve oldalfal kerül a vágásba. A szomszédos elemek sraffozása ellentétes irányú. Tanulási adatok.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"xa":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const W=900,H=720,D=500,T=18,PL=60,MID=441,DRW=[[78, 286], [286, 494], [494, 702]];
+const xa=v.xa, sc=0.30, ox=15, oy=300, X=x=>ox+x*sc, Y=z=>oy-z*sc, LN=css("--line");
+function R_(x,z,w,h,o){o=o||{};return el("rect",{x:X(x),y:Y(z+h),width:w*sc,height:h*sc,fill:o.f||"none",stroke:LN,"stroke-width":o.w||2});}
+R_(0,0,W,H);R_(T,PL,W-2*T,H-PL-T,{w:1.2});R_(MID,PL,T,H-PL-T,{w:1.2});
+DRW.forEach(([a,b])=>R_(T+3,a+4,MID-T-6,b-a-8,{w:1}));R_(MID+T+3,PL+T+2,W-MID-2*T-6,H-PL-2*T-4,{w:1});
+el("line",{x1:X(MID+T),y1:Y(360),x2:X(W-T),y2:Y(360),stroke:LN,"stroke-width":1,"stroke-dasharray":"5 3"});
+el("line",{x1:X(xa),y1:Y(H+25),x2:X(xa),y2:Y(-25),stroke:css("--hl2"),"stroke-width":1.2,"stroke-dasharray":"12 3 2 3"});
+[[H+25,H+55],[-25,-55]].forEach(([a,b])=>{el("line",{x1:X(xa),y1:Y(a),x2:X(xa),y2:Y(b),stroke:css("--hl2"),"stroke-width":4});
+  el("line",{x1:X(xa),y1:Y(b),x2:X(xa)+22,y2:Y(b),stroke:css("--hl2"),"stroke-width":1.6});
+  el("path",{d:"M"+(X(xa)+28)+" "+Y(b)+" l-8 -4 l0 8 z",fill:css("--hl2")});el("text",{x:X(xa)+32,y:Y(b)+5,"font-size":13,"font-weight":"bold"},"A");});
+const handle=el("rect",{x:X(0),y:Y(H+60),width:W*sc,height:(H+120)*sc,fill:"transparent",style:"cursor:ew-resize"});
+function sec(xa){ if(xa<=T||xa>=W-T||(xa>=MID&&xa<=MID+T)){const m=(xa>=MID&&xa<=MID+T);return [["oldalfal / középfal",0,m?PL:0,D-3,H-(m?PL:0),"fp"]];}
+ let o=[["fedlap",0,H-T,D-3,T,"fp"],["fenéklap",0,PL,D-3,T,"fp2"],["hátfal (HDF 3)",0,PL,3,H-PL,"hdf"],["lábazat",D-3-40-T,0,T,PL,"fp2"]];
+ if(xa<MID)DRW.forEach(([a,b],i)=>{o.push([(i+1)+". fiók homlokja",D-T,a+4,T,b-a-8,"fp"],[(i+1)+". fiók hátlapja",40,a+20,12,150,"fp2"],[(i+1)+". fiók alja",52,a+20,D-T-52-12,8,"hdf"]);});
+ else o.push(["ajtó",D-T,PL+T+2,T,H-PL-2*T-4,"fp"],["polc",23,351,D-3-20-T-20,T,"fp2"]);
+ return o;}
+const S2=sec(xa), sx=330, SX=y=>sx+y*sc;
+el("text",{x:SX(D/2),y:Y(H)-30,"text-anchor":"middle","font-size":15,"font-weight":"bold"},"A–A");
+const PAT={fp:"url(#hA)",fp2:"url(#hB)",hdf:"url(#hC)"};
+const defs=el("defs",{});defs.innerHTML='<pattern id="hA" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="'+LN+'" stroke-width="1"/></pattern>'+
+ '<pattern id="hB" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="6" stroke="'+LN+'" stroke-width="1"/></pattern>'+
+ '<pattern id="hC" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.8" fill="'+LN+'"/></pattern>';
+S2.forEach(([n,y,z,d,h,k])=>el("rect",{x:SX(y),y:Y(z+h),width:d*sc,height:h*sc,fill:PAT[k],stroke:LN,"stroke-width":1.4}));
+el("text",{x:SX(D),y:Y(-40),"text-anchor":"end","font-size":11},"elöl →");
+status("A metszősík a bal éltől <b>"+xa+" mm</b>-re. A vágásba eső elemek: "+S2.map(e=>e[0]).join(", ")+".");
+if(!FIG.drag){FIG.drag=1;let on=false;const go=e=>{const r=FIG.svg.getBoundingClientRect(),vb=FIG.svg.viewBox.baseVal;
+  const x=((e.clientX-r.left)*vb.width/r.width-15)/0.30;document.getElementById("xa").value=Math.max(0,Math.min(900,Math.round(x)));draw();};
+ FIG.svg.addEventListener("pointerdown",e=>{if((e.clientX-FIG.svg.getBoundingClientRect().left)/FIG.svg.getBoundingClientRect().width<0.5){on=true;FIG.svg.setPointerCapture(e.pointerId);go(e);}});
+ FIG.svg.addEventListener("pointermove",e=>{if(on)go(e);});FIG.svg.addEventListener("pointerup",()=>on=false);}
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

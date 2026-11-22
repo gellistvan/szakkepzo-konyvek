@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fafaj-határozókulcs a bütün</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"><label for="faj">Melyik minta útját követed?</label> <select id="faj"><option value="tölgy">tölgy</option><option value="kőris">kőris</option><option value="akác">akác</option><option value="dió / cseresznye">dió / cseresznye</option><option value="bükk és a szórt likacsúak">bükk és a szórt likacsúak</option><option value="erdeifenyő">erdeifenyő</option><option value="lucfenyő">lucfenyő</option><option value="jegenyefenyő">jegenyefenyő</option></select></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Elágazó fafaj-határozókulcs: tűlevelű és lombos ág, gyantajárat, geszt, gyűrűs, félgyűrűs és szórt likacsúság"></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">Tájékoztató, egyszerűsített kulcs a leggyakoribb hazai fafajokhoz; a teljes azonosításhoz a fafajok alfejezetei és mintagyűjtemény kell.</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "[tölgy] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[tölgy] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – igen", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[tölgy] Vannak edények: a fa lombos. Hogyan rendeződnek az edények az évgyűrűben? – gyűrűs", "path": ["start", "edeny", "lomb"], "cur": "lomb"}, {"msg": "[tölgy] Gyűrűs likacsú: a korai pásztában nagy edények gyűrűje. Milyen a bélsugár és a geszt színe? – széles", "path": ["start", "edeny", "lomb", "gyuru"], "cur": "gyuru"}, {"msg": "[tölgy] Eredmény: tölgy (cser). széles, fényes bélsugár Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "lomb", "gyuru", "tolgy"], "cur": "tolgy"}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+const NODES={"start": [55, 66, 30, 6, "Tiszta bütüfelület\n(éles kés, 10–20× nagyító)", 0], "edeny": [55, 55, 30, 6, "Vannak edények (pórusok)\na bütün?", 0], "tul": [23, 43, 28, 6, "TŰLEVELŰ\nGyantajárat látható?", 0], "lomb": [80, 43, 34, 6, "LOMBOS\nAz edények elrendeződése?", 0], "jeg": [7, 30, 15, 6, "jegenyefenyő", 1], "geszt": [30, 30, 20, 6, "Elkülönülő\nszínes geszt?", 0], "erdei": [17, 16, 21, 7, "erdeifenyő\n(vörösbarna geszt)", 1], "luc": [40, 16, 21, 7, "lucfenyő\n(nincs színes geszt)", 1], "gyuru": [62, 30, 21, 6, "gyűrűs likacsú\nBélsugár, geszt?", 0], "felgy": [84, 30, 18, 6, "félgyűrűs:\ndió, cseresznye", 1], "szort": [104, 30, 19, 8, "szórt likacsú:\nbükk, gyertyán,\njuhar, hárs, nyár", 1], "tolgy": [61, 16, 17, 8, "tölgy (cser)\nszéles, fényes\nbélsugár", 1], "koris": [80, 16, 19, 8, "kőris\nkeskeny bélsugár,\nvilágos geszt", 1], "akac": [98, 16, 15, 8, "akác\nzöldessárga\ngeszt", 1]}, EDGES=[["start", "edeny", ""], ["edeny", "tul", "nem"], ["edeny", "lomb", "igen"], ["tul", "jeg", "nincs"], ["tul", "geszt", "van"], ["geszt", "erdei", "igen"], ["geszt", "luc", "nem"], ["lomb", "gyuru", "gyűrűs"], ["lomb", "felgy", "félgyűrűs"], ["lomb", "szort", "szórt"], ["gyuru", "tolgy", "széles"], ["gyuru", "koris", "keskeny"], ["gyuru", "akac", "zöldessárga"]], ALL={"tölgy": [{"msg": "[tölgy] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[tölgy] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – igen", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[tölgy] Vannak edények: a fa lombos. Hogyan rendeződnek az edények az évgyűrűben? – gyűrűs", "path": ["start", "edeny", "lomb"], "cur": "lomb"}, {"msg": "[tölgy] Gyűrűs likacsú: a korai pásztában nagy edények gyűrűje. Milyen a bélsugár és a geszt színe? – széles", "path": ["start", "edeny", "lomb", "gyuru"], "cur": "gyuru"}, {"msg": "[tölgy] Eredmény: tölgy (cser). széles, fényes bélsugár Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "lomb", "gyuru", "tolgy"], "cur": "tolgy"}], "kőris": [{"msg": "[kőris] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[kőris] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – igen", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[kőris] Vannak edények: a fa lombos. Hogyan rendeződnek az edények az évgyűrűben? – gyűrűs", "path": ["start", "edeny", "lomb"], "cur": "lomb"}, {"msg": "[kőris] Gyűrűs likacsú: a korai pásztában nagy edények gyűrűje. Milyen a bélsugár és a geszt színe? – keskeny", "path": ["start", "edeny", "lomb", "gyuru"], "cur": "gyuru"}, {"msg": "[kőris] Eredmény: kőris. keskeny bélsugár, világos geszt Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "lomb", "gyuru", "koris"], "cur": "koris"}], "akác": [{"msg": "[akác] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[akác] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – igen", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[akác] Vannak edények: a fa lombos. Hogyan rendeződnek az edények az évgyűrűben? – gyűrűs", "path": ["start", "edeny", "lomb"], "cur": "lomb"}, {"msg": "[akác] Gyűrűs likacsú: a korai pásztában nagy edények gyűrűje. Milyen a bélsugár és a geszt színe? – zöldessárga", "path": ["start", "edeny", "lomb", "gyuru"], "cur": "gyuru"}, {"msg": "[akác] Eredmény: akác. zöldessárga geszt Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "lomb", "gyuru", "akac"], "cur": "akac"}], "dió / cseresznye": [{"msg": "[dió / cseresznye] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[dió / cseresznye] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – igen", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[dió / cseresznye] Vannak edények: a fa lombos. Hogyan rendeződnek az edények az évgyűrűben? – félgyűrűs", "path": ["start", "edeny", "lomb"], "cur": "lomb"}, {"msg": "[dió / cseresznye] Eredmény: félgyűrűs. dió, cseresznye Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "lomb", "felgy"], "cur": "felgy"}], "bükk és a szórt likacsúak": [{"msg": "[bükk és a szórt likacsúak] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[bükk és a szórt likacsúak] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – igen", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[bükk és a szórt likacsúak] Vannak edények: a fa lombos. Hogyan rendeződnek az edények az évgyűrűben? – szórt", "path": ["start", "edeny", "lomb"], "cur": "lomb"}, {"msg": "[bükk és a szórt likacsúak] Eredmény: szórt likacsú. bükk, gyertyán, juhar, hárs, nyár Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "lomb", "szort"], "cur": "szort"}], "erdeifenyő": [{"msg": "[erdeifenyő] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[erdeifenyő] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – nem", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[erdeifenyő] Nincsenek edények: a fa tűlevelű. Látsz-e apró, világos gyantajárat-pontokat? – van", "path": ["start", "edeny", "tul"], "cur": "tul"}, {"msg": "[erdeifenyő] Vannak gyantajáratok. Elkülönül-e a sötétebb, színes geszt a szijácstól? – igen", "path": ["start", "edeny", "tul", "geszt"], "cur": "geszt"}, {"msg": "[erdeifenyő] Eredmény: erdeifenyő. (vörösbarna geszt) Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "tul", "geszt", "erdei"], "cur": "erdei"}], "lucfenyő": [{"msg": "[lucfenyő] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[lucfenyő] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – nem", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[lucfenyő] Nincsenek edények: a fa tűlevelű. Látsz-e apró, világos gyantajárat-pontokat? – van", "path": ["start", "edeny", "tul"], "cur": "tul"}, {"msg": "[lucfenyő] Vannak gyantajáratok. Elkülönül-e a sötétebb, színes geszt a szijácstól? – nem", "path": ["start", "edeny", "tul", "geszt"], "cur": "geszt"}, {"msg": "[lucfenyő] Eredmény: lucfenyő. (nincs színes geszt) Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "tul", "geszt", "luc"], "cur": "luc"}], "jegenyefenyő": [{"msg": "[jegenyefenyő] Vágj tiszta bütüfelületet éles késsel, és nézd 10–20× nagyítóval. – tovább", "path": ["start"], "cur": "start"}, {"msg": "[jegenyefenyő] Látsz-e lyukszerű edényeket (pórusokat) a bütün? – nem", "path": ["start", "edeny"], "cur": "edeny"}, {"msg": "[jegenyefenyő] Nincsenek edények: a fa tűlevelű. Látsz-e apró, világos gyantajárat-pontokat? – nincs", "path": ["start", "edeny", "tul"], "cur": "tul"}, {"msg": "[jegenyefenyő] Eredmény: jegenyefenyő.  Ellenőrizd a másodlagos bélyegekkel.", "path": ["start", "edeny", "tul", "jeg"], "cur": "jeg"}]};
+function render(s){svg.setAttribute("viewBox","0 0 590 380");svg.innerHTML="";
+ const X=x=>(x+1)*5.1, Y=y=>(72-y)*5.9, on=new Set(s.path);
+ EDGES.forEach(([a,b,l])=>{const A=NODES[a],B=NODES[b],act=on.has(a)&&on.has(b);
+  el("line",{x1:X(A[0]),y1:Y(A[1]-A[3]/2),x2:X(B[0]),y2:Y(B[1]+B[3]/2),stroke:act?css("--hl"):css("--line"),"stroke-width":act?3.5:1});
+  if(l)el("text",{x:(X(A[0])+X(B[0]))/2+4,y:(Y(A[1]-A[3]/2)+Y(B[1]+B[3]/2))/2,"font-size":10,"font-style":"italic"},l);});
+ for(const k in NODES){const [x,y,w,h,t,leaf]=NODES[k],a=on.has(k),c=k==s.cur;
+  el("rect",{x:X(x-w/2),y:Y(y+h/2),width:w*5.1,height:h*5.9,rx:4,fill:c?css("--cellhl"):(leaf?css("--code"):css("--cell")),
+   stroke:a?css("--hl"):css("--line"),"stroke-width":c?4:(a?2.5:1)});
+  const L=t.split("\n");L.forEach((l,i)=>el("text",{x:X(x),y:Y(y)+(i-(L.length-1)/2)*11+4,"text-anchor":"middle","font-size":9.5,"font-weight":c?"bold":"normal"},l));}
+}
+document.getElementById("faj").addEventListener("input",e=>setSteps(ALL[e.target.value]));
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.innerHTML = s.msg || "";   // a lépésszöveg saját, megbízható HTML-t (<b>, <i>) tartalmazhat
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 900);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

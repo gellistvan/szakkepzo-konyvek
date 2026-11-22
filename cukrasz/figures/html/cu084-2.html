@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Töltelékigény-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="forma">Forma</label><select id="forma" aria-label="Forma"><option value="kor" selected>kör alakú torta</option><option value="tepsi">téglalap (tepsi)</option></select></div>
+<div class="row"><label for="d">Átmérő (kör)</label><input id="d" type="range" min="10" max="40" step="1" value="24" aria-label="Átmérő (kör)"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="a">Hossz (tepsi)</label><input id="a" type="range" min="10" max="80" step="1" value="60" aria-label="Hossz (tepsi)"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="b">Szélesség (tepsi)</label><input id="b" type="range" min="10" max="60" step="1" value="40" aria-label="Szélesség (tepsi)"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="H">Magasság (bevonathoz)</label><input id="H" type="range" min="2" max="12" step="0.5" value="6" aria-label="Magasság (bevonathoz)"><output id="H_o" for="H"></output></div>
+<div class="row"><label for="n">Belső krémrétegek</label><input id="n" type="range" min="1" max="4" step="1" value="2" aria-label="Belső krémrétegek"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="h">Rétegvastagság</label><input id="h" type="range" min="0.2" max="2" step="0.1" value="0.8" aria-label="Rétegvastagság"><output id="h_o" for="h"></output></div>
+<div class="row"><label for="t">Bevonat vastagsága (0 = nincs)</label><input id="t" type="range" min="0" max="1" step="0.05" value="0.3" aria-label="Bevonat vastagsága (0 = nincs)"><output id="t_o" for="t"></output></div>
+<div class="row"><label for="rho">Krém (sűrűség, szemléltető)</label><select id="rho" aria-label="Krém (sűrűség, szemléltető)"><option value="0.95">sárgakrém 0,95 g/cm³</option><option value="0.85" selected>vajkrém 0,85 g/cm³</option><option value="0.5">tejszínhabos 0,50 g/cm³</option></select></div>
+<div class="row"><label for="loss">Veszteség</label><input id="loss" type="range" min="0" max="20" step="1" value="2" aria-label="Veszteség"><output id="loss_o" for="loss"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 290" role="img" aria-label="Tortametszet krémrétegekkel és a töltelékigény számításának lépései."></svg>
+<p class="small">A fejezet (cu084) képletei és példái; a sűrűségek szemléltető értékek (a fejezet sávjai: sárgakrém 0,90–1,05, vajkrém 0,80–0,95, tejszínhabos 0,45–0,65 g/cm³; ellenőrizendő: saját mérés).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"d":"cm", "a":"cm", "b":"cm", "H":"cm", "n":"db", "h":"cm", "t":"cm", "loss":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const R=v.forma=="kor";
+let A, side; const H=v.H, n=v.n, h=v.h, t=v.t, rho=v.rho, loss=v.loss/100;
+if(R){const r=v.d/2; A=Math.PI*r*r; side=2*Math.PI*r*H;} else {A=v.a*v.b; side=2*(v.a+v.b)*H;}
+const Vb=n*A*h, Vk=t>0?(side+A)*t:0, net=(Vb+Vk)*rho, gross=net/(1-loss);
+// metszet
+const X0=40, W=300, Y0=250; const lap=Math.max(14, Math.min(40,(H*22-n*h*22)/(n+1)));
+let y=Y0; el("rect",{x:X0-20,y:Y0,width:W+40,height:10,fill:css("--grid"),stroke:css("--line")});
+for(let i=0;i<n+1;i++){ el("rect",{x:X0,y:y-lap,width:W,height:lap,fill:css("--grid"),stroke:css("--line")}); y-=lap;
+  if(i<n){ const kh=Math.max(6,h*22); el("rect",{x:X0,y:y-kh,width:W,height:kh,fill:css("--hl2"),"fill-opacity":0.55,stroke:css("--line")}); y-=kh; } }
+if(t>0){ const bt=Math.max(4,t*22); el("rect",{x:X0-bt,y:y-bt,width:W+2*bt,height:Y0-y+bt,fill:"none",stroke:css("--hl"),"stroke-width":bt}); }
+el("text",{x:X0+W/2,y:Y0+28,"font-size":13,"text-anchor":"middle"},R?("Ø "+fmt(v.d,0)+" cm"):(fmt(v.a,0)+" × "+fmt(v.b,0)+" cm"));
+el("text",{x:X0+W/2,y:24,"font-size":12,"text-anchor":"middle",fill:css("--muted")},"metszet (szemléltető): lapok, "+n+" krémréteg"+(t>0?", bevonat":""));
+// számítás
+const L=[["A = "+(R?"π·r²":"a·b"),fmt(A,1)+" cm²"],["V belső = n·A·h",fmt(Vb,1)+" cm³"]];
+if(t>0){L.push(["A oldal = "+(R?"2·π·r·H":"2·(a+b)·H"),fmt(side,1)+" cm²"]);L.push(["V külső = (A oldal + A)·t",fmt(Vk,1)+" cm³"]);}
+L.push(["m nettó = V·ρ",fmt(net,1)+" g"]); L.push(["m bruttó = m nettó/(1−v)",fmt(gross,1)+" g"]);
+L.forEach((l,i)=>{el("text",{x:370,y:60+i*30,"font-size":13},l[0]); el("text",{x:620,y:60+i*30,"font-size":13,"text-anchor":"end","font-weight":i==L.length-1?"bold":"normal"},l[1]);});
+status("<b>Bruttó szükséglet: "+fmt(gross,1)+" g</b> (nettó "+fmt(net,1)+" g, térfogat "+fmt(Vb+Vk,1)+" cm³). Ellenőrzés a fejezet példáival: 24 cm, 1 réteg 0,8 cm, ρ 0,95 → 343,8 g; 60×40 cm, 1,0 cm, 10% → 2533,3 g; 24 cm, 2×0,8 + 0,3 cm bevonat, H 6 cm, ρ 0,85, 2% → 863,2 g.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

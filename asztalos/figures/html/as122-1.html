@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sablon eltérítése vezetőgyűrűs marásnál</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="g">Vezetőgyűrű Ø</label><input id="g" type="range" min="17" max="40" step="1" value="30" aria-label="Vezetőgyűrű Ø"><output id="g_o" for="g"></output></div>
+<div class="row"><label for="s">Marószerszám Ø</label><input id="s" type="range" min="6" max="30" step="1" value="12" aria-label="Marószerszám Ø"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="mode">Kontúr</label><select id="mode" aria-label="Kontúr"><option value="kulso" selected>külső kontúr</option><option value="belso">belső kivágás</option></select></div>
+<div class="row"><label for="w">Kész méret (szélesség)</label><input id="w" type="range" min="100" max="600" step="10" value="300" aria-label="Kész méret (szélesség)"><output id="w_o" for="w"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 580 300" role="img" aria-label="Vezetőgyűrűs sablonmarás felülnézetben: a kész alkatrész kontúrja a sablon peremén e távolsággal túl van."></svg>
+<p class="small">Példa: Ø30 gyűrű, Ø12 szerszám → e = 9 mm; Ø20 szerszámmal e = 5 mm. A vezetőgyűrű és a szerszám a gépkönyv és a szerszámgyártó adatai szerint választandó.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"g":"mm", "s":"mm", "w":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const G=v.g, S=v.s, ext=v.mode==="kulso", e=(G-S)/2, W=v.w;
+const fg=css("--fg"), mu=css("--muted"), hl=css("--hl"), k=3.2, cx=300, cy=150;
+const bad=S>=G;
+// sablon él (x=cx), sablon a bal oldalon
+el("rect",{x:cx-230,y:cy-100,width:230,height:200,fill:mu,"fill-opacity":0.25,stroke:fg});
+el("text",{x:cx-115,y:cy,"text-anchor":"middle","font-size":13},ext?"sablon":"sablon (a nyílás széle)");
+const gx=cx+G/2*k;
+el("circle",{cx:gx,cy:cy,r:G/2*k,fill:"none",stroke:fg,"stroke-width":2});
+el("circle",{cx:gx,cy:cy,r:Math.min(S,G)/2*k,fill:fg,"fill-opacity":0.6});
+const ex=cx+e*k;
+el("line",{x1:ex,y1:cy-100,x2:ex,y2:cy+100,stroke:hl,"stroke-width":4});
+el("text",{x:ex+6,y:cy-85,"font-size":12},ext?"kész kontúr":"kész nyílás széle");
+el("line",{x1:cx,y1:cy+115,x2:ex,y2:cy+115,stroke:fg});
+el("text",{x:(cx+ex)/2,y:cy+132,"text-anchor":"middle","font-size":12},"e = "+fmt(e,1)+" mm");
+const tpl=ext?W-2*e:W+2*e;
+status(bad?"<span class='bad'>A szerszám nem lehet nagyobb a vezetőgyűrűnél – nem fér át rajta.</span>":
+  "e = ("+G+" − "+S+") / 2 = <b>"+fmt(e,1)+" mm</b>. "+(ext?"Külső kontúr: a sablon oldalanként e-vel <b>kisebb</b>":"Belső kivágás: a sablon nyílása oldalanként e-vel <b>nagyobb</b>")+
+  " → "+W+" mm-es "+(ext?"alkatrészhez":"nyíláshoz")+" <b>"+fmt(tpl,1)+" mm</b> sablon"+(ext?"":"nyílás")+".");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szélesbítő toldás szorítása</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="L">Tábla hossza L</label><input id="L" type="range" min="400" max="2400" step="50" value="1200" aria-label="Tábla hossza L"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="e">Tervezett szorítóköz e</label><input id="e" type="range" min="250" max="500" step="10" value="350" aria-label="Tervezett szorítóköz e"><output id="e_o" for="e"></output></div>
+<div class="row"><label for="a">Szélső távolság</label><input id="a" type="range" min="100" max="150" step="5" value="150" aria-label="Szélső távolság"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="bad">Hibás elrendezés (csak alul)</label><input id="bad" type="checkbox" aria-label="Hibás elrendezés (csak alul)"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 660 345" role="img" aria-label="A szorítók száma és helye a tábla hossza mentén, felváltva felül és alul; váltóval a hibás, csak alulról szorított tábla."></svg>
+<p class="small">A képlet a fejezet Számítás 1. példája (1200 mm, 350 mm → 5 db). Tájékoztató értékek: szorítóköz 300–500 mm, szélső távolság 100–150 mm (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"L":"mm", "e":"mm", "a":"mm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const L=v.L,e=v.e,a=v.a,bad=v.bad;
+const n=Math.ceil(L/e+1-1e-9), step=n>1?(L-2*a)/(n-1):0;
+const sx=600/2400, X=x=>50+x*sx, W=650*sx*0.55;
+// felülnézet
+el("text",{x:50,y:22,"font-size":13,"font-weight":"bold"},"Felülnézet (a tábla hossza mentén)");
+el("rect",{x:X(0),y:40,width:L*sx,height:W,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+for(let j=1;j<5;j++)el("line",{x1:X(0),y1:40+W*j/5,x2:X(L),y2:40+W*j/5,stroke:css("--line"),"stroke-width":2});
+if(!bad){for(const x of [20,L-60])el("rect",{x:X(x),y:34,width:40*sx,height:W+12,fill:css("--grid"),stroke:css("--line")});}
+for(let i=0;i<n;i++){const x=a+i*step, up=bad?false:(i%2===0);
+  el("line",{x1:X(x),y1:28,x2:X(x),y2:52+W,stroke:up?css("--hl"):css("--hl2"),"stroke-width":5,"stroke-dasharray":up?"":"7 4"});
+  el("text",{x:X(x),y:68+W,"text-anchor":"middle","font-size":11},(i+1)+(up?" felül":" alul"));}
+// méretek
+el("text",{x:X(L/2),y:86+W,"text-anchor":"middle","font-size":12},"L = "+L+" mm, osztás ≈ "+fmt(step,0)+" mm, szélső távolság "+a+" mm");
+// homloknézet
+const y0=300;
+el("text",{x:50,y:y0-48,"font-size":13,"font-weight":"bold"},"Homloknézet (5 léc keresztmetszete)");
+const bow=bad?28:0;
+let d="";for(let k=0;k<=50;k++){const t=k/50,x=60+t*520,y=y0-bow*Math.sin(Math.PI*t);d+=(k?"L":"M")+x+" "+y;}
+for(let k=50;k>=0;k--){const t=k/50,x=60+t*520,y=y0+14-bow*Math.sin(Math.PI*t);d+="L"+x+" "+y;}
+el("path",{d:d+"Z",fill:"none",stroke:css("--line"),"stroke-width":1.5});
+for(let j=1;j<5;j++){const t=j/5,x=60+t*520,y=y0-bow*Math.sin(Math.PI*t);el("line",{x1:x,y1:y,x2:x,y2:y+14,stroke:css("--line"),"stroke-width":3});}
+if(bad){el("rect",{x:50,y:y0+22,width:540,height:6,fill:css("--hl2")});}
+else{el("rect",{x:50,y:y0+22,width:540,height:6,fill:css("--hl2"),"opacity":0.6});el("rect",{x:50,y:y0-14,width:540,height:6,fill:css("--hl")});}
+const ok=step<=e+1e-9&&a>=100&&a<=150&&!bad;
+status((bad?'<span class="bad">HIBÁS: minden szorító alul, keresztléc nélkül – a tábla felhajlik, a túlhúzott fuga kiéhezik.</span><br>':
+ '<span class="ok">Helyes: a szorítók felváltva felül és alul, a végeken keresztléc.</span><br>')+
+ "n = L/e + 1 = "+L+"/"+e+" + 1 ≈ "+fmt(L/e+1,1)+" → <b>"+n+" db</b> szorító; egyenletes osztás "+fmt(step,0)+" mm"+
+ (step>e?' <span class="bad">(nagyobb, mint e)</span>':""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

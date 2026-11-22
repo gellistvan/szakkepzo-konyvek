@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mézeskalácsház sablonméretező</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="a">Ház hossza a</label><input id="a" type="range" min="8" max="20" step="0.5" value="12" aria-label="Ház hossza a"><output id="a_o" for="a"></output></div>
+<div class="row"><label for="b">Ház szélessége b</label><input id="b" type="range" min="6" max="16" step="0.5" value="10" aria-label="Ház szélessége b"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="m">Falmagasság</label><input id="m" type="range" min="5" max="12" step="0.5" value="8" aria-label="Falmagasság"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="h">Gerincmagasság</label><input id="h" type="range" min="3" max="10" step="0.5" value="6" aria-label="Gerincmagasság"><output id="h_o" for="h"></output></div>
+<div class="row"><label for="o">Eresz (alsó él)</label><input id="o" type="range" min="0" max="4" step="0.5" value="2" aria-label="Eresz (alsó él)"><output id="o_o" for="o"></output></div>
+<div class="row"><label for="t">Oldalsó túllógás</label><input id="t" type="range" min="0" max="4" step="0.5" value="2" aria-label="Oldalsó túllógás"><output id="t_o" for="t"></output></div>
+<div class="row"><label for="d3">3D-s összeállítás</label><input id="d3" type="checkbox" aria-label="3D-s összeállítás"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 600" role="img" aria-label="Mézeskalácsház sablonjai kiterítve méretekkel: alaplap, két oldalfal, két oromfalas homlokzat, két tetőelem."></svg>
+<p class="small">Szabály (javított): tetőelem hossza = ferde él + eresz (csak az alsó élen), szélessége = a ház hossza + 2 × oldalsó túllógás. A tetőelem egyik vége a gerincen van, ott nincs túllógás.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"a":"cm", "b":"cm", "m":"cm", "h":"cm", "o":"cm", "t":"cm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const a=v.a,b=v.b,m=v.m,h=v.h,o=v.o,t=v.t;
+const s=Math.hypot(b/2,h), L=s+o, Wr=a+2*t, ang=Math.atan2(h,b/2)*180/Math.PI;
+status("Ferde tetőél <b>s = √((b/2)² + h²) = "+fmt(s)+" cm</b>; tetőelem <b>"+fmt(Wr,1)+" × "+fmt(L,1)+" cm</b> (2 db); hajlásszög <b>"+fmt(ang,1)+"°</b>. Homlokzat: "+fmt(b,1)+" × "+fmt(m,1)+" cm + "+fmt(h,1)+" cm orom; oldalfal "+fmt(a,1)+" × "+fmt(m,1)+" cm; alaplap "+fmt(a,1)+" × "+fmt(b,1)+" cm."+(ang>60?' <span class="bad">Meredek tető: a tetőelem lecsúszhat, alátámasztás kell.</span>':''));
+const ln=(x1,y1,x2,y2,o2)=>el("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:css("--line"),"stroke-width":1.6},o2||{}));
+const pg=(P,o2)=>el("polygon",Object.assign({points:P.map(p=>p[0]+","+p[1]).join(" "),fill:"none",stroke:css("--line"),"stroke-width":1.6},o2||{}));
+const tx=(x,y,t2,fs)=>el("text",{x:x,y:y,"font-size":fs||12,"text-anchor":"middle"},t2);
+if(!v.d3){
+ const sc=10, X0=20, Y0=20; // kiterítés: felső sor homlokzatok + alaplap, középen oldalfalak, alul tetőelemek
+ let x=X0; const yT=Y0+(h+m)*sc;
+ for(let k=0;k<2;k++){pg([[x,yT],[x+b*sc,yT],[x+b*sc,yT-m*sc],[x+b/2*sc,yT-(m+h)*sc],[x,yT-m*sc]]);
+   if(k===0){ln(x,yT-m*sc,x+b*sc,yT-m*sc,{"stroke-dasharray":"5 4","stroke-width":1});ln(x+b/2*sc,yT-m*sc,x+b/2*sc,yT-(m+h)*sc,{"stroke-dasharray":"5 4","stroke-width":1});}
+   tx(x+b/2*sc,yT-m*sc/2,"homlokzat");x+=b*sc+15;}
+ pg([[x,yT],[x+a*sc,yT],[x+a*sc,yT-b*sc],[x,yT-b*sc]]);tx(x+a*sc/2,yT-b*sc/2,"alaplap");
+ const yO=yT+15+m*sc; x=X0;
+ for(let k=0;k<2;k++){pg([[x,yO],[x+a*sc,yO],[x+a*sc,yO-m*sc],[x,yO-m*sc]]);tx(x+a*sc/2,yO-m*sc/2,"oldalfal");x+=a*sc+15;}
+ const yR=yO+15+L*sc; x=X0;
+ for(let k=0;k<2;k++){pg([[x,yR],[x+Wr*sc,yR],[x+Wr*sc,yR-L*sc],[x,yR-L*sc]]);ln(x,yR-o*sc,x+Wr*sc,yR-o*sc,{"stroke-dasharray":"5 4","stroke-width":1});
+   tx(x+Wr*sc/2,yR-L*sc/2,"tetőelem "+fmt(Wr,1)+" × "+fmt(L,1));x+=Wr*sc+15;}
+ FIG.svg.setAttribute("viewBox","0 0 "+Math.max(X0*2+2*b*sc+30+a*sc,X0*2+2*Wr*sc+15,X0*2+2*a*sc+15)+" "+(yR+20));
+}else{
+ const sc=14, c=Math.cos(Math.PI/6)*0.6, sn=Math.sin(Math.PI/6)*0.6, X0=40, Y0=40+(m+h+b*sn+2)*sc;
+ const P=(x,y,z)=>[X0+(x+y*c)*sc, Y0-(z+y*sn)*sc];
+ // test: talp, falak, tető (a túllógással)
+ pg([P(0,0,0),P(a,0,0),P(a,0,m),P(0,0,m)],{fill:css("--bg")});
+ pg([P(a,0,0),P(a,b,0),P(a,b,m),P(a+0,b/2,m+h),P(a,0,m)],{fill:css("--bg")});
+ const e=o/s; // eresz-arány a ferde él mentén
+ const yA=-e*b/2, zA=m-e*h, yB=b+e*b/2;
+ pg([P(-t,b/2,m+h),P(a+t,b/2,m+h),P(a+t,yA,zA),P(-t,yA,zA)],{fill:css("--bg"),"stroke-width":2.2});
+ pg([P(a+t,b/2,m+h),P(a+t,yB,zA),P(a+t,yA,zA)],{fill:"none","stroke-dasharray":"4 3","stroke-width":1});
+ tx(P(a/2,0,m/2)[0],P(a/2,0,m/2)[1],"oldalfal");tx(P(a,b/2,m/2)[0]+10,P(a,b/2,m/2)[1],"homlokzat");
+ FIG.svg.setAttribute("viewBox","0 0 "+(X0*2+(a+2*t+b*c+2)*sc)+" "+(Y0+30));
+}
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

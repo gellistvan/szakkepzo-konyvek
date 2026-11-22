@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Farontó rovar határozó</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"><span class="small">Eset:</span> <button onclick='setSteps([{"msg": "1/5 – A nyílás alakja? → ovális", "hl": 0, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}, {"msg": "2/5 – Mekkora? → kb. 6–8 mm", "hl": 1, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}, {"msg": "3/5 – Milyen a rágcsalék? → durva, hengeres", "hl": 2, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}, {"msg": "4/5 – Fafaj, hely? → fenyő ablaktok (tűlevelű)", "hl": 3, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}, {"msg": "5/5 – Valószínű károsító → házicincér. Teendő: a tok alsó részét, illesztéseit átnézni; letörlés után pár nap múlva friss rágcsalék keresése; hegyes szerszámmal járatok keresése; nedvességmérés; friss rágcsaléknál a fertőzött rész eltávolítása és kezelése (szakember).", "hl": 4, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}])'>4. feladat: ovális nyílás</button> <button onclick='setSteps([{"msg": "1/5 – A nyílás alakja? → kerek", "hl": 0, "path": ["kerek", "Ø 1–2 mm", "finom, lisztes, világos", "bútor, régi ajtó", "kopogóbogár"]}, {"msg": "2/5 – Mekkora? → Ø 1–2 mm", "hl": 1, "path": ["kerek", "Ø 1–2 mm", "finom, lisztes, világos", "bútor, régi ajtó", "kopogóbogár"]}, {"msg": "3/5 – Milyen a rágcsalék? → finom, lisztes, világos", "hl": 2, "path": ["kerek", "Ø 1–2 mm", "finom, lisztes, világos", "bútor, régi ajtó", "kopogóbogár"]}, {"msg": "4/5 – Fafaj, hely? → bútor, régi ajtó", "hl": 3, "path": ["kerek", "Ø 1–2 mm", "finom, lisztes, világos", "bútor, régi ajtó", "kopogóbogár"]}, {"msg": "5/5 – Valószínű károsító → kopogóbogár. Teendő: friss rágcsalék figyelése (letörlés után), a fertőzött rész felmérése; aktív fertőzésnél kezelés, szakember bevonása.", "hl": 4, "path": ["kerek", "Ø 1–2 mm", "finom, lisztes, világos", "bútor, régi ajtó", "kopogóbogár"]}])'>kerek, lisztes rágcsalék</button> <button onclick='setSteps([{"msg": "1/5 – A nyílás alakja? → kerek, kicsi", "hl": 0, "path": ["kerek, kicsi", "kicsik, csoportosan", "nagyon finom, porszerű", "tölgy parketta (lombos szijács)", "lyukasztóbogár (Lyctus)"]}, {"msg": "2/5 – Mekkora? Hány? → kicsik, csoportosan", "hl": 1, "path": ["kerek, kicsi", "kicsik, csoportosan", "nagyon finom, porszerű", "tölgy parketta (lombos szijács)", "lyukasztóbogár (Lyctus)"]}, {"msg": "3/5 – Milyen a rágcsalék? → nagyon finom, porszerű", "hl": 2, "path": ["kerek, kicsi", "kicsik, csoportosan", "nagyon finom, porszerű", "tölgy parketta (lombos szijács)", "lyukasztóbogár (Lyctus)"]}, {"msg": "4/5 – Fafaj, hely? → tölgy parketta (lombos szijács)", "hl": 3, "path": ["kerek, kicsi", "kicsik, csoportosan", "nagyon finom, porszerű", "tölgy parketta (lombos szijács)", "lyukasztóbogár (Lyctus)"]}, {"msg": "5/5 – Valószínű károsító → lyukasztóbogár (Lyctus). Teendő: a fertőzött szijácsos részek felmérése; aktív fertőzésnél kezelés, szakember bevonása.", "hl": 4, "path": ["kerek, kicsi", "kicsik, csoportosan", "nagyon finom, porszerű", "tölgy parketta (lombos szijács)", "lyukasztóbogár (Lyctus)"]}])'>apró, csoportos, porszerű</button></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Lépésenkénti határozó: nyílás, méret, rágcsalék, fafaj, károsító"></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">Tájékoztató határozó a fejezet adataival (méretek ellenőrizendők); bizonytalan esetben szakember mérje fel.</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "1/5 – A nyílás alakja? → ovális", "hl": 0, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}, {"msg": "2/5 – Mekkora? → kb. 6–8 mm", "hl": 1, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}, {"msg": "3/5 – Milyen a rágcsalék? → durva, hengeres", "hl": 2, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}, {"msg": "4/5 – Fafaj, hely? → fenyő ablaktok (tűlevelű)", "hl": 3, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}, {"msg": "5/5 – Valószínű károsító → házicincér. Teendő: a tok alsó részét, illesztéseit átnézni; letörlés után pár nap múlva friss rágcsalék keresése; hegyes szerszámmal járatok keresése; nedvességmérés; friss rágcsaléknál a fertőzött rész eltávolítása és kezelése (szakember).", "hl": 4, "path": ["ovális", "kb. 6–8 mm", "durva, hengeres", "fenyő ablaktok (tűlevelű)", "házicincér"]}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+function render(s){svg.setAttribute("viewBox","0 0 560 300");svg.innerHTML="";
+ const Q=["nyílás alakja","mérete","rágcsalék","fafaj, hely","károsító"];
+ for(let i=0;i<5;i++){const x=10+i*110,on=i==s.hl,done=i<s.hl;
+  el("rect",{x:x,y:60,width:96,height:150,rx:8,fill:on?css("--cellhl"):css("--cell"),stroke:css("--line"),"stroke-width":on?4:1.3});
+  el("text",{x:x+48,y:82,"text-anchor":"middle","font-size":12,"font-weight":"bold"},Q[i]);
+  if(i<=s.hl){const words=s.path[i].split(" ");let lines=[""];words.forEach(w=>{if((lines[lines.length-1]+" "+w).length>13)lines.push(w);else lines[lines.length-1]+=(lines[lines.length-1]?" ":"")+w;});
+   lines.forEach((l,j)=>el("text",{x:x+48,y:115+j*17,"text-anchor":"middle","font-size":13},l));}
+  else el("text",{x:x+48,y:130,"text-anchor":"middle","font-size":20},"?");
+  if(i<4)el("text",{x:x+103,y:140,"text-anchor":"middle","font-size":16},"\u25B6");}
+ el("text",{x:280,y:250,"text-anchor":"middle","font-size":12},"Válassz esetet a gombokkal, majd lépj végig a határozón.");}
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.innerHTML = s.msg || "";   // a lépésszöveg saját, megbízható HTML-t (<b>, <i>) tartalmazhat
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 1500);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>
