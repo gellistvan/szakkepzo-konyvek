@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>20.1 Érzékelők: fény, mozgás, jelenlét, hőmérséklet –
+Villanyszerelő – villamos berendezés- és készülékszerelő
+szakirány</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz4">IV. RÉSZ – Épületvillamosság (közös ismeretek)</a> › <a href="index.html#vech19">20 Épületautomatika és vezérlők</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve069.html">← 19.3 Biztonsági világítás</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve071.html">20.2 Beavatkozók: mágneskapcsolók, szelepek, szervomotorok →</a></div>
+</nav>
+<h2 data-number="20.1" id="ve070"><span
+class="header-section-number">20.1</span> Érzékelők: fény, mozgás,
+jelenlét, hőmérséklet</h2>
+<h3 data-number="20.1.1" id="miért-van-szükséged-érzékelőkre"><span
+class="header-section-number">20.1.1</span> Miért van szükséged
+érzékelőkre?</h3>
+<p>Egy családi ház udvari világítását úgy szeretnéd beállítani, hogy
+alkonyatkor magától kapcsoljon be, de csak akkor, ha valaki a
+kocsibeállón mozog. Napközben egyáltalán ne égjen a lámpa, mert a
+tulajdonos szerint pazarlás lenne. Ha a mozgás megszűnt, a lámpa még
+maradjon bekapcsolva két percig, hogy a lakó beérjen az ajtóig.</p>
+<p>Ehhez két érzékelőt kell összehangolnod: egy
+<strong>fényérzékelőt</strong>, amely a sötétedést érzékeli, és egy
+<strong>mozgásérzékelőt</strong>, amely a területen belüli embert vagy
+járművet. Ugyanez a gondolatmenet vezet a társasházi lépcsőházak, a
+kávézók mosdói, az irodai tárgyalók vagy a hűtőházak automatizálásáig
+is. Az érzékelő az épület „szeme és füle”, a beavatkozók – például
+mágneskapcsolók, relék, LED-meghajtók – pedig a „keze”. Ebben az
+alfejezetben az érzékelők oldalát tanulod meg: hogyan működnek, hogyan
+választasz közülük, hová telepítsd, és hogyan állítsd be őket, hogy ne
+legyen téves bekapcsolás vagy bosszantó kimaradás.</p>
+<h3 data-number="20.1.2"
+id="szemléletes-kép-az-érzékelő-mint-bemeneti-láncszem"><span
+class="header-section-number">20.1.2</span> Szemléletes kép: az érzékelő
+mint „bemeneti láncszem”</h3>
+<p>Egy épületautomatikai rendszerben az érzékelő nem önmagában dolgozik:
+jelet ad egy vezérlőnek vagy közvetlenül egy beavatkozónak. Például egy
+szabadon álló mozgásérzékelős reflektorban a szenzor, a
+vezérlőelektronika és a kapcsolórelé egyetlen házban van. Egy
+KNX-rendszerben viszont az érzékelő a buszra küld táviratot, és a
+döntést egy másik eszköz hozza meg.</p>
+<figure>
+<img src="assets/ve070-diagram-1.png"
+alt="Az érzékelő helye az automatizálási láncban - A szabadon álló érzékelős kapcsolóban ez a lánc egy házban van; buszrendszerben az érzékelő és a beavatkozó külön eszköz." />
+<figcaption aria-hidden="true">Az érzékelő helye az automatizálási
+láncban - A szabadon álló érzékelős kapcsolóban ez a lánc egy házban
+van; buszrendszerben az érzékelő és a beavatkozó külön
+eszköz.</figcaption>
+</figure>
+<p>A gyakorlatban ezért az érzékelő kiválasztásakor mindig a teljes
+láncot kell nézned: milyen terhet kapcsol, milyen feszültséggel működik,
+milyen a kimenete, és hogyan viselkedik áramkimaradás után.</p>
+<h3 data-number="20.1.3" id="fényérzékelők"><span
+class="header-section-number">20.1.3</span> Fényérzékelők</h3>
+<h4 data-number="20.1.3.1" id="fotoellenállás-ldr"><span
+class="header-section-number">20.1.3.1</span> Fotoellenállás (LDR)</h4>
+<p>A <strong>fotoellenállás</strong> (LDR, Light Dependent Resistor)
+olyan félvezető rétegből készült alkatrész, amelynek ellenállása erős
+megvilágításban lecsökken, sötétben pedig megnő. Régebbi kivitelben
+kadmium-szulfid (CdS), újabb berendezésekben környezetbarát anyagok is
+lehetnek <strong>(ellenőrizendő: aktuális RoHS-korlátozások)</strong>.
+Az LDR nem ad ki feszültséget, hanem az ellenállásváltozását használjuk
+fel egy feszültségosztóban vagy komparátor bemenetén.</p>
+<p><strong>Szabály.</strong> Egy tipikus szürkületkapcsoló
+jelkondicionálása: az érzékelőt egy ellenállással feszültségosztóba
+kötik, és az osztópont feszültségét hasonlítják egy beállított
+küszöbfeszültséghez. Ha nappalból estébe megyünk, az LDR ellenállása nő,
+az osztópont feszültsége pedig áthalad a küszöbön, és a készülék
+kapcsol.</p>
+<p>A fotoellenállás előnye az olcsósága és az egyszerű elektronikája,
+hátránya a lassabb reakció, a nagy szórás és az, hogy a kapcsolási
+küszöb hőmérsékletfügghet. Pontos fényméréshez vagy gyors
+fényjel-átvitelhez ezért más érzékelőt válassz.</p>
+<h4 data-number="20.1.3.2" id="fotodióda-és-fénytranzisztor"><span
+class="header-section-number">20.1.3.2</span> Fotodióda és
+fénytranzisztor</h4>
+<p>A <strong>fotodióda</strong> fény hatására záróirányú áramot ad; ez
+az áram közel arányos a megvilágítással, és gyorsan változik. A
+<strong>fénytranzisztor</strong> a fotodióda áramát tranzisztorral
+erősíti, ezért nagyobb jelszintet ad, de valamivel lassabb. A gyakorlati
+szerelő számára ezek nem alkatrészszinten, hanem kész érzékelők
+formájában jelennek meg: fénysorompó, fénymérő, világításszabályozó
+érzékelő, jeladó.</p>
+<p><strong>Továbbvitt eredmény.</strong> Az érzékelő mint jeladó és a
+beavatkozó kapcsolatát a <a href="ve071.html">Beavatkozók:
+mágneskapcsolók, szelepek, szervomotorok</a> alfejezetben használjuk
+fel: ott azt nézzük meg, milyen jelszintet kell az érzékelő kimenetének
+szolgáltatnia ahhoz, hogy a beavatkozót megbízhatóan vezérelje.</p>
+<h4 data-number="20.1.3.3" id="szürkületkapcsoló"><span
+class="header-section-number">20.1.3.3</span> Szürkületkapcsoló</h4>
+<p>A <strong>szürkületkapcsoló</strong> (twilight switch) fotóérzékelőt,
+komparátort és kimeneti kapcsolót tartalmazó készülék. Beállítható
+küszöbértéke luxban van megadva, például 2–100 lx. A kikapcsolás és a
+bekapcsolás küszöbe között hiszterézis van, hogy felhős égbolt vagy
+elhaladó fényszóró ne okozzon villódzást.</p>
+<p><strong>Példa.</strong> Egy szürkületkapcsoló beállítási tartománya
+3–80 lx, késleltetése bekapcsolásnál 10 s, kikapcsolásnál 30 s. A
+beállított érték 20 lx. Ez azt jelenti, hogy amikor a fényerő 20 lx alá
+esik, a készülék vár 10 másodpercet, majd bekapcsol; ha a fényerő 20 lx
++ hiszterézis fölé emelkedik, 30 másodperc múlva kapcsol ki. A
+késleltetés azt akadályozza meg, hogy egy rövid árnyék vagy egy éjszakai
+autó fényszórója zavarja a működést.</p>
+<p>A szürkületkapcsoló érzékelőjét lehetőleg északi égbolt felé néző,
+árnyékos helyre szereld, ne közvetlen napfényre vagy a vezérelt lámpa
+fényébe. Ha a lámpa az érzékelőt is megvilágítja, a rendszer öngerjesztő
+villódzásba kezdhet: a lámpa bekapcsol, a fényhatás miatt a kapcsoló
+kikapcsol, a sötét miatt újra bekapcsol, és ez így ismétlődik.</p>
+<h3 data-number="20.1.4" id="mozgás--és-jelenlétérzékelők"><span
+class="header-section-number">20.1.4</span> Mozgás- és
+jelenlétérzékelők</h3>
+<h4 data-number="20.1.4.1" id="pir-mozgásérzékelő"><span
+class="header-section-number">20.1.4.1</span> PIR mozgásérzékelő</h4>
+<p>A <strong>PIR mozgásérzékelő</strong> (passive infrared) a mozgó,
+meleg testek hősugárzását érzékeli. Az emberi test felszíne körülbelül
+9–10 µm hullámhosszú infravörös sugárzást bocsát ki; a PIR érzékelő erre
+a tartományra érzékeny. A PIR látómezejét optikai lencse, általában
+Fresnel-lencse osztja zónákra. Ha egy meleg tárgy az egyik zónából a
+másikba lép, az érzékelő jelet ad.</p>
+<p><strong>Definíció.</strong> A PIR érzékelő olyan passzív infravörös
+szenzor, amely a látómezőjében mozgó, a környezeténél melegebb testeket
+a zónák közötti jelváltozás alapján érzékeli. „Passzív”, mert maga nem
+sugároz ki semmilyen jelet, csak érzékel.</p>
+<p>A PIR tipikusan 5–12 m távolságra, nagyjából 90–180°-os látószögben
+érzékel. A legérzékenyebb mozgásirány a zónákat keresztülmetsző irány; a
+feléjük vagy tőlük távolodó mozgás kevésbé vált ki jelet.</p>
+<p><strong>Hiba.</strong> A PIR-t úgy szerelték, hogy a látómezőjét egy
+meleg levegős radiátor, klíma vagy légfüggöny „látja”. Az érzékelő akkor
+is kapcsolhat, ha ember nincs a helyiségben. Helyes gyakorlat: a
+látómezőt a hőforrásoktól elfordítani, és az érzékelőt a huzat irányából
+kitakarni.</p>
+<h4 data-number="20.1.4.2" id="mikrohullámú-radar-érzékelő"><span
+class="header-section-number">20.1.4.2</span> Mikrohullámú (radar)
+érzékelő</h4>
+<p>A <strong>mikrohullámú jelenlétérzékelő</strong> nagy frekvenciájú
+elektromágneses jelet bocsát ki, és a visszaverődés Doppler-eltolódását
+értékeli. A mozgó tárgy által visszavert jel frekvenciája eltolódik; az
+érzékelő ebből mozgást érzékel. Két fontos tulajdonsága van:
+<strong>áthatol</strong> nem fémes akadályokon (például faajtón,
+gipszkartonon, üvegen), és nagyon érzékeny, ezért a mozdulatlan embert
+is érzékelheti, ha apró légzési vagy mozgási jelet ad.</p>
+<p><strong>Szabály.</strong> A mikrohullámú érzékelőt akkor válaszd,
+ha:</p>
+<ul>
+<li>az érzékelő nem lehet kint a helyiségben (például álmennyezet fölött
+kell lennie),</li>
+<li>a helyiségben a PIR számára rossz a hőháttér,</li>
+<li>mozdulatlan jelenlétet is érzékelni kell.</li>
+</ul>
+<p>A nagyobb érzékenységért cserébe a mikrohullámú érzékelő több téves
+kapcsolást okozhat, ha rosszul állítod be. Nem fém ajtó mögül, hanem a
+ténylegesen figyelendő tér felé kell irányítani, és a tartományát a
+szükséges értékre kell csökkenteni. Általában van érzékenység- és
+tartományszabályzó, valamint a teszteléshez rövid késleltetésű
+üzemmód.</p>
+<h4 data-number="20.1.4.3" id="jelenlétérzékelő"><span
+class="header-section-number">20.1.4.3</span> Jelenlétérzékelő</h4>
+<p>A <strong>jelenlétérzékelő</strong> (presence detector) olyan
+mozgásérzékelő, amely nem csak a nagyobb mozgást, hanem az apró, munka
+közbeni mozgást is érzékeli, és nagyobb érzékenységgel, finomabb
+zónabontással dolgozik. Irodai tárgyalókban, tantermekben, mosdókban
+arra használják, hogy a világítást mindaddig bekapcsolva tartsa, amíg
+valaki a helyiségben van, akkor is, ha az illető hosszabb ideig
+mozdulatlanul ül.</p>
+<p>A szerelő szempontjából a fő különbség az, hogy a jelenlétérzékelő
+kimenete gyakran buszjel vagy 0–10 V-os/relés jel, és az érzékenységet a
+helyiség méretéhez, a tartózkodási zónához kell hangolni. A mennyezetre
+szerelt jelenlétérzékelő látómezeje kúpos; a padlón lévő érzékelési kör
+átmérője nő, ha magasabbra szereled, de ugyanakkor az érzékenység a
+távolsággal csökken.</p>
+<h3 data-number="20.1.5"
+id="hőmérséklet--nedvesség--és-co₂-érzékelők"><span
+class="header-section-number">20.1.5</span> Hőmérséklet-, nedvesség- és
+CO₂-érzékelők</h3>
+<h4 data-number="20.1.5.1" id="hőmérséklet-érzékelők"><span
+class="header-section-number">20.1.5.1</span> Hőmérséklet-érzékelők</h4>
+<p>Az épületautomatikában leggyakrabban
+<strong>ellenállás-hőmérőt</strong> (Pt100, Pt1000) vagy
+<strong>NTC-termisztort</strong> (negatív hőmérsékleti együtthatójú
+ellenállást), illetve félvezetős digitális érzékelőt találsz. A Pt100 0
+°C-on 100 Ω ellenállást mutat, és 100 °C-on körülbelül 138,5 Ω-ot; a
+Pt1000 ennek a tízszerese. A termisztor nagyobb érzékenységű, de
+nemlineáris, ezért a készülék jelfeldolgozója linearizálja.</p>
+<p><strong>Szabály.</strong> Az érzékelőt úgy helyezd el, hogy a
+helyiség <strong>tényleges</strong> levegőhőmérsékletét mérje, ne pedig
+a fal hőmérsékletét vagy a fűtőtest közvetlen hősugárzását. Falra
+szerelt szobaérzékelőnél:</p>
+<ul>
+<li>ne kerüljön közvetlenül a radiátor fölé,</li>
+<li>ne szereld fűtetlen belső falra vagy hőhídra,</li>
+<li>ne takarja függöny, szekrény vagy kép,</li>
+<li>ne érje közvetlen napsugárzás vagy légkondicionáló légárama.</li>
+</ul>
+<h4 data-number="20.1.5.2"
+id="nedvesség--és-páratartalom-érzékelők"><span
+class="header-section-number">20.1.5.2</span> Nedvesség- és
+páratartalom-érzékelők</h4>
+<p>A <strong>relatív páratartalom</strong> (RH) érzékelése kapacitív
+érzékelővel történik: a nedvesség hatására a szigetelőréteg dielektromos
+állandója megváltozik, ami a kapacitás mérhető változását okozza. Az
+érzékelő a hőmérsékletet is méri, mert a relatív páratartalom csak a
+hőmérséklettel együtt értelmezhető. Fürdőszobában, konyhában, pincében
+vagy medencehelyiségben a helyi páraérzékelő gyakran közvetlenül egy
+ventilátort vezérel, vagy a szellőztető rendszernek ad jelet.</p>
+<h4 data-number="20.1.5.3" id="co₂-érzékelők"><span
+class="header-section-number">20.1.5.3</span> CO₂-érzékelők</h4>
+<p>A <strong>CO₂-érzékelő</strong> a levegő szén-dioxid-koncentrációját
+méri ppm-ben. Az épületautomatikában leggyakrabban <strong>NDIR</strong>
+(nem diszperzív infravörös) elven működik: a CO₂-molekula elnyeli az
+infravörös fény egy meghatározott hullámhossz-tartományát, ebből
+következtet a koncentrációra. Az iskolai tantermekben, irodákban,
+tárgyalókban a CO₂-érzékelő a frisslevegő-befúvást vezérli, és a
+világításhoz hasonlóan a jelenlétfüggő szellőztetést teszi lehetővé.</p>
+<p><strong>Figyelem.</strong> A CO₂-érzékelő nem szén-monoxid-érzékelő!
+A CO (szén-monoxid) égésből származó mérgező gáz, és teljesen más
+érzékelő elven működik. A fűtőberendezés mellé CO-érzékelőt kell tenni,
+nem CO₂-érzékelőt.</p>
+<h3 data-number="20.1.6" id="telepítési-hibák-és-beállítás"><span
+class="header-section-number">20.1.6</span> Telepítési hibák és
+beállítás</h3>
+<p>Az érzékelők telepítési hibái sokszor nem azonnal, hanem csak az első
+téves kapcsolásnál vagy a felülvizsgálatnál derülnek ki. A leggyakoribb
+hibák: rossz irányba állított vagy hőforrás felé fordított érzékelő, a
+lámpa fényét látó szürkületérzékelő, túl nagy érzékenység. A beállítás
+sorrendje mindig: fényküszöb, majd érzékenység, végül késleltetési idő
+(részletesen a gyakorlati útmutatóban, a tipikus hibákat az alfejezet
+„Tipikus hibák” szakasza sorolja fel).</p>
+<h3 data-number="20.1.7" id="szabványi-háttér"><span
+class="header-section-number">20.1.7</span> Szabványi háttér</h3>
+<p><strong>Szabvány.</strong> Az épületautomatikai érzékelők szerelése
+és csatlakoztatása a kisfeszültségű villamos berendezésekre vonatkozó
+MSZ HD 60364 sorozat hatálya alá tartozik, tipikusan az áramkörök
+kialakítása, a vezetékezés és az érintésvédelem szempontjából. Az
+automatizálási eszközök közötti kommunikációra a gyártói
+rendszerszabványok, például a KNX és a DALI esetén a rendszerleírások
+vonatkoznak. A pontos típusjeleket, tűréshatárokat és a készülékek
+minősítését mindig a gyártói adatlap alapján kell ellenőrizni
+<strong>(ellenőrizendő: aktuális szabványkiadás és
+terméktanúsítás)</strong>.</p>
+<p><strong>Megjegyzés.</strong> A DALI és KNX protokollok érzékelői
+buszra küldik az adatot, így a hagyományos „érzékelő-kapcsoló” funkciók
+szoftverben is beállíthatók. A DALI szabványosítja az érzékelők és
+beavatkozók együttműködését, míg a KNX rendszerben az érzékelők és
+beavatkozók a helyi buszon kommunikálnak. A részleteket a <a
+href="ve072.html">KNX, DALI és más épületautomatikai rendszerek</a>
+alfejezetben tanulod.</p>
+<h3 data-number="20.1.8" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">20.1.8</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy társasház belső lépcsőházában a tulajdonos azt kérte, hogy a
+világítás alkonyatkor és mozgásra kapcsoljon, de éjszaka ne teljes,
+hanem csökkentett fényerővel. A szerelő egy kombinált készüléket épített
+be: a lépcsőház ablaka mellett elhelyezett szürkületérzékelő adta a
+sötétedés feltételt, a mozgásérzékelő pedig a lépcsőre irányult. A
+kimenet két fényerőt kapcsolt: erős fényt a mozgás pillanatában, majd 30
+másodperc után csökkentett fényt. A rendszer az első télen tévesen
+kapcsolt: kiderült, hogy az érzékelő a radiátor légáramlását érzékelte.
+Az áthelyezés és a látómező átállítása megszüntette a hibát.</p>
+<p>A tanulság: egy érzékelő csak akkor működik jól, ha a telepítési
+helye a fizikai működés elvének is megfelel, nem csak a bekötési
+rajznak.</p>
+<h3 data-number="20.1.9"
+id="gyakorlati-útmutató-kombinált-szürkület--és-mozgásérzékelő-beállítása"><span
+class="header-section-number">20.1.9</span> Gyakorlati útmutató:
+kombinált szürkület- és mozgásérzékelő beállítása</h3>
+<p><strong>Cél.</strong> Egy udvari LED-reflektort vezérlő kombinált
+érzékelő beállítása úgy, hogy nappal ne kapcsoljon, este mozgásra
+kapcsoljon, és a mozgás megszűnése után 2 percig égjen.</p>
+<p><strong>Eszközök és anyagok.</strong></p>
+<ul>
+<li>Kombinált szürkület- és mozgásérzékelő kapcsoló, a terhelésnek
+megfelelő árammal,</li>
+<li>feszültségmérő (CAT III vagy magasabb, ellenőrzött),</li>
+<li>csavarhúzó a beállító potenciométerekhez,</li>
+<li>elsötétítő takaró vagy karton,</li>
+<li>stopper.</li>
+</ul>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
+(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
+vonatkozik; hálózati feszültségen önállóan ne végezd. Az éles szerelést
+csak jogosult személy végezheti.</p>
+<p><strong>Bekötési rajz.</strong> A háromvezetékes érzékelő (kapcsai:
+L, N és a kapcsolt L’ kimenet) a leggyakoribb hibaforrás: a kapcsolt
+kimenet a fázist kapcsolja a lámpatestre, a nulla és a védővezető
+közvetlenül a lámpatesthez fut. Hibás, ha az N kerül a kimenetre, vagy
+ha a nullát kapcsolja az érzékelő.</p>
+<figure>
+<img src="assets/ve070-diagram-2.png"
+alt="Kombinált szürkület- és mozgásérzékelő bekötése (L, N, L’, PE) - Szemléltető bekötési rajz: az F1 kismegszakító után az L a B1 érzékelő L kapcsára jut; a B1 elektronikája L és N között kap tápot, belső relé-érintkezője az L-t kapcsolja az L’ kimenetre. L’ → E1 reflektor → N. A PE az érzékelőn nem halad át, közvetlenül a reflektor testére fut. S1 opcionális kézi felülvezérlő. Színek: L barna, L’ fekete, N világoskék, PE zöld-sárga. A típusok példák (ellenőrizendő a gyártói bekötési rajzzal)." />
+<figcaption aria-hidden="true">Kombinált szürkület- és mozgásérzékelő
+bekötése (L, N, L’, PE) - Szemléltető bekötési rajz: az F1 kismegszakító
+után az L a B1 érzékelő L kapcsára jut; a B1 elektronikája L és N között
+kap tápot, belső relé-érintkezője az L-t kapcsolja az L’ kimenetre. L’ →
+E1 reflektor → N. A PE az érzékelőn nem halad át, közvetlenül a
+reflektor testére fut. S1 opcionális kézi felülvezérlő. Színek: L barna,
+L’ fekete, N világoskék, PE zöld-sárga. A típusok példák (ellenőrizendő
+a gyártói bekötési rajzzal).</figcaption>
+</figure>
+<p>A rajzon az F1 kismegszakító után a fázis a B1 érzékelő L kapcsára
+jut. Az érzékelő elektronikája L és N között kap tápot, a belső
+relé-érintkezője zárja az L–L’ utat; az L’ kimenet az E1 reflektoron át
+az N-re zárul. A PE az érzékelőn nem halad át, a reflektor fém testére
+fut. Az S1 kapcsoló (ha van) a relével párhuzamosan, kézzel kapcsolja be
+a lámpát.</p>
+<h4 data-number="20.1.9.1" id="lépések"><span
+class="header-section-number">20.1.9.1</span> Lépések</h4>
+<ol type="1">
+<li><strong>Öt biztonsági szabály.</strong> Lekapcsolás (F1),
+visszakapcsolás elleni biztosítás (lakat, tábla), a feszültségmentesség
+ellenőrzése kétpólusú feszültségvizsgálóval minden vezető között (a
+vizsgálót előtte és utána ismert forráson próbáld ki; nem
+fázisceruzával), földelés és rövidre zárás – kisfeszültségű
+végáramkörnél, ha a munkautasítás nem írja elő, indoklással elhagyható
+–, a szomszédos feszültség alatti részek lefedése. A tanműhelyi
+gyakorlatnál is ezt a sorrendet kövesd.</li>
+<li><strong>Bekötés ellenőrzése.</strong> Győződj meg arról, hogy a
+fázis, nulla és védővezető a kapcsolási rajz szerint csatlakozik, a
+terhelés árama nem haladja meg a készülék terhelhetőségét.</li>
+<li><strong>Visszakapcsolás és beállítás feltételei.</strong> A bekötés
+befejezése, a burkolat visszahelyezése után a feszültséget jogosult
+személy kapcsolja vissza; a beállítás csak a gyártó által kialakított,
+érintésvédett beállítóelemeken, szigetelt szerszámmal végezhető, a
+készülék fedelének zárt állapotában. Hálózati feszültségen önállóan ne
+dolgozz.</li>
+<li><strong>Alapbeállítás.</strong> Állítsd a fényküszöböt a legkisebb
+(legsötétebb) értékre, a világítási időt a legrövidebbre, az
+érzékenységet közepesre.</li>
+<li><strong>Fényküszöb beállítása.</strong> A kívánt szürkületi
+fényviszonyok között (vagy részleges takarással, luxmérővel ellenőrizve
+kb. 20 lx; ellenőrizendő: gyártói ajánlás) lassan növeld a küszöböt,
+amíg a lámpa mozgásra éppen bekapcsol. Ezután teljes nappali fényben
+ellenőrizd, hogy nem kapcsol; sötétben kapcsoljon.</li>
+<li><strong>Mozgásérzékenység beállítása.</strong> Állítsd az
+érzékenységet a kívánt tartományra. Sétálj keresztbe a látómezőn, ne
+pontosan az érzékelő felé. Ha a lámpa a kívánt helytől távolabb is
+bekapcsol, csökkentsd az érzékenységet.</li>
+<li><strong>Késleltetés beállítása.</strong> A mozgás megszűnése után
+mérd a világítási időt. Állítsd 2 percre. Ellenőrizd, hogy a lámpa
+valóban kikapcsol-e.</li>
+<li><strong>Végellenőrzés.</strong> Ismételd meg a tesztet nappali és
+sötét állapotban is, majd rögzítsd a beállításokat a készülék feliratán
+vagy a karbantartási naplóban.</li>
+</ol>
+<p><strong>Ellenőrzési pontok.</strong></p>
+<ul>
+<li>Nincs folyamatos villódzás (a hiszterézis és a késleltetés együtt
+működik),</li>
+<li>a lámpa nem világít nappal,</li>
+<li>a mozgásra a kívánt távolságból kapcsol,</li>
+<li>a mozgás megszűnése után a lámpa kb. 2 perc múlva (a beállított
+utánfutási idő után) kikapcsol.</li>
+</ul>
+<h3 data-number="20.1.10" id="tipikus-hibák"><span
+class="header-section-number">20.1.10</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>A szürkületkapcsoló érzékelője a lámpát látja.</strong> A
+lámpa fénye miatt a kapcsoló kikapcsol, a sötétben újra bekapcsol, és ez
+villódzást okoz. A helyes megoldás az érzékelő elfordítása, árnyékolása
+vagy a fénypont irányának megváltoztatása.</li>
+<li><strong>A PIR érzékelőt a fűtőtest felé irányítják.</strong> A meleg
+levegő vagy a radiátor mint meleg tárgy téves kapcsolást okoz. A helyes
+irány a valószínű mozgásirány keresztirányú lefedése, a hőforrás
+kizárásával.</li>
+<li><strong>A CO₂-érzékelőt összetévesztik a CO-érzékelővel.</strong> A
+CO₂-érzékelő nem riaszt égéstermékre, a CO a tüzelőberendezések mellé
+való. A gyakorlatban mindkettőt feliratozni kell, és a rendeltetésnek
+megfelelően kell elhelyezni.</li>
+<li><strong>Az érzékelő kimenetét közvetlenül motorhoz kötik.</strong> A
+legtöbb érzékelő csak kis áramú relés kimenetet ad; közvetlen
+motorindítás nem szabad. A kimenetet a beavatkozó tekercsére,
+LED-meghajtóra vagy jelfogóra kell kötni.</li>
+</ol>
+<h3 data-number="20.1.11" id="önellenőrzés"><span
+class="header-section-number">20.1.11</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e, hogy a PIR érzékelő elektromágneses jelet bocsát ki?</li>
+<li>Miért van szükség hiszterézisre a szürkületkapcsolóban?</li>
+<li>Melyik érzékelő alkalmas mozdulatlan ember érzékelésére, és
+miért?</li>
+<li>Mi a teendő, ha a szürkületkapcsoló a saját lámpáját látja?</li>
+<li>Miért nem szabad a hőmérséklet-érzékelőt radiátor fölé
+szerelni?</li>
+<li>Mire használunk NDIR-érzékelőt?</li>
+</ol>
+<h3 data-number="20.1.12" id="feladatok"><span
+class="header-section-number">20.1.12</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Fogalmazd meg egy mondatban, mi a
+lényegi különbség a PIR és a mikrohullámú mozgásérzékelő között.</p>
+<p><strong>2. feladat (A).</strong> Egy szürkületkapcsoló 20 lx alatt
+kapcsol be, és a kioldási hiszterézise 5 lx. Mekkora a kikapcsolási
+fényerő?</p>
+<p><strong>3. feladat (B).</strong> Egy PIR érzékelőt 2,5 m magasra
+szerelnek, és a padlón körülbelül 6 m átmérőjű körben érzékel. A
+folyosón a 4 m-nél távolabb lévő ajtón ki-be járók ne kapcsolják a
+lámpát. Milyen beállítási (érzékenység, maszkolás/takarólap) és
+tesztelési lépéseket tennél?</p>
+<p><strong>4. feladat (B).</strong> Rajzolj egy kapcsolási vázlatot,
+amelyen egy szürkületkapcsoló egy LED-reflektort vezérel. Jelöld a
+fázist, a nullát és a védővezetőt, valamint az érzékelő
+terheléskimenetét.</p>
+<p><strong>5. feladat (C).</strong> Egy tárgyalóban a világítás akkor is
+lekapcsol, ha az ülő emberek hosszabb ideig mozdulatlanul dolgoznak.
+Milyen érzékelőt válassz, és milyen beállításokkal oldanád meg?</p>
+<p><strong>6. feladat (D).</strong> Egy udvari szürkületkapcsolós lámpa
+éjszaka 2 percenként ki- és bekapcsol. Sorold fel a lehetséges okokat,
+és mindegyikhez adj hibafeltárási mérést vagy megfigyelést.</p>
+<h3 data-number="20.1.13" id="megoldások"><span
+class="header-section-number">20.1.13</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li><strong>Hamis.</strong> A PIR passzív, nem sugároz ki semmilyen
+jelet, csak a hőmérsékleti sugárzást érzékeli. A mikrohullámú érzékelő
+viszont aktív jelet bocsát ki.</li>
+<li>A hiszterézis a bekapcsolási és kikapcsolási fényszint közötti sáv.
+Megakadályozza, hogy a fényviszonyok kismértékű ingadozása, felhő vagy
+elhaladó fényszóró villódzást okozzon.</li>
+<li>A mikrohullámú érzékelő, mert a visszavert jel Doppler-eltolódását a
+légzés vagy apró mozgás is megváltoztatja. A PIR elsősorban a meleg
+testek zónaváltását érzékeli.</li>
+<li>Az érzékelőt el kell fordítani a lámpától, árnyékolni kell, vagy a
+lámpa fényét más irányba kell állítani.</li>
+<li>Mert a radiátor hője a helyiség levegőhőmérsékleténél magasabb
+értéket mutat, és nem a tényleges komfortérzetet méri.</li>
+<li>Szén-dioxid-koncentráció mérésére, tipikusan
+szellőztetés-vezérléshez.</li>
+</ol>
+<p><strong>Feladatok – megoldások</strong></p>
+<p><strong>1. feladat.</strong> A PIR a meleg testek infravörös
+sugárzását érzékeli passzívan, a mikrohullámú érzékelő pedig saját
+nagyfrekvenciás jelének Doppler-eltolódását méri aktívan, és nem fémes
+akadályokon is áthatol.</p>
+<p><strong>2. feladat.</strong> A kikapcsolási küszöb 20 lx + 5 lx = 25
+lx. A bekapcsolás 20 lx alatt történik, a kikapcsolás 25 lx fölött.</p>
+<p><strong>3. feladat.</strong> A 6 m átmérő 3 m sugarú érzékelési kör;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext><mo>&lt;</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext></mrow><annotation encoding="application/x-tex">3\,\text{m} &lt; 4\,\text{m}</annotation></semantics></math>,
+az ajtót a névleges lefedés nem éri el. A szélső zónák érzékenysége
+azonban a szerelési magasság és a lencse függvénye, ezért az
+érzékenységet csökkentjük, vagy takarólappal szűkítünk. Sétapróbával
+ellenőrizzük, hogy 3 m-en belül kapcsol, a 4 m-es ajtónál nem. Ezután a
+késleltetést is tesztelni kell.</p>
+<p><strong>4. feladat.</strong> Egyvonalas ábrán: az L1 fázis a
+szürkületkapcsoló L kapcsára, a kapcsoló terheléskimenete a lámpára, a
+lámpa nullája az N-re, a PE vezető a lámpa testére. Az érzékelő saját
+tápfeszültségét is az L és N közé kell kötni. A kapcsolási rajzon az
+érzékelőt mint kapcsolót jelöljük, a terhelése a lámpa. A megoldás rajza
+megegyezik a gyakorlati útmutató bekötési rajzával (S1 nélkül): ott az
+érzékelő L, N és L’ kapcsa, a reflektor és a PE bekötése is látható.</p>
+<p><strong>5. feladat.</strong> Jelenlétérzékelőt kell választani,
+amelyik mikrohullámú vagy finomabb PIR zónákkal dolgozik. A késleltetést
+15–30 percre állítjuk, az érzékenységet a tárgyaló asztal körüli zónára
+irányítjuk, és beállítjuk, hogy a mozgás megszűnése után a lámpa ne
+azonnal kapcsoljon ki. Ha szellőztetés is van, a jelenlétérzékelő azt is
+vezérelheti.</p>
+<p><strong>6. feladat.</strong> Lehetséges okok:</p>
+<ul>
+<li>A szürkületkapcsoló a saját lámpáját látja: takarjuk le az
+érzékelőt, ha a villódzás megszűnik, ez az ok.</li>
+<li>A hiszterézis túl kicsi, vagy a fényküszöb a kikapcsolás közelében
+ingadozik: luxmérővel mérjük az érzékelő helyén a megvilágítást a ki- és
+bekapcsolás pillanatában, és figyeljük a környező fényforrásokat.</li>
+<li>Hőmérsékletfüggő érzékenység: hidegben a fényküszöb eltolódhat,
+ezért a gyártói adatlapot ellenőrizni kell <strong>(ellenőrizendő: a
+készülék specifikációja)</strong>.</li>
+<li>Rossz bekötés, például a terhelés visszahat az érzékelőre: a
+kapcsolási rajz alapján ellenőrizni kell.</li>
+</ul>
+<h3 data-number="20.1.14" id="rövid-összefoglaló"><span
+class="header-section-number">20.1.14</span> Rövid összefoglaló</h3>
+<p>Az épületautomatikai érzékelők a fizikai mennyiséget – fény, mozgás,
+jelenlét, hőmérséklet, nedvesség, CO₂ – villamos jellé alakítják, amely
+tovább vezérli a beavatkozókat. A <strong>fényérzékelők</strong> közül a
+fotoellenállás egyszerű, a fotodióda gyors és pontos, a
+szürkületkapcsoló készülékben foglalt megoldás. A <strong>PIR
+mozgásérzékelő</strong> passzív infravörös zónaváltozást érzékel, a
+<strong>mikrohullámú</strong> érzékelő aktív radarelvet használ, a
+<strong>jelenlétérzékelő</strong> apró mozgásokat is érzékel. A
+<strong>hőmérséklet-érzékelő</strong> Pt100, Pt1000 vagy termisztor
+alapú lehet, a <strong>páratartalom</strong> kapacitív elven, a
+<strong>CO₂</strong> jellemzően NDIR elven működik. A telepítésnél
+figyelni kell a hőforrásokra, a fényforrásra, a látómezőre és a
+beállításokra (küszöb, hiszterézis, késleltetés). <strong>Továbbvitt
+eredmény:</strong> az érzékelők kimeneti jelét és csatlakoztatását a <a
+href="ve071.html">Beavatkozók: mágneskapcsolók, szelepek,
+szervomotorok</a> alfejezetben használjuk fel, a hálózatba kötés
+szempontjából pedig a <a href="ve072.html">KNX, DALI és más
+épületautomatikai rendszerek</a> alfejezet tárgyalja a rendszerszintű
+integrációt.</p>
+<h3 data-number="20.1.15" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">20.1.15</span> Források és ellenőrzési
+hiányok</h3>
+<p>A leírás a klasszikus érzékelői működési elveket tartalmazza, amelyek
+stabil fizikai ismeretek, de a konkrét terméktípusok, lux-értékek,
+érzékelési távolságok és a szabványhivatkozások pontos kiadása
+ellenőrzést igényel. A gyártói adatlapokon szereplő tűréshatárok,
+beépítési magasságok és kapcsolási küszöbök mindig az adott készülékre
+vonatkoznak <strong>(ellenőrizendő: aktuális gyártói adatlapok és
+szabványkiadások)</strong>.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve069.html">← 19.3 Biztonsági világítás</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve071.html">20.2 Beavatkozók: mágneskapcsolók, szelepek, szervomotorok →</a></div>
+</nav>
+</body>
+</html>

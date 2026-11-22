@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>38.1 Egyenirányítók, szűrők, stabilizátorok, kapcsolóüzemű táp
+és PFC – Villanyszerelő – villamos berendezés- és készülékszerelő
+szakirány</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz8">VIII. RÉSZ – Ipari elektronika</a> › <a href="index.html#vech37">38 Tápegységek, analóg és digitális alapok</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve137.html">← 37.4 Erősáramú félvezetők: tirisztor, triac, IGBT, MOSFET</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve139.html">38.2 Erősítők, műveleti erősítő és szűrők →</a></div>
+</nav>
+<h2 data-number="38.1" id="ve138"><span
+class="header-section-number">38.1</span> Egyenirányítók, szűrők,
+stabilizátorok, kapcsolóüzemű táp és PFC</h2>
+<h3 data-number="38.1.1"
+id="miért-kell-egy-villanyszerelőnek-ismernie-a-tápegységeket"><span
+class="header-section-number">38.1.1</span> Miért kell egy
+villanyszerelőnek ismernie a tápegységeket?</h3>
+<p>Egy LED-világítás driverét, egy telefon töltőjét vagy egy
+vezérlőszekrény 24 V-os tápegységét kinyitva ugyanazt a logikai láncot
+találjuk: a hálózati váltakozó feszültséget egyenirányítani kell, a
+lüktető egyenfeszültséget ki kell simítani, majd stabilizálni. Ha egy
+tápegység meghibásodik, a hiba sokszor az egyenirányító diódában, a
+pufferkondenzátorban vagy a kapcsolóüzemű fokozatban van. Az alfejezet
+célja, hogy a blokkvázlattól a kapcsolásokon át a méretezésig értse a
+tanuló, mi történik a készülékben, és hogyan lehet biztonságosan mérni,
+javítani.</p>
+<h3 data-number="38.1.2" id="a-hálózati-tápegység-blokkvázlata"><span
+class="header-section-number">38.1.2</span> A hálózati tápegység
+blokkvázlata</h3>
+<p>A klasszikus hálózati tápegység (lineáris táp) felépítése:</p>
+<pre class="text"><code>Hálózati  →  Transzformátor  →  Egyenirányító  →  Szűrő  →  Stabilizátor  →  Terhelés
+230 V AC      (leválasztás,       (diódák)        (kondenzátor)  (lineáris vagy
+               feszültségváltás)                                    kapcsolóüzemű)</code></pre>
+<p>A transzformátor a feszültség szintjét állítja be és galvanikusan
+leválasztja a hálózatot. Az egyenirányító a váltakozó feszültségből
+lüktető egyenfeszültséget állít elő, a szűrőkondenzátor ezt kisimítja, a
+stabilizátor pedig a terhelés és a hálózat változásai ellenére közel
+állandó kimeneti feszültséget tart. A kapcsolóüzemű tápegység ugyanezt a
+célt szolgálja, de a transzformátort nagyfrekvenciás kapcsolással és
+kisebb vasmaggal valósítja meg, ezért kisebb és jobb hatásfokú.</p>
+<h3 data-number="38.1.3" id="egyenirányító-kapcsolások"><span
+class="header-section-number">38.1.3</span> Egyenirányító
+kapcsolások</h3>
+<h4 data-number="38.1.3.1" id="egyutas-félhullámú-egyenirányító"><span
+class="header-section-number">38.1.3.1</span> Egyutas (félhullámú)
+egyenirányító</h4>
+<p>Az egyutas kapcsolás egyetlen diódát tartalmaz a transzformátor
+szekunder tekercse és a terhelés között. A dióda csak a pozitív
+félperiódusban vezet, a negatívban lezár, így a kimeneten a
+szinuszjelnek csak a pozitív fele jelenik meg.</p>
+<p>Az áramkört a következő kapcsolási rajz mutatja (T1 transzformátor,
+D1 dióda, C1 szűrőkondenzátor, R1 terhelés):</p>
+<figure>
+<img src="assets/ve138-diagram-1.png"
+alt="Egyutas egyenirányító szűrőkondenzátorral - A T1 transzformátor a 230 V-os hálózatot leválasztja és letranszformálja (a szekunder feszültség csúcsértéke a kidolgozott A) példában 24 V). A D1 dióda csak a pozitív félperiódusban vezet és tölti a C1 szűrőkondenzátort (2200 µF); a két töltés között C1 táplálja az R1 terhelést (az A) példában 1 A, kb. 19 Ω). A kondenzátor pozitív kivezetése a dióda katódja felőli oldalon van." />
+<figcaption aria-hidden="true">Egyutas egyenirányító szűrőkondenzátorral
+- A T1 transzformátor a 230 V-os hálózatot leválasztja és
+letranszformálja (a szekunder feszültség csúcsértéke a kidolgozott A)
+példában 24 V). A D1 dióda csak a pozitív félperiódusban vezet és tölti
+a C1 szűrőkondenzátort (2200 µF); a két töltés között C1 táplálja az R1
+terhelést (az A) példában 1 A, kb. 19 Ω). A kondenzátor pozitív
+kivezetése a dióda katódja felőli oldalon van.</figcaption>
+</figure>
+<p><strong>Definíció.</strong> Az egyutas egyenirányító olyan
+egyenirányító, amely a váltakozó feszültségnek csak az egyik
+félperiódusát engedi át, ezért a kimeneti áram mindig azonos irányú, de
+erősen lüktet. A kimeneti feszültség középértéke ohmos terhelésen,
+szűrőkondenzátor nélkül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><mfrac><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><mi>π</mi></mfrac></mrow><annotation encoding="application/x-tex">U_{\text{DC}} \approx \frac{U_{\text{csúcs}}}{\pi}</annotation></semantics></math>
+(szűrőkondenzátorral és kis terheléssel a kimenet közel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><annotation encoding="application/x-tex">U_{\text{csúcs}}</annotation></semantics></math>),
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><annotation encoding="application/x-tex">U_{\text{csúcs}}</annotation></semantics></math>
+a szekunder feszültség csúcsértéke.</p>
+<p>Előnye az egyszerűség, hátránya a rossz kihasználás és a nagy
+hullámosság. A transzformátor vasmagja egyenáramú előmágnesezést kaphat,
+ezért kisfeszültségű, kis áramú helyeken használjuk.</p>
+<h4 data-number="38.1.3.2"
+id="kétutas-teljeshullámú-egyenirányítók"><span
+class="header-section-number">38.1.3.2</span> Kétutas (teljeshullámú)
+egyenirányítók</h4>
+<p>A teljeshullámú megoldás a szinusz mindkét félperiódusát
+kihasználja.</p>
+<p><strong>Középmegcsapolásos kétutas egyenirányító</strong><br />
+A transzformátor szekunder tekercsének középmegcsapolása a közös ponthoz
+(0 V) csatlakozik, a két szélső kivezetésre egy-egy dióda kapcsolódik. A
+pozitív félperiódusban az egyik dióda vezet, a negatívban a másik, így a
+terhelésen mindig azonos irányú áram folyik.</p>
+<p><strong>Híd egyenirányító (Graetz-kapcsolás)</strong><br />
+A négy diódából álló híd a leggyakoribb egyenirányító. A váltakozó
+feszültség a híd két szemközti pontjára csatlakozik, a kimenet a másik
+két pont. A pozitív félperiódusban két dióda vezet, a negatívban a másik
+kettő, így a terhelésen mindkét félperiódusban azonos irányú feszültség
+jelenik meg. A híd kimeneti csúcsfeszültsége közelítőleg
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><annotation encoding="application/x-tex">U_{\text{csúcs}}</annotation></semantics></math>,
+a hullámossági alapharmonikus pedig kétszerese a hálózati frekvenciának
+(100 Hz).</p>
+<p>A következő rajz a hidat a T1 transzformátorral, a C1
+pufferkondenzátorral és az R1 terheléssel mutatja. A felső két dióda
+(D1, D3) katódja a + kimeneten, az alsó két dióda (D2, D4) anódja a −
+kimeneten találkozik; egy félperiódusban mindig egy átlós diódapár vezet
+(D1–D4, illetve D3–D2).</p>
+<figure>
+<img src="assets/ve138-diagram-2.png"
+alt="Híd egyenirányító (Graetz-kapcsolás) pufferkondenzátorral - Graetz-híd: ha AC1 a pozitívabb, D1 és D4 vezet; ha AC2, akkor D3 és D2. A + kimeneten D1 és D3 katódja, a − kimeneten D2 és D4 anódja találkozik, így az R1 terhelésen az áram iránya mindkét félperiódusban azonos. A C1 pufferkondenzátor + kivezetése a + kimenetre csatlakozik. Az AC2 vezeték pont nélküli keresztezése nem csatlakozás." />
+<figcaption aria-hidden="true">Híd egyenirányító (Graetz-kapcsolás)
+pufferkondenzátorral - Graetz-híd: ha AC1 a pozitívabb, D1 és D4 vezet;
+ha AC2, akkor D3 és D2. A + kimeneten D1 és D3 katódja, a − kimeneten D2
+és D4 anódja találkozik, így az R1 terhelésen az áram iránya mindkét
+félperiódusban azonos. A C1 pufferkondenzátor + kivezetése a + kimenetre
+csatlakozik. Az AC2 vezeték pont nélküli keresztezése nem
+csatlakozás.</figcaption>
+</figure>
+<p><strong>Definíció.</strong> A kétutas (teljeshullámú) egyenirányító
+az egyenirányítás során a váltakozó feszültség mindkét félperiódusát
+felhasználja. A kimeneti feszültség középértéke ohmos terhelésen,
+szűrőkondenzátor nélkül
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><mfrac><mrow><mn>2</mn><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub></mrow><mi>π</mi></mfrac></mrow><annotation encoding="application/x-tex">U_{\text{DC}} \approx \frac{2\,U_{\text{csúcs}}}{\pi}</annotation></semantics></math>.
+Szűrőkondenzátorral és kis terheléssel a kimenet közel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><annotation encoding="application/x-tex">U_{\text{csúcs}}</annotation></semantics></math>
+(lásd a Simítás szakaszt). A híd kapcsolás a négy dióda miatt nagyobb
+feszültségeséssel rendelkezik, de a transzformátor teljesítményét jobban
+kihasználja, mint a középmegcsapolásos változat.</p>
+<h4 data-number="38.1.3.3" id="háromfázisú-híd-egyenirányító"><span
+class="header-section-number">38.1.3.3</span> Háromfázisú híd
+egyenirányító</h4>
+<p>Háromfázisú rendszerben hat diódát használó háromfázisú hidat
+alkalmaznak (B6 kapcsolás). A fázisfeszültségek közül mindig az a
+diódapár vezet, amely a legnagyobb vonali feszültségnek felel meg, így a
+kimeneti feszültség hullámossága sokkal kisebb, alapfrekvenciája 300 Hz
+(6·50 Hz). A kimeneti középfeszültség közelítőleg
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><mfrac><mrow><mn>3</mn><msqrt><mn>3</mn></msqrt></mrow><mi>π</mi></mfrac><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">csúcs,fázis</mtext></msub><mo>≈</mo><mn>2</mn><mo>,</mo><mn>34</mn><mspace width="0.167em"></mspace><msub><mi>U</mi><mtext mathvariant="normal">fázis,eff</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{DC}} \approx \frac{3\sqrt{3}}{\pi}\,U_{\text{csúcs,fázis}} \approx 2{,}34\,U_{\text{fázis,eff}}</annotation></semantics></math>
+szinuszos táplálásnál. Ezt a kapcsolást ipari hajtások, frekvenciaváltók
+és nagyobb egyenáramú tápegységek bemenetén találjuk.</p>
+<p>A háromfázisú híd előnye a kis hullámosság és a jó
+teljesítménytényező, hátránya a hat dióda és a bonyolultabb
+felépítés.</p>
+<h3 data-number="38.1.4"
+id="simítás-hullámosság-és-szűrőkondenzátor"><span
+class="header-section-number">38.1.4</span> Simítás, hullámosság és
+szűrőkondenzátor</h3>
+<p>Az egyenirányító kimenete önmagában lüktet: az egyutasnál 50 Hz-es, a
+kétutasnál 100 Hz-es búgófeszültség jelenik meg. A terhelés számára
+általában simább egyenfeszültségre van szükség, ezért a kimenettel
+párhuzamosan szűrőkondenzátort kapcsolunk. A kondenzátor a diódák
+vezetési időszakában feltöltődik a csúcsfeszültségre, majd a diódák
+zárása után a terhelésen keresztül kisül.</p>
+<p><strong>Definíció.</strong> A hullámosság (búgófeszültség) a kimeneti
+feszültség váltakozó összetevője, amelyet csúcs-csúcs értékkel
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi></mrow><annotation encoding="application/x-tex">\Delta U</annotation></semantics></math>)
+jellemzünk. Közelítő képlete terhelt kapcsolásban:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>≈</mo><mfrac><msub><mi>I</mi><mtext mathvariant="normal">terhelés</mtext></msub><mrow><msub><mi>f</mi><mtext mathvariant="normal">töltés</mtext></msub><mspace width="0.278em"></mspace><mi>C</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+\Delta U \approx \frac{I_{\text{terhelés}}}{f_{\text{töltés}}\;C}
+</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mtext mathvariant="normal">terhelés</mtext></msub><annotation encoding="application/x-tex">I_{\text{terhelés}}</annotation></semantics></math>
+a terhelőáram,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
+a szűrőkondenzátor kapacitása,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mtext mathvariant="normal">töltés</mtext></msub><annotation encoding="application/x-tex">f_{\text{töltés}}</annotation></semantics></math>
+pedig a kondenzátor töltési frekvenciája (egyutasnál 50 Hz, hidas
+kétutasnál 100 Hz, háromfázisú hídnál 300 Hz).</p>
+<p>A képletből látható: nagyobb terhelőáram vagy kisebb kapacitás növeli
+a hullámosságot. A szűrés akkor megfelelő, ha a hullámosság a terhelés
+által megengedett határon belül marad. A kimeneti középfeszültség jó
+közelítéssel:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>−</mo><mfrac><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi></mrow><mn>2</mn></mfrac></mrow><annotation encoding="application/x-tex">
+U_{\text{DC}} \approx U_{\text{csúcs}} - \frac{\Delta U}{2}
+</annotation></semantics></math></p>
+<p><strong>Megjegyzés.</strong> A pontos hullámosság számításához
+figyelembe kell venni a diódák nyitóirányú feszültségesését
+(szilíciumdiódánál kb. 0,7 V, hídnál két dióda, tehát kb. 1,4 V) és a
+transzformátor belső ellenállását. A gyakorlatban a kondenzátor
+kapacitását úgy választjuk, hogy a hullámosság a kimeneti feszültség
+néhány százaléka legyen.</p>
+<h3 data-number="38.1.5" id="lineáris-stabilizátor"><span
+class="header-section-number">38.1.5</span> Lineáris stabilizátor</h3>
+<p>A szűrt egyenfeszültség még függ a hálózat ingadozásától és a
+terheléstől. A stabilizátor feladata, hogy a kimeneti feszültséget közel
+állandó értéken tartsa.</p>
+<p><strong>Definíció.</strong> A lineáris stabilizátor olyan
+feszültségstabilizáló áramkör, amely a bemeneti feszültség és a kimeneti
+feszültség különbségét egy soros szabályozóelemen (általában
+tranzisztoron) ejti le, és a kimeneti feszültséget visszacsatolással
+állandó értéken tartja. A bemeneti és kimeneti feszültség különbsége
+hővé alakul.</p>
+<p>A legegyszerűbb lineáris stabilizátor egy Zener-dióda és egy soros
+ellenállás, de a gyakorlatban integrált áramköröket használunk: pl. a
+78xx sorozat (pl. 7805, 7812) fix pozitív kimeneti feszültséget ad, a
+79xx sorozat negatívat. Az IC tartalmazza a referenciafeszültséget, a
+hibajel-erősítőt, a soros tranzisztort és a védelmeket (túláram,
+túlmelegedés).</p>
+<p><strong>Szabály.</strong> Lineáris stabilizátor használatakor a
+bemeneti feszültségnek legalább a kimeneti feszültségnél nagyobbnak kell
+lennie a katalógusban megadott minimális feszültségkülönbséggel (dropout
+feszültség). A disszipált teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">veszteség</mtext></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><msub><mi>I</mi><mtext mathvariant="normal">ki</mtext></msub></mrow><annotation encoding="application/x-tex">
+P_{\text{veszteség}} = \left(U_{\text{be}} - U_{\text{ki}}\right)\,I_{\text{ki}}
+</annotation></semantics></math></p>
+<p>Ez melegedést okoz, ezért a stabilizátort megfelelő hűtőbordával kell
+ellátni. A hatásfok:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mfrac><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub></mfrac><mo>=</mo><mfrac><mrow><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mspace width="0.167em"></mspace><msub><mi>I</mi><mtext mathvariant="normal">ki</mtext></msub></mrow><mrow><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub><mspace width="0.167em"></mspace><msub><mi>I</mi><mtext mathvariant="normal">ki</mtext></msub></mrow></mfrac><mo>=</mo><mfrac><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub></mfrac></mrow><annotation encoding="application/x-tex">
+\eta = \frac{P_{\text{ki}}}{P_{\text{be}}} = \frac{U_{\text{ki}}\,I_{\text{ki}}}{U_{\text{be}}\,I_{\text{ki}}} = \frac{U_{\text{ki}}}{U_{\text{be}}}
+</annotation></semantics></math></p>
+<p>ha a vezérlő áramfelvétele elhanyagolható. A lineáris stabilizátor
+hatásfoka annál rosszabb, minél nagyobb a bemeneti és kimeneti
+feszültség különbsége.</p>
+<h3 data-number="38.1.6" id="kapcsolóüzemű-tápegység-smps"><span
+class="header-section-number">38.1.6</span> Kapcsolóüzemű tápegység
+(SMPS)</h3>
+<p>A lineáris stabilizátor hátránya a nagy veszteség. A kapcsolóüzemű
+tápegység (Switch Mode Power Supply, SMPS) a feszültség átalakítását
+nagyfrekvenciás kapcsolással, induktivitás vagy transzformátor
+energiájának periodikus felhalmozásával és leadásával végzi.</p>
+<p><strong>Definíció.</strong> A kapcsolóüzemű tápegység olyan
+egyenirányító–átalakító rendszer, amelyben egy kapcsolóelem
+(tranzisztor) nagy frekvencián (tipikusan 20 kHz–1 MHz) ki-be kapcsol,
+és a kimeneti feszültséget a kapcsolás kitöltési tényezőjének (PWM)
+szabályozásával állítja be. A nagyfrekvenciás üzem lehetővé teszi kis
+méretű induktivitás és transzformátor használatát, így a táp kisebb,
+könnyebb és jobb hatásfokú (jellemzően 80–95%).</p>
+<p>A hálózati kapcsolóüzemű táp felépítése:</p>
+<pre class="text"><code>Hálózat → EMI szűrő → egyenirányító + pufferkondenzátor → nagyfrekvenciás
+  230 V AC                                  (kb. 325 V DC)      kapcsolófokozat
+        → transzformátor → kimeneti egyenirányító + szűrő → szabályozó visszacsatolás</code></pre>
+<p>A szabályozás a kimeneti feszültséget méri, és a kapcsoló tranzisztor
+bekapcsolási idejét változtatja (PWM). A fő kapcsoló topológiák:</p>
+<ul>
+<li><strong>Buck (feszültségcsökkentő, step-down):</strong> csökkenti a
+feszültséget.</li>
+<li><strong>Boost (feszültségnövelő, step-up):</strong> növeli a
+feszültséget.</li>
+<li><strong>Flyback:</strong> galvanikusan leválasztott,
+transzformátoros topológia, a leggyakoribb kis teljesítményű hálózati
+tápegységben.</li>
+<li><strong>Forward:</strong> szintén leválasztott, de a transzformátor
+közvetlenül adja át az energiát.</li>
+</ul>
+<p><strong>Összefüggés.</strong> A kapcsolóüzemű táp hatásfoka:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mfrac><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub></mfrac></mrow><annotation encoding="application/x-tex">
+\eta = \frac{P_{\text{ki}}}{P_{\text{be}}}
+</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><annotation encoding="application/x-tex">P_{\text{ki}}</annotation></semantics></math>
+a kimeneti egyenáramú teljesítmény,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><annotation encoding="application/x-tex">P_{\text{be}}</annotation></semantics></math>
+a hálózatból felvett hatásos teljesítmény. A veszteségek fő forrásai a
+kapcsolóelem kapcsolási vesztesége, a transzformátor és a diódák
+vesztesége.</p>
+<p>Az SMPS előnye a kiváló hatásfok és a kis tömeg, hátránya a
+bonyolultság, az elektromágneses zavar (EMI) és a hálózati visszahatás,
+amit az aktív PFC oldhat meg.</p>
+<p><strong>Biztonsági korlát.</strong> A hálózati tápegység (SMPS)
+bontása és javítása hálózati feszültségű munka, ezért csak jogosult,
+arra képesített személy végezheti; a tanuló tanműhelyi
+(törpefeszültségű) környezetben vagy oktató felügyeletével gyakorolhat.
+Bontás előtt alkalmazd az öt biztonsági szabályt: leválasztás a
+hálózatról, visszakapcsolás elleni biztosítás, a feszültségmentesség
+ellenőrzése, a szomszédos feszültség alatti részek lefedése (a
+földelés–rövidre zárás a készüléken belül nem értelmezhető, a helyette
+szükséges lépés a kisütés). <strong>Figyelem.</strong> A primer oldali
+pufferkondenzátor (kb. 325 V DC, aktív PFC-vel 380–400 V DC) a hálózat
+leválasztása után is veszélyes töltést tarthat: várd ki a gyártói
+kisütési időt, majd mérd meg a kondenzátor feszültségét (megfelelő
+CAT-kategóriájú műszer, megfelelő méréshatár); szükség esetén süsd ki
+megfelelő értékű és teljesítményű, szigetelt kisütő ellenálláson át
+(néhány kΩ), soha ne csavarhúzóval zárd rövidre. A primer oldal a
+hálózattal galvanikus kapcsolatban van: földelt oszcilloszkóppal csak
+leválasztó transzformátoron át vagy differenciálszondával mérj, különben
+a szonda földcsipesze zárlatot okozhat. <strong>(ellenőrizendő: gyártói
+szervizutasítás)</strong></p>
+<h3 data-number="38.1.7" id="teljesítménytényező-és-pfc"><span
+class="header-section-number">38.1.7</span> Teljesítménytényező és
+PFC</h3>
+<p>A hagyományos egyenirányító + pufferkondenzátor bemeneti fokozat csak
+a hálózati feszültség csúcsai közelében vesz fel áramot, ezért a
+hálózati áram nem szinuszos, hanem keskeny impulzusokból áll. Ez
+harmonikus áramokat okoz a hálózatban, rontja a teljesítménytényezőt, és
+a nulla- és fázisvezetőkben túlterhelést, a transzformátorokban
+melegedést okozhat.</p>
+<p><strong>Definíció.</strong> A teljesítménytényező (Power Factor, PF)
+a hatásos teljesítmény és a látszólagos teljesítmény hányadosa:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>F</mi><mo>=</mo><mfrac><mi>P</mi><mi>S</mi></mfrac></mrow><annotation encoding="application/x-tex">
+PF = \frac{P}{S}
+</annotation></semantics></math></p>
+<p>Szinuszos feszültség és szinuszos áram esetén
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>F</mi><mo>=</mo><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi></mrow><annotation encoding="application/x-tex">PF = \cos\varphi</annotation></semantics></math>,
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>
+a fázisszög. Ha az áram nem szinuszos, akkor a PF kisebb lehet 1-nél a
+harmonikus torzítás miatt is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>F</mi><mo>=</mo><mfrac><mrow><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi></mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mi>T</mi><mi>H</mi><msubsup><mi>D</mi><mi>i</mi><mn>2</mn></msubsup></mrow></msqrt></mfrac></mrow><annotation encoding="application/x-tex">
+PF = \frac{\cos\varphi}{\sqrt{1 + THD_i^2}}
+</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mi>H</mi><msub><mi>D</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">THD_i</annotation></semantics></math>
+az áram harmonikus torzítása. A hálózati egyenirányítós tápegységeknél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mo>≈</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\cos\varphi \approx 1</annotation></semantics></math>,
+de a THD nagy, így a PF jellemzően 0,5–0,7.</p>
+<p><strong>Szabvány.</strong> Az elektronikus berendezések hálózati
+visszahatását az EMC szabványok korlátozzák. A hálózati áram harmonikus
+összetevőire vonatkozó határértékeket az MSZ EN 61000-3-2 szabvány írja
+elő
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≤</mo><mn>16</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">\leq 16\,\text{A}</annotation></semantics></math>
+bemeneti áramú berendezésekre) <strong>(ellenőrizendő: aktuális kiadás
+és határértékek)</strong>. A nagyobb teljesítményű SMPS-ek ezért aktív
+teljesítménytényező-korrekciót (PFC) kapnak.</p>
+<p><strong>Definíció.</strong> Az aktív PFC egy olyan bemeneti fokozat,
+amely a hálózati áram felvételét úgy szabályozza, hogy az arányos legyen
+a hálózati feszültség pillanatértékével, így az áram szinuszos és
+fázisban van a feszültséggel. Ezáltal a teljesítménytényező közel 1
+lesz, a harmonikus tartalom pedig a szabványos határ alá csökken.</p>
+<p>Az aktív PFC gyakorlatban egy boost konvertert használ: a hálózati
+egyenirányító után egy induktivitás és egy kapcsoló tranzisztor áll, a
+szabályzó pedig a bemeneti áramot úgy alakítja, hogy az kövesse a
+hálózati feszültség alakját. A PFC a kimeneti pufferkondenzátor
+feszültségét a bemeneti csúcsfeszültség fölé emeli (jellemzően 380–400 V
+DC), így a következő DC-DC fokozat stabil tápfeszültséget kap.</p>
+<p><strong>Hálózati visszahatás.</strong> PFC nélküli SMPS-ek nagy
+csúcsáramú impulzusokat vesznek fel, ami feszültségtorzulást okozhat a
+hálózat belső impedanciáján. Ez zavarhatja a szomszédos berendezéseket,
+és a villamos hálózat üzemeltetőjének is problémát jelent. Az aktív PFC
+ezt a visszahatást minimalizálja.</p>
+<h3 data-number="38.1.8" id="kidolgozott-példák"><span
+class="header-section-number">38.1.8</span> Kidolgozott példák</h3>
+<p><strong>Példa (A).</strong> Egyutas egyenirányító
+szűrőkondenzátorral. A transzformátor szekunder feszültségének
+csúcsértéke
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{csúcs}} = 24\,\text{V}</annotation></semantics></math>,
+a terhelőáram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 1\,\text{A}</annotation></semantics></math>,
+a szűrőkondenzátor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>2200</mn><mspace width="0.167em"></mspace><mi>μ</mi><mtext mathvariant="normal">F</mtext></mrow><annotation encoding="application/x-tex">C = 2200\,\mu\text{F}</annotation></semantics></math>,
+a töltési frekvencia
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f = 50\,\text{Hz}</annotation></semantics></math>.<br />
+<strong>Számítás.</strong> A hullámosság csúcs-csúcs értéke:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>=</mo><mfrac><mi>I</mi><mrow><mi>f</mi><mspace width="0.167em"></mspace><mi>C</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><mrow><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext><mo>×</mo><mn>2200</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">F</mtext></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>0</mn><mo>,</mo><mn>11</mn></mrow></mfrac><mo>≈</mo><mn>9</mn><mo>,</mo><mn>09</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+\Delta U = \frac{I}{f\,C} = \frac{1\,\text{A}}{50\,\text{Hz} \times 2200\cdot 10^{-6}\,\text{F}} = \frac{1}{0{,}11} \approx 9{,}09\,\text{V}
+</annotation></semantics></math></p>
+<p>A kimeneti középfeszültség közelítőleg:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>−</mo><mfrac><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi></mrow><mn>2</mn></mfrac><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mfrac><mrow><mn>9</mn><mo>,</mo><mn>09</mn></mrow><mn>2</mn></mfrac><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>≈</mo><mn>24</mn><mo>−</mo><mn>4</mn><mo>,</mo><mn>55</mn><mo>=</mo><mn>19</mn><mo>,</mo><mn>45</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{DC}} \approx U_{\text{csúcs}} - \frac{\Delta U}{2} = 24\,\text{V} - \frac{9{,}09}{2}\,\text{V} \approx 24 - 4{,}55 = 19{,}45\,\text{V}
+</annotation></semantics></math></p>
+<p>Figyelembe véve a dióda nyitóirányú feszültségesését (kb. 0,7 V), a
+tényleges kimenet kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>18</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">18{,}7\,\text{V}</annotation></semantics></math>.
+<strong>Ellenőrzés:</strong> a hullámosság a kimeneti feszültség kb. 47
+%-a
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>9</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>/</mi><mn>19</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">9{,}1\,\text{V} / 19{,}5\,\text{V}</annotation></semantics></math>),
+ami nagyon nagy; ilyenkor a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>≈</mo><mi>I</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mi>C</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\Delta U \approx I/(fC)</annotation></semantics></math>
+közelítés is csak durva becslés. A hullámosságot a kapacitás növelésével
+lehet csökkenteni (például
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mi>μ</mi><mtext mathvariant="normal">F</mtext></mrow><annotation encoding="application/x-tex">10\,000\,\mu\text{F}</annotation></semantics></math>-nál
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>≈</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">\Delta U \approx 2\,\text{V}</annotation></semantics></math>).</p>
+<p><strong>Példa (B).</strong> Hidas egyenirányító 230 V hálózatról. A
+hálózati csúcsfeszültség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>=</mo><mn>230</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>×</mo><msqrt><mn>2</mn></msqrt><mo>≈</mo><mn>325</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{csúcs}} = 230\,\text{V} \times \sqrt{2} \approx 325\,\text{V}</annotation></semantics></math>.
+A szűrőkondenzátor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>470</mn><mspace width="0.167em"></mspace><mi>μ</mi><mtext mathvariant="normal">F</mtext></mrow><annotation encoding="application/x-tex">C = 470\,\mu\text{F}</annotation></semantics></math>,
+a terhelőáram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 0{,}5\,\text{A}</annotation></semantics></math>,
+a töltési frekvencia
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f = 100\,\text{Hz}</annotation></semantics></math>.<br />
+<strong>Számítás.</strong> A hullámosság:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><mrow><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext><mo>×</mo><mn>470</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">F</mtext></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>047</mn></mrow></mfrac><mo>≈</mo><mn>10</mn><mo>,</mo><mn>64</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+\Delta U = \frac{0{,}5\,\text{A}}{100\,\text{Hz} \times 470\cdot 10^{-6}\,\text{F}} = \frac{0{,}5}{0{,}047} \approx 10{,}64\,\text{V}
+</annotation></semantics></math></p>
+<p>A középfeszültség a diódák vesztesége nélkül:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><mn>325</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mfrac><mrow><mn>10</mn><mo>,</mo><mn>64</mn></mrow><mn>2</mn></mfrac><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>≈</mo><mn>319</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{DC}} \approx 325\,\text{V} - \frac{10{,}64}{2}\,\text{V} \approx 319{,}7\,\text{V}
+</annotation></semantics></math></p>
+<p>A híd két diódáján eső kb. 1,4 V-ot levonva a kimenet kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>318</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">318{,}3\,\text{V}</annotation></semantics></math>.
+<strong>Ellenőrzés:</strong> a hullámosság a kimeneti feszültség kb. 3
+%-a, ami már elfogadható sok tápegység bemenetén.</p>
+<p><strong>Példa (C).</strong> Lineáris stabilizátor hatásfoka. Egy
+7805-ös stabilizátor bemenete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{be}} = 12\,\text{V}</annotation></semantics></math>,
+kimenete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{ki}} = 5\,\text{V}</annotation></semantics></math>,
+terhelőárama
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 1\,\text{A}</annotation></semantics></math>.<br />
+<strong>Számítás.</strong> A veszteségi teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">veszteség</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>12</mn><mo>−</mo><mn>5</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>×</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{veszteség}} = (12 - 5)\,\text{V} \times 1\,\text{A} = 7\,\text{W}
+</annotation></semantics></math></p>
+<p>A bemeneti teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>×</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{be}} = 12\,\text{V} \times 1\,\text{A} = 12\,\text{W}
+</annotation></semantics></math></p>
+<p>A hatásfok:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mfrac><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub></mfrac><mo>=</mo><mfrac><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>417</mn><mo>=</mo><mn>41</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mi>%</mi></mrow><annotation encoding="application/x-tex">
+\eta = \frac{P_{\text{ki}}}{P_{\text{be}}} = \frac{5\,\text{W}}{12\,\text{W}} \approx 0{,}417 = 41{,}7\,\%
+</annotation></semantics></math></p>
+<p><strong>Ellenőrzés:</strong> a veszteség (7 W) jelentős, ezért a
+stabilizátor hűtőbordát igényel. Ha a bemenet közelítene a kimenethez
+(pl. 7 V), a hatásfok javulna:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mi>/</mi><mn>7</mn><mo>≈</mo><mn>71</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mi>%</mi></mrow><annotation encoding="application/x-tex">5/7 \approx 71{,}4\,\%</annotation></semantics></math>.</p>
+<p><strong>Példa (D).</strong> Kapcsolóüzemű táp hatásfoka. Egy SMPS
+kimenete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{ki}} = 12\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{ki}} = 5\,\text{A}</annotation></semantics></math>,
+hatásfoka
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>85</mn></mrow><annotation encoding="application/x-tex">\eta = 0{,}85</annotation></semantics></math>.<br />
+<strong>Számítás.</strong> A kimeneti teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>×</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{ki}} = 12\,\text{V} \times 5\,\text{A} = 60\,\text{W}
+</annotation></semantics></math></p>
+<p>A bemeneti teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mfrac><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><mi>η</mi></mfrac><mo>=</mo><mfrac><mn>60</mn><mrow><mn>0</mn><mo>,</mo><mn>85</mn></mrow></mfrac><mo>≈</mo><mn>70</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{be}} = \frac{P_{\text{ki}}}{\eta} = \frac{60}{0{,}85} \approx 70{,}6\,\text{W}
+</annotation></semantics></math></p>
+<p>A veszteség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>70</mn><mo>,</mo><mn>6</mn><mo>−</mo><mn>60</mn><mo>=</mo><mn>10</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">70{,}6 - 60 = 10{,}6\,\text{W}</annotation></semantics></math>,
+ami jóval kisebb, mint egy lineáris stabilizátor ugyanilyen
+átalakításnál. <strong>Ellenőrzés:</strong> a hatásfok 85 % azt jelenti,
+hogy a felvett teljesítmény 15 %-a hővé alakul; ez a gyakorlatban jó
+érték, de a hűtésről itt is gondoskodni kell.</p>
+<h3 data-number="38.1.9"
+id="ábra-a-hullámosság-és-a-szűrőkondenzátor-kapcsolata"><span
+class="header-section-number">38.1.9</span> Ábra: a hullámosság és a
+szűrőkondenzátor kapcsolata</h3>
+<p>Az alábbi interaktív ábra segít megérteni a szűrőkondenzátor
+méretezését. Az ábra a kondenzátorfeszültséget mutatja az idő
+függvényében (fűrészfogas hullámosság az egyenirányított szinusz alatt,
+a közelítés ΔU ≈ I/(f·C)). Az interaktív változatban a csúcsfeszültség,
+a terhelőáram, a kapacitás és a töltési frekvencia (50/100 Hz)
+állítható.</p>
+<figure id="fig-ve138-1">
+<div class="fig-interactive"><iframe src="figures/html/ve138-1.html" title="Interaktív ábra: a hullámosság a terhelőáram és a kondenzátor függvényében" loading="lazy" style="width:100%;border:0;height:460px"></iframe><noscript><img src="figures/img/ve138-1.png" style="width:85.0%"
+alt="Interaktív ábra: a hullámosság a terhelőáram és a kondenzátor függvényében" /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve138-1.png" style="width:85.0%"
+alt="Interaktív ábra: a hullámosság a terhelőáram és a kondenzátor függvényében" /></details></div>
+<figcaption>A szűrőkondenzátor hatása a hullámosságra</figcaption>
+</figure>
+<p>A statikus tartalék ábra leírása: a vízszintes tengelyen a
+kondenzátor kapacitása (µF), a függőleges tengelyen a hullámosság (V)
+látható; a görbék különböző terhelőáramokhoz tartoznak. A diagram a
+fenti képletből számolt, szemléltető értékeket mutat 100 Hz töltési
+frekvenciánál.</p>
+<h3 data-number="38.1.10" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">38.1.10</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy ipari vezérlőszekrény 24 V-os tápegysége rendszeresen leállt. A
+karbantartó megmérte a kimeneti feszültséget: terhelés nélkül 24 V,
+terhelve viszont 12 V-ra esett, és a kimeneten erős búgás volt. A
+hibakeresés során kiderült, hogy a tápegység szűrőkondenzátora
+(pufferkondenzátor) elvesztette kapacitását – a kondenzátor
+kidudorodott, és a mért kapacitása a névleges töredéke volt. A
+kondenzátor cseréje után a feszültség stabil lett, a búgás megszűnt. A
+tanulság: a pufferkondenzátor öregedése fokozatosan növeli a
+hullámosságot és csökkenti a kimeneti feszültséget, ezért időszakos
+felülvizsgálatnál érdemes a kapacitást és az ESR-t ellenőrizni.</p>
+<h3 data-number="38.1.11" id="tipikus-hibák"><span
+class="header-section-number">38.1.11</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>Polaritás tévesztés az elektrolitkondenzátornál.</strong> Az
+elektrolitkondenzátor fordított bekötése robbanásszerű meghibásodáshoz
+vezethet. A pozitív lábat a magasabb potenciálra kell kötni.<br />
+</li>
+<li><strong>Túl kicsi szűrőkondenzátor választása.</strong> Ha a
+hullámosság nagy, a terhelés (pl. erősítő, vezérlő) hibásan működhet, a
+stabilizátor bemeneti feszültsége a minimális érték alá eshet, és a
+kimeneten brumm jelenik meg.<br />
+</li>
+<li><strong>Lineáris stabilizátor hűtésének elhanyagolása.</strong> A
+disszipált teljesítmény (U_be – U_ki) × I jelentős lehet; hűtőborda
+nélkül a stabilizátor túlmelegszik, és lekapcsol.<br />
+</li>
+<li><strong>PFC nélküli SMPS alkalmazása érzékeny hálózaton.</strong> A
+nagy csúcstényezőjű áramfelvétel harmonikusokat kelt, amelyek
+zavarhatják a szomszédos készülékeket, és a hálózati előírásoknak sem
+felel meg.<br />
+</li>
+<li><strong>A pufferkondenzátor feszültségtűrésének
+alábecslése.</strong> A hálózati egyenirányító után a csúcsfeszültség
+325 V, ezért PFC nélküli tápban legalább 400 V névleges feszültségű
+kondenzátort kell használni, aktív PFC-s tápban (380–400 V DC busz)
+jellemzően 450 V-osat; cserénél mindig az eredetivel azonos vagy nagyobb
+névleges feszültségű típust válassz <strong>(ellenőrizendő: gyártói
+szervizutasítás)</strong>. A 250 V-os kondenzátor károsodik.</li>
+</ol>
+<h3 data-number="38.1.12" id="önellenőrzés"><span
+class="header-section-number">38.1.12</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e, hogy a hidas egyenirányító kimeneti hullámossági
+alapharmonikusa 50 Hz? Indokolj!<br />
+</li>
+<li>Egy kétutas híd egyenirányító pufferkondenzátora 1000 µF, a
+terhelőáram 2 A. Közelítőleg mekkora a hullámosság csúcs-csúcs
+értéke?<br />
+</li>
+<li>Miért rosszabb a lineáris stabilizátor hatásfoka, ha a bemeneti
+feszültség sokkal nagyobb, mint a kimeneti?<br />
+</li>
+<li>Magyarázd meg egy mondatban, mit csinál az aktív PFC!<br />
+</li>
+<li>Mi a különbség a flyback és a buck topológia között?<br />
+</li>
+<li>Miért kell a pufferkondenzátort PFC nélküli, 230 V-os hálózati
+tápnál legalább 400 V-osra méretezni, és mekkora névleges feszültség
+kell aktív PFC-s tápban?</li>
+</ol>
+<h3 data-number="38.1.13" id="feladatok"><span
+class="header-section-number">38.1.13</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Egy egyutas egyenirányító
+terhelőárama 0,5 A, a szűrőkondenzátor 470 µF. Mennyi a hullámosság
+csúcs-csúcs értéke? A töltési frekvencia 50 Hz. Válaszd ki a helyes
+képletet, és számolj!</p>
+<p><strong>2. feladat (A).</strong> Rajzold le a híd egyenirányító
+kapcsolását, és jelöld a kimeneti polaritást!</p>
+<p><strong>3. feladat (B).</strong> Egy hálózati SMPS bemeneti
+pufferkondenzátora 330 µF, a terhelőáram 0,8 A, a híd egyenirányító
+töltési frekvenciája 100 Hz. Számítsd ki a hullámosságot és a kimeneti
+középfeszültséget a diódák feszültségesése nélkül, ha a hálózati
+csúcsfeszültség 325 V!</p>
+<p><strong>4. feladat (B).</strong> Egy 7812-es stabilizátor bemenete 18
+V, kimenete 12 V, terhelőárama 0,8 A. Mekkora a disszipált teljesítmény
+és a hatásfok?</p>
+<p><strong>5. feladat (C).</strong> Egy kapcsolóüzemű tápegység kimeneti
+teljesítménye 90 W, hatásfoka 88 %. Mennyi a bemeneti teljesítmény és a
+veszteség? Ha a bemeneti feszültség 230 V és a teljesítménytényező PF =
+0,65, mekkora a látszólagos teljesítmény és az effektív bemeneti áram?
+Miért fontos a PF javítása?</p>
+<p><strong>6. feladat (D).</strong> Egy LED-driver tápegység bemeneti
+fokozata híd egyenirányítóból és pufferkondenzátorból áll. A hálózati
+feszültség 230 V, 50 Hz. A terhelés 300 mA-t vesz fel 60 V DC mellett. A
+kapcsolóüzemű fokozat hatásfoka 90 %. Becsüld meg a bemeneti
+pufferkondenzátor minimális kapacitását, ha a hullámosság a 325 V-os
+csúcsfeszültség 10 %-ánál nem lehet nagyobb, és a LED áramának
+folytonosnak kell lennie! (Tételezz fel 100 Hz töltési frekvenciát, és
+hanyagold el a diódaveszteséget.)</p>
+<h3 data-number="38.1.14" id="megoldások"><span
+class="header-section-number">38.1.14</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Hamis. A hidas (kétutas) egyenirányító a hálózati feszültség mindkét
+félperiódusát egyenirányítja, ezért a búgófeszültség alapfrekvenciája a
+hálózati frekvencia kétszerese, 100 Hz.<br />
+</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>=</mo><mfrac><mi>I</mi><mrow><mi>f</mi><mspace width="0.167em"></mspace><mi>C</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><mrow><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext><mo>×</mo><mn>1000</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">F</mtext></mrow></mfrac><mo>=</mo><mfrac><mn>2</mn><mrow><mn>0</mn><mo>,</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">\Delta U = \frac{I}{f\,C} = \frac{2\,\text{A}}{100\,\text{Hz} \times 1000\cdot 10^{-6}\,\text{F}} = \frac{2}{0{,}1} = 20\,\text{V}</annotation></semantics></math>.<br />
+</li>
+<li>Mert a bemeneti és kimeneti feszültség különbsége a soros
+tranzisztoron hővé alakul, tehát a veszteség
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub><mo>−</mo><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mo stretchy="false" form="postfix">)</mo><mi>I</mi></mrow><annotation encoding="application/x-tex">(U_{\text{be}} - U_{\text{ki}})I</annotation></semantics></math>,
+és minél nagyobb a különbség, annál több hő keletkezik.<br />
+</li>
+<li>Az aktív PFC a bemeneti áramot a hálózati feszültséggel arányos
+szinuszos alakra szabályozza, így a teljesítménytényező közel 1 lesz, a
+harmonikusok csökkennek.<br />
+</li>
+<li>A buck egy nem leválasztott, feszültségcsökkentő topológia; a
+flyback galvanikusan leválasztott, transzformátoros topológia, amely
+energiát tárol a vasmagban.<br />
+</li>
+<li>Mert a 230 V effektív hálózati feszültség csúcsértéke
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>230</mn><msqrt><mn>2</mn></msqrt><mo>≈</mo><mn>325</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">230\sqrt{2} \approx 325\,\text{V}</annotation></semantics></math>,
+és a kondenzátornak ezt a feszültséget plusz tartalékkal kell
+elviselnie, ezért PFC nélkül 400 V-os típus szükséges. Aktív PFC-vel a
+busz 380–400 V DC, ehhez tartalék nélkül a 400 V-os kondenzátor nem
+elég, ezért jellemzően 450 V-os típus kell <strong>(ellenőrizendő:
+gyártói szervizutasítás)</strong>.</li>
+</ol>
+<p><strong>1. feladat megoldása</strong></p>
+<p>Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 0{,}5\,\text{A}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>470</mn><mspace width="0.167em"></mspace><mi>μ</mi><mtext mathvariant="normal">F</mtext></mrow><annotation encoding="application/x-tex">C = 470\,\mu\text{F}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f = 50\,\text{Hz}</annotation></semantics></math>.<br />
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi></mrow><annotation encoding="application/x-tex">\Delta U</annotation></semantics></math>.<br />
+Képlet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>=</mo><mfrac><mi>I</mi><mrow><mi>f</mi><mspace width="0.167em"></mspace><mi>C</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">\Delta U = \frac{I}{f\,C}</annotation></semantics></math>.<br />
+Behelyettesítés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><mrow><mn>50</mn><mo>×</mo><mn>470</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>0235</mn></mrow></mfrac><mo>≈</mo><mn>21</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">\Delta U = \frac{0{,}5}{50 \times 470\cdot 10^{-6}} = \frac{0{,}5}{0{,}0235} \approx 21{,}3\,\text{V}</annotation></semantics></math>.<br />
+Ellenőrzés: a hullámosság nagy, mert az egyutas kapcsolás lassan tölti a
+kondenzátort.</p>
+<p><strong>2. feladat megoldása</strong></p>
+<p>A helyes rajz a Kétutas egyenirányítók szakasz „Híd egyenirányító
+(Graetz-kapcsolás) pufferkondenzátorral” kapcsolási rajza; az alábbi
+betűjelek (AC1, AC2, D1–D4, +, −) azzal egyeznek, a kimeneti polaritást
+a rajz + és − kapcsa mutatja.</p>
+<p>A híd (Graetz-kapcsolás) négy diódából áll; a két váltakozó áramú
+pontot AC1-gyel és AC2-vel jelöljük. A két váltakozó áramú pont közül
+mindkettőhöz egy dióda anódja (a + kimenet felé) és egy dióda katódja (a
+− kimenet felől) csatlakozik: AC1 → D1 anódja, D1 katódja → + kimenet;
+AC2 → D3 anódja, D3 katódja → + kimenet; a − kimenet → D2 anódja, D2
+katódja → AC1; a − kimenet → D4 anódja, D4 katódja → AC2. A terhelés a +
+és a − kimenet közé kerül. A + kimeneten tehát két katód, a − kimeneten
+két anód találkozik. Ha AC1 pozitívabb, mint AC2, D1 és D4 vezet; ha AC2
+a pozitív, D3 és D2 vezet. Mindkét félperiódusban a terhelésen az áram
+iránya ugyanaz, a pozitív pólus a katódok közös pontja.</p>
+<p><strong>3. feladat megoldása</strong></p>
+<p>Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>330</mn><mspace width="0.167em"></mspace><mi>μ</mi><mtext mathvariant="normal">F</mtext></mrow><annotation encoding="application/x-tex">C = 330\,\mu\text{F}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 0{,}8\,\text{A}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f = 100\,\text{Hz}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>=</mo><mn>325</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{csúcs}} = 325\,\text{V}</annotation></semantics></math>.<br />
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi></mrow><annotation encoding="application/x-tex">\Delta U</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><annotation encoding="application/x-tex">U_{\text{DC}}</annotation></semantics></math>.<br />
+Képlet:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>=</mo><mfrac><mi>I</mi><mrow><mi>f</mi><mspace width="0.167em"></mspace><mi>C</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">\Delta U = \frac{I}{f\,C}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><msub><mi>U</mi><mtext mathvariant="normal">csúcs</mtext></msub><mo>−</mo><mfrac><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi></mrow><mn>2</mn></mfrac></mrow><annotation encoding="application/x-tex">U_{\text{DC}} \approx U_{\text{csúcs}} - \frac{\Delta U}{2}</annotation></semantics></math>.<br />
+Számítás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>8</mn></mrow><mrow><mn>100</mn><mo>×</mo><mn>330</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>8</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>033</mn></mrow></mfrac><mo>≈</mo><mn>24</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+\Delta U = \frac{0{,}8}{100 \times 330\cdot 10^{-6}} = \frac{0{,}8}{0{,}033} \approx 24{,}2\,\text{V}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><mn>325</mn><mo>−</mo><mfrac><mrow><mn>24</mn><mo>,</mo><mn>2</mn></mrow><mn>2</mn></mfrac><mo>≈</mo><mn>325</mn><mo>−</mo><mn>12</mn><mo>,</mo><mn>1</mn><mo>=</mo><mn>312</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">
+U_{\text{DC}} \approx 325 - \frac{24{,}2}{2} \approx 325 - 12{,}1 = 312{,}9\,\text{V}
+</annotation></semantics></math></p>
+<p>Ellenőrzés: a hullámosság a csúcsfeszültség kb. 7 %-a, ami
+elfogadható, de a gyakorlatban a diódaveszteséget is le kell vonni.</p>
+<p><strong>4. feladat megoldása</strong></p>
+<p>Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>18</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{be}} = 18\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{ki}} = 12\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = 0{,}8\,\text{A}</annotation></semantics></math>.<br />
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">veszteség</mtext></msub><annotation encoding="application/x-tex">P_{\text{veszteség}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math>.<br />
+Számítás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">veszteség</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>18</mn><mo>−</mo><mn>12</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>×</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>4</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{veszteség}} = (18 - 12)\,\text{V} \times 0{,}8\,\text{A} = 4{,}8\,\text{W}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mn>18</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>×</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>14</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{be}} = 18\,\text{V} \times 0{,}8\,\text{A} = 14{,}4\,\text{W}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mfrac><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>×</mo><mn>0</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><mrow><mn>14</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>9</mn><mo>,</mo><mn>6</mn></mrow><mrow><mn>14</mn><mo>,</mo><mn>4</mn></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>667</mn><mo>=</mo><mn>66</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mi>%</mi></mrow><annotation encoding="application/x-tex">
+\eta = \frac{12\,\text{V} \times 0{,}8\,\text{A}}{14{,}4\,\text{W}} = \frac{9{,}6}{14{,}4} \approx 0{,}667 = 66{,}7\,\%
+</annotation></semantics></math></p>
+<p>Ellenőrzés: a hatásfok 66,7 %, a veszteség 4,8 W, ami hűtőbordát
+igényel.</p>
+<p><strong>5. feladat megoldása</strong></p>
+<p>Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">ki</mtext></msub><mo>=</mo><mn>90</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{ki}} = 90\,\text{W}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>88</mn></mrow><annotation encoding="application/x-tex">\eta = 0{,}88</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>230</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U = 230\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>F</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>65</mn></mrow><annotation encoding="application/x-tex">PF = 0{,}65</annotation></semantics></math>.<br />
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><annotation encoding="application/x-tex">P_{\text{be}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">veszteség</mtext></msub><annotation encoding="application/x-tex">P_{\text{veszteség}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math>.<br />
+Számítás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mfrac><mn>90</mn><mrow><mn>0</mn><mo>,</mo><mn>88</mn></mrow></mfrac><mo>≈</mo><mn>102</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{be}} = \frac{90}{0{,}88} \approx 102{,}3\,\text{W}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">veszteség</mtext></msub><mo>=</mo><mn>102</mn><mo>,</mo><mn>3</mn><mo>−</mo><mn>90</mn><mo>=</mo><mn>12</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{veszteség}} = 102{,}3 - 90 = 12{,}3\,\text{W}
+</annotation></semantics></math></p>
+<p>A látszólagos teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mfrac><msub><mi>P</mi><mtext mathvariant="normal">be</mtext></msub><mrow><mi>P</mi><mi>F</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>102</mn><mo>,</mo><mn>3</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>65</mn></mrow></mfrac><mo>≈</mo><mn>157</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">VA</mtext></mrow><annotation encoding="application/x-tex">
+S = \frac{P_{\text{be}}}{PF} = \frac{102{,}3}{0{,}65} \approx 157{,}4\,\text{VA}
+</annotation></semantics></math></p>
+<p>Az effektív bemeneti áram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>S</mi><mi>U</mi></mfrac><mo>=</mo><mfrac><mrow><mn>157</mn><mo>,</mo><mn>4</mn></mrow><mn>230</mn></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>684</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">
+I = \frac{S}{U} = \frac{157{,}4}{230} \approx 0{,}684\,\text{A}
+</annotation></semantics></math></p>
+<p>Ellenőrzés: ha a PF 1 lenne, az áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>102</mn><mo>,</mo><mn>3</mn><mi>/</mi><mn>230</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>445</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">102{,}3 / 230 = 0{,}445\,\text{A}</annotation></semantics></math>
+lenne; a rossz PF miatt az áram nagyobb, ami a vezetékeket és a
+transzformátort jobban terheli. Ezért fontos a PFC.</p>
+<p><strong>6. feladat megoldása</strong></p>
+<p>Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">hálózat</mtext></msub><mo>=</mo><mn>230</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{hálózat}} = 230\,\text{V}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mtext mathvariant="normal">töltés</mtext></msub><mo>=</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Hz</mtext></mrow><annotation encoding="application/x-tex">f_{\text{töltés}} = 100\,\text{Hz}</annotation></semantics></math>,
+a LED oldali teljesítmény
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">LED</mtext></msub><mo>=</mo><mn>60</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>×</mo><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>18</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{LED}} = 60\,\text{V} \times 0{,}3\,\text{A} = 18\,\text{W}</annotation></semantics></math>,
+a kapcsolóüzemű fokozat hatásfoka
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">\eta = 0{,}9</annotation></semantics></math>.<br />
+Keresett: a bemeneti pufferkondenzátor minimális kapacitása, ha a
+hullámosság
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>≤</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>×</mo><mn>325</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>32</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">\Delta U \leq 0{,}1 \times 325\,\text{V} = 32{,}5\,\text{V}</annotation></semantics></math>.<br />
+Számítás: A bemeneti egyenáramú teljesítmény a kapcsolóüzemű fokozat
+bemenete:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">DC</mtext></msub><mo>=</mo><msub><mi>P</mi><mtext mathvariant="normal">LED</mtext></msub><mi>/</mi><mi>η</mi><mo>=</mo><mn>18</mn><mi>/</mi><mn>0</mn><mo>,</mo><mn>9</mn><mo>=</mo><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{DC}} = P_{\text{LED}} / \eta = 18 / 0{,}9 = 20\,\text{W}</annotation></semantics></math>.
+A bemeneti egyenfeszültség közelítőleg
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>≈</mo><mn>325</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_{\text{DC}} \approx 325\,\text{V}</annotation></semantics></math>,
+tehát a bemeneti áram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">DC</mtext></msub><mo>=</mo><msub><mi>P</mi><mtext mathvariant="normal">DC</mtext></msub><mi>/</mi><msub><mi>U</mi><mtext mathvariant="normal">DC</mtext></msub><mo>=</mo><mn>20</mn><mi>/</mi><mn>325</mn><mo>≈</mo><mn>0</mn><mo>,</mo><mn>0615</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_{\text{DC}} = P_{\text{DC}} / U_{\text{DC}} = 20 / 325 \approx 0{,}0615\,\text{A}</annotation></semantics></math>.<br />
+A hullámosság képlete:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>=</mo><mfrac><msub><mi>I</mi><mtext mathvariant="normal">DC</mtext></msub><mrow><mi>f</mi><mspace width="0.167em"></mspace><mi>C</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">\Delta U = \frac{I_{\text{DC}}}{f\,C}</annotation></semantics></math>.
+Ebből:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mfrac><msub><mi>I</mi><mtext mathvariant="normal">DC</mtext></msub><mrow><mi>f</mi><mspace width="0.167em"></mspace><mi mathvariant="normal">Δ</mi><msub><mi>U</mi><mtext mathvariant="normal">max</mtext></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>0615</mn></mrow><mrow><mn>100</mn><mo>×</mo><mn>32</mn><mo>,</mo><mn>5</mn></mrow></mfrac><mo>≈</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>0615</mn></mrow><mn>3250</mn></mfrac><mo>≈</mo><mn>1</mn><mo>,</mo><mn>89</mn><mo>⋅</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><mspace width="0.167em"></mspace><mtext mathvariant="normal">F</mtext><mo>=</mo><mn>18</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mi>μ</mi><mtext mathvariant="normal">F</mtext></mrow><annotation encoding="application/x-tex">
+C = \frac{I_{\text{DC}}}{f\,\Delta U_{\text{max}}} = \frac{0{,}0615}{100 \times 32{,}5} \approx \frac{0{,}0615}{3250} \approx 1{,}89 \cdot 10^{-5}\,\text{F} = 18{,}9\,\mu\text{F}
+</annotation></semantics></math></p>
+<p>A gyakorlatban ennél jóval nagyobb kapacitást (pl. 100–220 µF)
+választanak, hogy a hullámosság kisebb, a táp stabilabb legyen, és a
+bekapcsolási áramlökést is kezelni tudja. <strong>Ellenőrzés:</strong> a
+számított érték minimális elméleti kapacitás; a valóságban a diódák
+vesztesége, a hálózati ingadozás és a csúcstényező miatt nagyobb
+tartalék szükséges.</p>
+<h3 data-number="38.1.15" id="rövid-összefoglaló"><span
+class="header-section-number">38.1.15</span> Rövid összefoglaló</h3>
+<p>A hálózati tápegység blokkvázlata: transzformátor (opcionális),
+egyenirányító, szűrő, stabilizátor. Az egyutas egyenirányító csak az
+egyik félperiódust használja, a kétutas (híd) mindkettőt, a háromfázisú
+híd pedig hat diódával kis hullámosságú egyenfeszültséget ad. A
+szűrőkondenzátor a hullámosságot csökkenti:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>U</mi><mo>≈</mo><mi>I</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mi>C</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\Delta U \approx I/(f C)</annotation></semantics></math>,
+ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+a töltési frekvencia (50, 100 vagy 300 Hz). A lineáris stabilizátor a
+felesleges feszültséget hővé alakítja, hatásfoka
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">ki</mtext></msub><mi>/</mi><msub><mi>U</mi><mtext mathvariant="normal">be</mtext></msub></mrow><annotation encoding="application/x-tex">U_{\text{ki}}/U_{\text{be}}</annotation></semantics></math>;
+a kapcsolóüzemű tápegység nagyfrekvenciás kapcsolással 80–95 %
+hatásfokot ér el. A hálózati egyenirányítós bemenetek rossz
+teljesítménytényezővel és nagy harmonikus árammal rendelkeznek; az aktív
+PFC ezt a bemeneti áram szinuszos alakra szabályozásával javítja. A
+biztonságos méréshez mindig tartsuk be az öt biztonsági szabályt,
+különösen a pufferkondenzátor feszültségének ellenőrzésekor.</p>
+<p><strong>Továbbvitt eredmény.</strong> A szűrőkondenzátor méretezési
+képlete, a híd egyenirányító kimeneti feszültsége és a kapcsolóüzemű táp
+blokkvázlata közvetlenül használatos; az RC-szűrés és a hullámosság
+fogalma az <a href="ve139.html">Erősítők, műveleti erősítő és szűrők</a>
+alfejezetben folytatódik.</p>
+<h3 data-number="38.1.16" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">38.1.16</span> Források és ellenőrzési
+hiányok</h3>
+<p>A fejezetben használt hullámossági képlet, a kimeneti középfeszültség
+közelítései és a hatásfokszámítások a klasszikus elektronikai alapokból
+következnek. A kapcsolóüzemű tápegységek topológiái és az aktív PFC
+működése a gyártói alkalmazási jegyzetek és a tankönyvi irodalom szerint
+került bemutatásra. A hálózati harmonikus határértékekre vonatkozó MSZ
+EN 61000-3-2 szabvány pontos követelményeit és a 78xx stabilizátorok
+adatait a hatályos kiadás és a gyártói adatlapok alapján kell
+ellenőrizni <strong>(ellenőrizendő: szabványkiadás, határértékek, IC
+paraméterek)</strong>. Az interaktív ábra a fenti képletből számolt,
+szemléltető jellegű.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve137.html">← 37.4 Erősáramú félvezetők: tirisztor, triac, IGBT, MOSFET</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve139.html">38.2 Erősítők, műveleti erősítő és szűrők →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

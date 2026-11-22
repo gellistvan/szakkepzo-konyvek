@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tirisztor jelleggörbe</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ig">Gate-áram I_G (relatív)</label><input id="ig" type="range" min="0" max="1" step="0.05" value="0" aria-label="Gate-áram I_G (relatív)"><output id="ig_o" for="ig"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 360" role="img" aria-label="Tirisztor jelleggörbe: zárási és vezetési ágak, gyújtás gate-árammal"></svg>
+<p class="small">Sematikus jelleggörbe relatív egységekben (nem katalógusadat): a gate-áram növelése csökkenti az átbillenési feszültséget; a vezetési ágon a feszültségesés kb. 1–1,5 V. A konkrét U_DRM, U_RRM, I_GT, I_H, I_L értékeket a gyártói adatlap adja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"ig":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const X0=40,X1=540,Y0=20,Y1=330,ox=X0+(X1-X0)*1.15/2.3,oy=Y0+(Y1-Y0)*1.05/1.55;
+const sx=u=>ox+(X1-X0)*u/2.3, sy=i=>oy-(Y1-Y0)*i/1.55;
+const ub=1-0.85*v.ig, blk=u=>0.006+0.03*Math.pow(u/ub,3), on=i=>0.02+0.04*i;
+el("line",{x1:X0,x2:X1,y1:oy,y2:oy,stroke:css("--fg"),"stroke-width":1});el("line",{x1:ox,x2:ox,y1:Y0,y2:Y1,stroke:css("--fg"),"stroke-width":1});
+function sb(t,s){const ts=document.createElementNS(NS,"tspan");ts.setAttribute("baseline-shift","sub");ts.setAttribute("font-size","9");ts.textContent=s;t.appendChild(ts);return t;}
+sb(el("text",{x:X1,y:oy+16,"text-anchor":"end","font-size":12},"U"),"AK");sb(el("text",{x:ox-8,y:Y0+10,"text-anchor":"end","font-size":12},"I"),"A");
+let p=[sx(-1.07)+","+sy(-0.45),sx(-1.055)+","+sy(-0.25)];for(let u=-1.048;u<=0;u+=0.01)p.push(sx(u)+","+sy(-0.004-0.02*Math.pow(u/-1.05,8)));
+el("polyline",{points:p.join(" "),fill:"none",stroke:css("--hl2"),"stroke-width":2.6});
+let q=[];for(let u=0;u<=ub;u+=ub/100)q.push(sx(u)+","+sy(blk(u)));
+el("polyline",{points:q.join(" "),fill:"none",stroke:css("--hl2"),"stroke-width":2.6});
+el("line",{x1:sx(ub),y1:sy(blk(ub)),x2:sx(on(0.1)),y2:sy(0.1),stroke:css("--hl"),"stroke-width":1.8,"stroke-dasharray":"6 4"});
+el("circle",{cx:sx(ub),cy:sy(blk(ub)),r:5,fill:css("--bg"),stroke:css("--hl"),"stroke-width":2.4});
+let r=[];for(let i=0.036;i<=1;i+=0.01)r.push(sx(on(i))+","+sy(i));
+el("polyline",{points:r.join(" "),fill:"none",stroke:css("--hl2"),"stroke-width":3.4});
+sb(el("text",{x:sx(ub),y:sy(blk(ub))-12,"text-anchor":"middle","font-size":12,fill:css("--hl")},"U"),"BO");
+el("text",{x:sx(-0.5),y:sy(-0.08),"text-anchor":"middle","font-size":12},"záróirány");
+el("text",{x:sx(0.5),y:sy(0.12),"text-anchor":"middle","font-size":12},"előre zárás");
+el("text",{x:sx(on(0.8))+10,y:sy(0.8),"font-size":12},"vezetési ág");
+status("I<sub>G</sub> = "+fmt(v.ig,2)+" (relatív) → az átbillenési feszültség <b>U<sub>BO</sub> = "+fmt(ub*100,0)+" %</b>-a az I<sub>G</sub> = 0 melletti értéknek. "+
+ (v.ig<0.05?"Gate-áram nélkül a tirisztor csak a nagy U<sub>BO</sub> elérésekor billen át (üzemszerűen kerülendő).":"Nagyobb gate-áramnál a tirisztor kisebb anód–katód feszültségnél gyújt, és a vezetési ágra ugrik; ott marad, amíg az áram I<sub>H</sub> alá nem csökken."));
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

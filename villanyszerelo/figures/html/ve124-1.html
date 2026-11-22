@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A kapcsolószekrény hőmérlege</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="P">Hőveszteség P</label><input id="P" type="range" min="20" max="500" step="1" value="116.0" aria-label="Hőveszteség P"><output id="P_o" for="P"></output></div>
+<div class="row"><label for="A">Hűtőfelület A</label><input id="A" type="range" min="0.5" max="5" step="0.1" value="1.2" aria-label="Hűtőfelület A"><output id="A_o" for="A"></output></div>
+<div class="row"><label for="k">Hőátadási tényező k</label><input id="k" type="range" min="3" max="6" step="0.1" value="5.0" aria-label="Hőátadási tényező k"><output id="k_o" for="k"></output></div>
+<div class="row"><label for="Ta">Környezet Ta</label><input id="Ta" type="range" min="15" max="40" step="1" value="30.0" aria-label="Környezet Ta"><output id="Ta_o" for="Ta"></output></div>
+<div class="row"><label for="V">Ventilátor V̇</label><input id="V" type="range" min="0" max="200" step="1" value="0" aria-label="Ventilátor V̇"><output id="V_o" for="V"></output></div>
+<div class="row"><label for="Tm">Megengedett Ti,max</label><input id="Tm" type="range" min="30" max="55" step="1" value="40.0" aria-label="Megengedett Ti,max"><output id="Tm_o" for="Tm"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Hőmérleg-grafikon: a vízszintes veszteségvonal és a hőleadási egyenesek metszéspontja adja az egyensúlyi belső hőmérsékletet"></svg>
+<p class="small">Egyszerűsített, egyensúlyi modell (a fal hőleadása és a ventilátor által kicserélt levegő egyaránt a T_i − T_a különbséggel arányos). A k-tényező, a hűtőfelület számítása és a megengedett belső hőmérséklet gyártói adat (ellenőrizendő: szekrény- és készülékadatlap). Számított értékek, nem mérés.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"P":"W", "A":"m²", "k":"W/(m²K)", "Ta":"°C", "V":"m³/h", "Tm":"°C"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const RC=1.2*1005/3600, gp=v.k*v.A, gf=gp+RC*v.V, Ti=v.Ta+v.P/gf, Tp=v.Ta+v.P/gp;
+const X0=60,X1=540,Y0=260,Y1=15, tmin=10, tmax=90, pmax=Math.max(100,Math.ceil(v.P*1.6/50)*50);
+const X=t=>X0+(X1-X0)*(t-tmin)/(tmax-tmin), Y=p=>Y0-(Y0-Y1)*p/pmax;
+for(let t=10;t<=90;t+=10){el("line",{x1:X(t),x2:X(t),y1:Y0,y2:Y1,stroke:css("--grid")});el("text",{x:X(t),y:Y0+16,"text-anchor":"middle","font-size":12},t);}
+for(let k=0;k<=4;k++){const p=pmax*k/4;el("line",{x1:X0,x2:X1,y1:Y(p),y2:Y(p),stroke:css("--grid")});el("text",{x:X0-6,y:Y(p)+4,"text-anchor":"end","font-size":12},fmt(p,0));}
+el("text",{x:(X0+X1)/2,y:Y0+34,"text-anchor":"middle","font-size":13},"belső hőmérséklet Ti (°C)");
+el("text",{x:14,y:(Y0+Y1)/2,"font-size":13,"text-anchor":"middle",transform:"rotate(-90 14 "+((Y0+Y1)/2)+")"},"W");
+function lineG(g,dash,w,col){const t2=Math.min(tmax,v.Ta+pmax/g);el("line",{x1:X(v.Ta),y1:Y(0),x2:X(t2),y2:Y(g*(t2-v.Ta)),stroke:col,"stroke-width":w,"stroke-dasharray":dash});}
+el("line",{x1:X0,x2:X1,y1:Y(v.P),y2:Y(v.P),stroke:css("--line"),"stroke-width":2.5});
+lineG(gp,"8 5",2,css("--line")); if(v.V>0) lineG(gf,"2 4",2.6,css("--hl"));
+el("line",{x1:X(v.Tm),x2:X(v.Tm),y1:Y0,y2:Y1,stroke:css("--bad"),"stroke-width":1.5,"stroke-dasharray":"6 3 2 3"});
+el("text",{x:X(v.Tm)+4,y:Y1+12,"font-size":12,fill:css("--bad")},"Ti,max");
+if(Ti<=tmax) el("circle",{cx:X(Ti),cy:Y(v.P),r:7,fill:Ti>v.Tm?css("--bad"):css("--ok")});
+let h="Egyensúly: T<sub>i</sub> = T<sub>a</sub> + P/(kA + ρc<sub>p</sub>V̇) = "+fmt(v.Ta,0)+" + "+fmt(v.P,0)+"/("+fmt(gp,1)+" + "+fmt(RC*v.V,1)+") ≈ <b>"+fmt(Ti,1)+" °C</b>";
+if(v.V>0) h+=" (ventilátor nélkül "+fmt(Tp,1)+" °C)";
+h+=". "+(Ti>v.Tm?"<span class='bad'>A megengedett "+fmt(v.Tm,0)+" °C fölött: nagyobb felület, ventilátor vagy hűtés kell.</span>":"<span class='ok'>A megengedett "+fmt(v.Tm,0)+" °C alatt.</span>");
+if(v.Ta>=v.Tm) h+=" <span class='bad'>A környezet már a határon van: szellőztetés nem elég, hűtőaggregát kell.</span>";
+status(h);
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

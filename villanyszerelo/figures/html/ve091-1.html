@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kapcsolási csoport vizsgáló</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="g">Csoport (1 Yy0, 2 Yy6, 3 Dyn5, 4 Dyn11, 5 Yzn5, 6 Yd11, 7 Dd0)</label><input id="g" type="range" min="1" max="7" step="1" value="3" aria-label="Csoport (1 Yy0, 2 Yy6, 3 Dyn5, 4 Dyn11, 5 Yzn5, 6 Yd11, 7 Dd0)"><output id="g_o" for="g"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 250" role="img" aria-label="Transzformátor kapcsolási csoportja: fázorábra, óratárcsa és sematikus kapcsolási vázlat a kiválasztott csoporthoz"></svg>
+<p class="small">Szemléltetés (25.3): a csoport jele nagybetűvel a nagyobb feszültségű (primer), kisbetűvel a kisebb feszültségű oldal kapcsolását, az n a kivezetett csillagpontot, a szám az óraszámot adja (h·30° késés). Sematikus vázlat, nem kapcsolási terv; a kapocsjelölések a gyártói dokumentáció szerint (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"g":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+const G=[["Yy0", "Y", "Y", 0, false], ["Yy6", "Y", "Y", 6, false], ["Dyn5", "D", "Y", 5, true], ["Dyn11", "D", "Y", 11, true], ["Yzn5", "Y", "Z", 5, true], ["Yd11", "Y", "D", 11, false], ["Dd0", "D", "D", 0, false]];
+const [name,pr,se,h,nn]=G[v.g-1], rad=a=>a*Math.PI/180, ang=90-30*h;
+const P=(cx,cy,r,a)=>[cx+r*Math.cos(rad(a)),cy-r*Math.sin(rad(a))];
+const arrow=(cx,cy,r,a,col,dash,lab)=>{const [x,y]=P(cx,cy,r,a), [tx,ty]=P(cx,cy,r*1.22,a);
+  el("line",{x1:cx,y1:cy,x2:x,y2:y,stroke:col,"stroke-width":3,"stroke-dasharray":dash});
+  const b=Math.atan2(y-cy,x-cx);el("path",{d:`M${x} ${y}L${x-10*Math.cos(b-.4)} ${y-10*Math.sin(b-.4)}L${x-10*Math.cos(b+.4)} ${y-10*Math.sin(b+.4)}Z`,fill:col});
+  el("text",{x:tx,y:ty+4,"text-anchor":"middle","font-size":13,fill:col},lab);};
+el("text",{x:20,y:18,"font-size":14,"font-weight":"bold"},name);
+// fázorábra
+let cx=80,cy=135,r=70;
+el("text",{x:cx+30,y:20,"text-anchor":"middle","font-size":11},"fázorábra");
+[90,-30,210].forEach((a,i)=>arrow(cx,cy,r,a,css("--fg"),"",["U","V","W"][i]));
+[0,-120,120].forEach((d,i)=>arrow(cx,cy,r*.8,ang+d,css("--hl2"),"6 4",["u","v","w"][i]));
+// óratárcsa
+cx=255;el("text",{x:cx,y:20,"text-anchor":"middle","font-size":11},"óratárcsa");
+el("circle",{cx:cx,cy:cy,r:70,fill:"none",stroke:css("--line"),"stroke-width":2});
+for(let k=0;k<12;k++){const [x1,y1]=P(cx,cy,62,90-30*k),[x2,y2]=P(cx,cy,70,90-30*k),[tx,ty]=P(cx,cy,84,90-30*k);
+  el("line",{x1:x1,y1:y1,x2:x2,y2:y2,stroke:css("--line"),"stroke-width":1.5});el("text",{x:tx,y:ty+4,"text-anchor":"middle","font-size":11},String(k||12));}
+el("line",{x1:cx,y1:cy,x2:cx,y2:cy-58,stroke:css("--fg"),"stroke-width":4});
+const [hx,hy]=P(cx,cy,42,ang);el("line",{x1:cx,y1:cy,x2:hx,y2:hy,stroke:css("--hl2"),"stroke-width":4,"stroke-dasharray":"7 4"});
+el("text",{x:cx,y:cy+114,"text-anchor":"middle","font-size":12},h+" óra = "+(30*h)+"° késés");
+// vázlat
+const sym=(cx,cy,r,k,neu,labs)=>{
+  const ends=[90,210,330].map(a=>P(cx,cy,r,a));
+  if(k==="D"){el("path",{d:`M${ends[0]}L${ends[1]}L${ends[2]}Z`,fill:"none",stroke:css("--line"),"stroke-width":3});}
+  else{ends.forEach(([x,y],i)=>{el("line",{x1:cx,y1:cy,x2:x,y2:y,stroke:css("--line"),"stroke-width":3});
+    if(k==="Z"){const a=rad([90,210,330][i]),px=-Math.sin(a),py=-Math.cos(a);el("line",{x1:x-9*px,y1:y-9*py,x2:x+9*px,y2:y+9*py,stroke:css("--line"),"stroke-width":3});}});
+    el("circle",{cx:cx,cy:cy,r:3,fill:css("--fg")});}
+  if(neu){el("line",{x1:cx,y1:cy,x2:cx+r*1.1,y2:cy,stroke:css("--line"),"stroke-width":2,"stroke-dasharray":"4 3"});el("text",{x:cx+r*1.1+6,y:cy+4,"font-size":12},"n");}
+  ends.forEach(([x,y],i)=>{const [tx,ty]=P(cx,cy,r*1.4,[90,210,330][i]);el("text",{x:tx,y:ty+4,"text-anchor":"middle","font-size":12},labs[i]);});};
+el("text",{x:465,y:20,"text-anchor":"middle","font-size":11},"sematikus vázlat");
+sym(415,120,34,pr,false,["U","V","W"]);sym(520,120,34,se,nn,["u","v","w"]);
+const nm={Y:"csillag",D:"delta",Z:"zegzug"};
+el("text",{x:415,y:195,"text-anchor":"middle","font-size":12},"primer:");el("text",{x:415,y:211,"text-anchor":"middle","font-size":12},nm[pr]);el("text",{x:520,y:195,"text-anchor":"middle","font-size":12},"szekunder:");el("text",{x:520,y:211,"text-anchor":"middle","font-size":12},nm[se]+(nn?" + n":""));
+status("<b>"+name+"</b>: óraszám "+h+" → a kisfeszültségű oldal a nagyfeszültségű oldalhoz képest <b>"+(30*h)+"° késésben</b> van"+(h>6?" (= "+(360-30*h)+"° sietés)":"")+". Csak azonos óraszámú és áttételű transzformátorok kapcsolhatók párhuzamosan (pl. Dyn5 és Yy0 között 150° eltérés).");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

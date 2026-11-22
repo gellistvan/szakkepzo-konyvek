@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hiszterézishurok</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="hm">H_max csúcs-térerősség</label><input id="hm" type="range" min="200" max="6000" step="50" value="2000" aria-label="H_max csúcs-térerősség"><output id="hm_o" for="hm"></output></div>
+<div class="row"><label for="w">pillanat ωt</label><input id="w" type="range" min="0" max="359" step="1" value="60" aria-label="pillanat ωt"><output id="w_o" for="w"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 330" role="img" aria-label="Hiszterézishurok a remanencia és a koercitív térerősség jelölésével; a pont H(t) = Hmax·sin(ωt) szerint járja körbe a hurkot"></svg>
+<p class="small">Szemléltető modell (5.3): a lágy anyag ágai a fejezet első mágnesezési görbéjének (szaggatott) H_c = 100 A/m-rel eltolt másai, a csúcsoknál záródnak. Nem mért adat; valódi anyagnál a gyártói B–H görbe az irányadó.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"hm":"A/m", "w":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+if(!window.__ui){window.__ui=1;const b=document.createElement("button");b.textContent="▶ Lejátszás";b.style.margin="6px 0";let tm=null;
+ b.onclick=()=>{if(tm){clearInterval(tm);tm=null;b.textContent="▶ Lejátszás";}else{tm=setInterval(()=>{const w=document.getElementById("w");w.value=(+w.value+3)%360;draw();},50);b.textContent="⏸ Szünet";}};
+ document.body.insertBefore(b,document.getElementById("status"));}
+const HV=[0, 200, 400, 800, 1600, 3200, 6400, 10000], BV=[0, 0.4, 0.8, 1.2, 1.5, 1.7, 1.8, 1.85], MM=[0.002, 0.002, 0.001384615, 0.000574468, 0.000198529, 5.3571e-05, 1.9377e-05, 0.0], HC=100.0;
+const f=h=>{const a=Math.min(Math.abs(h),HV[HV.length-1]);let i=0;while(i<HV.length-2&&a>=HV[i+1])i++;const hx=HV[i+1]-HV[i],s=(a-HV[i])/hx;
+ const b=(2*s**3-3*s**2+1)*BV[i]+(s**3-2*s**2+s)*hx*MM[i]+(-2*s**3+3*s**2)*BV[i+1]+(s**3-s**2)*hx*MM[i+1];return Math.sign(h)*b;};
+const hm=v.hm, up=h=>f(h-HC*(1-(h/hm)**2)), dn=h=>f(h+HC*(1-(h/hm)**2));
+const XM=6000, x0=50,x1=540,yc=165, X=h=>x0+(x1-x0)*(h+XM)/(2*XM), Y=b=>yc-b*75;
+el("line",{x1:x0,y1:yc,x2:x1,y2:yc,stroke:css("--line")});el("line",{x1:X(0),y1:15,x2:X(0),y2:315,stroke:css("--line")});
+[-6000,-3000,3000,6000].forEach(h=>el("text",{x:X(h),y:yc+16,"text-anchor":"middle","font-size":11},(h/1000).toString().replace("-","−")+" kA/m"));
+[-2,-1,1,2].forEach(b=>{el("line",{x1:x0,y1:Y(b),x2:x1,y2:Y(b),stroke:css("--grid")});el("text",{x:X(0)-6,y:Y(b)+4,"text-anchor":"end","font-size":11},(b+" T").replace("-","−"));});
+let pa="",pb="",pv="",A=0;const N=300;let prev=null;
+for(let k=0;k<=N;k++){const h=-hm+2*hm*k/N;pa+=(k?"L":"M")+X(h)+" "+Y(up(h));pb+=(k?"L":"M")+X(h)+" "+Y(dn(h));if(k)A+=(dn(h)-up(h)+prev)*(2*hm/N)/2;prev=dn(h)-up(h);}
+for(let k=0;k<=100;k++){const h=XM*k/100;pv+=(k?"L":"M")+X(h)+" "+Y(f(h));}
+el("path",{d:pv,fill:"none",stroke:css("--muted"),"stroke-width":1.5,"stroke-dasharray":"6 4"});
+el("path",{d:pa+" L"+X(hm)+" "+Y(dn(hm))+pb.replace("M","L").split("L").reverse().join(" L").replace(/ L$/,"")+" Z",fill:css("--grid"),stroke:"none",opacity:.7});
+el("path",{d:pa,fill:"none",stroke:css("--hl"),"stroke-width":2.5});el("path",{d:pb,fill:"none",stroke:css("--hl"),"stroke-width":2.5});
+const br=f(HC*(1-0)), th=v.w*Math.PI/180, H=hm*Math.sin(th), rising=Math.cos(th)>=0, B=rising?up(H):dn(H);
+const brr=dn(0);el("circle",{cx:X(0),cy:Y(brr),r:4,fill:css("--bg"),stroke:css("--line")});el("text",{x:X(0)-14,y:Y(brr)-8,"text-anchor":"end","font-size":12},"+B_r = "+fmt(brr,2)+" T");
+el("circle",{cx:X(H),cy:Y(B),r:7,fill:css("--hl2"),stroke:css("--line")});
+status("H = H_max·sin(ωt) = <b>"+fmt(H,0)+" A/m</b>, B = <b>"+fmt(B,2)+" T</b> ("+(rising?"felszálló":"leszálló")+" ág). Remanencia B_r = "+fmt(brr,2)+" T, koercitív tér H_c ≈ "+fmt(HC*(1-0),0)+" A/m. Hurokterület ≈ <b>"+fmt(A,0)+" J/m³</b> ciklusonként"+(hm>=3000?" – a csúcsoknál a görbe már ellaposodik: telítés.":"."));
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

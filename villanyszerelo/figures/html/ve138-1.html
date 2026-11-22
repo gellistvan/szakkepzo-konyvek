@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szűrőkondenzátor és hullámosság</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="U">Csúcsfeszültség Ucsúcs</label><input id="U" type="range" min="5" max="400" step="1" value="24" aria-label="Csúcsfeszültség Ucsúcs"><output id="U_o" for="U"></output></div>
+<div class="row"><label for="I">Terhelőáram I</label><input id="I" type="range" min="0.1" max="5" step="0.1" value="1" aria-label="Terhelőáram I"><output id="I_o" for="I"></output></div>
+<div class="row"><label for="C">Kapacitás C</label><input id="C" type="range" min="100" max="10000" step="100" value="2200" aria-label="Kapacitás C"><output id="C_o" for="C"></output></div>
+<div class="row"><label for="f">Töltési frekvencia (50 egyutas, 100 kétutas)</label><input id="f" type="range" min="50" max="100" step="50" value="100" aria-label="Töltési frekvencia (50 egyutas, 100 kétutas)"><output id="f_o" for="f"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Egyenirányított feszültség kondenzátoros simítása: a hullámosság csúcs-csúcs értéke a terhelőáram, a kapacitás és a töltési frekvencia függvényében"></svg>
+<p class="small">Szaggatott szürke: az egyenirányított szinusz (kétutas, 50 Hz-es hálózat). A fűrészfog a fejezet közelítése (ΔU ≈ I/(f·C)); a diódák feszültségesését és a transzformátor belső ellenállását nem tartalmazza. Szemléltető, tanulási ábra.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"U":"V", "I":"A", "C":"µF", "f":"Hz"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const dU=v.I/(v.f*v.C*1e-6), udc=v.U-dU/2, bad=dU>0.3*v.U, T=1/v.f;
+const X0=60,X1=540,Y0=250,Y1=24,tmax=0.04,sx=t=>X0+(X1-X0)*t/tmax,sy=u=>Y0-(Y0-Y1)*Math.max(u,0)/(v.U*1.1);
+for(let k=0;k<=4;k++){const t=k*0.01;el("line",{x1:sx(t),x2:sx(t),y1:Y0,y2:Y1,stroke:css("--grid"),"stroke-width":1});el("text",{x:sx(t),y:Y0+16,"text-anchor":"middle","font-size":12},fmt(t*1000,0));}
+for(let k=0;k<=4;k++){const u=v.U*1.1*k/4;el("line",{x1:X0,x2:X1,y1:sy(u),y2:sy(u),stroke:css("--grid"),"stroke-width":1});el("text",{x:X0-6,y:sy(u)+4,"text-anchor":"end","font-size":12},fmt(u,v.U>=50?0:1));}
+el("text",{x:(X0+X1)/2,y:Y0+34,"text-anchor":"middle","font-size":12},"idő (ms)");
+el("text",{x:14,y:(Y0+Y1)/2,"text-anchor":"middle","font-size":12,transform:"rotate(-90 14 "+((Y0+Y1)/2)+")"},"feszültség (V)");
+let r=[];for(let n=0;n<=400;n++){const t=tmax*n/400;r.push(sx(t)+","+sy(v.U*Math.abs(Math.sin(2*Math.PI*50*t))));}
+el("polyline",{points:r.join(" "),fill:"none",stroke:css("--muted"),"stroke-width":1.2,"stroke-dasharray":"2 3"});
+const first=0.005;let p=[];for(let k=0;first+k*T<tmax;k++){const tp=first+k*T,te=Math.min(tp+T,tmax);p.push(sx(tp)+","+sy(v.U));p.push(sx(te)+","+sy(v.U-dU*(te-tp)/T));if(te<tmax)p.push(sx(te)+","+sy(v.U-dU));}
+el("polyline",{points:p.join(" "),fill:"none",stroke:css("--hl2"),"stroke-width":2.8,"stroke-linejoin":"round"});
+el("line",{x1:X0,x2:X1,y1:sy(udc),y2:sy(udc),stroke:css("--hl"),"stroke-width":1.6,"stroke-dasharray":"7 4"});
+el("text",{x:X0+6,y:sy(udc)+16,"text-anchor":"start","font-size":12,fill:css("--hl")},"UDC ≈ "+fmt(udc,1)+" V");
+status("ΔU = I/(f·C) = "+fmt(v.I,1)+"/("+v.f+"·"+fmt(v.C*1e-6,6)+") = <b>"+fmt(dU,2)+" V</b> (csúcs-csúcs); U<sub>DC</sub> ≈ U<sub>csúcs</sub> − ΔU/2 = <b>"+fmt(udc,2)+" V</b>; ΔU/Ucsúcs = "+fmt(100*dU/v.U,1)+" %."+
+ (bad?' <span class="bad">A hullámosság nagy (&gt; 30 % Ucsúcs): a közelítés itt már durva, növeld a kapacitást.</span>':(dU/v.U>0.1?' <span class="bad">A közelítés még használható, de a hullámosság (&gt; 10 %) a gyakorlatban túl nagy: a szokásos cél néhány százalék.</span>':' <span class="ok">A közelítés itt elfogadható, a hullámosság kicsi.</span>')));
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Egyenáramú motor gerjesztési módjai</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mode">Gerjesztés (1 külső, 2 párhuzamos, 3 soros, 4 vegyes)</label><input id="mode" type="range" min="1" max="4" step="1" value="2" aria-label="Gerjesztés (1 külső, 2 párhuzamos, 3 soros, 4 vegyes)"><output id="mode_o" for="mode"></output></div>
+<div class="row"><label for="M">Terhelőnyomaték M</label><input id="M" type="range" min="1" max="40" step="0.5" value="26.5" aria-label="Terhelőnyomaték M"><output id="M_o" for="M"></output></div>
+<div class="row"><label for="brk">Gerjesztésszakadás (0 = nem, 1 = igen)</label><input id="brk" type="range" min="0" max="1" step="1" value="0" aria-label="Gerjesztésszakadás (0 = nem, 1 = igen)"><output id="brk_o" for="brk"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 300" role="img" aria-label="A kiválasztott gerjesztési mód kapcsolása és fordulatszám–nyomaték jelleggörbéje mozgatható munkaponttal; párhuzamos módban gerjesztésszakadás próbálható"></svg>
+<p class="small">Tanulási modell (ellenőrizendő): U = 220 V, Iₙ = 20 A, Rₐ = 0,6 Ω, nₙ = 1500 1/min; armatúra: kör „M =” jellel; a soros és vegyes fluxusgörbe szemléltető feltevés, nem gyártói adat. A kapocsjelölés (A1–A2, F1–F2, E1–E2, D1–D2) ellenőrizendő: MSZ EN 60034-8.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"mode":"", "M":"Nm", "brk":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const U=220, IN=20, RA=0.6, KPHI=1.324169;
+const NAMES=["külső","párhuzamos","soros","vegyes"], md=NAMES[v.mode-1];
+const F={"külső":[x=>1,0],"párhuzamos":[x=>1,0],"soros":[x=>1.6*x/(1+0.6*x),0.4],"vegyes":[x=>0.75+0.25*x,0.2]};
+const shuntField=(md==="párhuzamos"||md==="külső"||md==="vegyes");
+function op(m,M,brk){let [ph,rs]=F[m]; if(brk){ if(m==="párhuzamos"||m==="külső") ph=x=>0.04; else if(m==="vegyes") ph=x=>0.25*x+0.01;}
+ let lo=1e-6,hi=4000;for(let i=0;i<200;i++){const mid=(lo+hi)/2; if(KPHI*ph(mid/IN)*mid<M) lo=mid; else hi=mid;}
+ const I=(lo+hi)/2, w=(U-I*(RA+rs))/(KPHI*ph(I/IN)); return [I, w*60/(2*Math.PI)];}
+const brk=v.brk>0&&md!=="soros";
+// bal: egyszerű kapcsolási vázlat
+const g=(x1,y1,x2,y2,w)=>el("line",{x1:x1,y1:y1,x2:x2,y2:y2,stroke:css("--line"),"stroke-width":w||2});
+const box=(x,y,lab)=>{el("circle",{cx:x,cy:y,r:22,fill:css("--bg"),stroke:css("--line"),"stroke-width":2});el("text",{x:x,y:y-1,"text-anchor":"middle","font-size":14},"M");el("text",{x:x,y:y+15,"text-anchor":"middle","font-size":12},"=");el("text",{x:x+28,y:y+4,"font-size":12},lab);};
+const coil=(x,y,vert,lab,broken)=>{for(let k=0;k<4;k++){const c=vert?[x,y-18+k*12]:[x-18+k*12,y];el("path",{d:vert?"M"+c[0]+" "+(c[1]-6)+" a6 6 0 0 1 0 12":"M"+(c[0]-6)+" "+c[1]+" a6 6 0 0 1 12 0",fill:"none",stroke:broken?css("--bad"):css("--line"),"stroke-width":2});}
+ el("text",{x:vert?x+12:x-20,y:vert?y+4:y-14,"font-size":12,fill:broken?css("--bad"):css("--fg")},lab);};
+el("text",{x:10,y:18,"font-size":13,"font-weight":"bold"},"Kapcsolás: "+md+" gerjesztés");
+el("text",{x:10,y:58,"font-size":12},"L+");el("text",{x:10,y:258,"font-size":12},"L−");
+if(md==="külső"){g(30,54,90,54);g(90,54,90,128);box(90,150,"A1–A2");g(90,172,90,254);g(30,254,90,254);
+  g(190,90,190,128);g(190,172,190,210);coil(190,150,true,"F1–F2",brk);g(190,90,260,90);g(190,210,260,210);g(260,90,260,140);g(260,160,260,210);
+  g(245,140,275,140,3);g(252,160,268,160,3);el("text",{x:268,y:132,"font-size":12},"+ külön DC");}
+if(md==="párhuzamos"){g(30,54,230,54);g(90,54,90,128);box(90,150,"A1–A2");g(90,172,90,254);g(230,54,230,128);g(230,172,230,254);coil(230,150,true,"E1–E2",brk);g(30,254,230,254);}
+if(md==="soros"){g(30,54,90,54);coil(110,54,false,"D1–D2",false);g(130,54,230,54);g(230,54,230,128);box(230,150,"A1–A2");g(230,172,230,254);g(30,254,230,254);}
+if(md==="vegyes"){g(30,54,70,54);coil(90,54,false,"D1–D2",false);g(110,54,290,54);g(190,54,190,128);box(190,150,"A1–A2");g(190,172,190,254);g(290,54,290,128);g(290,172,290,254);coil(290,150,true,"E1–E2",brk);g(30,254,290,254);}
+// jobb: n–M görbe
+const X0=380,Y0=260,W=240,H=220,MM=40,NM=4000,X=m=>X0+W*m/MM,Y=n=>Y0-H*Math.min(n,NM)/NM;
+el("line",{x1:X0,x2:X0+W,y1:Y0,y2:Y0,stroke:css("--line")});el("line",{x1:X0,x2:X0,y1:Y0,y2:Y0-H,stroke:css("--line")});
+for(let m=0;m<=40;m+=10)el("text",{x:X(m),y:Y0+15,"text-anchor":"middle","font-size":11},String(m));
+for(let n=0;n<=4000;n+=1000){el("text",{x:X0-4,y:Y(n)+4,"text-anchor":"end","font-size":11},String(n));el("line",{x1:X0,x2:X0+W,y1:Y(n),y2:Y(n),stroke:css("--grid")});}
+el("text",{x:X0+W/2,y:Y0+30,"text-anchor":"middle","font-size":12},"M (Nm)");el("text",{x:X0+4,y:Y0-H-6,"font-size":12},"n (1/min)");
+const key=md==="külső"?"párhuzamos":md;
+[["párhuzamos",""],["vegyes","8 4"],["soros","2 4"]].forEach(([m,da])=>{let d="";for(let k=0;k<=200;k++){const M=1+39*k/200,n=op(m,M,false)[1];d+=(d?"L":"M")+X(M).toFixed(1)+" "+Y(n).toFixed(1);}
+ el("path",{d:d,fill:"none",stroke:m===key?css("--hl"):css("--muted"),"stroke-width":m===key?3.5:1.5,"stroke-dasharray":da});});
+const [I,n]=op(md,v.M,brk);
+el("circle",{cx:X(v.M),cy:Y(n),r:7,fill:css("--hl2")});
+let s="<b>"+md+" gerjesztés</b>, M = "+fmt(v.M,1)+" Nm: I<sub>a</sub> ≈ <b>"+fmt(I,1)+" A</b>, n ≈ <b>"+fmt(n,0)+" 1/min</b> (ω = (U − I<sub>a</sub>R)/(KΦ)). ";
+if(brk) s+='<span class="bad">Gerjesztésszakadás: a fluxus a remanens értékre esik – a fordulatszám és/vagy az armatúraáram veszélyesen megnő (megszaladás, túláram); a védelemnek le kell kapcsolnia.</span>';
+else if(md==="soros"&&n>3000) s+='<span class="bad">Kis terhelésnél a soros motor megszaladhat – terhelés nélkül (szíjhajtás) nem üzemeltethető.</span>';
+else if(md==="soros") s+="Lágy jelleggörbe: a fluxus a terheléssel nő, a fordulatszám erősen csökken.";
+else if(md==="vegyes") s+="Átmeneti jelleggörbe: a soros tekercs a terheléssel növeli a fluxust.";
+else s+='<span class="ok">Merev jelleggörbe: a fluxus állandó, a fordulatszám alig csökken.</span>';
+if(v.brk>0&&md==="soros") s+=" (Soros gépnél a gerjesztőtekercs szakadása az armatúraáramot is megszakítja: a motor megáll.)";
+status(s);
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

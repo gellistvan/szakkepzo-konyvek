@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dióda karakterisztikája a hőmérséklet függvényében</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="T">Hőmérséklet T</label><input id="T" type="range" min="0" max="100" step="1" value="25" aria-label="Hőmérséklet T"><output id="T_o" for="T"></output></div>
+<div class="row"><label for="lis">log₁₀ Is(25 °C) / A</label><input id="lis" type="range" min="-15" max="-12" step="0.1" value="-14" aria-label="log₁₀ Is(25 °C) / A"><output id="lis_o" for="lis"></output></div>
+<div class="row"><label for="lia">log₁₀ munkaponti áram / A</label><input id="lia" type="range" min="-4" max="-1" step="0.05" value="-2" aria-label="log₁₀ munkaponti áram / A"><output id="lia_o" for="lia"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 330" role="img" aria-label="Dióda nyitóirányú áram-feszültség karakterisztikája 0, 25 és 50 Celsius-fokon és a kiválasztott hőmérsékleten"></svg>
+<p class="small">Shockley-modell (n = 1), IS(T) általános szilíciummodellel (Eg = 1,12 eV, XTI = 3). Szemléltető, számított görbék; a konkrét dióda hőmérsékletfüggése az adatlapból ellenőrizendő. Mért adat nincs.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"T":"°C", "lis":"", "lia":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const KQ=8.617333262e-5,T0=298.15,EG=1.12,XTI=3,N=1;
+const ut=t=>KQ*(t+273.15), is=(t,i25)=>i25*Math.pow((t+273.15)/T0,XTI/N)*Math.exp((EG/N)*(1/ut(25)-1/ut(t)));
+const cur=(u,t,i25)=>is(t,i25)*(Math.exp(u/(N*ut(t)))-1), vol=(i,t,i25)=>N*ut(t)*Math.log(i/is(t,i25)+1);
+const I25=Math.pow(10,v.lis), Iw=Math.pow(10,v.lia);
+const X0=60,X1=530,Y0=290,Y1=20,sx=u=>X0+(X1-X0)*u/0.8, sy=i=>Y0-(Y0-Y1)*i/0.1;
+for(let k=0;k<=8;k+=2){const u=k/10;el("line",{x1:sx(u),x2:sx(u),y1:Y0,y2:Y1,stroke:css("--grid"),"stroke-width":1});el("text",{x:sx(u),y:Y0+16,"text-anchor":"middle","font-size":12},fmt(u,1));}
+for(let k=0;k<=100;k+=20){el("line",{x1:X0,x2:X1,y1:sy(k/1000),y2:sy(k/1000),stroke:css("--grid"),"stroke-width":1});el("text",{x:X0-6,y:sy(k/1000)+4,"text-anchor":"end","font-size":12},k+"");}
+el("text",{x:(X0+X1)/2,y:Y0+32,"text-anchor":"middle","font-size":12},"U (V)");
+el("text",{x:14,y:(Y0+Y1)/2,"text-anchor":"middle","font-size":12,transform:"rotate(-90 14 "+((Y0+Y1)/2)+")"},"I (mA)");
+function curve(t,dash,w,col){let p=[];for(let n=0;n<=200;n++){const u=0.8*n/200,i=cur(u,t,I25);if(i>0.1){p.push([sx(u),Y1]);break;}p.push([sx(u),sy(i)]);}
+ el("polyline",{points:p.map(q=>q.join(",")).join(" "),fill:"none",stroke:col,"stroke-width":w,"stroke-dasharray":dash});}
+curve(0,"7 3 2 3",1.6,css("--fg"));curve(25,"",1.6,css("--fg"));curve(50,"6 4",1.6,css("--fg"));
+curve(v.T,"",3.6,css("--hl2"));
+const uw=vol(Iw,v.T,I25);
+if(Iw<=0.1){el("line",{x1:X0,x2:sx(uw),y1:sy(Iw),y2:sy(Iw),stroke:css("--hl"),"stroke-width":1.4,"stroke-dasharray":"3 3"});
+ el("circle",{cx:sx(uw),cy:sy(Iw),r:6,fill:css("--hl2")});}
+el("text",{x:X0+8,y:Y1+12,"font-size":11.5},"vékony: –·– 0 °C, —— 25 °C, – – 50 °C");el("text",{x:X0+8,y:Y1+28,"font-size":11.5},"vastag, színes: a kiválasztott T");
+const dT=(vol(Iw,v.T+1,I25)-vol(Iw,v.T-1,I25))/2*1000;
+status("T = <b>"+fmt(v.T,0)+" °C</b>, U<sub>T</sub> = "+fmt(ut(v.T)*1000,1)+" mV, I<sub>S</sub>(T) = "+is(v.T,I25).toExponential(2).replace(".",",")+" A. "+
+ "I = <b>"+fmt(Iw*1000,v.lia<-3?2:1)+" mA</b>-nél U = <b>"+fmt(uw,3)+" V</b>; ΔU/ΔT ≈ <b>"+fmt(dT,2).replace("-","−")+" mV/K</b> (ökölszabály: kb. −2 mV/K; nagyobb áramnál kisebb abszolút értékű). "+
+ "Ugyanennél az áramnál: 0 °C: "+fmt(vol(Iw,0,I25),3)+" V, 25 °C: "+fmt(vol(Iw,25,I25),3)+" V, 50 °C: "+fmt(vol(Iw,50,I25),3)+" V.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

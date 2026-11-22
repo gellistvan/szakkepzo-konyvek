@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terhelhetőség-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ia">Referencia-terhelhetőség I_alap (táblázatból)</label><input id="ia" type="range" min="5" max="120" step="0.5" value="24" aria-label="Referencia-terhelhetőség I_alap (táblázatból)"><output id="ia_o" for="ia"></output></div>
+<div class="row"><label for="ins">Szigetelés (0 = PVC 70 °C, 1 = XLPE 90 °C)</label><input id="ins" type="range" min="0" max="1" step="1" value="0" aria-label="Szigetelés (0 = PVC 70 °C, 1 = XLPE 90 °C)"><output id="ins_o" for="ins"></output></div>
+<div class="row"><label for="th">Környezeti hőmérséklet ϑ</label><input id="th" type="range" min="10" max="60" step="1" value="40" aria-label="Környezeti hőmérséklet ϑ"><output id="th_o" for="th"></output></div>
+<div class="row"><label for="k2">Csoportosítási tényező k2</label><input id="k2" type="range" min="0.3" max="1" step="0.01" value="0.7" aria-label="Csoportosítási tényező k2"><output id="k2_o" for="k2"></output></div>
+<div class="row"><label for="k3">Hőszigetelési tényező k3</label><input id="k3" type="range" min="0.5" max="1" step="0.05" value="1" aria-label="Hőszigetelési tényező k3"><output id="k3_o" for="k3"></output></div>
+<div class="row"><label for="ib">Üzemi áram I_b</label><input id="ib" type="range" min="0.5" max="100" step="0.01" value="14.03" aria-label="Üzemi áram I_b"><output id="ib_o" for="ib"></output></div>
+<div class="row"><label for="ni">Védelem I_n fokozata</label><input id="ni" type="range" min="0" max="12" step="1" value="3" aria-label="Védelem I_n fokozata"><output id="ni_o" for="ni"></output></div>
+<div class="row"><label for="pt">Védelem típusa (0 = kismegszakító, I_2 = 1,45·I_n; 1 = gG olvadóbiztosító, I_2 ≈ 1,6·I_n)</label><input id="pt" type="range" min="0" max="1" step="1" value="0" aria-label="Védelem típusa (0 = kismegszakító, I_2 = 1,45·I_n; 1 = gG olvadóbiztosító, I_2 ≈ 1,6·I_n)"><output id="pt_o" for="pt"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 260" role="img" aria-label="Oszlopdiagram: üzemi áram 14,0 A, kismegszakító 16 A, korrigált terhelhetőség 14,6 A – a 16 A nagyobb a terhelhetőségnél, a feltétel nem teljesül."></svg>
+<p class="small">k1 a fejezet képletéből (PVC 70 °C, XLPE 90 °C üzemi hőmérséklet, 30 °C referencia). Az I_alap referencia-terhelhetőséget és a k2, k3 tényezőt a hatályos táblázatból kell venni (ellenőrizendő: MSZ HD 60364-5-52); a gombok a fejezet példáinak (szemléltető) értékeit töltik be. A „teljesül/nem teljesül” felirat színtől függetlenül olvasható.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"ia":"A", "ins":"", "th":"°C", "k2":"", "k3":"", "ib":"A", "ni":"", "pt":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const IN=[6,10,13,16,20,25,32,35,40,50,63,80,100], In=IN[v.ni];
+document.getElementById("ni_o").textContent=In+" A";
+if(!document.getElementById("presets")){const p=document.createElement("div");p.id="presets";p.className="small";
+ p.innerHTML='Példák: <button data-p="24,0,40,0.70,1,14.03,3,0">1. példa</button> <button data-p="36,0,25,0.80,1,32,7,1">2. példa (6 mm²)</button> <button data-p="50,0,25,0.80,1,32,7,1">2. példa (10 mm²)</button>';
+ document.getElementById("status").before(p);
+ p.querySelectorAll("button").forEach(b=>b.onclick=()=>{const a=b.dataset.p.split(",");["ia","ins","th","k2","k3","ib","ni","pt"].forEach((id,i)=>document.getElementById(id).value=a[i]);draw();});}
+document.getElementById("pt_o").textContent=v.pt==1?"gG":"MCB";
+const tmax=v.ins==1?90:70, k1=Math.round(100*Math.sqrt(Math.max(0,(tmax-v.th)/(tmax-30))))/100;
+const f2=v.pt==1?1.6:1.45, I2=f2*In;
+const Iz=v.ia*k1*v.k2*v.k3, c1=v.ib<=In, c2=In<=Iz, c3=I2<=1.45*Iz+1e-9, ok=c1&&c2&&c3;
+const yes=b=>b?"<span class='ok'>teljesül</span>":"<span class='bad'>nem teljesül</span>";
+status("k1 = √(("+tmax+" − "+fmt(v.th,0)+")/("+tmax+" − 30)) ≈ <b>"+fmt(k1,2)+"</b> (két tizedesre, mint a táblázat); I<sub>z</sub> = "+fmt(v.ia,1)+" · "+fmt(k1,2)+" · "+fmt(v.k2,2)+" · "+fmt(v.k3,2)+" = <b>"+fmt(Iz,2)+" A</b><br>"
+ +"I<sub>b</sub> ≤ I<sub>n</sub> ("+fmt(v.ib,2)+" ≤ "+In+"): "+yes(c1)+"; I<sub>n</sub> ≤ I<sub>z</sub> ("+In+" ≤ "+fmt(Iz,2)+"): "+yes(c2)
+ +"; I<sub>2</sub> = "+fmt(f2,f2==1.6?1:2)+"·I<sub>n</sub> = "+fmt(I2,1)+" A ≤ 1,45·I<sub>z</sub> = "+fmt(1.45*Iz,1)+" A: "+yes(c3)+"<br>Összesítve: "+(ok?"<span class='ok'>a vezeték megfelel</span>":"<span class='bad'>a vezeték NEM felel meg</span>"));
+const top=Math.max(v.ib,In,Iz,1)*1.2, H=200, y0=225, bw=90, xs=[110,250,390];
+const lab=["I_b (üzemi)","I_n (védelem)","I_z (korrigált)"], val=[v.ib,In,Iz], fill=[css("--bg"),css("--grid"),c2?css("--ok"):css("--bad")];
+el("line",{x1:60,y1:y0,x2:520,y2:y0,stroke:css("--line")});
+const yz=y0-H*Iz/top; el("line",{x1:60,y1:yz,x2:520,y2:yz,stroke:css("--line"),"stroke-dasharray":"4 4"});
+for(let i=0;i<3;i++){const h=H*val[i]/top;
+ el("rect",{x:xs[i]-bw/2,y:y0-h,width:bw,height:h,fill:fill[i],stroke:css("--line"),"stroke-width":2,"stroke-dasharray":i==0?"6 3":""});
+ el("text",{x:xs[i],y:y0-h-6,"text-anchor":"middle","font-size":14,"font-weight":"bold",stroke:css("--bg"),"stroke-width":5,"paint-order":"stroke"},fmt(val[i],i==1?0:2)+" A");
+ el("text",{x:xs[i],y:y0+18,"text-anchor":"middle","font-size":13},lab[i]);}
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

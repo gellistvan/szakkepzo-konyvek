@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feszültségosztó szimuláció</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="Ut">Tápfeszültség Ut</label><input id="Ut" type="range" min="1" max="48" step="1" value="24" aria-label="Tápfeszültség Ut"><output id="Ut_o" for="Ut"></output></div>
+<div class="row"><label for="R1">R1</label><input id="R1" type="range" min="10" max="10000" step="10" value="100" aria-label="R1"><output id="R1_o" for="R1"></output></div>
+<div class="row"><label for="R2">R2</label><input id="R2" type="range" min="10" max="10000" step="10" value="300" aria-label="R2"><output id="R2_o" for="R2"></output></div>
+<div class="row"><label for="Rt">Terhelés Rt</label><input id="Rt" type="range" min="10" max="10000" step="10" value="300" aria-label="Terhelés Rt"><output id="Rt_o" for="Rt"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 280" role="img" aria-label="Feszültségosztó: tápfeszültség, két soros ellenállás és párhuzamos terhelés; a terheletlen és a terhelt kimeneti feszültség"></svg>
+<p class="small">Szemléltetés (4.1): U2 = Ut·R2/(R1+R2); terhelve R2 helyére R2‖Rt kerül. Alapérték: 24 V, 100 Ω, 300 Ω → 6 V és 18 V (Rt-t növelve a terheletlen értékhez tart). Számolt értékek.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"Ut":"V", "R1":"Ω", "R2":"Ω", "Rt":"Ω"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const U0=v.Ut*v.R2/(v.R1+v.R2), R2e=v.R2*v.Rt/(v.R2+v.Rt), U1=v.Ut*R2e/(v.R1+R2e), U10=v.Ut-U0, U11=v.Ut-U1;
+const L=css("--line"), W=2;
+el("path",{d:"M60 40V112M60 124V200M60 40H150M230 40H300M300 40V70M300 150V200M60 200H300",fill:"none",stroke:L,"stroke-width":W});
+// egyenfeszültségű forrás: hosszú lemez (+) felül, rövid lemez (−) alul
+el("line",{x1:44,y1:112,x2:76,y2:112,stroke:L,"stroke-width":W});el("line",{x1:52,y1:124,x2:68,y2:124,stroke:L,"stroke-width":W+1.5});
+el("text",{x:84,y:106,"font-size":12},"+");
+el("rect",{x:150,y:28,width:80,height:24,fill:css("--bg"),stroke:L,"stroke-width":W});el("text",{x:190,y:20,"text-anchor":"middle","font-size":13},"R1 = "+fmt(v.R1,0)+" Ω");
+el("rect",{x:288,y:70,width:24,height:80,fill:css("--bg"),stroke:L,"stroke-width":W});el("text",{x:278,y:115,"font-size":13,"text-anchor":"end"},"R2 = "+fmt(v.R2,0)+" Ω");
+// a terhelés az R2-vel párhuzamos: az R1–R2 csomóponttól (felül) a közös alsó vezetékig
+el("path",{d:"M300 55H400V135M400 175V200M300 200H400",fill:"none",stroke:L,"stroke-width":W,"stroke-dasharray":"5 3"});
+el("circle",{cx:300,cy:55,r:3.5,fill:L});el("circle",{cx:300,cy:200,r:3.5,fill:L});
+el("rect",{x:388,y:135,width:24,height:40,fill:css("--bg"),stroke:L,"stroke-width":W});el("text",{x:420,y:160,"font-size":13},"Rt = "+fmt(v.Rt,0)+" Ω");
+el("text",{x:30,y:123,"font-size":13,"text-anchor":"middle"},"Ut");
+const bar=(y,val,txt,col,dash)=>{el("rect",{x:20,y:y,width:520,height:14,fill:"none",stroke:L});el("rect",{x:20,y:y,width:520*val/v.Ut,height:14,fill:col,opacity:dash?0.45:0.9});el("text",{x:24,y:y+28,"font-size":12},txt);};
+el("rect",{x:20,y:208,width:520,height:12,fill:"none",stroke:L});el("rect",{x:20,y:208,width:520*U0/v.Ut,height:12,fill:css("--hl")});el("text",{x:20,y:236,"font-size":12},"terheletlen U2 = "+fmt(U0)+" V (kék sáv, a skála 0…Ut)");
+el("rect",{x:20,y:244,width:520,height:12,fill:"none",stroke:L});el("rect",{x:20,y:244,width:520*U1/v.Ut,height:12,fill:css("--hl2")});el("text",{x:20,y:272,"font-size":12},"terhelt U2 = "+fmt(U1)+" V (narancs sáv)");
+status("Terheletlenül: <b>U<sub>2</sub> = "+fmt(U0)+" V</b>, U<sub>1</sub> = "+fmt(U10)+" V. Terhelve (R<sub>2</sub>‖R<sub>t</sub> = "+fmt(R2e)+" Ω): <b>U<sub>2</sub> = "+fmt(U1)+" V</b>, U<sub>1</sub> = "+fmt(U11)+" V – a terhelés "+fmt(U0-U1)+" V-ot elvesz.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

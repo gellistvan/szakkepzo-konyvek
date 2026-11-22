@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soros RL-kör fázorábrája</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="R">Ellenállás R</label><input id="R" type="range" min="1" max="100" step="1" value="30" aria-label="Ellenállás R"><output id="R_o" for="R"></output></div>
+<div class="row"><label for="L">Induktivitás L</label><input id="L" type="range" min="1" max="400" step="1" value="127" aria-label="Induktivitás L"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="Uh">Hálózati feszültség U</label><input id="Uh" type="range" min="12" max="400" step="1" value="230" aria-label="Hálózati feszültség U"><output id="Uh_o" for="Uh"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Fázorábra: az ellenálláson és a tekercsen eső feszültség és az eredő feszültség"></svg>
+<p class="small">Szemléltetés: soros RL-kör 50 Hz-en, a fázorábra tulajdonságai (U² = U_R² + U_L²). A számértékek számoltak.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"R":"Ω", "L":"mH", "Uh":"V"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const f=50, XL=2*Math.PI*f*v.L/1000, Z=Math.hypot(v.R,XL), I=v.Uh/Z, phi=Math.atan2(XL,v.R), UR=I*v.R, UL=I*XL;
+const sc=Math.min(300/v.Uh,300/v.Uh), ox=70, oy=260, X=x=>ox+x*sc*0.9, Y=y=>oy-y*sc*0.9;
+const arr=(x1,y1,x2,y2,col,w,dash)=>{el("line",{x1:X(x1),y1:Y(y1),x2:X(x2),y2:Y(y2),stroke:col,"stroke-width":w,"stroke-dasharray":dash||""});
+  const a=Math.atan2(Y(y2)-Y(y1),X(x2)-X(x1));el("path",{d:`M${X(x2)} ${Y(y2)}L${X(x2)-10*Math.cos(a-.4)} ${Y(y2)-10*Math.sin(a-.4)}L${X(x2)-10*Math.cos(a+.4)} ${Y(y2)-10*Math.sin(a+.4)}Z`,fill:col});};
+arr(0,0,UR,0,css("--fg"),3);arr(UR,0,UR,UL,css("--hl"),3,"6 4");arr(0,0,UR,UL,css("--hl2"),3.5);
+el("text",{x:X(UR/2),y:oy+20,"text-anchor":"middle","font-size":13},"U_R = "+fmt(UR,0)+" V");
+el("text",{x:X(UR)+8,y:Y(UL/2),"font-size":13},"U_L = "+fmt(UL,0)+" V");
+el("text",{x:X(UR/2)-8,y:Y(UL/2)-8,"text-anchor":"end","font-size":13,fill:css("--hl2")},"U = "+fmt(v.Uh,0)+" V");
+status("X<sub>L</sub> = 2π·50·L = <b>"+fmt(XL)+" Ω</b>; Z = √(R²+X<sub>L</sub>²) = <b>"+fmt(Z)+" Ω</b>; I = U/Z = <b>"+fmt(I)+" A</b>; φ = <b>"+fmt(phi*180/Math.PI,1)+"°</b>; cos φ = <b>"+fmt(Math.cos(phi))+"</b>; P = U·I·cos φ = <b>"+fmt(v.Uh*I*Math.cos(phi),0)+" W</b>.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

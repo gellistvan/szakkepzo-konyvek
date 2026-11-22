@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>32.6 PLC-alapok és ipari vezérlés – Villanyszerelő – villamos
+berendezés- és készülékszerelő szakirány</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Kapcsoló- és vezérlőkészülékek, ipari elosztóberendezések</a> › <a href="index.html#vech31">32 Motorvezérlések</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve117.html">← 32.5 Vezérlések hibakeresése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve119.html">33.1 Ipari elosztóhálózatok jellemzői és topológiája →</a></div>
+</nav>
+<h2 data-number="32.6" id="ve118"><span
+class="header-section-number">32.6</span> PLC-alapok és ipari
+vezérlés</h2>
+<h3 data-number="32.6.1"
+id="motiváció-miért-kell-plc-a-motorvezérléshez"><span
+class="header-section-number">32.6.1</span> Motiváció: miért kell PLC a
+motorvezérléshez?</h3>
+<p>A hagyományos relés motorvezérlés – direktindítás, önfenntartás,
+reverzálás, csillag–delta – jól működik, amíg a vezérlési logika
+rögzített. Amint a megrendelő azt kéri, hogy a szivattyú csak akkor
+induljon, ha a tartály szintje alacsony, a nyomás megfelelő, a
+vészleállító nincs benyomva, és egy kézi kapcsoló is engedélyez, a relés
+huzalozás gyorsan áttekinthetetlenné válik. Minden új feltétel új relét,
+új segédérintkezőt és új vezetéket jelent. A módosítás pedig a
+kapcsolószekrény átszerelésével jár.</p>
+<p>A programozható logikai vezérlő (PLC) ezt a problémát oldja meg: a
+logikát nem vezetékek, hanem program tárolja. Ugyanaz a hardver más
+programmal más feladatot lát el, a módosítás pedig gyakran csak a
+program átírása. A PLC ezért ma már a motorvezérlések és az ipari
+elosztóberendezések alapvető eleme.</p>
+<p><strong>Továbbvitt eredmény.</strong> A PLC-s vezérlés itt megismert
+felépítése, a be- és kimenetek kezelése, valamint a vészleállító
+független bekötésének elve közvetlenül szükséges a frekvenciaváltók és
+lágyindítók vezérlésének megértéséhez a <a
+href="ve127.html">Motorvédelmek, lágyindítók és frekvenciaváltók az
+elosztóban</a> alfejezetben.</p>
+<h3 data-number="32.6.2"
+id="szemléletes-kép-ugyanaz-a-direktindítás-relével-és-plc-vel"><span
+class="header-section-number">32.6.2</span> Szemléletes kép: ugyanaz a
+direktindítás relével és PLC-vel</h3>
+<p>Vegyünk egy egyszerű direktindítást önfenntartással. A hagyományos
+kapcsolásban a Start nyomógomb (NO) és a Stop nyomógomb (NC) sorban van
+a K1 mágneskapcsoló tekercsével, és a K1 segédérintkező (NO)
+párhuzamosan a Start gombbal biztosítja az önfenntartást. Ez a kapcsolás
+a <a href="ve113.html">Direktindítás, önfenntartás és kezelőszervek</a>
+alfejezetből már ismert.</p>
+<p>Ugyanezt PLC-vel úgy valósítjuk meg, hogy a Start és Stop gombokat a
+PLC bemeneteire kötjük, a K1 tekercset pedig a PLC egyik kimenetére. A
+programban egy „öntartó” logikai ágat hozunk létre: ha a Start bemenet
+aktív, vagy a K1 kimenet már aktív, és a Stop nincs benyomva, akkor a K1
+kimenet aktív marad. A kapcsolás logikája ugyanaz, csak a kapcsolást nem
+vezetékek, hanem a program utasításai valósítják meg.</p>
+<figure id="fig-ve118-1">
+<div class="fig-interactive"><iframe src="figures/html/ve118-1.html" title="Létradiagram PLC-vel: Start gomb, Stop gomb, K1 tekercs és K1 önfenntartó érintkező" loading="lazy" style="width:100%;border:0;height:460px"></iframe><noscript><img src="figures/img/ve118-1.png" style="width:85.0%"
+alt="Létradiagram PLC-vel: Start gomb, Stop gomb, K1 tekercs és K1 önfenntartó érintkező" /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve118-1.png" style="width:85.0%"
+alt="Létradiagram PLC-vel: Start gomb, Stop gomb, K1 tekercs és K1 önfenntartó érintkező" /></details></div>
+<figcaption>Direktindítás létradiagramja PLC-vel:
+önfenntartás</figcaption>
+</figure>
+<p>A létradiagram bal oldali függőleges vonala a bal oldali (jelvezető)
+sín, a jobb oldali a visszatérő sín. A felső ágban a Start gomb (S1) NO
+kontaktusa, a Stop gomb (S0, hardveresen NC jeladó, ezért a programban
+NO kontaktussal vizsgálva) és a K1 kimenet (tekercs) van sorosan. Itt a
+K1 a mágneskapcsolót vezérlő PLC-kimenet neve; az alfejezet későbbi
+kidolgozott példájában (direktindítás PLC-vel) ugyanez a kimenet a DO0
+címet kapja. Az alsó ágban a K1 kimenet saját NO kontaktusa
+(tartóérintkező) párhuzamosan kapcsolódik a Start gombbal: ha a K1
+kimenet bekapcsolt, a Start elengedése után is tartja magát. A
+HTML-kiadás interaktív változatában a gombok lenyomhatók, és lépésenként
+követhető, melyik ágon halad a jel.</p>
+<h3 data-number="32.6.3" id="a-plc-felépítése-és-működési-ciklusa"><span
+class="header-section-number">32.6.3</span> A PLC felépítése és működési
+ciklusa</h3>
+<p><strong>Definíció.</strong> A programozható logikai vezérlő (PLC,
+Programmable Logic Controller) olyan ipari számítógép, amely bemenetein
+érzékeli a folyamat állapotát (nyomógombok, érzékelők), a tárolt program
+szerint logikai döntéseket hoz, és kimenetein vezérli a beavatkozókat
+(mágneskapcsolók, szelepek, jelzőlámpák).</p>
+<p>A PLC fő részei: - <strong>Központi egység (CPU):</strong> a
+programot tárolja és végrehajtja. - <strong>Bemeneti egység (input,
+I):</strong> a külső jeleket fogadja, galvanikusan leválasztja és a CPU
+számára értelmezhető jelszintre alakítja. - <strong>Kimeneti egység
+(output, O):</strong> a CPU döntéseit a külső áramkörök felé kapcsolja
+(relé, tranzisztor vagy triak kimenet). - <strong>Tápegység:</strong> a
+belső elektronika számára stabil feszültséget állít elő. -
+<strong>Kommunikációs interfész:</strong> programozáshoz, felügyelethez,
+más készülékekkel való adatcseréhez.</p>
+<p>A PLC nem folyamatosan, hanem ciklikusan dolgozik. A ciklus
+lépései:</p>
+<figure>
+<img src="assets/ve118-diagram-1.png"
+alt="A PLC működési ciklusa - A PLC ciklikusan ismétli ezeket a lépéseket, jellemzően néhány milliszekundum alatt." />
+<figcaption aria-hidden="true">A PLC működési ciklusa - A PLC ciklikusan
+ismétli ezeket a lépéseket, jellemzően néhány milliszekundum
+alatt.</figcaption>
+</figure>
+<ol type="1">
+<li><strong>Bemenetek olvasása:</strong> a PLC beolvassa az összes
+bemenet állapotát (0 vagy 1) egy belső memóriaterületre.</li>
+<li><strong>Program végrehajtása:</strong> a CPU a tárolt programot
+lépésről lépésre végrehajtja a beolvasott bemeneti képek alapján.</li>
+<li><strong>Kimenetek írása:</strong> a program által kiszámított
+kimeneti értékek kiíródnak a fizikai kimenetekre.</li>
+<li><strong>Diagnosztika és kommunikáció:</strong> a PLC ellenőrzi saját
+állapotát, kezeli a kommunikációs kéréseket.</li>
+</ol>
+<p><strong>Szabály.</strong> A ciklusidő jellemzően 1–20 ms, de ez a
+program hosszától és a készülék típusától függ. A gyakorlatban ez azt
+jelenti, hogy a PLC „észreveszi” a bemeneti változást, végrehajtja a
+logikát, és a kimeneten legrosszabb esetben kb. két ciklusidő (és a
+be-/kimeneti modul késleltetése) után jelenik meg a változás. A
+motorvezérléseknél ez a késés általában elhanyagolható, de nagyon gyors
+folyamatoknál (pl. pozícióvezérlés) már számít.</p>
+<h3 data-number="32.6.4"
+id="bemenetek-és-kimenetek-digitális-és-analóg-io-24-v-dc"><span
+class="header-section-number">32.6.4</span> Bemenetek és kimenetek:
+digitális és analóg I/O, 24 V DC</h3>
+<p><strong>Digitális bemenet (DI):</strong> csak két állapotot érzékel:
+aktív (logikai 1) vagy inaktív (logikai 0). A bemenet tipikusan 24 V DC
+feszültségszintet vár, és a bemeneti áram néhány mA. Például egy
+egyszerűsített modellben (a valódi digitális bemenet nem egyszerű
+ellenállás, a 4,7 kΩ modellérték; ellenőrizendő: gyártói adatlap), ha a
+bemeneti ellenállás 4,7 kΩ, akkor a bemeneti áram:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>U</mi><mi>R</mi></mfrac><mo>=</mo><mfrac><mrow><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>4</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I = \frac{U}{R} = \frac{24\,\text{V}}{4{,}7\,\text{k}\Omega} = 5{,}1\,\text{mA}.</annotation></semantics></math></p>
+<p>A digitális bemenetre nyomógombot, végálláskapcsolót, reléérintkezőt,
+közelítésérzékelőt köthetünk.</p>
+<p><strong>Digitális kimenet (DO):</strong> két állapota van: be (vezet)
+vagy ki (szakad). A kimenet lehet: - <strong>relés kimenet:</strong>
+galvanikusan leválasztott, egyaránt kapcsolhat egyen- és váltakozó
+feszültséget, de lassabb (jellemzően 10 ms) és korlátozott az
+élettartama; - <strong>tranzisztoros kimenet:</strong> csak
+egyenfeszültséget kapcsol, gyors (jellemzően &lt; 1 ms), nincs
+mechanikus kopás; - <strong>triakos kimenet:</strong> váltakozó
+feszültséget kapcsol, gyors, de terhelésfüggő.</p>
+<p>A motorvezérlésekben a PLC kimenet jellemzően egy segédrelét vagy
+közvetlenül a mágneskapcsoló 24 V DC tekercsét vezérli. A relés kimenet
+névleges árama tipikusan 2 A, ezért közvetlenül nagyobb terhelést (pl.
+230 V-os mágneskapcsoló tekercs) általában csak akkor kapcsolhat, ha az
+áram a határon belül van – ellenkező esetben segédrelét kell
+közbeiktatni. A pontos terhelhetőséget mindig a gyártói adatlap adja meg
+<strong>(ellenőrizendő: gyártói adatlap)</strong>.</p>
+<p><strong>Analóg bemenet (AI):</strong> folytonos jelet fogad, például
+0–10 V feszültséget, 0(4)–20 mA áramjelet, vagy ellenállás-hőmérő
+(Pt100) jelét. A PLC ezt a jelet digitális számmá alakítja (például 0–10
+V → 0–27648). Analóg bemenetre hőmérséklet-, nyomás-, szint- vagy
+áramlásérzékelőt kötünk. A motorvezérléseknél analóg bemenet használható
+például frekvenciaváltó alapjelének vagy hőmérséklet-felügyeletnek.</p>
+<p><strong>Analóg kimenet (AO):</strong> folytonos jelet ad ki, például
+0–10 V vagy 4–20 mA. Ezzel lehet egy frekvenciaváltó
+fordulatszám-alapjelét vezérelni.</p>
+<p><strong>Szabály.</strong> A leggyakoribb ipari jelszint a 24 V DC,
+ezért a PLC bemenetei és a vezérlési körök is ezen a feszültségen
+működnek. A 24 V DC törpefeszültség az áramütés szempontjából kisebb
+kockázatú, mint a 230 V AC, de zárlatra és vezetékezési hibákra itt is
+gondolni kell, és a tápellátást túláramvédelemmel kell ellátni.</p>
+<p><strong>Figyelem.</strong> Az analóg bemenet típusát a
+hardverkonfigurációban be kell állítani (feszültség vagy áram mód). Ha
+4–20 mA-es érzékelőt kötünk 0–10 V-os bemenetre, a jel értelmezhetetlen
+lesz, és a bemenet károsodhat.</p>
+<h3 data-number="32.6.5"
+id="létradiagram-érintkező-tekercs-önfenntartás"><span
+class="header-section-number">32.6.5</span> Létradiagram: érintkező,
+tekercs, önfenntartás</h3>
+<p>A PLC programozásának egyik legelterjedtebb grafikus nyelve a
+létradiagram (ladder diagram, LD). A létradiagram a relés kapcsolási
+rajz logikáját követi: bal oldalon a „feszültség alatti” sín, jobb
+oldalon a „nulla” sín, közöttük vízszintes lépcsőfokok sorakoznak.</p>
+<p><strong>Definíció.</strong> A létradiagram elemei: -
+<strong>Érintkező (kontaktus):</strong> egy bemenet vagy segédváltozó
+állapotát vizsgálja. A NO (záró) érintkező akkor vezet, ha a
+hozzárendelt változó logikai 1; a NC (bontó) érintkező akkor vezet, ha a
+változó logikai 0. <strong>Figyelem.</strong> A hardveresen bontó (NC)
+Stop-gomb nyugalomban 1-et ad a bemenetre, ezért a programban záró (NO)
+kontaktussal vizsgáljuk; így huzalszakadáskor is leáll a motor. -
+<strong>Tekercs (coil):</strong> egy kimenetet vagy segédváltozót állít
+be. Ha a tekercshez vezető ág vezet (a bal síntől a jobb sínig), a
+tekercs logikai 1 lesz, ellenkező esetben 0. -
+<strong>Önfenntartás:</strong> a tekercshez rendelt segédérintkezőt
+párhuzamosan kapcsoljuk a Start feltétellel, így a bekapcsolás után a
+tekercs tartja magát.</p>
+<p>A direktindítás PLC-s létradiagramja az alábbi sorokat
+tartalmazza:</p>
+<p><strong>1. sor (öntartó indítás):</strong> - Start gomb (S1) NO
+érintkező - Vele párhuzamosan K1 segédérintkező (NO) – ez a tartóáramkör
+- Sorosan a Stop gomb (S0) kontaktusa: a gomb hardveresen NC,
+nyugalomban 1-et ad a bemenetre, ezért a programban <strong>NO</strong>
+(záró) kontaktussal vizsgáljuk; így huzalszakadáskor is leáll a motor -
+Sorosan a vészleállító (S2) kontaktusa, ugyanígy NO kontaktus
+(opcionálisan itt is feltüntethető, de a vészleállító hardveresen is
+bontja a kimenetet) - A sor végén K1 tekercs</p>
+<p><strong>2. sor (vészleállító felügyelet):</strong> - A vészleállító
+állapotát egy bemenet figyeli, és a programban tiltja a K1
+bekapcsolását, ha a vészleállító aktív.</p>
+<p>A létradiagramot úgy kell olvasni, mint egy relés kapcsolást: a bal
+oldali sínen „van feszültség”, a jobb oldali sín a „nulla”. Ha az adott
+lépcsőfokon az érintkezőkön keresztül vezető út jön létre, a tekercs
+bekapcsol. A PLC ténylegesen nem köti össze fizikailag a síneket, hanem
+a logikai változók értékét számolja ki.</p>
+<p><strong>Szabály.</strong> A létradiagramban egy tekercs általában
+csak egyszer szerepelhet, de a hozzá tartozó érintkezők
+(segédérintkezők) korlátlanul használhatók. A hagyományos relés
+kapcsolásban minden segédérintkező fizikai érintkező, a PLC-nél viszont
+csak egy memóriabit.</p>
+<h3 data-number="32.6.6"
+id="kidolgozott-példa-direktindítás-plc-vel-létradiagram-és-bekötés"><span
+class="header-section-number">32.6.6</span> Kidolgozott példa:
+direktindítás PLC-vel, létradiagram és bekötés</h3>
+<p><strong>Példa.</strong> Egy háromfázisú szivattyúmotort kell PLC-vel
+vezérelni. A vezérlési feltételek: - Start gomb (S1, NO) és Stop gomb
+(S0, NC) a PLC bemeneteire csatlakozik. - Vészleállító (S2, két
+bontóérintkezős): az 1. NC érintkező sorosan a K1 mágneskapcsoló
+tekercsének 230 V AC körében van (a segédrelé NO érintkezőjével sorban),
+így a PLC-től függetlenül bontja a kört; a 2. NC érintkező a PLC
+bemenetére csatlakozik (felügyelet). A kockázatértékeléstől függően
+biztonsági relé alkalmazandó (ellenőrizendő: MSZ EN 60204-1, MSZ EN ISO
+13850). - A PLC DO0 kimenete a K10 jelű 24 V DC segédrelét vezérli,
+amely a K1 mágneskapcsolót kapcsolja. - Az önfenntartást a program
+valósítja meg.</p>
+<p><strong>Bekötési terv (szöveges leírás):</strong> - 24 V DC
+tápegység: +24 V a PLC tápfeszültségére (L+), 0 V a PLC M jelű kapcsára.
+- S1 Start gomb egyik kapcsa a PLC DI0 bemenetre, másik kapcsa a +24
+V-ra. - S0 Stop gomb egyik kapcsa a DI1 bemenetre, másik kapcsa a +24
+V-ra. - S2 vészleállító 2. NC érintkezőjének egyik kapcsa a DI2
+bemenetre, másik kapcsa a +24 V-ra (felügyelet). - A PLC DO0 kimenete
+egy K10 segédrelé tekercsét vezérli; a segédrelé egyik kapcsa a PLC
+DO0-ra, másik kapcsa a 0 V-ra. - A K10 segédrelé NO érintkezője a K1
+mágneskapcsoló tekercsének 230 V AC körét kapcsolja, sorban az S2
+vészleállító 1. NC érintkezőjével.</p>
+<p><strong>A létradiagram:</strong></p>
+<figure>
+<img src="assets/ve118-diagram-2.png"
+alt="PLC létradiagram: direktindítás önfenntartással és vészleállító felügyelettel - A létradiagram a PLC program logikáját mutatja. S1 Start NO, S0 Stop és S2 vészleállító fizikailag NC gomb (nyugalomban 1-et ad a bemenetre), ezért a programban záró (NO) kontaktussal vizsgáljuk. A DO0 kimenet a K10 segédrelé tekercsét vezérli (a K1 mágneskapcsolót a K10 NO érintkezője kapcsolja); a DO0 NO az önfenntartó (tartó) érintkező. A vészleállító a programban is tiltja a DO0-t." />
+<figcaption aria-hidden="true">PLC létradiagram: direktindítás
+önfenntartással és vészleállító felügyelettel - A létradiagram a PLC
+program logikáját mutatja. S1 Start NO, S0 Stop és S2 vészleállító
+fizikailag NC gomb (nyugalomban 1-et ad a bemenetre), ezért a programban
+záró (NO) kontaktussal vizsgáljuk. A DO0 kimenet a K10 segédrelé
+tekercsét vezérli (a K1 mágneskapcsolót a K10 NO érintkezője kapcsolja);
+a DO0 NO az önfenntartó (tartó) érintkező. A vészleállító a programban
+is tiltja a DO0-t.</figcaption>
+</figure>
+<p>A létradiagram itt a Start gomb és az önfenntartó DO0 érintkező
+párhuzamos kapcsolását, majd a Stop és vészleállító soros kapcsolatát
+mutatja. Ha a Start gombot megnyomják, a DO0 kimenet (K10 segédrelé)
+bekapcsol (logikai 1), és a DO0 tartóérintkező lezár. Amíg a Stop és a
+vészleállító nincs benyomva, a DO0 bekapcsolva marad.</p>
+<p><strong>Számítási ellenőrzés.</strong> A PLC bemeneti áramát a
+bemeneti ellenállásból számíthatjuk. Ha a bemeneti ellenállás 4,7 kΩ és
+a tápfeszültség 24 V:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>b</mi><mi>e</mi></mrow></msub><mo>=</mo><mfrac><mrow><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>4</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I_{be} = \frac{24\,\text{V}}{4{,}7\,\text{k}\Omega} = 5{,}1\,\text{mA}.</annotation></semantics></math></p>
+<p>Ez az érték a PLC bemeneti adatlapján szereplő tipikus tartományba
+esik (általában 3–10 mA), így a nyomógomb érintkezője megfelelő. A relés
+kimenet terhelhetőségét is ellenőrizni kell: ha a segédrelé tekercsének
+árama 30 mA, a PLC kimenet névleges 2 A terhelhetősége bőven elegendő,
+de a gyártói adatlapot mindig meg kell nézni <strong>(ellenőrizendő:
+gyártói adatlap)</strong>.</p>
+<h3 data-number="32.6.7"
+id="biztonság-vészleállító-a-plc-től-függetlenül"><span
+class="header-section-number">32.6.7</span> Biztonság: vészleállító a
+PLC-től függetlenül</h3>
+<p>A legfontosabb biztonsági szabály a PLC-s vezérléseknél: a
+vészleállító áramkör nem épülhet kizárólag a PLC-re.</p>
+<p><strong>Szabály.</strong> A vészleállító (és más biztonsági funkció)
+áramkört úgy kell kialakítani, hogy a vészleállító érintkezője
+közvetlenül, a PLC-től függetlenül megszakítsa a mágneskapcsoló
+tekercsének vagy a biztonsági relének az áramkörét. A PLC csak
+felügyelheti a vészleállító állapotát, de a PLC programhibája, lefagyása
+vagy tápfeszültség-kiesése nem akadályozhatja meg a leállást.</p>
+<p><strong>Tipikus helyes megoldás:</strong> - A vészleállító NC
+érintkezője sorosan van a K1 mágneskapcsoló tekercs áramkörében, így
+benyomásakor azonnal megszakad a tekercs áramköre. - A vészleállító
+állapota egy PLC bemenetre is rá van kötve, így a program értesül a
+vészleállításról, és letiltja a kimeneteket, jelzi a hibát, és csak a
+vészleállító visszaállítása után engedélyezi az újraindítást. - A
+visszaállítás után a motor nem indulhat automatikusan: a programban egy
+élen történő indítást kell feltételezni (a Start gomb újra megnyomása
+szükséges).</p>
+<p><strong>Tilos.</strong> A vészleállítót csak egy PLC bemenetre kötni,
+és a mágneskapcsolót kizárólag a PLC kimenetén keresztül vezérelni. Ha a
+PLC lefagy vagy a program hibás, a vészleállító hatástalan marad.
+Ugyanez vonatkozik a biztonsági ajtókapcsolókra, vészleállító kötelekre
+és más biztonsági funkciókra.</p>
+<h3 data-number="32.6.8"
+id="gyakorlati-útmutató-plc-bekötése-és-egyszerű-program-feltöltése"><span
+class="header-section-number">32.6.8</span> Gyakorlati útmutató: PLC
+bekötése és egyszerű program feltöltése</h3>
+<p><strong>Cél.</strong> Egy PLC digitális bemeneteinek és kimenetének
+bekötése, valamint egy egyszerű önfenntartó motorindítás
+létradiagramjának elkészítése.</p>
+<p><strong>Eszközök és anyagok:</strong> - PLC (24 V DC tápfeszültségű,
+legalább 4 digitális bemenet és 1 relés kimenet) - 24 V DC tápegység -
+Start nyomógomb (NO), Stop nyomógomb (NC), vészleállító (NC) - Segédrelé
+24 V DC tekercssel és NO érintkezővel - Mágneskapcsoló (a motor
+vezérléséhez, a tanműhelyben lehet szimulált terhelés) - Huzalok,
+érvéghüvelyek, sorkapcsok - Multiméter, programozó eszköz (PC vagy
+programozópanel) - A PLC programozószoftvere</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
+(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
+vonatkozik; hálózati feszültségen önállóan ne végezd. A
+kapcsolószekrényben 230/400 V is jelen lehet, ezért a munkát csak
+feszültségmentesítés után kezdd el.</p>
+<p><strong>Az öt biztonsági szabály:</strong> 1.
+<strong>Lekapcsolás:</strong> a kapcsolószekrény főkapcsolóját kapcsold
+ki. 2. <strong>Visszakapcsolás elleni biztosítás:</strong> lakatold le a
+főkapcsolót, vagy távolítsd el a biztosítékokat. 3.
+<strong>Feszültségmentesség ellenőrzése:</strong> ellenőrizd a 24 V DC
+és a 230/400 V AC áramköröket is. 4. <strong>Földelés és rövidre
+zárás:</strong> a hálózati feszültségű oldalon csak akkor, ha az előírás
+megköveteli; a tanműhelyi gyakorlatnál általában elegendő a
+feszültségmentesítés és a visszakapcsolás elleni biztosítás. 5.
+<strong>Szomszédos feszültség alatti részek lefedése:</strong> ha a
+szekrényben más áramkör feszültség alatt marad, takard le.</p>
+<p><strong>Lépések:</strong></p>
+<ol type="1">
+<li><strong>Készítsd elő a PLC-t:</strong> rögzítsd a szerelőlemezre, és
+ellenőrizd a tápellátás bekötési pontjait (L+, M, PE).</li>
+<li><strong>Kösd be a tápegységet:</strong> a 24 V DC tápegység
+kimenetét kösd a PLC L+ és M kapcsaira, valamint a bemeneti közös
+pontra.</li>
+<li><strong>Kösd be a bemeneteket:</strong> a Start gombot a DI0, a Stop
+gombot a DI1, a vészleállító 2. NC érintkezőjét a DI2 bemenetre kösd.
+Mindegyik érintkező másik kapcsa a +24 V-ra csatlakozzon.</li>
+<li><strong>Kösd be a kimenetet:</strong> a PLC DO0 kimenetét kösd a
+segédrelé tekercsének egyik kapcsára, a másik kapcsot a 0 V-ra. A
+segédrelé NO érintkezője és sorosan a vészleállító 1. NC érintkezője
+kerül a mágneskapcsoló tekercs áramkörébe.</li>
+<li><strong>Ellenőrizd a bekötést:</strong> feszültségmentes állapotban
+a nyomógomb-érintkezők folytonosságát a PLC-ről lekötve mérd (nyitva
+szakadás, zárva kb. 0 Ω); bekapcsolt tápnál a bemenetet a bemeneti
+LED-del és a DI–M feszültség mérésével ellenőrizd (aktív: kb. 24
+V).</li>
+<li><strong>Töltsd fel a programot:</strong> készítsd el a
+létradiagramot a programozószoftverben, fordítsd le, és töltsd fel a
+PLC-re.</li>
+<li><strong>Teszteld a működést:</strong> a vészleállító legyen
+alaphelyzetben, a Stop gomb legyen zárva. Nyomd meg a Start gombot: a
+K10 segédrelé behúz, a K1 mágneskapcsoló meghúz. Engedd el a Start
+gombot: a K10 önfenntartásból behúzva marad. Nyomd meg a Stop gombot: a
+K10 elenged, vele a K1 is. Nyomd meg a vészleállítót: a mágneskapcsoló
+azonnal elenged, függetlenül a PLC állapotától.</li>
+<li><strong>Dokumentáld:</strong> rögzítsd a bekötési rajzot, a
+programot és a teszt eredményeit.</li>
+</ol>
+<h3 data-number="32.6.9" id="tipikus-hibák"><span
+class="header-section-number">32.6.9</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>A vészleállító csak a PLC bemenetére van kötve.</strong>
+Ha a PLC lefagy, a vészleállító nem állítja le a motort. <strong>Helyes
+gyakorlat:</strong> a vészleállító NC érintkezője közvetlenül a
+mágneskapcsoló tekercsének áramkörét szakítja meg, a PLC bemenet csak a
+felügyeletet látja el.</p></li>
+<li><p><strong>A PLC kimenetét közvetlenül 230 V-os mágneskapcsoló
+tekercsére kötik, anélkül hogy ellenőriznék a kimenet
+terhelhetőségét.</strong> A relés kimenet névleges árama korlátozott, és
+a bekapcsolási áramlökés is nagyobb lehet. <strong>Helyes
+gyakorlat:</strong> mindig ellenőrizd a gyártói adatlapot, és ha
+szükséges, iktass be segédrelét.</p></li>
+<li><p><strong>Az analóg bemenet típusát rosszul állítják be.</strong>
+Ha 4–20 mA-es érzékelőt kötnek 0–10 V-os bemenetre, a mért érték hibás
+lesz. <strong>Helyes gyakorlat:</strong> a hardverkonfigurációban
+állítsd be a bemenet típusát, és a bekötést ennek megfelelően
+végezd.</p></li>
+<li><p><strong>A 0 V vezetékeket láncolva (sorba fűzve) kötik.</strong>
+Ha sok fogyasztó 0 V-ja egymásról továbbkötve jut vissza, a közös
+szakaszokon eső feszültség és a zavarok hibás bemeneti jeleket
+okozhatnak. <strong>Helyes gyakorlat:</strong> a 0 V-okat egy 0 V-sínről
+vagy sorkapocsról, csillagpontosan kösd.</p></li>
+<li><p><strong>Az önfenntartást elfelejtik a programba írni.</strong> A
+motor csak addig jár, amíg a Start gombot nyomva tartják. <strong>Helyes
+gyakorlat:</strong> a K1 segédérintkezőt (vagy egy memóriabitet)
+párhuzamosan kell kapcsolni a Start gombbal a létradiagramban.</p></li>
+</ol>
+<h3 data-number="32.6.10" id="önellenőrzés"><span
+class="header-section-number">32.6.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A PLC program ciklikusan fut, és a bemeneteket a
+ciklus elején olvassa be. Indokold!</li>
+<li>Hány mA áram folyik egy 4,7 kΩ-os PLC bemeneten 24 V DC
+tápfeszültségnél?</li>
+<li>Mi a különbség a relés és a tranzisztoros PLC kimenet között?</li>
+<li>Miért nem szabad a vészleállítót csak a PLC bemenetére kötni?</li>
+<li>Rajzold le a létradiagramot egy olyan vezérléshez, ahol a motor csak
+akkor indulhat, ha egy hővédő (termosztát) NC érintkezője zárt, és a
+Start gomb megnyomása után önfenntartással működik.</li>
+<li>Mi a teendő, ha a PLC bemenet nem érzékeli a nyomógomb zárását?</li>
+</ol>
+<h3 data-number="32.6.11" id="feladatok"><span
+class="header-section-number">32.6.11</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Sorold fel a PLC fő részeit, és
+magyarázd el egy-egy mondatban a szerepüket!</p>
+<p><strong>2. feladat (A)</strong> Egy PLC bemeneti ellenállása 6,8 kΩ,
+a bemeneti feszültség 24 V DC. Számítsd ki a bemeneti áramot! Mekkora
+teljesítményt vesz fel a bemenet?</p>
+<p><strong>3. feladat (B)</strong> Készíts létradiagramot egy
+kútszivattyú vezérléséhez: a szivattyú akkor indul, ha a Start gombot
+megnyomják, és a tartály szintje alacsony (S4 szintérzékelő NO érintkező
+zár). A szivattyú önfenntartással működik, és leáll, ha a Stop gombot
+megnyomják, vagy a tartály megtelik (S5 szintérzékelő NC érintkező
+nyit). A vészleállító (S6 NC) szintén leállítja.</p>
+<p><strong>4. feladat (B)</strong> Rajzold le egy PLC bekötési vázlatát:
+Start gomb a DI0, Stop gomb a DI1, vészleállító a DI2 bemenetre; a DO0
+kimenet egy 24 V DC segédrelét vezérel. Jelöld a tápegység
+csatlakozásait is.</p>
+<p><strong>5. feladat (C)</strong> Egy PLC-s motorvezérlésben a
+vészleállító benyomásakor a motor nem áll le. Sorold fel a lehetséges
+okokat, és add meg a hiba behatárolásának lépéseit!</p>
+<p><strong>6. feladat (D)</strong> A tanműhelyben a PLC programja fut, a
+Start gomb megnyomásakor a DO0 kimeneten nem jelenik meg feszültség. A
+PLC bemenetén a DI0 jel megjelenik (a bemeneti LED világít). Ismertesd a
+hibakeresés lépéseit, és jelöld meg, melyik hibát hogyan lehet
+kizárni!</p>
+<h3 data-number="32.6.12" id="megoldások"><span
+class="header-section-number">32.6.12</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok:</strong></p>
+<ol type="1">
+<li><strong>Igaz.</strong> A PLC ciklikusan dolgozik: bemenetek olvasása
+→ program végrehajtása → kimenetek írása → diagnosztika. A bemeneteket a
+ciklus elején beolvassa, így a program a ciklus közbeni változásokat
+csak a következő ciklusban érzékeli.</li>
+<li>Az áram:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mrow><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>4</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I = \frac{24\,\text{V}}{4{,}7\,\text{k}\Omega} = 5{,}1\,\text{mA}</annotation></semantics></math>.</li>
+<li>A relés kimenet galvanikusan leválasztott, egyen- és váltakozó
+feszültséget is kapcsolhat, de lassabb és kopik. A tranzisztoros kimenet
+csak egyenfeszültséget kapcsol, gyors, nincs mechanikus kopás.</li>
+<li>Mert ha a PLC lefagy, programhiba lép fel vagy a tápellátás kiesik,
+a vészleállító nem tudná leállítani a motort. A vészleállítónak
+közvetlenül kell megszakítania a mágneskapcsoló áramkörét.</li>
+<li>A létradiagram: Start gomb (NO) párhuzamosan a K1 önfenntartó
+érintkezővel (NO), sorosan a termosztát és a Stop gomb kontaktusa
+(hardveresen NC jeladók, a programban NO kontaktussal vizsgálva),
+sorosan a K1 tekercs.</li>
+<li>Ellenőrizni kell a bekötést (a gomb a +24 V-ról a bemenetre van-e
+kötve), a tápfeszültséget, a bemeneti LED állapotát, a programban a
+bemenet címét, és a bemeneti feszültséget multiméterrel.</li>
+</ol>
+<p><strong>Feladatok megoldásai:</strong></p>
+<p><strong>1. feladat (A)</strong> A PLC fő részei: CPU (program
+tárolása és végrehajtása), bemeneti egység (külső jelek fogadása és
+leválasztása), kimeneti egység (beavatkozók vezérlése), tápegység (belső
+feszültségek előállítása), kommunikációs interfész (programozás,
+felügyelet, adatcsere).</p>
+<p><strong>2. feladat (A)</strong><br />
+Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>6</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R = 6{,}8\,\text{k}\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U = 24\,\text{V}</annotation></semantics></math>.
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>U</mi><mi>R</mi></mfrac><mo>=</mo><mfrac><mn>24</mn><mn>6800</mn></mfrac><mo>≈</mo><mn>3</mn><mo>,</mo><mn>53</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I = \frac{U}{R} = \frac{24}{6800} \approx 3{,}53\,\text{mA}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mstyle displaystyle="true"><mfrac><msup><mi>U</mi><mn>2</mn></msup><mi>R</mi></mfrac></mstyle><mo>=</mo><mstyle displaystyle="true"><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mrow><mn>6800</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac></mstyle><mo>≈</mo><mn>84</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mW</mtext><mo>≈</mo><mn>85</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mW</mtext></mrow><annotation encoding="application/x-tex">P = \dfrac{U^2}{R} = \dfrac{(24\,\text{V})^2}{6800\,\Omega} \approx 84{,}7\,\text{mW} \approx 85\,\text{mW}</annotation></semantics></math>.<br />
+Ellenőrzés: a bemeneti áram tipikusan 3–10 mA, így az érték reális.</p>
+<p><strong>3. feladat (B)</strong> A létradiagram (szöveges
+leírás):<br />
+- 1. sor: [Start gomb (NO) → S4 alacsony szint (NO)] párhuzamosan K1
+önfenntartó érintkezővel (NO) → S5 tele szint → S6 vészleállító → Stop
+gomb → K1 tekercs (az S5, S6 és a Stop fizikailag NC jeladó, a
+programban NO kontaktussal vizsgáljuk).<br />
+A sorrend lényeges: az S4 csak az indítást engedélyezi (a Start-tal
+sorosan, az indítóágban); a tartóág a tele szintig fenntartja a
+szivattyút, így az szintemelkedéskor sem áll le idő előtt (kétpontos
+szabályozás: alsó szinten indul, felsőn áll le).</p>
+<p><strong>4. feladat (B)</strong> A bekötési vázlat (szöveges
+leírás):<br />
+- 24 V DC tápegység + kimenete a PLC L+ és a nyomógombok közös
+pontjára.<br />
+- 0 V a PLC M-re.<br />
+- Start gomb másik kapcsa DI0, Stop gomb másik kapcsa DI1, vészleállító
+2. NC érintkezőjének másik kapcsa DI2 (az 1. NC érintkező a
+mágneskapcsoló tekercsének 230 V-os körében van).<br />
+- DO0 a segédrelé tekercs egyik kapcsára, a másik kapocs a 0 V-ra.<br />
+- A segédrelé NO érintkezője és sorosan a vészleállító 1. NC érintkezője
+a mágneskapcsoló tekercs áramkörébe.</p>
+<p><strong>5. feladat (C)</strong> Lehetséges okok:<br />
+- A vészleállító csak a PLC bemenetére van kötve, és a PLC program a
+kimenetet nem tiltja le (vagy a PLC lefagyott).<br />
+- A vészleállító érintkezője rosszul van bekötve (pl. NO helyett NC,
+vagy a hardveres áramkörben nincs benne).<br />
+- A mágneskapcsoló tekercs áramköre nem a vészleállítón át megy, hanem
+közvetlenül a tápfeszültségre van kötve.<br />
+- A PLC kimenete nem kapcsol le (pl. ragasztott reléérintkező a PLC
+kimenetén).<br />
+Behatárolás: feszültségmentes állapotban ellenőrizni a bekötést, a
+vészleállító érintkezőjének működését multiméterrel, és a PLC programban
+a bemenet állapotát.</p>
+<p><strong>6. feladat (D)</strong> Hibakeresés lépései:<br />
+- Ellenőrizd, hogy a PLC RUN üzemmódban van-e.<br />
+- Nézd meg a DO0 kimeneti LED állapotát a PLC-n. Ha világít, a hiba a
+kimeneti áramkörben van (pl. a segédrelé nem húz be, vagy a kimenet
+terhelése meghaladja a határt).<br />
+- Ha a DO0 LED nem világít, ellenőrizd a programot: a létradiagramban a
+DI0 érintkező helyesen van-e, a Stop és a vészleállító kontaktusok a
+hardveres NC gomboknak megfelelően NO kontaktusként szerepelnek-e, és az
+önfenntartás megvan-e.<br />
+- Ellenőrizd a 24 V DC tápfeszültséget a kimeneti közös ponton.<br />
+- Multiméterrel mérj feszültséget a DO0 és a 0 V között, amikor a Start
+gomb aktív. Ha nincs feszültség, a program logikája hibás, vagy a
+kimenet nem lett hozzárendelve.</p>
+<h3 data-number="32.6.13" id="rövid-összefoglaló"><span
+class="header-section-number">32.6.13</span> Rövid összefoglaló</h3>
+<p>A PLC programozható logikai vezérlő, amely ipari számítógépként
+működik: bemenetein (DI) érzékeli a nyomógombok, érzékelők állapotát, a
+tárolt program szerint logikai döntéseket hoz, és kimenetein (DO)
+vezérli a mágneskapcsolókat, szelepeket, jelzőlámpákat. A PLC ciklikusan
+dolgozik: bemenetek olvasása → program végrehajtása → kimenetek írása →
+diagnosztika. A digitális be- és kimenetek 0/1 állapotot kezelnek,
+jellemzően 24 V DC jelszinten; az analóg bemenetek folytonos jeleket
+(0–10 V, 4–20 mA) fogadnak. A létradiagram (LD) a relés kapcsolási rajz
+logikáját követi: érintkezők (NO, NC) és tekercsek alkotják a
+lépcsőfokokat. Az önfenntartást egy tekercshez rendelt segédérintkező
+párhuzamos kapcsolásával valósítjuk meg a Start gombbal. A legfontosabb
+biztonsági szabály, hogy a vészleállító áramkört a PLC-től függetlenül,
+közvetlenül a mágneskapcsoló tekercsét megszakító módon kell
+kialakítani; a PLC csak felügyelheti az állapotát. A PLC-s vezérlés
+fogalmai, a be- és kimenetek kezelése, valamint a vészleállító
+függetlenségének elve alapozza meg a frekvenciaváltók és lágyindítók
+vezérlését a <a href="ve127.html">Motorvédelmek, lágyindítók és
+frekvenciaváltók az elosztóban</a> alfejezetben.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve117.html">← 32.5 Vezérlések hibakeresése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve119.html">33.1 Ipari elosztóhálózatok jellemzői és topológiája →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

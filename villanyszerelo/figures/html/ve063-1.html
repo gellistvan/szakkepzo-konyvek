@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gG olvadóbetét kiolvadási sávja (16 A)</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="i">Áram I</label><input id="i" type="range" min="16" max="480" step="0.5" value="40" aria-label="Áram I"><output id="i_o" for="i"></output></div>
+<div class="row"><label for="b">B16 összevetés (0 = ki, 1 = be)</label><input id="b" type="range" min="0" max="1" step="1" value="1" aria-label="B16 összevetés (0 = ki, 1 = be)"><output id="b_o" for="b"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Log–log idő-áram diagram: a 16 A gG olvadóbetét kiolvadási sávja, áramcsúszkával és kapcsolható B16 összevetéssel"></svg>
+<p class="small">Szemléltető sáv a gG 16 A betét szabványos kapuértékeiből (1,25·In: nem olvad ki 1 h-n belül; 1,6·In: 1 h-n belül kiolvad; 10 s, 5 s és 0,1 s kapuk) log–log interpolációval; a B16 sáv a 18.2 ábra modellje. Nem gyártói görbe – ellenőrizendő: MSZ EN 60269-1/-2, MSZ EN 60898-1, gyártói adatlap.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"i":"A", "b":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const GMIN=[[20.0, 3600.0], [33.0, 10.0], [85.0, 0.1]], GMAX=[[25.6, 3600.0], [65.0, 5.0], [150.0, 0.1]];
+function ip(p,i){if(i<p[0][0])return null;for(let k=0;k<p.length-1;k++){const [x0,y0]=p[k],[x1,y1]=p[k+1];if(i<=x1){const q=(Math.log10(y1)-Math.log10(y0))/(Math.log10(x1)-Math.log10(x0));return Math.pow(10,Math.log10(y0)+q*(Math.log10(i)-Math.log10(x0)));}}
+ const [x1,y1]=p[p.length-1];return y1*Math.pow(x1/i,2);}
+function ll(m,a,b){const q=(Math.log10(b[1])-Math.log10(a[1]))/(Math.log10(b[0])-Math.log10(a[0]));return Math.pow(10,Math.log10(a[1])+q*(Math.log10(m)-Math.log10(a[0])));}
+function bmin(i){const m=i/16;if(m<1.13)return null;if(m>=3)return 0.005;return m<=2.55?ll(m,[1.13,3600],[2.55,1]):Math.pow(m/2.55,-1.5);}
+function bmax(i){const m=i/16;if(m<1.45)return null;if(m>=5)return 0.005;return m<=2.55?ll(m,[1.45,3600],[2.55,60]):60*Math.pow(m/2.55,-2);}
+const L=70,R=540,T=15,B=270, X=i=>L+(Math.log10(i)-Math.log10(16))/(Math.log10(480)-Math.log10(16))*(R-L), Y=t=>B-(Math.log10(Math.min(t,1e4))-Math.log10(0.004))/(4-Math.log10(0.004))*(B-T);
+[16,20,25.6,33,65,85,150,300].forEach(i=>{el("line",{x1:X(i),x2:X(i),y1:T,y2:B,stroke:css("--grid")});el("text",{x:X(i),y:B+16,"text-anchor":"middle","font-size":11},String(i).replace(".",","));});
+[[0.01,"0,01"],[0.1,"0,1"],[1,"1"],[10,"10"],[60,"1 min"],[3600,"1 h"]].forEach(p=>{el("line",{x1:L,x2:R,y1:Y(p[0]),y2:Y(p[0]),stroke:css("--grid")});el("text",{x:L-6,y:Y(p[0])+4,"text-anchor":"end","font-size":12},p[1]);});
+function path(f,start,col,w,dash){let d="M"+X(start).toFixed(1)+" "+Y(1e4).toFixed(1);for(let k=0;k<=200;k++){const i=start*Math.pow(480/start,k/200),t=f(i);if(t===null)continue;d+="L"+X(i).toFixed(1)+" "+Y(t).toFixed(1);}
+ el("path",{d:d,fill:"none",stroke:col,"stroke-width":w,"stroke-dasharray":dash||""});}
+path(i=>ip(GMIN,i),20,css("--hl"),1.6);path(i=>ip(GMAX,i),25.6,css("--hl"),3);
+if(v.b){path(bmin,18.08,css("--muted"),1.4,"6 4");path(bmax,23.2,css("--muted"),1.4,"6 4");}
+const a=ip(GMIN,v.i),b=ip(GMAX,v.i);
+if(a!==null)el("line",{x1:X(v.i),x2:X(v.i),y1:Y(b===null?1e4:b),y2:Y(a),stroke:css("--hl2"),"stroke-width":6,opacity:.85});
+else el("line",{x1:X(v.i),x2:X(v.i),y1:T,y2:B,stroke:css("--hl2"),"stroke-width":2,"stroke-dasharray":"3 3"});
+el("text",{x:(L+R)/2,y:B+36,"text-anchor":"middle","font-size":13},"áram I (A, log)");
+el("text",{x:14,y:(T+B)/2,"font-size":13,transform:"rotate(-90 14 "+((T+B)/2)+")","text-anchor":"middle"},"t (log)");
+const ts=t=>t<1?fmt(t,3)+" s":t<120?fmt(t,1)+" s":fmt(t/60,0)+" min";
+let s="<b>I = "+fmt(v.i,1)+" A = "+fmt(v.i/16,2)+"·In</b> (gG 16 A): ";
+if(a===null) s+="a betét nem olvad ki (1,25·In = 20 A alatt 1 h-n belül sem).";
+else if(b===null) s+="1 h-n belül nem garantált a kiolvadás (20…25,6 A); legkorábban ≈ "+ts(a)+".";
+else s+="kiolvadás ≈ "+ts(a)+" és "+ts(b)+" között.";
+if(v.b){const c=bmin(v.i),d=bmax(v.i);s+="<br>B16: "+(c===null?"nem old ki":d===null?"1 h-n belül nem garantált":(v.i>=80?"biztos azonnali kioldás (&lt; 0,1 s)":"kiold ≈ "+ts(c)+" és "+ts(d)+" között"))+".";}
+status(s);
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A4-es rajzlap lépésenként</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"><label><input type="checkbox" id="m12"> méretarány 1:2 (a rajzi hossz fele, a méretszám változatlan)</label></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="A4-es rajzlap belső kerettel, jobb alsó feliratmezővel; 120×50 mm-es lemez két Ø8 furattal, 90 mm tengelytávolsággal, a vonalfajták megnevezésével."></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">A lap és a lemez mérete a gyakorlati útmutató szerinti; a vonalvastagság aránya 2:1 (pl. 0,5 mm / 0,25 mm). Kis képernyőn a rajz kicsinyítve jelenik meg, a méretszámok mindig a valós (mm-ben megadott) méretet mutatják.</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "1. Belső keret: a lap szélétől balra 20 mm (lefűzés), a többi oldalon 10 mm; vastag folytonos vonal.", "k": 1}, {"msg": "2. Feliratmező a jobb alsó sarokban (180 × 40 mm): cím, rajzszám, méretarány, név, dátum.", "k": 2}, {"msg": "3. A lemez körvonala előbb vékonyan, előrajzként (120 × 50 mm).", "k": 3}, {"msg": "4. A látható kontúrt vastag folytonos vonallal húzzuk ki.", "k": 4}, {"msg": "5. A furatok tengelyvonalai vékony pont-vonallal, a furaton néhány mm-rel túlnyúlva.", "k": 5}, {"msg": "6. A két Ø8 mm-es furat, középpontjuk a lemez szélétől 15 mm-re.", "k": 6}, {"msg": "7. Méretek: segédvonal (1), méretvonal (2), nyílhegy (3), méretszám (4); a méretszám mindig a valós méret.", "k": 7}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+
+const E=[{"t": "line", "p": [[0, 0], [297, 0], [297, 210], [0, 210], [0, 0]], "s": 1, "w": "thin", "ls": "solid", "obj": false}, {"t": "line", "p": [[20, 10], [287, 10], [287, 200], [20, 200], [20, 10]], "s": 1, "w": "thick", "ls": "solid", "obj": false}, {"t": "line", "p": [[107, 50], [107, 10]], "s": 2, "w": "thick", "ls": "solid", "obj": false}, {"t": "line", "p": [[107, 50], [287, 50]], "s": 2, "w": "thick", "ls": "solid", "obj": false}, {"t": "line", "p": [[107, 30], [287, 30]], "s": 2, "w": "thin", "ls": "solid", "obj": false}, {"t": "line", "p": [[227, 30], [227, 50]], "s": 2, "w": "thin", "ls": "solid", "obj": false}, {"t": "line", "p": [[147, 10], [147, 30]], "s": 2, "w": "thin", "ls": "solid", "obj": false}, {"t": "line", "p": [[227, 10], [227, 30]], "s": 2, "w": "thin", "ls": "solid", "obj": false}, {"t": "text", "p": [110, 40], "txt": "Cím: Szerelőlemez", "s": 2, "size": 4, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [230, 40], "txt": "Rajzszám: SZL-01", "s": 2, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [110, 20], "txt": "M 1:1", "s": 2, "size": 4, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [150, 20], "txt": "Név:", "s": 2, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [230, 20], "txt": "Dátum:", "s": 2, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "line", "p": [[40, 120], [160, 120], [160, 170], [40, 170], [40, 120]], "s": 3, "w": "thin", "ls": "solid", "obj": true, "until": 3}, {"t": "line", "p": [[40, 120], [160, 120], [160, 170], [40, 170], [40, 120]], "s": 4, "w": "thick", "ls": "solid", "obj": true}, {"t": "line", "p": [[48, 145.0], [62, 145.0]], "s": 5, "w": "thin", "ls": "dashdot", "obj": true}, {"t": "line", "p": [[55, 138.0], [55, 152.0]], "s": 5, "w": "thin", "ls": "dashdot", "obj": true}, {"t": "line", "p": [[138, 145.0], [152, 145.0]], "s": 5, "w": "thin", "ls": "dashdot", "obj": true}, {"t": "line", "p": [[145, 138.0], [145, 152.0]], "s": 5, "w": "thin", "ls": "dashdot", "obj": true}, {"t": "circle", "c": [55, 145.0], "r": 4.0, "s": 6, "w": "thick", "obj": true}, {"t": "circle", "c": [145, 145.0], "r": 4.0, "s": 6, "w": "thick", "obj": true}, {"t": "dim", "a": [40, 108], "b": [160, 108], "txt": "120", "s": 7, "side": 2.2, "ext": [[40, 118], [160, 118]], "rot": 0, "obj": true}, {"t": "dim", "a": [40, 182], "b": [55, 182], "txt": "15", "s": 7, "side": 2.2, "ext": [[40, 172], [55, 153.0]], "rot": 0, "obj": true}, {"t": "dim", "a": [55, 182], "b": [145, 182], "txt": "90", "s": 7, "side": 2.2, "ext": [[55, 153.0], [145, 153.0]], "rot": 0, "obj": true}, {"t": "dim", "a": [172, 120], "b": [172, 170], "txt": "50", "s": 7, "side": 2.2, "ext": [[162, 120], [162, 170]], "rot": 90, "obj": true}, {"t": "dim", "a": [32, 120], "b": [32, 145.0], "txt": "25", "s": 7, "side": 2.2, "ext": [[38, 120], [47, 145.0]], "rot": 90, "obj": true}, {"t": "line", "p": [[52.17, 147.83], [36, 170.0], [22, 170.0]], "s": 7, "w": "thin", "ls": "solid", "obj": true}, {"t": "text", "p": [23, 171.2], "txt": "2×Ø8", "s": 7, "size": 3.6, "anchor": "start", "rot": 0, "obj": true, "bold": false}, {"t": "callout", "n": 1, "tgt": [160, 113], "at": [150, 92], "s": 7, "obj": false, "objtgt": true}, {"t": "callout", "n": 2, "tgt": [120, 108], "at": [120, 92], "s": 7, "obj": false, "objtgt": true}, {"t": "callout", "n": 3, "tgt": [41.5, 108], "at": [55, 92], "s": 7, "obj": false, "objtgt": true}, {"t": "callout", "n": 4, "tgt": [100, 111], "at": [88, 92], "s": 7, "obj": false, "objtgt": true}, {"t": "callout", "n": 5, "tgt": [55, 138.0], "at": [30, 100], "s": 7, "obj": false, "objtgt": true}, {"t": "line", "p": [[180, 192], [195, 192]], "s": 1, "w": "thick", "ls": "solid", "obj": false}, {"t": "text", "p": [198, 190.9], "txt": "vastag: látható él, kontúr", "s": 1, "size": 3.0, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "line", "p": [[180, 184], [195, 184]], "s": 1, "w": "thin", "ls": "solid", "obj": false}, {"t": "text", "p": [198, 182.9], "txt": "vékony: méret-, segédvonal", "s": 1, "size": 3.0, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "line", "p": [[180, 176], [195, 176]], "s": 1, "w": "thin", "ls": "dash", "obj": false}, {"t": "text", "p": [198, 174.9], "txt": "szaggatott: takart él", "s": 1, "size": 3.0, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "line", "p": [[180, 168], [195, 168]], "s": 1, "w": "thin", "ls": "dashdot", "obj": false}, {"t": "text", "p": [198, 166.9], "txt": "pont-vonal: tengely", "s": 1, "size": 3.0, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "line", "p": [[180, 160], [195, 160]], "s": 1, "w": "thin", "ls": "dashdotdot", "obj": false}, {"t": "text", "p": [198, 158.9], "txt": "kétpont-vonal: szélső helyzet", "s": 1, "size": 3.0, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [180, 150], "txt": "Méretmegadás elemei:", "s": 7, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": true}, {"t": "text", "p": [180, 143.0], "txt": "1 segédvonal", "s": 7, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [180, 136.8], "txt": "2 méretvonal", "s": 7, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [180, 130.6], "txt": "3 nyílhegy", "s": 7, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [180, 124.4], "txt": "4 méretszám", "s": 7, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": false}, {"t": "text", "p": [180, 118.2], "txt": "5 tengelyvonal", "s": 7, "size": 3.2, "anchor": "start", "rot": 0, "obj": false, "bold": false}], OX=40, OY=120;
+const LW={thick:2.4,thin:1.0}, DASH={solid:"",dash:"8 4",dashdot:"14 4 2.5 4",dashdotdot:"14 4 2.5 4 2.5 4"};
+const SC=2.0;
+function kk(){const c=document.getElementById("m12");return c&&c.checked?0.5:1;}
+function T(p,obj){const f=obj?kk():1;const x=obj?OX+f*(p[0]-OX):p[0],y=obj?OY+f*(p[1]-OY):p[1];return [x*SC+6,(212-y)*SC];}
+function render(s){svg.setAttribute("viewBox","0 0 612 432");svg.innerHTML="";const ln=css("--line");
+ for(const e of E){if(e.s>s.k||(e.until&&s.k>e.until))continue;
+  if(e.t==="line")el("polyline",{points:e.p.map(p=>T(p,e.obj).join(",")).join(" "),fill:"none",stroke:ln,"stroke-width":LW[e.w],"stroke-dasharray":DASH[e.ls]});
+  else if(e.t==="circle"){const c=T(e.c,e.obj);el("circle",{cx:c[0],cy:c[1],r:e.r*SC*(e.obj?kk():1),fill:"none",stroke:ln,"stroke-width":LW[e.w]});}
+  else if(e.t==="text"){let txt=e.txt;if(txt==="M 1:1"&&kk()<1)txt="M 1:2";const p=T(e.p,e.obj);
+    el("text",{x:p[0],y:p[1],"text-anchor":e.anchor,"font-size":Math.max(11,e.size*SC*1.25),"font-weight":e.bold?"bold":"normal",fill:(txt!==e.txt)?css("--hl2"):css("--fg")},txt);}
+  else if(e.t==="dim"){const a=T(e.a,true),b=T(e.b,true);
+    e.ext.forEach((q,i)=>{const s0=T(q,true),t=i?b:a;el("line",{x1:s0[0],y1:s0[1],x2:t[0]+(t[0]-s0[0]?Math.sign(t[0]-s0[0])*4:0),y2:t[1]+(t[1]-s0[1]?Math.sign(t[1]-s0[1])*4:0),stroke:ln,"stroke-width":LW.thin});});
+    el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:ln,"stroke-width":LW.thin});
+    [[a,b],[b,a]].forEach(([p,q])=>{const dx=p[0]-q[0],dy=p[1]-q[1],n=Math.hypot(dx,dy),ux=dx/n,uy=dy/n,L=7,W=2.4;
+      el("polygon",{points:[p,[p[0]-L*ux+W*uy,p[1]-L*uy-W*ux],[p[0]-L*ux-W*uy,p[1]-L*uy+W*ux]].map(z=>z.join(",")).join(" "),fill:ln});});
+    const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+    if(e.rot){const t=el("text",{x:mx-6,y:my,"text-anchor":"middle","font-size":13,transform:"rotate(-90 "+(mx-6)+" "+my+")"},e.txt);}
+    else el("text",{x:mx,y:my-5,"text-anchor":"middle","font-size":13},e.txt);}
+  else if(e.t==="callout"){const t=T(e.tgt,true),c=T(e.at,false);el("line",{x1:c[0],y1:c[1],x2:t[0],y2:t[1],stroke:ln,"stroke-width":0.8});
+    el("circle",{cx:c[0],cy:c[1],r:8,fill:css("--bg"),stroke:ln,"stroke-width":1});el("text",{x:c[0],y:c[1]+4.5,"text-anchor":"middle","font-size":12},String(e.n));}}
+ if(kk()<1&&s.k>=7)el("text",{x:T([OX-15,OY-55],false)[0],y:T([OX-15,OY-55],false)[1],"font-size":12,fill:css("--hl2")},"1:2: a rajzi hossz fele, a méretszám (120, 50, 90, 15, 25, 2×Ø8) változatlan");}
+document.addEventListener("change",e=>{if(e.target.id==="m12")show(+document.getElementById("pos").value);});
+
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.textContent = s.msg || "";
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 1400);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

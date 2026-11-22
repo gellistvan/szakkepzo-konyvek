@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frekvenciaváltó: U/f és nyomatékgörbe</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="f">Frekvencia f</label><input id="f" type="range" min="10" max="80" step="1" value="50" aria-label="Frekvencia f"><output id="f_o" for="f"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Feszültség–frekvencia egyenes és nyomaték–fordulatszám görbe a frekvencia csúszkájával"></svg>
+<p class="small">Szemléltető modell (5,5 kW-os, 4 pólusú motor, Kloss-görbe, állandó billenő szlipfordulat, az állórész-ellenállás elhanyagolva): nem mért görbék; kis frekvencián a valóságban feszültség-emelés kell. A pontos görbét a gyártói adatlap adja (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"f":"Hz"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const FN=50,UN=400,P=2,MB0=108,DNB=285;
+const U=f=>UN*Math.min(1,f/FN), Mb=f=>MB0*Math.pow(Math.min(1,FN/f),2), ns=f=>60*f/P;
+const Mf=(n,f)=>{let s=(ns(f)-n)/ns(f);if(Math.abs(s)<1e-9)s=1e-9;const sb=DNB/ns(f);return 2*Mb(f)/(s/sb+sb/s);};
+// bal: U(f)
+const A0=45,B0=250,AW=150,AH=190, XA=f=>A0+AW*f/80, YA=u=>B0-AH*u/480;
+el("line",{x1:A0,x2:A0+AW,y1:B0,y2:B0,stroke:css("--line"),"stroke-width":1.5});el("line",{x1:A0,x2:A0,y1:B0,y2:YA(480),stroke:css("--line"),"stroke-width":1.5});
+el("path",{d:"M"+XA(0)+" "+YA(0)+"L"+XA(50)+" "+YA(400)+"L"+XA(80)+" "+YA(400),fill:"none",stroke:css("--line"),"stroke-width":2.5});
+el("circle",{cx:XA(v.f),cy:YA(U(v.f)),r:6,fill:css("--hl2")});
+[0,20,40,60,80].forEach(f=>el("text",{x:XA(f),y:B0+15,"text-anchor":"middle","font-size":10},String(f)));
+[0,200,400].forEach(u=>el("text",{x:A0-5,y:YA(u)+4,"text-anchor":"end","font-size":10},String(u)));
+el("text",{x:A0+AW/2,y:B0+32,"text-anchor":"middle","font-size":11},"f (Hz)");el("text",{x:A0,y:28,"font-size":11},"U (V)");
+// jobb: M(n)
+const C0=300,CW=240,CH=190, XC=n=>C0+CW*n/2450, YC=m=>B0-CH*m/125;
+el("line",{x1:C0,x2:C0+CW,y1:B0,y2:B0,stroke:css("--line"),"stroke-width":1.5});el("line",{x1:C0,x2:C0,y1:B0,y2:YC(125),stroke:css("--line"),"stroke-width":1.5});
+[0,500,1000,1500,2000].forEach(n=>el("text",{x:XC(n),y:B0+15,"text-anchor":"middle","font-size":10},String(n)));
+[0,50,100].forEach(m=>{el("text",{x:C0-5,y:YC(m)+4,"text-anchor":"end","font-size":10},String(m));el("line",{x1:C0,x2:C0+CW,y1:YC(m),y2:YC(m),stroke:css("--grid")});});
+el("text",{x:C0+CW/2,y:B0+32,"text-anchor":"middle","font-size":11},"n (1/min)");el("text",{x:C0,y:28,"font-size":11},"M (N·m)");
+const curve=(f,col,w,dash)=>{let d="";const nmax=ns(f)*0.9995;for(let i=0;i<=300;i++){const n=0.3+(nmax-0.3)*i/300;d+=(i?"L":"M")+XC(n)+" "+YC(Mf(n,f));}
+ el("path",{d:d,fill:"none",stroke:col,"stroke-width":w,"stroke-dasharray":dash||""});};
+curve(25,css("--grid"),1.5,"2 4");curve(50,css("--grid"),1.5,"");curve(80,css("--grid"),1.5,"7 4");
+curve(v.f,css("--hl2"),3);
+el("text",{x:C0+CW-4,y:YC(120),"text-anchor":"end","font-size":10},"szürke: 25 / 50 / 80 Hz");
+status("f = <b>"+fmt(v.f,0)+" Hz</b>: U = "+(v.f<=FN?"8·f = ":"")+"<b>"+fmt(U(v.f),0)+" V</b>, n<sub>s</sub> = "+fmt(ns(v.f),0)+" 1/min, billenőnyomaték ≈ <b>"+fmt(Mb(v.f),0)+" N·m</b>"+(v.f>FN?" (mezőgyengítés: Mb ∝ (50/f)²)":" (állandó U/f: közel azonos)")+".");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

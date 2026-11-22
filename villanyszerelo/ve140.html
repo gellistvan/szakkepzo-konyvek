@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>38.3 Logikai kapuk, számrendszerek és a relé helyett logika –
+Villanyszerelő – villamos berendezés- és készülékszerelő
+szakirány</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz8">VIII. RÉSZ – Ipari elektronika</a> › <a href="index.html#vech37">38 Tápegységek, analóg és digitális alapok</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve139.html">← 38.2 Erősítők, műveleti erősítő és szűrők</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve141.html">39.1 Munkahely, szerszám, vezetékmegmunkálás, érvéghüvely és kábelsaru →</a></div>
+</nav>
+<h2 data-number="38.3" id="ve140"><span
+class="header-section-number">38.3</span> Logikai kapuk, számrendszerek
+és a relé helyett logika</h2>
+<h3 data-number="38.3.1"
+id="motiváció-miért-kell-ez-a-villanyszerelőnek"><span
+class="header-section-number">38.3.1</span> Motiváció: miért kell ez a
+villanyszerelőnek?</h3>
+<p>Egyre több gépen és épületautomatikai rendszeren találkozol
+<strong>PLC-vel</strong> (programozható logikai vezérlő),
+<strong>érintőképernyős HMI-panellel</strong> vagy okos relével. Ha
+elromlik egy motor, ami „kétkezes indítással” biztosított préshez van
+beépítve, a hibát csak akkor tudod megkeresni, ha érted: a vezérlés
+valójában egy <strong>ÉS</strong> kapcsolatot valósít meg a gombok
+között. Ha a LED-es kijelzőn <code>0x3F</code> értéket látsz, és nem
+tudod, hogy az a 63-as szám, nem tudod beállítani a paramétereket. A
+digitális logika nem elvont informatika: ez a relés kapcsolások és a
+modern vezérlések közös nyelve.</p>
+<h3 data-number="38.3.2"
+id="egyenesen-a-helyszínre-a-relés-kapcsolás-mint-logikai-áramkör"><span
+class="header-section-number">38.3.2</span> Egyenesen a helyszínre: a
+relés kapcsolás mint logikai áramkör</h3>
+<p>Nézzünk egy klasszikus mágneskapcsoló-vezérlést. Tegyük fel, hogy egy
+szivattyút csak akkor szabad indítani, ha a <strong>biztonsági
+kapcsoló</strong> (pl. vészleállító, ami alaphelyzetben enged) zárt
+<strong>ÉS</strong> a <strong>szintérzékelő</strong> is azt jelzi, hogy
+van elég víz. Ha van feszültség, a tekercs meghúz. Ez a kapcsolás így
+néz ki:</p>
+<figure>
+<img src="assets/ve140-diagram-1.png"
+alt="ÉS logika relés megvalósítása - K1 mágneskapcsoló tekercse csak akkor kap feszültséget, ha B1 (szintkapcsoló, záró) ÉS S2 (vészleállító, alaphelyzetben zárt bontó) egyszerre zárva van: +24 V → B1 → S2 → K1 A1-A2 → 0 V soros kör. Betűjelek: B = érzékelő, S = kézi működtetésű kapcsoló (MSZ EN IEC 81346-2)." />
+<figcaption aria-hidden="true">ÉS logika relés megvalósítása - K1
+mágneskapcsoló tekercse csak akkor kap feszültséget, ha B1
+(szintkapcsoló, záró) ÉS S2 (vészleállító, alaphelyzetben zárt bontó)
+egyszerre zárva van: +24 V → B1 → S2 → K1 A1-A2 → 0 V soros kör.
+Betűjelek: B = érzékelő, S = kézi működtetésű kapcsoló (MSZ EN IEC
+81346-2).</figcaption>
+</figure>
+<p>A tápfeszültséget itt 24 V DC-nek jelöltük, de a logika gondolati
+váza ugyanaz, akár 230 V-os vezérlést nézünk (jogosult személy által),
+akár tanműhelyi törpefeszültséget. A lényeg: a <strong>nyitott</strong>
+és <strong>zárt</strong> kontaktusokból matematikai kapcsolat lesz.</p>
+<h3 data-number="38.3.3"
+id="bináris-és-hexadecimális-számrendszerek"><span
+class="header-section-number">38.3.3</span> Bináris és hexadecimális
+számrendszerek</h3>
+<p>A relé csak <strong>két állapotot</strong> ismer: be van húzva (1)
+vagy elengedve (0). A PLC-k és a digitális elektronika is ezen a két
+állapoton alapszik.</p>
+<p><strong>Definíció.</strong> A <strong>kettes (bináris)
+számrendszer</strong> alapszáma 2, a használt számjegyek: <code>0</code>
+és <code>1</code>. A helyiértékek jobbról balra
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>0</mn></msup><mo>,</mo><msup><mn>2</mn><mn>1</mn></msup><mo>,</mo><msup><mn>2</mn><mn>2</mn></msup><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">2^0, 2^1, 2^2, \dots</annotation></semantics></math>
+növekednek. <strong>Definíció.</strong> A <strong>tizenhatos
+(hexadecimális) számrendszer</strong> alapszáma 16, a számjegyek:
+<code>0</code>–<code>9</code>, majd <code>A</code> (10), <code>B</code>
+(11), <code>C</code> (12), <code>D</code> (13), <code>E</code> (14),
+<code>F</code> (15). A hexadecimális rövidítésére gyakran
+<code>0x</code> előtagot írnak (pl. <code>0x3F</code>), vagy alsó
+indexbe <code>16</code> kerül:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><msub><mi>F</mi><mn>16</mn></msub></mrow><annotation encoding="application/x-tex">3F_{16}</annotation></semantics></math>.</p>
+<p>Miért pont a hexadecimális? Mert <strong>4 bit</strong> (négy bináris
+számjegy) pontosan egy hexadecimális számjegyet ad ki. Ez óriási
+tömörítés: a 8 bites <code>11001010</code> kettes szám hexadecimálisan
+csak <code>0xCA</code>.</p>
+<p><strong>Szabály. Átváltás 10-esből 2-esbe (maradékos
+osztás).</strong> Osszuk maradékosan a számot 2-vel, amíg a hányados 0
+nem lesz. A maradékokat alulról felfelé kell olvasni!</p>
+<p><strong>Példa.</strong> Alakítsuk át a 202-t binárisra:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>202</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>101</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> maradék: </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn></mrow><annotation encoding="application/x-tex">202 : 2 = 101 \text{ maradék: } 0</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>101</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>50</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> maradék: </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn></mrow><annotation encoding="application/x-tex">101 : 2 = 50  \text{ maradék: } 1</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>25</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> maradék: </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn></mrow><annotation encoding="application/x-tex">50  : 2 = 25  \text{ maradék: } 0</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>25</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>12</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> maradék: </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn></mrow><annotation encoding="application/x-tex">25  : 2 = 12  \text{ maradék: } 1</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>6</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> maradék: </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn></mrow><annotation encoding="application/x-tex">12  : 2 = 6   \text{ maradék: } 0</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>3</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> maradék: </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn></mrow><annotation encoding="application/x-tex">6   : 2 = 3   \text{ maradék: } 0</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> maradék: </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn></mrow><annotation encoding="application/x-tex">3   : 2 = 1   \text{ maradék: } 1</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>0</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> maradék: </mtext><mspace width="0.333em"></mspace></mrow><mn>1</mn></mrow><annotation encoding="application/x-tex">1   : 2 = 0   \text{ maradék: } 1</annotation></semantics></math></p>
+<p>A maradékokat alulról felfelé olvasva:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>202</mn><mn>10</mn></msub><mo>=</mo><msub><mn>11001010</mn><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">202_{10} = 11001010_2</annotation></semantics></math>.</p>
+<p><strong>Szabály. Átváltás 2-esből 16-osba.</strong> Csoportosítsd a
+biteket jobbról 4-esével, és írd át mindegyiket 16-os alakra. (Ha a bal
+oldalon nem jön ki a 4 bit, pótold 0-val!)</p>
+<p><strong>Példa.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>10101101</mn><mn>2</mn></msub><mo>→</mo><mn>0</mn><mi>x</mi><mi>A</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">10101101_2 \to 0xAD</annotation></semantics></math>.
+Csoportosítás: <code>1010</code> és <code>1101</code>. <code>1010</code>
+= A, <code>1101</code> = D. Tehát
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mi>A</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">0xAD</annotation></semantics></math>.
+Ellenőrzés 10-esben:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>10</mn><mo>⋅</mo><msup><mn>16</mn><mn>1</mn></msup><mo>=</mo><mn>160</mn></mrow><annotation encoding="application/x-tex">A = 10 \cdot 16^1 = 160</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>13</mn><mo>⋅</mo><msup><mn>16</mn><mn>0</mn></msup><mo>=</mo><mn>13</mn></mrow><annotation encoding="application/x-tex">D = 13 \cdot 16^0 = 13</annotation></semantics></math>,
+összesen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>160</mn><mo>+</mo><mn>13</mn><mo>=</mo><mn>173</mn></mrow><annotation encoding="application/x-tex">160 + 13 = 173</annotation></semantics></math>.</p>
+<h3 data-number="38.3.4" id="logikai-kapuk-és-igazságtáblák"><span
+class="header-section-number">38.3.4</span> Logikai kapuk és
+igazságtáblák</h3>
+<p>A digitális logikában a kimenet (pl. a motor indítójele) a bemenetek
+(pl. gombok) kombinációjától függ. A legegyszerűbb kapukat relékkel is
+meg tudod valósítani.</p>
+<p><strong>Definíció.</strong> Az <strong>igazságtábla</strong> olyan
+táblázat, amely a bemeneti változók minden lehetséges kombinációjához
+megadja a kimeneti értéket.</p>
+<h4 data-number="38.3.4.1" id="és-and-vagy-or-nem-not"><span
+class="header-section-number">38.3.4.1</span> ÉS (AND), VAGY (OR), NEM
+(NOT)</h4>
+<p><strong>ÉS (AND):</strong> A kimenet akkor 1-es, ha
+<strong>minden</strong> bemenet 1-es. Kapcsolási jele:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = A \cdot B</annotation></semantics></math>.
+Relés megvalósítás: <strong>soros</strong> kontaktusok.</p>
+<p><strong>VAGY (OR):</strong> A kimenet akkor 1-es, ha <strong>legalább
+az egyik</strong> bemenet 1-es. Kapcsolási jele:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>+</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = A + B</annotation></semantics></math>.
+Relés megvalósítás: <strong>párhuzamos</strong> kontaktusok.</p>
+<p><strong>NEM (NOT):</strong> A kimenet a bemenet ellentettje. Jele:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mi>A</mi><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">Y = \overline{A}</annotation></semantics></math>.
+Relés megvalósítás: <strong>nyugalmi érintkező</strong> (NC kontaktus).
+Amikor a relé nincs meghúzva, a kontaktus zárva van (1), ha meghúz, bont
+(0).</p>
+<p><strong>Példa az ÉS működésére.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+= vészleállító rendben (0 = lenyomva, 1 = kihúzva),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+= szint van (1 = van). A motornak (Y) akkor szabad járnia, ha mindkettő
+1.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = A \cdot B</annotation></semantics></math>.</p>
+<h4 data-number="38.3.4.2" id="nand-nor-xor"><span
+class="header-section-number">38.3.4.2</span> NAND, NOR, XOR</h4>
+<ul>
+<li><strong>NAND (NEM-ÉS):</strong> az ÉS tagadása.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mrow><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">Y = \overline{A \cdot B}</annotation></semantics></math>.
+Rendkívül fontos, mert minden más kapu kiváltható vele.</li>
+<li><strong>NOR (NEM-VAGY):</strong> a VAGY tagadása.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mover><mrow><mi>A</mi><mo>+</mo><mi>B</mi></mrow><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">Y = \overline{A + B}</annotation></semantics></math>.</li>
+<li><strong>XOR (Kizáró VAGY):</strong> a kimenet 1, ha a <strong>két
+bemenet különböző</strong>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>⊕</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y = A \oplus B</annotation></semantics></math>.
+A váltókapcsolás („lépcsőházi váltó”) logikája: a lámpa állapota
+bármelyik kapcsoló átbillentésére megfordul – ez az XOR (a bekötéstől
+függően az XNOR, azaz az egyezőség) függvény. Ha például azonos állásban
+ég a lámpa, az XNOR; ha különböző állásban ég, az XOR.</li>
+</ul>
+<figure id="fig-ve140-1">
+<div class="fig-interactive"><iframe src="figures/html/ve140-1.html" title="Logikai kapuk igazságtáblája és relés megfelelője, kattintható bemenetekkel" loading="lazy" style="width:100%;border:0;height:1100px"></iframe><noscript><img src="figures/img/ve140-1.png" style="width:95.0%"
+alt="Logikai kapuk igazságtáblája és relés megfelelője, kattintható bemenetekkel" /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve140-1.png" style="width:95.0%"
+alt="Logikai kapuk igazságtáblája és relés megfelelője, kattintható bemenetekkel" /></details></div>
+<figcaption>A hét logikai kapu (ÉS, VAGY, NEM, NAND, NOR, XOR, XNOR)
+igazságtáblája és relés megfelelője; a kitöltött cella az 1-es
+kimenet</figcaption>
+</figure>
+<p>A táblázat négy sora a két bemenet (A, B) négy kombinációja, az
+oszlopok a kapuk kimenetei; az utolsó sor a relés megvalósítást adja (NO
+= záró, NC = bontó érintkező, a soros kapcsolás ÉS, a párhuzamos VAGY).
+Az ÉS kimenete csak az 1–1 sorban 1, a VAGY-é csak a 0–0 sorban 0, a
+XOR-é akkor 1, ha a két bemenet különböző. A HTML-kiadásban az A és B
+bemenetre kattintva minden kapu relés létrafoka átvált: az áramot vivő
+ág kiemelődik, a lámpa az 1-es kimenetnél világít, és a táblázat
+aktuális sora kijelölődik.</p>
+<h3 data-number="38.3.5"
+id="a-relés-kapcsolás-és-a-logikai-kapu-megfelelősége"><span
+class="header-section-number">38.3.5</span> A relés kapcsolás és a
+logikai kapu megfelelősége</h3>
+<p>A PLC-programozásban ezt a nyelvet <strong>létradiagramnak</strong>
+(Ladder Diagram, LD) hívják. A PLC bemenetei ugyanúgy kontaktusokként
+jelennek meg, a kimenetei pedig tekercsként.</p>
+<p><strong>Relé logika:</strong></p>
+<ul>
+<li><code>A</code> és <code>B</code> kontaktus <strong>sorosan</strong>
+= ÉS</li>
+<li><code>A</code> és <code>B</code> kontaktus
+<strong>párhuzamosan</strong> = VAGY</li>
+<li><code>A</code> kontaktus <strong>bontó (NC)</strong> = NEM</li>
+</ul>
+<p><strong>PLC logika (LD):</strong> Ugyanezt a grafikus programban
+rajzolod meg, a PLC processzora a programot ciklikusan hajtja végre
+(bemenetek beolvasása → logika kiértékelése → kimenetek írása), a
+kimeneteket relé- vagy tranzisztoros kimeneti fokozat kapcsolja.</p>
+<figure>
+<img src="assets/ve140-diagram-2.png"
+alt="Relés létradiagram (AND/OR vegyes) - Y = (A ÉS B) VAGY C. Az A és B soros (AND) ág, a C ezzel párhuzamos (OR) ág; utánuk az Y tekercs a 0 V-os sínre." />
+<figcaption aria-hidden="true">Relés létradiagram (AND/OR vegyes) - Y =
+(A ÉS B) VAGY C. Az A és B soros (AND) ág, a C ezzel párhuzamos (OR) ág;
+utánuk az Y tekercs a 0 V-os sínre.</figcaption>
+</figure>
+<p>Ebben a rajzban az <code>A</code> és <code>B</code> sorosan van,
+tehát <code>A ÉS B</code>, de ezzel párhuzamosan van a <code>C</code>,
+tehát a teljes függvény:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>⋅</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>C</mi></mrow><annotation encoding="application/x-tex">Y = (A \cdot B) + C</annotation></semantics></math>.</p>
+<p><strong>Számítás. Logikai függvény értelmezése.</strong> Adott a
+kapcsolási rajz:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+soros, ezzel párhuzamosan
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>,
+az egész elé kötve
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
+(azaz sorosan D is van). Mennyi a kimenet ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>0</mn><mo>,</mo><mi>B</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>C</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>D</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">A=0, B=1, C=1, D=1</annotation></semantics></math>?
+1. lépés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>⋅</mo><mi>B</mi><mo>=</mo><mn>0</mn><mo>⋅</mo><mn>1</mn><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">A \cdot B = 0 \cdot 1 = 0</annotation></semantics></math>.
+2. lépés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>⋅</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>C</mi><mo>=</mo><mn>0</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">(A \cdot B) + C = 0 + 1 = 1</annotation></semantics></math>.
+3. lépés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>⋅</mo><mo stretchy="false" form="prefix">[</mo><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>⋅</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>C</mi><mo stretchy="false" form="postfix">]</mo><mo>=</mo><mn>1</mn><mo>⋅</mo><mn>1</mn><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">D \cdot [(A \cdot B) + C] = 1 \cdot 1 = 1</annotation></semantics></math>.
+A motor jár. ∎</p>
+<h3 data-number="38.3.6" id="flip-flop-számláló-és-időzítő"><span
+class="header-section-number">38.3.6</span> Flip-flop, számláló és
+időzítő</h3>
+<p>Eddig olyan áramköröket néztünk, ahol a kimenet <strong>csak</strong>
+a pillanatnyi bemenettől függ. Ezt hívják <strong>kombinációs
+logikának</strong>. A gyakorlatban szükség van arra, hogy egy rendszer
+„emlékezzen” egy állapotra. Ez a <strong>sorrendi logika</strong>.</p>
+<h4 data-number="38.3.6.1" id="sr-flip-flop"><span
+class="header-section-number">38.3.6.1</span> SR flip-flop</h4>
+<p>A leggyakoribb memóriaelem két stabil állapottal rendelkezik. A relés
+vezérlésben ezt hívják <strong>önfenntartásnak</strong>.</p>
+<ul>
+<li><strong>S (Set)</strong>: Beállítás (pl. indítógomb).</li>
+<li><strong>R (Reset)</strong>: Törlés (pl. stop gomb).</li>
+<li><strong>Q</strong>: Kimenet (pl. mágneskapcsoló tekercs).</li>
+</ul>
+<p><strong>Szabály.</strong> 1.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">S=1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>0</mn><mo>⇒</mo><mi>Q</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">R=0 \Rightarrow Q=1</annotation></semantics></math>
+(behúz). 2.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">S=0</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>0</mn><mo>⇒</mo><mi>Q</mi></mrow><annotation encoding="application/x-tex">R=0 \Rightarrow Q</annotation></semantics></math>
+az előzőben marad (tartás!). 3.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">S=0</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>1</mn><mo>⇒</mo><mi>Q</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">R=1 \Rightarrow Q=0</annotation></semantics></math>
+(elenged). 4.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">S=1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">R=1</annotation></semantics></math>:
+az elméleti (kapukból épített) SR tárolónál tiltott állapot. A relés
+önfenntartásban viszont a sorosan előre kötött STOP (S0) bontó miatt a
+törlés biztosan érvényesül (törlés-domináns tároló) – a biztonságos
+vezérlést mindig így kell kialakítani; a PLC-ben ennek az RS
+(reset-domináns) blokk felel meg <strong>(ellenőrizendő: a PLC-gyártó
+blokkdefiníciója)</strong>.</p>
+<p>Valósítsuk meg relés önfenntartással:</p>
+<figure>
+<img src="assets/ve140-diagram-3.png"
+alt="Önfenntartás mint SR flip-flop - S1 az indító (Set, START, záró nyomógomb), S0 a leállító (Reset, STOP, bontó nyomógomb). L+ → F1 95-96 → S0 Stop → (S1 Start ∥ K1 13-14) → K1 A1-A2 → 0 V: a K1 13-14 önfenntartó érintkező az S1-gyel párhuzamos, ezért elengedés után is tartja a kört, amíg S0-t meg nem nyomják." />
+<figcaption aria-hidden="true">Önfenntartás mint SR flip-flop - S1 az
+indító (Set, START, záró nyomógomb), S0 a leállító (Reset, STOP, bontó
+nyomógomb). L+ → F1 95-96 → S0 Stop → (S1 Start ∥ K1 13-14) → K1 A1-A2 →
+0 V: a K1 13-14 önfenntartó érintkező az S1-gyel párhuzamos, ezért
+elengedés után is tartja a kört, amíg S0-t meg nem nyomják.</figcaption>
+</figure>
+<h4 data-number="38.3.6.2" id="időzítő-és-számláló"><span
+class="header-section-number">38.3.6.2</span> Időzítő és számláló</h4>
+<p>Az <strong>időzítő (Timer)</strong> olyan logikai elem, amely az
+indítás után egy beállított késleltetéssel állítja csak a kimenetét.
+(Például a csillag-delta indításnál az átkapcsolás 5 másodperc után
+történik ezzel.) A <strong>számláló (Counter)</strong> pedig
+impulzusokat számol, és a beállított érték elérése után ad ki logikai
+jelet (pl. minden 10. becsomagolt doboz után).</p>
+<h3 data-number="38.3.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">38.3.7</span> Valós életbeli
+alkalmazás</h3>
+<h4 data-number="38.3.7.1"
+id="kétkezes-indítás-biztonsági-logikája"><span
+class="header-section-number">38.3.7.1</span> Kétkezes indítás
+biztonsági logikája</h4>
+<p>Egy mechanikus présgépnél a balesetek elkerülésére kétkezes vezérlést
+írnak elő (kétkezes vezérlőeszköz: MSZ EN ISO 13851, ellenőrizendő). A
+gép csak akkor indul, ha a <strong>bal</strong> ÉS a
+<strong>jobb</strong> gombot <strong>egyszerre</strong>, legfeljebb 0,5
+másodperc különbséggel nyomja meg a kezelő. Ha az egyik gomb megragad
+zárva, a gép nem indul el újra, amíg mindkettőt el nem engedik.</p>
+<p>A szerelőnek nem elég tudnia, hogy „a relé tekercse meghúz”, hanem a
+kapcsolást mint logikai rendszert kell látnia:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><msub><mi>S</mi><mrow><mi>b</mi><mi>a</mi><mi>l</mi></mrow></msub><mo>⋅</mo><msub><mi>S</mi><mrow><mi>j</mi><mi>o</mi><mi>b</mi><mi>b</mi></mrow></msub></mrow><annotation encoding="application/x-tex">Y = S_{bal} \cdot S_{jobb}</annotation></semantics></math>
+– ez azonban csak az ÉS-kapcsolat; a kétkezes vezérlés ennél több: a 0,5
+s-os egyidejűségi időablak és az „újraindítás csak mindkét gomb
+elengedése után” feltétel sorrendi (időzítős, memóriás) logikát kíván.
+Ezt minősített kétkezes biztonsági modul valósítja meg, nem két soros
+nyomógomb. Ha a hibakeresés során (jogosult személy, mérés előtti
+műszerellenőrzéssel) azt méri, hogy az egyik gomb kimenetén hiányzik a
+vezérlőfeszültség, akkor a logikai ÉS egyik bemenete <code>0</code>,
+tehát a kimenet is <code>0</code>. A relé nem húzhat meg.</p>
+<p><strong>Hiba.</strong> Egy szerelő átkötötte a hibás bal oldali
+gombot, hogy „kipróbálja a sajtót”. A logikai függvénye így
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mn>1</mn><mo>⋅</mo><msub><mi>S</mi><mrow><mi>j</mi><mi>o</mi><mi>b</mi><mi>b</mi></mrow></msub></mrow><annotation encoding="application/x-tex">Y = 1 \cdot S_{jobb}</annotation></semantics></math>
+lett. A gép egy kézzel is indult. Ez súlyos balesetveszély! Védelmi
+áramköröket <strong>tilos</strong> átkötni!</p>
+<h3 data-number="38.3.8" id="tipikus-hibák"><span
+class="header-section-number">38.3.8</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>A bontó/záró érintkezők összekeverése a PLC-ben.</strong>
+A relés kapcsolásban a vészstop gomb fizikailag <strong>NC</strong>
+(bontó) kontaktus, sorba kötve a tekerccsel. A vészleállító NC
+érintkezője huzalozottan (biztonsági relén vagy biztonsági PLC-n át)
+bontja a mágneskapcsoló tekercskörét; a szabványos PLC csak a nyugtázó
+jelet kapja. A vészleállítás nem függhet a szabványos PLC programjától.
+A programban a bontó (NC) terepi érintkező bemenetét ZÁRÓ
+programkontaktussal (‑| |‑) kell kiértékelni: a bit alaphelyzetben 1, a
+rung vezet; a gomb megnyomása vagy vezetékszakadás a bitet 0-ra viszi,
+és a rung bont. Ha a programba bontó kontaktust (‑|/|‑) rajzolnak, a
+logika megfordul – ez a tipikus hiba. A vészleállítás ettől függetlenül
+huzalozottan történik, ezért a programbeli hiba itt a jelzést, nem a
+leállítást rontja el <strong>(ellenőrizendő: MSZ EN 60204-1, MSZ EN ISO
+13850)</strong>.</p></li>
+<li><p><strong>A hexadecimális A–F értékek elfelejtése.</strong> Az
+ember ösztönösen úgy gondolja, hogy <code>A</code> = 1, mint az
+osztályzatoknál. Valójában <code>A</code> = 10. Ez gyakori hiba a
+frekvenciaváltók vagy PLC-k paramétereinek beállításakor (pl. a
+<code>0x1F</code> nem 19, hanem 31).</p></li>
+<li><p><strong>Az önfenntartó kontaktus elhagyása.</strong> Ha a start
+gomb impulzusszerű (nyomógomb), az SR flip-flop „memóriája” nélkül a
+motor csak addig jár, amíg a gombot nyomva tartod. A szivattyú leáll,
+amint elengeded a gombot. Mindig ellenőrizni kell a
+tartókontaktust.</p></li>
+</ol>
+<h3 data-number="38.3.9" id="önellenőrzés"><span
+class="header-section-number">38.3.9</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz-e: A VAGY kapu relés megvalósítása soros kapcsolás?</li>
+<li>Hány bitet jelent egy hexadecimális számjegy?</li>
+<li>Mennyi
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mn>1010</mn><mn>2</mn></msub><mo>+</mo><msub><mn>0001</mn><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">1010_2 + 0001_2</annotation></semantics></math>?</li>
+<li>Mennyi az XOR kimenete, ha A=1, B=1?</li>
+<li>Mi a veszélye az S=1, R=1 állapotnak SR flip-flopnál?</li>
+</ol>
+<h3 data-number="38.3.10" id="feladatok"><span
+class="header-section-number">38.3.10</span> Feladatok</h3>
+<ol type="1">
+<li><strong>(A)</strong> Írd fel a 100-es számot kettes és 16-os
+számrendszerben!</li>
+<li><strong>(A)</strong> Rajzold le a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>⋅</mo><mover><mi>B</mi><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">Y = A \cdot \overline{B}</annotation></semantics></math>
+függvény relés kapcsolását!</li>
+<li><strong>(B)</strong> Mennyi
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>x</mi><mi>D</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">0xD2</annotation></semantics></math>
+értéke 10-es számrendszerben?</li>
+<li><strong>(B)</strong> Írd fel a NAND kapu igazságtábláját!</li>
+<li><strong>(C)</strong> Egy motor akkor járjon, ha a vészleállító (A)
+ki van húzva, ÉS vagy a szintkapcsoló (B) jelez, vagy a karbantartói
+kapcsoló (C) be van kapcsolva. Add meg a logikai függvényt!</li>
+<li><strong>(D)</strong> Egy relés kapcsolás nem működik. Rajzod alapján
+a start gomb (S) és az önfenntartó kontaktus (K1) párhuzamosan van
+kötve. A stop gomb sorosan. Mi a lehetséges hiba, és hogyan
+ellenőrzöd?</li>
+</ol>
+<h3 data-number="38.3.11" id="megoldások"><span
+class="header-section-number">38.3.11</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok:</strong> 1. Hamis, a VAGY
+párhuzamos. 2. 4 bitet. 3.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mn>1011</mn><mn>2</mn></msub><annotation encoding="application/x-tex">1011_2</annotation></semantics></math>.
+4. 0. 5. Az elméleti SR tárolónál tiltott állapot (határozatlan
+kimenet); a relés önfenntartásnál a sorosan kötött STOP miatt
+törlés-domináns, vagyis a STOP elsőbbsége biztosított – a biztonságos
+kialakítás.</p>
+<p><strong>Feladatok – megoldások:</strong></p>
+<ol type="1">
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mn>100</mn><mn>10</mn></msub><annotation encoding="application/x-tex">100_{10}</annotation></semantics></math>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>50</mn></mrow><annotation encoding="application/x-tex">100:2 = 50</annotation></semantics></math>
+m0;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>25</mn></mrow><annotation encoding="application/x-tex">50:2 = 25</annotation></semantics></math>
+m0;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>25</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">25:2 = 12</annotation></semantics></math>
+m1;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">12:2 = 6</annotation></semantics></math>
+m0;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">6:2 = 3</annotation></semantics></math>
+m0;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">3:2 = 1</annotation></semantics></math>
+m1;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>:</mo><mn>2</mn><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">1:2 = 0</annotation></semantics></math>
+m1 → alulról felfelé
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mn>1100100</mn><mn>2</mn></msub><annotation encoding="application/x-tex">1100100_2</annotation></semantics></math>;
+négyes csoportok:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0110</mn><mspace width="0.222em"></mspace><mn>0100</mn></mrow><annotation encoding="application/x-tex">0110\ 0100</annotation></semantics></math>
+→
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mn>64</mn><mn>16</mn></msub><annotation encoding="application/x-tex">64_{16}</annotation></semantics></math>.
+Ellenőrzés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>⋅</mo><mn>16</mn><mo>+</mo><mn>4</mn><mo>=</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">6 \cdot 16 + 4 = 100</annotation></semantics></math>
+✓.</li>
+<li>A: relé A NO kontaktusa, sorban a relé B NC kontaktusával, sorban az
+Y tekerccsel.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mn>13</mn></mrow><annotation encoding="application/x-tex">D = 13</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2 = 2</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>13</mn><mo>⋅</mo><msup><mn>16</mn><mn>1</mn></msup><mo>+</mo><mn>2</mn><mo>⋅</mo><msup><mn>16</mn><mn>0</mn></msup><mo>=</mo><mn>208</mn><mo>+</mo><mn>2</mn><mo>=</mo><mn>210</mn></mrow><annotation encoding="application/x-tex">13 \cdot 16^1 + 2 \cdot 16^0 = 208 + 2 = 210</annotation></semantics></math>.</li>
+<li>A=0, B=0 → 1. A=0, B=1 → 1. A=1, B=0 → 1. A=1, B=1 → 0.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mi>B</mi><mo>+</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Y = A \cdot (B + C)</annotation></semantics></math>.
+A vészleállító minden ágban sorosan marad; a karbantartói kapcsoló csak
+a szintfeltételt helyettesítheti, a vészleállítót soha (ellenőrizendő:
+MSZ EN 60204-1). Tipikus hiba az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>⋅</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>C</mi></mrow><annotation encoding="application/x-tex">Y = (A \cdot B) + C</annotation></semantics></math>
+alak: ebben
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">C = 1</annotation></semantics></math>
+esetén a motor a lenyomott vészleállító ellenére jár, vagyis a
+vészleállítót kiiktatja.</li>
+<li>A leírás alapján a kapcsolás elvileg helyes (START ∥ K1 záró
+érintkező, sorosan a STOP bontó gomb). Az ellenőrzést az öt biztonsági
+szabállyal kezdjük: lekapcsolás, visszakapcsolás elleni biztosítás,
+feszültségmentesség ellenőrzése kétpólusú vizsgálóval, szükség esetén
+földelés és rövidre zárás, szomszédos részek lefedése. Ezután
+feszültségmentes állapotban, ohmmérővel ellenőrizzük a gombokat: a START
+kapcsai (13-14) nyugalomban szakadást, lenyomva zárást mutassanak. Ha a
+START helyére <strong>bontó (NC)</strong> érintkezőt kötöttek, a K1 a
+bekapcsoláskor magától behúz (váratlan indulás), és a STOP elengedése
+után azonnal újraindul, vagyis a motor tartósan nem állítható le; ez
+veszélyes hiba. Egyéb okok: kioldott hőkioldó (F1 95-96 szakadt), az
+önfenntartáshoz tévesen a K1 bontó érintkezőjét (21-22) kötötték be
+(ekkor a kontaktor bekapcsoláskor START nélkül is behúz, majd azonnal
+elenged és újra behúz: kerepel, a motor szaggatottan, váratlanul indul –
+ez veszélyes, azonnal le kell kapcsolni; csak nyomva tartott STARTnál
+marad tartósan behúzva), vagy szakadt a K1 tekercs (A1-A2 között
+szakadás vagy a gyártói értéktől eltérő ellenállás). Nyomógomb
+vizsgálatához lakatfogó nem alkalmas: áram nélkül nem mutat semmit.</li>
+</ol>
+<h3 data-number="38.3.12" id="rövid-összefoglaló"><span
+class="header-section-number">38.3.12</span> Rövid összefoglaló</h3>
+<p>A kettes számrendszer a kapcsolók nyelvét jelenti: a be van húzva (1)
+és elengedve (0) állapotok matematikáját. A 16-os számrendszer ennek a
+tömör rövidítése (4 bit = 1 hexa jegy). A logikai kapuk között az ÉS-t
+soros, a VAGY-ot párhuzamos kontaktusokkal tudod megépíteni, míg a
+NEM-et alaphelyzetben zárt (NC) kontaktussal. Ez az egyszerű
+megfeleltetés köti össze a hagyományos relés kapcsolásokat a modern
+PLC-k létradiagramjával. Az SR flip-flop a relés önfenntartás
+megfelelője: ez az egyszerű memória biztosítja, hogy a startgomb
+impulzusa után is menjen a gép. Az időzítők és számlálók ezt a memóriát
+egészítik ki késleltetésekkel és eseményszámolással.
+<strong>Visszautalás:</strong> a <a href="ve118.html">PLC-alapok és
+ipari vezérlés</a> alfejezet létradiagramjai itt kaptak logikai
+(Boole-algebrai) magyarázatot; a következő alfejezet a szerelői
+kézügyességgel folytatódik. A védelmi áramkörökben a logikai függvényt
+<strong>tilos módosítani</strong> (pl. átkötéssel), mert ezzel a
+biztonsági kapcsolatok (ÉS feltételek) meghiúsulnak.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve139.html">← 38.2 Erősítők, műveleti erősítő és szűrők</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve141.html">39.1 Munkahely, szerszám, vezetékmegmunkálás, érvéghüvely és kábelsaru →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

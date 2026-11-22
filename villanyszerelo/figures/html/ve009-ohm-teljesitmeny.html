@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ohm törvénye és teljesítmény</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="U">Feszültség U</label><input id="U" type="range" min="0" max="400" step="1" value="230" aria-label="Feszültség U"><output id="U_o" for="U"></output></div>
+<div class="row"><label for="R">Ellenállás R</label><input id="R" type="range" min="1" max="500" step="1" value="46" aria-label="Ellenállás R"><output id="R_o" for="R"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 260" role="img" aria-label="Áramkör egy feszültségforrással és egy ellenállással; az áram és a teljesítmény a csúszkák szerint változik"></svg>
+<p class="small">Szemléltetés: az Ohm-törvény és P = U·I (3.3). A számértékek számolt értékek; hálózati feszültségen csak jogosult személy dolgozhat.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"U":"V", "R":"Ω"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const I=v.U/v.R, P=v.U*I, Pmax=400*400/1;
+const bar=(x,y,w,val,max,txt,col)=>{el("rect",{x,y,width:w,height:18,fill:"none",stroke:css("--line")});
+  el("rect",{x,y,width:Math.min(w,w*val/max),height:18,fill:col});el("text",{x:x+w+8,y:y+14,"font-size":13},txt);};
+// áramkör: forrás – ellenállás
+el("path",{d:"M60 40H300V200H60Z",fill:"none",stroke:css("--line"),"stroke-width":2});
+el("rect",{x:150,y:28,width:80,height:24,fill:css("--bg"),stroke:css("--line"),"stroke-width":2});
+el("text",{x:190,y:20,"text-anchor":"middle","font-size":13},"R = "+fmt(v.R,0)+" Ω");
+el("line",{x1:40,x2:80,y1:110,y2:110,stroke:css("--line"),"stroke-width":2});el("line",{x1:50,x2:70,y1:128,y2:128,stroke:css("--line"),"stroke-width":2});
+el("text",{x:90,y:125,"font-size":13},"U = "+fmt(v.U,0)+" V");
+el("path",{d:"M240 40H300V200H60V120",fill:"none",stroke:css("--hl2"),"stroke-width":2,"stroke-dasharray":"6 4"});
+el("text",{x:180,y:125,"font-size":13,fill:css("--hl2")},"I = "+fmt(I)+" A →");
+bar(340,60,170,I,40,"",css("--hl"));bar(340,120,170,P,20000,"",css("--hl2"));
+el("text",{x:340,y:48,"font-size":12},"áram (0–40 A)");el("text",{x:340,y:108,"font-size":12},"teljesítmény (0–20 kW)");
+status("<b>I = U/R = "+fmt(v.U,0)+"/"+fmt(v.R,0)+" = "+fmt(I)+" A</b>; <b>P = U·I = "+fmt(P,0)+" W</b>. Ugyanez 1 órán át: "+fmt(P/1000)+" kWh.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

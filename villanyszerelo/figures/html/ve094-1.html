@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aszinkron motor jelleggörbéje</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="Mb">Billenőnyomaték Mb</label><input id="Mb" type="range" min="20" max="200" step="1" value="108" aria-label="Billenőnyomaték Mb"><output id="Mb_o" for="Mb"></output></div>
+<div class="row"><label for="sb">Billenőszlip sb</label><input id="sb" type="range" min="0.02" max="0.5" step="0.01" value="0.19" aria-label="Billenőszlip sb"><output id="sb_o" for="sb"></output></div>
+<div class="row"><label for="ML">Terhelő nyomaték ML</label><input id="ML" type="range" min="0" max="200" step="1" value="36" aria-label="Terhelő nyomaték ML"><output id="ML_o" for="ML"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 320" role="img" aria-label="Nyomaték–fordulatszám jelleggörbe Kloss-képlettel; a billenőnyomaték, a billenőszlip és a terhelő nyomaték állítható, az üzemi pont jelölve"></svg>
+<p class="small">Szemléltetés: Kloss-féle közelítés M/Mb = 2/(s/sb + sb/s), ns = 1500 1/min. Tanulási példa (5,5 kW-os, 4 pólusú motor), nem mért görbe; a valós görbét a gyártói adatlap adja (ellenőrizendő). Nagy szlipnél (az indítás közelében) a közelítés pontatlan: a valós indítónyomaték a katalógus szerint jellemzően nagyobb.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"Mb":"N·m", "sb":"", "ML":"N·m"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const NS=1500, X0=60, Y0=270, W=470, H=220, ymax=220;
+const X=n=>X0+W*n/NS, Y=m=>Y0-H*m/ymax;
+const M=s=>2*v.Mb/(s/v.sb+v.sb/s);
+el("line",{x1:X0,x2:X0+W,y1:Y0,y2:Y0,stroke:css("--line"),"stroke-width":1.5});el("line",{x1:X0,x2:X0,y1:Y0,y2:Y(ymax),stroke:css("--line"),"stroke-width":1.5});
+for(let n=0;n<=1500;n+=250){el("text",{x:X(n),y:Y0+16,"text-anchor":"middle","font-size":11},String(n));el("line",{x1:X(n),x2:X(n),y1:Y0,y2:Y0+4,stroke:css("--line")});}
+for(let m=0;m<=200;m+=50){el("text",{x:X0-6,y:Y(m)+4,"text-anchor":"end","font-size":11},String(m));el("line",{x1:X0,x2:X0+W,y1:Y(m),y2:Y(m),stroke:css("--grid")});}
+el("text",{x:X0+W/2,y:Y0+34,"text-anchor":"middle","font-size":12},"fordulatszám n (1/min)");
+el("text",{x:14,y:Y0-H/2,"font-size":12,transform:"rotate(-90 14 "+(Y0-H/2)+")","text-anchor":"middle"},"nyomaték M (N·m)");
+let d="";for(let i=1;i<=400;i++){const s=i/400;d+=(i==1?"M":"L")+X(NS*(1-s))+" "+Y(M(s));}
+el("path",{d:d,fill:"none",stroke:css("--line"),"stroke-width":2.5});
+el("line",{x1:X0,x2:X0+W,y1:Y(v.ML),y2:Y(v.ML),stroke:css("--hl2"),"stroke-width":1.5,"stroke-dasharray":"7 4"});
+el("circle",{cx:X(NS*(1-v.sb)),cy:Y(v.Mb),r:5,fill:css("--fg")});
+el("text",{x:X(NS*(1-v.sb))-8,y:Y(v.Mb)-8,"text-anchor":"end","font-size":12},"billenőpont");
+let msg="";
+if(v.ML<=0){msg="Terhelő nyomaték nélkül a motor a szinkron fordulatszámhoz közel jár.";}
+else if(v.ML>v.Mb){msg='<span class="bad">ML > Mb: nincs stabil üzemi pont, a motor lefullad (megáll).</span>';}
+else{const k=2*v.Mb/v.ML, x=(k-Math.sqrt(k*k-4))/2, s=x*v.sb, n=NS*(1-s);
+ el("circle",{cx:X(n),cy:Y(v.ML),r:7,fill:css("--hl2")});
+ msg="Üzemi pont: <b>s = "+fmt(s,3)+"</b>, <b>n = "+fmt(n,0)+" 1/min</b>, M = ML = "+fmt(v.ML,0)+" N·m.";}
+const Ms=M(1), nb=NS*(1-v.sb);
+status(msg+" Billenőpont: n = "+fmt(nb,0)+" 1/min, Mb = "+fmt(v.Mb,0)+" N·m. Indításkor (s = 1) a Kloss-képlet szerint M = "+fmt(Ms,1)+" N·m. Mb ∝ U²: 10 % feszültségesésnél 0,81·Mb = "+fmt(0.81*v.Mb,1)+" N·m.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

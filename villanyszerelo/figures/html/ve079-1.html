@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rúdföldelő potenciáltölcsére</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="rho">Talaj ρ</label><input id="rho" type="range" min="10" max="1000" step="10" value="100" aria-label="Talaj ρ"><output id="rho_o" for="rho"></output></div>
+<div class="row"><label for="L">Rúdhossz L</label><input id="L" type="range" min="1" max="10" step="0.5" value="3" aria-label="Rúdhossz L"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="I">Hibaáram I_f</label><input id="I" type="range" min="0.5" max="20" step="0.5" value="5" aria-label="Hibaáram I_f"><output id="I_o" for="I"></output></div>
+<div class="row"><label for="x">Ember helyzete x</label><input id="x" type="range" min="0.5" max="15" step="0.5" value="1" aria-label="Ember helyzete x"><output id="x_o" for="x"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 306" role="img" aria-label="Rúdföldelő potenciáltölcsére: a felszíni potenciál a rúdtól távolodva csökken; a lépésfeszültség a két láb közötti különbség, az érintési feszültség a fémrész és a lábak közötti különbség."></svg>
+<p class="small">Közelítő félgömb-modell homogén talajra: U(x) ≈ I·ρ/(2πx), a rúd közelében U_A-ra korlátozva; d = 20 mm. A valós lépés- és érintési feszültség a talaj rétegződésétől és az elrendezéstől függ (mérés vagy részletes modellezés). A fejezet példája: ρ = 100 Ωm, L = 3 m, I_f = 5 A → R_A ≈ 33,9 Ω, U_A ≈ 170 V.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"rho":"Ωm", "L":"m", "I":"A", "x":"m"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const d=0.02, R=v.rho/(2*Math.PI*v.L)*Math.log(4*v.L/d), UA=v.I*R;
+const Uf=x=>Math.min(UA, v.I*v.rho/(2*Math.PI*Math.max(Math.abs(x),1e-6)));
+const us=Uf(v.x)-Uf(v.x+1), ut=UA-Uf(v.x);
+const top=Math.max(50,Math.ceil(UA/50)*50), X0=280, sx=12, Y=u=>220-u/top*190;
+for(let k=0;k<=4;k++){const uu=top*k/4;el("line",{x1:40,x2:530,y1:Y(uu),y2:Y(uu),stroke:css("--grid")});el("text",{x:36,y:Y(uu)+4,"text-anchor":"end","font-size":11},fmt(uu,0));}
+let p="";for(let i=0;i<=400;i++){const xx=-20+i*0.1;p+=(i?"L":"M")+(X0+xx*sx).toFixed(1)+" "+Y(Uf(xx)).toFixed(1);}
+el("path",{d:p,fill:"none",stroke:css("--hl"),"stroke-width":2.5});
+el("rect",{x:40,y:222,width:490,height:50,fill:css("--grid")});
+el("line",{x1:X0,y1:216,x2:X0,y2:222+v.L*5,stroke:css("--line"),"stroke-width":5});
+[v.x,v.x+1].forEach(xx=>{el("circle",{cx:X0+xx*sx,cy:Y(Uf(xx)),r:5,fill:css("--hl2")});el("path",{d:"M"+(X0+xx*sx)+",220 l-6,-12 h12 z",fill:css("--hl2")});});
+el("text",{x:X0+(v.x+0.5)*sx,y:284,"text-anchor":"middle","font-size":12},"lépés 1 m");
+[-20,-10,0,10,20].forEach(xx=>el("text",{x:X0+xx*sx,y:302,"text-anchor":"middle","font-size":11},xx+" m"));
+status("R<sub>A</sub> = ρ/(2πL)·ln(4L/d) = <b>"+fmt(R,1)+" Ω</b> · U<sub>A</sub> = I<sub>f</sub>·R<sub>A</sub> = <b>"+fmt(UA,0)+" V</b><br>x = "+fmt(v.x,1)+" m-en: lépésfeszültség ≈ <b>"+fmt(us,1)+" V</b>, érintési feszültség (földelt fémrész – láb) ≈ <b>"+fmt(ut,1)+" V</b>.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>14.3 Számítógépes hálózatok és adatkommunikáció –
+Villanyszerelő – villamos berendezés- és készülékszerelő
+szakirány</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz3">III. RÉSZ – Anyagok, műszaki rajz és dokumentáció</a> › <a href="index.html#vech13">14 Minőségbiztosítás, munkaszervezés és informatika</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve050.html">← 14.2 Irodai alkalmazások a szakmában</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve052.html">15.1 Felmérés, tervértelmezés és szerelési technológia →</a></div>
+</nav>
+<h2 data-number="14.3" id="ve051"><span
+class="header-section-number">14.3</span> Számítógépes hálózatok és
+adatkommunikáció</h2>
+<h3 data-number="14.3.1" id="motiváció"><span
+class="header-section-number">14.3.1</span> Motiváció</h3>
+<p>Az irodai alkalmazások mellett a mai villanyszerelő egyre gyakrabban
+találkozik számítógép-hálózatokkal: egy lakásfelújításnál a megszokott
+erősáramú körök mellé UTP-kábelt húznak az IP-kamera, a Wi-Fi átjátszó,
+az okosmérő vagy a klímavezérlő számára. Egy ipari csarnokban a PLC, a
+frekvenciaváltó és a karbantartó laptopja gyakran ugyanazon a hálózaton,
+de más-más hálózati szegmensben kommunikál. Aki tudja, mi a különbség
+egy router és egy switch között, hogyan kell bekötni egy
+RJ45-csatlakozót, és miért nem éri el az eszköz az átjárót, az nemcsak
+hibát talál, hanem a gyengeáramú rendszert is úgy tervezi, hogy az ne
+zavarja, és ne őt hívják vissza.</p>
+<p>Ebben az alfejezetben a hálózati alapfogalmakat, a kábelezést és az
+épületautomatikai összefüggést tanuljuk meg. A fizikai elvek, a
+csatlakozók és a címzés ismerete később is előjön, amikor KNX- vagy
+DALI-rendszert telepítünk, illetve amikor egy vezérlőberendezés
+HMI-kijelzőjét hálózatra kötjük.</p>
+<h3 data-number="14.3.2" id="hálózati-topológiák"><span
+class="header-section-number">14.3.2</span> Hálózati topológiák</h3>
+<p>A gyakorlatban szinte mindig csillag topológiát látunk: a végpontok
+(PC, nyomtató, kamera, access point) külön-külön kábelen csatlakoznak
+egy központi kapcsolóhoz (switch), a switch pedig a routerhez. A régebbi
+busz- és gyűrűs topológiák ma már legfeljebb ipari redundáns
+hálózatokban vagy régi dokumentációkban érdekesek, de a megértésük
+hasznos: busz esetén az eszközök egyetlen közös kábelre csatlakoznak,
+gyűrű esetén az utolsó eszköz visszacsatlakozik az elsőhöz.</p>
+<p><strong>Definíció.</strong> A hálózati topológia az eszközök logikai
+és fizikai összekapcsolásának elrendezése. A nagyméretű hálózatokban a
+csillag topológiákat hierarchikusan egymás fölé épített <strong>fa
+topológia</strong> alkotja: munkahelyi aljzatok → emeleti elosztó switch
+→ épületközi gerinchálózat → központi router.</p>
+<p>Az alábbi rétegábra egy kis iroda tipikus hálózati hierarchiáját
+szemlélteti.</p>
+<figure>
+<img src="assets/ve051-diagram-1.png"
+alt="Kis irodai hálózat hierarchiája - Szemléltető topológia: a router, a switch és a végpontok rétegei egymásra épülnek." />
+<figcaption aria-hidden="true">Kis irodai hálózat hierarchiája -
+Szemléltető topológia: a router, a switch és a végpontok rétegei
+egymásra épülnek.</figcaption>
+</figure>
+<p>A fa topológia előnye, hogy egyetlen kábel meghibásodása általában
+csak egy végpontot érint, és a hibakeresés rétegről rétegre
+haladhat.</p>
+<h3 data-number="14.3.3" id="ip-cím-maszk-kapu"><span
+class="header-section-number">14.3.3</span> IP-cím, maszk, kapu</h3>
+<p>Amikor egy készülék csatlakozik a hálózathoz, általában automatikusan
+kap IP-címet egy <strong>DHCP-kiszolgálótól</strong>. A
+villanyszerelőnek mégis ismernie kell a statikus címzés alapjait, mert
+az épületautomatikai eszközök, kamerák, PLC-k és frekvenciaváltók
+gyakran fix IP-címet igényelnek.</p>
+<p><strong>Definíció.</strong> Az <strong>IPv4-cím</strong> egy 32 bites
+szám, amelyet négy, ponttal elválasztott, 0 és 255 közötti decimális
+számként írunk, például <code>192.168.1.37</code>. Az IP-cím két részre
+oszlik: a <strong>hálózati cím</strong> azonosítja a hálózatot, a
+<strong>hosztcím</strong> az egyes készüléket ezen a hálózaton.</p>
+<p><strong>Definíció.</strong> A <strong>hálózati maszk</strong> (subnet
+mask) azt mondja meg, hogy az IP-címből hány bit tartozik a hálózat
+azonosításához. Az írásmód lehet hagyományos, például
+<code>255.255.255.0</code>, vagy rövidített, például <code>/24</code>. A
+<code>/24</code> azt jelenti, hogy a balról számított első 24 bit a
+hálózat, a maradék 8 bit a hoszt.</p>
+<p><strong>Szabály.</strong> Egy IP-címből a hálózati címet az IP-cím és
+a maszk <strong>bitenkénti logikai ÉS</strong> műveletével kapjuk meg.
+Az <strong>alapértelmezett átjáró (gateway)</strong> az a készülék,
+általában router, amelyen keresztül az adott hálózat gépei a más
+hálózatok felé forgalmaznak. Egy hálózatnak minden eszköze ugyanabban a
+hálózati tartományban kell legyen, és az átjárónak is ebben a
+tartományban kell lennie.</p>
+<p><strong>Példa.</strong> Legyen a készülék IP-címe
+<code>192.168.1.37/24</code>, az átjáró <code>192.168.1.1</code>. A
+maszk <code>255.255.255.0</code>. A bitenkénti ÉS művelet:</p>
+<ul>
+<li><code>192.168.1.37</code> →
+<code>11000000.10101000.00000001.00100101</code></li>
+<li><code>255.255.255.0</code> →
+<code>11111111.11111111.11111111.00000000</code></li>
+<li>eredmény → <code>11000000.10101000.00000001.00000000</code> =
+<code>192.168.1.0</code></li>
+</ul>
+<p>Tehát a hálózati cím <code>192.168.1.0</code>. A hálózatban a hosztok
+a <code>192.168.1.1</code> – <code>192.168.1.254</code> tartományt
+használhatják, a <code>192.168.1.255</code> a
+<strong>broadcast-cím</strong>, amely minden készülékhez szól. A
+használható hosztok számát a maszk határozza meg:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">használható hosztok száma</mtext><mo>=</mo><msup><mn>2</mn><mrow><mn>32</mn><mo>−</mo><mi>p</mi></mrow></msup><mo>−</mo><mn>2</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">\text{használható hosztok száma}=2^{32-p}-2,</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
+a maszk hossza, például <code>/24</code> esetén
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>8</mn></msup><mo>−</mo><mn>2</mn><mo>=</mo><mn>254</mn></mrow><annotation encoding="application/x-tex">2^{8}-2=254</annotation></semantics></math>.
+A kettőt a hálózati cím és a broadcast-cím miatt vonjuk le.</p>
+<p><strong>Szabály.</strong> A magánhálózatokban gyakran használt
+tartományok: <code>10.0.0.0/8</code>, <code>172.16.0.0/12</code> és
+<code>192.168.0.0/16</code>. A nyilvános interneten ezek a címek nem
+útválaszthatók, ezért a router <strong>NAT</strong>-ot (hálózati
+címfordítás) végez, amikor a magánhálózati készülék az internethez
+fordul.</p>
+<p>A <strong>DNS-kiszolgáló</strong> a neveket (például
+<code>www.iroda.hu</code>) IP-címre fordítja; az átjáró mellett a DNS-t
+is be kell állítani, ha nem DHCP-t használunk.</p>
+<h3 data-number="14.3.4" id="utp-kábelezés-és-rj45-csatlakozó"><span
+class="header-section-number">14.3.4</span> UTP-kábelezés és
+RJ45-csatlakozó</h3>
+<p>A lokalizált hálózati kábelezés leggyakrabban csavart réz érpárokat
+használ. A <strong>UTP</strong> (árnyékolatlan csavart érpár) 4 párt,
+összesen 8 eret tartalmaz; a párok csavarása a külső zavarokkal szembeni
+védelmet szolgálja. Az <strong>FTP</strong> kábel ezen felül
+fóliaárnyékolást is kap. A kategóriák a sebességet és a maximális hosszt
+befolyásolják: a Cat5e általában 1 Gbit/s sebességig, a Cat6 rövid távon
+10 Gbit/s-ig, a Cat6a 100 méteren is 10 Gbit/s-ig alkalmas.
+<strong>(ellenőrizendő: aktuális szabvány/gyártói adatlap)</strong></p>
+<p><strong>Szabvány.</strong> A strukturált hálózati kábelezésre az
+ISO/IEC 11801 sorozat és az ezzel harmonizált európai szabvány
+vonatkozik <strong>(ellenőrizendő: aktuális kiadás)</strong>. Az állandó
+link (permanent link, a patchpanel és a fali aljzat közötti fix kábel)
+legfeljebb 90 m, a csatorna (channel) a két patchkábellel együtt
+legfeljebb 100 m. A szerelőnek ezt a hosszat nem szabad túllépnie, és a
+kábelre ható húzóerőt, hajlítási sugarat a gyártó adatai szerint kell
+betartani.</p>
+<p><strong>Szabály.</strong> Az erősáramú (230/400 V) és az
+adatkábeleket egymástól elválasztva vezetjük: közös kábelcsatornában
+csak elválasztó fallal, közös szerelvénydobozban csak elválasztott
+rekeszben; a minimális elválasztási távolság a kábelek típusától és az
+elválasztás módjától függ (ellenőrizendő: MSZ EN 50174-2, gyártói
+adatlap). Erősáramú vezeték nem kerülhet az adataljzat dobozába; ez
+biztonsági kérdés is (eltérő szigetelési szint), nem csak zavarvédelem.
+A 8 eres kábelt a 8P8C moduláris csatlakozóba (<strong>RJ45</strong>)
+kell bekötni. A gyakorlatban Magyarországon is a <strong>T568B</strong>
+színsorrend terjedt el. A színsorrend a csatlakozó érintkezői szerint,
+balról jobbra:</p>
+<ol type="1">
+<li>narancs-fehér</li>
+<li>narancs</li>
+<li>zöld-fehér</li>
+<li>kék</li>
+<li>kék-fehér</li>
+<li>zöld</li>
+<li>barna-fehér</li>
+<li>barna</li>
+</ol>
+<p>A T568A variáns az 1–2 és a 3–6 párokat cseréli fel; a hibaelhárítás
+során mindig azt kell ellenőrizni, hogy a kábel két végén ugyanazt a
+szabványt követik-e.</p>
+<p><strong>Eljárás.</strong> RJ45-csatlakozó bekötése T568B szerint:</p>
+<ol type="1">
+<li>Készítsd elő az UTP-kábelt, a csatlakozót, a lehúzót, a krimpelő
+fogót és a kábeltesztert.</li>
+<li>A kábel végéről óvatosan, 25–30 mm hosszan távolítsd el a külső
+köpenyt úgy, hogy az erek szigetelése sértetlen maradjon.</li>
+<li>Válaszd szét a négy párt, és az ereket a T568B sorrend szerint
+rendezd el.</li>
+<li>Fogd össze az ereket, és egyenesre vágd őket úgy, hogy a köpenytől
+mérve körülbelül 13–15 mm hosszú, párhuzamos síkfelületet kapj.</li>
+<li>Told be a sorba rendezett ereket az RJ45-csatlakozóba; a kilincs
+(retesz) lefelé nézzen, a köpeny pedig nyúljon be a csatlakozó
+tehermentesítő részéig.</li>
+<li>Mielőtt krimpelsz, vizsgáld meg a csatlakozó elejét: mind a 8 érnek
+el kell érnie az érintkezők vonalát, és a színsorrend nem csúszhatott
+el.</li>
+<li>Helyezd a csatlakozót a krimpelő fogó 8P/RJ45 nyílásába, és nyomd
+össze határozottan; a fém tüskék benyomódnak az erekbe.</li>
+<li>Kábelteszterrel ellenőrizd a kész kábelt: az 1–8 LED-ek mindkét
+oldalon sorban, párban villanjanak. Ha szakadást, zárlatot vagy
+sorrendhibát mutat, vágd le a csatlakozót, és készítsd el újra.</li>
+</ol>
+<h3 data-number="14.3.5" id="router-switch-wi-fi-poe"><span
+class="header-section-number">14.3.5</span> Router, switch, Wi-Fi,
+PoE</h3>
+<p>A hálózati eszközök feladatát gyakran keverik, ezért érdemes pontosan
+meghatározni.</p>
+<p><strong>Definíció.</strong> A <strong>switch</strong> (kapcsoló) az
+azonos hálózaton belüli eszközöket kapcsolja össze, és a forgalmat a cél
+<strong>MAC-cím</strong> alapján portról portra irányítja. A switch nem
+végez útválasztást; a végpontok ugyanabba az IP-hálózatba tartoznak.</p>
+<p><strong>Definíció.</strong> A <strong>router</strong> (útválasztó)
+különböző hálózatok között irányítja a csomagokat, általában a helyi
+hálózat és az internet, vagy a helyi hálózat és egy felügyeleti hálózat
+között. A routeren fut a DHCP-kiszolgáló, a NAT és gyakran a tűzfal.</p>
+<p><strong>Definíció.</strong> A <strong>Wi-Fi</strong> vezeték nélküli
+helyi hálózatot hoz létre az IEEE 802.11 szabványcsalád alapján. A Wi-Fi
+AP (access point) általában egy routerbe vagy külön dobozba épül; az
+AP-t hálózati kábelen a switchhez kell kötni, ha nagyobb területet
+akarunk lefedni.</p>
+<p><strong>Definíció.</strong> A <strong>PoE</strong> (Power over
+Ethernet) tápellátást biztosít a hálózati kábelen keresztül az
+eszköznek. A szabványos típusok: IEEE 802.3af körülbelül 15,4 W, 802.3at
+körülbelül 30 W, 802.3bt körülbelül 60 W (Type 3) és 90 W (Type 4) a
+switch portján; a fogyasztóhoz a kábelveszteség után kevesebb jut (kb.
+13 W, 25,5 W, 51 W, 71 W). <strong>(ellenőrizendő: IEEE 802.3, gyártói
+adatlap)</strong> A PoE feszültsége jellemzően 48 V egyenfeszültség; a
+tényleges teljesítményt a kábel hossza, a kategória és az eszköz igénye
+egyaránt befolyásolja.</p>
+<p>Gyakorlati elv: a router WAN-portjára a szolgáltatótól érkező kábel
+kerül, a LAN-portjaira switch, PC vagy AP. Ha a hálózatban PoE kamera,
+IP-telefon vagy vezeték nélküli AP is van, célszerű PoE-képes switch-et
+választani, hogy ne kelljen külön tápegységet szerelni minden
+eszközhöz.</p>
+<h3 data-number="14.3.6"
+id="hálózat-és-épületautomatika-kapcsolata"><span
+class="header-section-number">14.3.6</span> Hálózat és épületautomatika
+kapcsolata</h3>
+<p>Az épületautomatikai rendszerek egy része önálló buszon működik
+(például KNX TP, DALI vagy Modbus RTU), de a felügyeletük, programozásuk
+és az egyes rendszerek közötti adatcsere egyre inkább IP-alapú hálózaton
+történik. A KNX IP-interfészen, a DALI hálózati átjárón, a PLC pedig
+Ethernet-porton keresztül kapcsolódik az épületfelügyelethez. A
+szerelőnek ugyanazt kell tudnia: IP-cím beállítás, hálózati kábel
+bekötése, hibakeresés a switch LED-jeivel és a parancssoros
+<code>ping</code> ellenőrzéssel.</p>
+<p><strong>Továbbvitt eredmény.</strong> Az itt tanult hálózati
+ismereteket a <a href="ve072.html">KNX, DALI és más épületautomatikai
+rendszerek</a> és a <a href="ve130.html">Vezérlőberendezések
+informatikai hálózatai és HMI</a> alfejezetek használják fel: ugyanazt
+az IP-címzést, kábelezést és csillag topológiát látjuk vissza a buszos
+rendszerek felügyeleti oldalán.</p>
+<h3 data-number="14.3.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">14.3.7</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy kis irodában a megrendelő IP-kamerát szeretett volna a
+bejárathoz. A szerelő behúzott egy 60 m hosszú UTP-kábelt, és a végét az
+irodában lévő PoE switchbe kötötte. A kamera nem indult el; a switch
+portján a LED világított, de a PoE-visszajelzés nem jött létre. A
+kábelteszter azt mutatta, hogy a 4. és 5. ér (a kék pár) megszakadt. A
+krimpeléskor az egyik ér a tehermentesítőnél megtört, és a feszes
+kötegelés a kábelt ennél a pontnál tovább húzta. 100 Mbit/s-os
+kapcsolatnál az adat az 1-2 és 3-6 érpáron halad, ezért a link LED
+világított; a switch azonban a kék és barna páron (B mód) adta volna a
+PoE-táplálást, így a kamera nem indult (ellenőrizendő: a switch
+PoE-módja). A csatlakozó ismételt elkészítése után a kamera megfelelően
+működött. A tanulság: a gyengeáramú hálózati hibák leggyakrabban nem az
+IP-címben, hanem a fizikai rétegben – a kábelben vagy a csatlakozóban –
+vannak.</p>
+<h3 data-number="14.3.8" id="gyakorlati-útmutató"><span
+class="header-section-number">14.3.8</span> Gyakorlati útmutató</h3>
+<p><strong>Cél:</strong> Készítsünk egy 5 m hosszú UTP-kábelt
+RJ45-csatlakozóval a T568B szabvány szerint, és ellenőrizzük
+kábelteszterrel.</p>
+<p><strong>Eszközök és anyagok:</strong> UTP Cat5e vagy jobb minőségű
+kábel, RJ45-csatlakozó (csavart érpárhoz), lehúzó, krimpelő fogó,
+kábelteszter, jelölőcímke.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
+(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
+vonatkozik; hálózati feszültségen önállóan ne végezd. Ha a hálózati
+eszköz 230 V-os táplálásához nyúlsz, azt csak jogosult személy kötheti
+le, a hatályos előírások szerint.</p>
+<p>Az öt biztonsági szabályt itt is be kell tartani, ha a hálózati
+készülékek tápellátását vagy a környező erősáramú szerelést
+érintjük:</p>
+<ol type="1">
+<li>Lekapcsolás: a környezetben lévő hálózati feszültségű áramköröket és
+a PoE-tápláló eszközöket lekapcsoljuk.</li>
+<li>Visszakapcsolás elleni biztosítás: a leválasztókat letiltjuk, hogy
+senki se kapcsolhassa vissza.</li>
+<li>Feszültségmentesség ellenőrzése: megfelelő feszültségvizsgálóval
+győződjünk meg arról, hogy a hálózati részeken nincs feszültség.</li>
+<li>Földelés és rövidre zárás: csak hálózati feszültségű berendezésen,
+ott is szabályosan.</li>
+<li>Szomszédos, feszültség alatt maradt részek lefedése: a feszültség
+alatt lévő kapcsokat, síneket takarjuk le.</li>
+</ol>
+<p><strong>Lépések:</strong></p>
+<ol type="1">
+<li>Mérd ki a szükséges kábelhosszt, hagyva 10–15 cm tartalékot a
+csatlakozók kialakításához.</li>
+<li>A kábel mindkét végéről óvatosan, 25–30 mm hosszan távolítsd el a
+külső köpenyt; a belső erek szigetelése sértetlen maradjon.</li>
+<li>Rendezd az ereket T568B sorrendbe: narancs-fehér, narancs,
+zöld-fehér, kék, kék-fehér, zöld, barna-fehér, barna.</li>
+<li>Vágd egyenesre a sorba rendezett ereket úgy, hogy a köpenytől mérve
+13–15 mm hosszúak legyenek.</li>
+<li>Told be az ereket az RJ45-csatlakozóba; a kilincs lefelé nézzen, a
+köpeny érjen be a tehermentesítőig.</li>
+<li>Ellenőrizd a csatlakozó elejét: mind a 8 ér elérje az érintkezőt, és
+a színsorrend ne csússzon el.</li>
+<li>Krimpeld meg a csatlakozót az erre való fogóval, majd ugyanezt
+végezd el a kábel másik végén.</li>
+<li>Teszteld a kábelt: a kábeltesztert a két végére csatlakoztatva az
+1–8 LED-ek sorban világítsanak. A főegység és a távadó oldalán azonos
+sorszámnak kell világítania.</li>
+</ol>
+<p><strong>Ellenőrzési pontok:</strong></p>
+<ul>
+<li>A T568B színsorrend mindkét végén azonos.</li>
+<li>A kábelköpeny beér a csatlakozó tehermentesítő részébe.</li>
+<li>A krimpelés után nincs szabadon kilógó ér, és a csatlakozó nem
+mozog.</li>
+<li>A teszter nem mutat szakadást, zárlatot vagy párkeresztezést.</li>
+</ul>
+<p><strong>Tipikus hibák a bekötés során:</strong></p>
+<ul>
+<li>Túl hosszúra lecsupaszított kábel miatt a párok nem érnek el az
+érintkezőkig.</li>
+<li>A párok sorrendje elcsúszik, például a kék és a zöld pár
+felcserélődik.</li>
+<li>A csatlakozót rossz irányból krimpelve az érintkezők nem hatolnak a
+szigetelésbe.</li>
+<li>Az erek a csatlakozó tövében eltörnek, ha a kábelt élesen
+visszahajtják.</li>
+</ul>
+<p><strong>Dokumentálás:</strong> A kész kábel mindkét végére azonos
+jelölőcímkét helyezzünk el, például <code>NET-001</code>. A patchpanel
+és a munkahelyi aljzat bekötésekor a rajzon tüntessük fel a kábel
+azonosítóját és a hálózati eszköz portját.</p>
+<h3 data-number="14.3.9" id="tipikus-hibák"><span
+class="header-section-number">14.3.9</span> Tipikus hibák</h3>
+<ol type="1">
+<li><p><strong>T568A és T568B keverése.</strong> Ha az egyik vég T568A,
+a másik T568B, a kábel nem egyenes, hanem keresztezett. A mai eszközök
+egy része automatikusan kezeli, de a legrosszabb az, ha csak időszakosan
+működik. Mindig ellenőrizzük a két vég azonosságát.</p></li>
+<li><p><strong>Ipari hálózaton az eszköz IP-címe ütközik.</strong> Ha
+két PLC vagy kamera ugyanazt a statikus IP-címet kapja, a hálózat
+kiszámíthatatlanul viselkedik. A javítás: minden eszközhöz egyedi, a
+hálózati tartományba illeszkedő címet adjunk, és vezessünk címzési
+táblázatot.</p></li>
+<li><p><strong>90 m-nél hosszabb szakasz kábelből.</strong> A megrendelő
+spórol, és 110 m kábelt húzat be; az átvitel hibás vagy lassú lesz. A
+szabvány szerinti csatornahosszt be kell tartani, vagy aktív eszközt,
+optikai átalakítót kell beépíteni.</p></li>
+<li><p><strong>UTP a 230 V-os vezetékkel egy védőcsőben vagy közös
+dobozban.</strong> Elválasztás nélkül tilos; lásd az erősáramú és
+adatkábelek elválasztásáról szóló szabályt.</p></li>
+<li><p><strong>PoE eszköz túl nagy teljesítményt igényel.</strong> Egy
+30 W-ot igénylő kamera egy 15,4 W-os PoE switch portra kötve nem fog
+indulni. A switch és a fogyasztó adatlapját mindig egyeztetni
+kell.</p></li>
+</ol>
+<h3 data-number="14.3.10" id="önellenőrzés"><span
+class="header-section-number">14.3.10</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Mi a különbség a router és a switch feladata között?</li>
+<li>Sorold fel a T568B színsorrendet a kábel 1–8 erei szerint.</li>
+<li>Mi a hálózati cím és a broadcast-cím a <code>192.168.1.37/24</code>
+IP-cím esetén, és hány hoszt használható?</li>
+<li>Mire való a PoE, és miért kell ismerni a fogyasztó
+teljesítményigényét?</li>
+<li>Mi a maximális engedélyezett hossza egy UTP-alapú állandó linknek
+(fix szakasznak)?</li>
+</ol>
+<h3 data-number="14.3.11" id="feladatok"><span
+class="header-section-number">14.3.11</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Sorolj fel legalább három hálózati
+topológiát, és mondd meg, melyik a legelterjedtebb a modern
+Ethernet-hálózatokban.</p>
+<p><strong>2. feladat (A)</strong> Milyen eszközt használunk az azonos
+hálózaton belüli eszközök összekapcsolására, és melyik irányítja a
+hálózatok közötti forgalmat?</p>
+<p><strong>3. feladat (B)</strong> Egy eszköz IP-címe
+<code>172.16.5.100/20</code>. Számítsd ki a hálózati címet, a
+broadcast-címet, és határozd meg a használható hosztok számát.</p>
+<p><strong>4. feladat (B)</strong> Rajzold le vagy írd le egy kis iroda
+hálózatának bekötési tervét: szolgáltatói csatlakozás, router, 8 portos
+PoE switch, két PC, egy Wi-Fi AP és egy PoE IP-kamera.</p>
+<p><strong>5. feladat (C)</strong> Egy 8 portos PoE switch minden portja
+legfeljebb 15,4 W-tal táplál. A portokra csatlakoztatott eszközök: 4
+kamera egyenként 7 W, 1 Wi-Fi AP 10 W, 3 IP-telefon egyenként 3 W. A
+switch teljes PoE-kerete 65 W. Elfér-e a rendszer a switch
+teljesítménykeretén belül? Indokold számítással, osztály szerinti
+foglalással is (IEEE 802.3af: 1. osztály 4,0 W, 2. osztály 7,0 W, 3.
+osztály 15,4 W a switch oldalán; a készüléknek 3,84 W, 6,49 W, illetve
+12,95 W áll rendelkezésére).</p>
+<p><strong>6. feladat (D)</strong> Egy kábelteszter az 1–8 LED-ek közül
+a 3–6 párokat fordított sorrendben mutatja. Mi lehet a hiba, és hogyan
+javítanád?</p>
+<h3 data-number="14.3.12" id="önellenőrzés-válaszok"><span
+class="header-section-number">14.3.12</span> Önellenőrzés –
+válaszok</h3>
+<ol type="1">
+<li>Switch: hálózaton belül MAC-cím alapján kapcsol; router: hálózatok
+között IP-cím alapján irányít (DHCP, NAT).</li>
+<li>Fehér-narancs, narancs, fehér-zöld, kék, fehér-kék, zöld,
+fehér-barna, barna.</li>
+<li>Hálózati cím 192.168.1.0, broadcast 192.168.1.255, 254 használható
+hoszt.</li>
+<li>Adat és táp egy kábelen; ha az igény meghaladja a port vagy a switch
+keretét, az eszköz nem indul vagy újraindul.</li>
+<li>90 m (a csatorna a patchkábelekkel együtt 100 m).</li>
+</ol>
+<h3 data-number="14.3.13" id="megoldások"><span
+class="header-section-number">14.3.13</span> Megoldások</h3>
+<p><strong>1. feladat</strong></p>
+<p>Busz, gyűrű, csillag és fa topológia. A modern Ethernet-hálózatokban
+a <strong>csillag topológia</strong> a legelterjedtebb, amelyet nagyobb
+hálózatok esetén <strong>fa topológiává</strong> bővítenek.</p>
+<p><strong>2. feladat</strong></p>
+<p>Az azonos hálózaton belüli eszközöket <strong>switch</strong> köti
+össze; a hálózatok közötti forgalmat <strong>router</strong>
+irányítja.</p>
+<p><strong>3. feladat</strong></p>
+<p>Adott: IP-cím <code>172.16.5.100</code>, maszk <code>/20</code>, azaz
+<code>255.255.240.0</code>.</p>
+<p>A maszkból: az első 20 bit hálózat, a maradék 12 bit hoszt. Az IP-cím
+binárisan:</p>
+<ul>
+<li><code>172.16.5.100</code> →
+<code>10101100.00010000.00000101.01100100</code></li>
+<li>maszk → <code>11111111.11111111.11110000.00000000</code></li>
+<li>bitenkénti ÉS →
+<code>10101100.00010000.00000000.00000000</code></li>
+</ul>
+<p>Visszaalakítva: <code>172.16.0.0</code>, ez a <strong>hálózati
+cím</strong>.</p>
+<p>A broadcast-címhez a hosztbiteket 1-re állítjuk. A harmadik oktettben
+a maszk utolsó 4 bitje a hoszt része: <code>0000</code> →
+<code>1111</code>, tehát <code>172.16.15.255</code>. A
+<strong>broadcast-cím</strong>: <code>172.16.15.255</code>.</p>
+<p>A használható hosztok száma:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mn>32</mn><mo>−</mo><mn>20</mn></mrow></msup><mo>−</mo><mn>2</mn><mo>=</mo><msup><mn>2</mn><mn>12</mn></msup><mo>−</mo><mn>2</mn><mo>=</mo><mn>4096</mn><mo>−</mo><mn>2</mn><mo>=</mo><mn>4094</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">2^{32-20}-2 = 2^{12}-2 = 4096-2 = 4094.</annotation></semantics></math></p>
+<p>Tehát a tartomány <code>172.16.0.1</code> –
+<code>172.16.15.254</code>.</p>
+<p><strong>4. feladat</strong></p>
+<p>A kapcsolási terv leírása:</p>
+<ul>
+<li>A szolgáltatói csatlakozás a router <strong>WAN-portjára</strong>
+csatlakozik.</li>
+<li>A router <strong>LAN-portjára</strong> egy 8 portos PoE switch
+csatlakozik.</li>
+<li>A switch portjaira: PC1, PC2, Wi-Fi AP és IP-kamera.</li>
+<li>Az IP-kamera PoE-t kap a switch portjától, ezért külön tápegység nem
+kell.</li>
+<li>A Wi-Fi AP-t is a switchre kötjük UTP-kábellel; a tápellátás vagy
+PoE-ből, vagy külön adapterből történik.</li>
+<li>Az IP-címzést a router DHCP-kiszolgálója osztja ki, kivéve, ha a
+kamerának fix címet adunk.</li>
+</ul>
+<p><strong>5. feladat</strong></p>
+<p>A fogyasztók teljes igénye:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>+</mo><mn>1</mn><mo>×</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>+</mo><mn>3</mn><mo>×</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>=</mo><mn>28</mn><mo>+</mo><mn>10</mn><mo>+</mo><mn>9</mn><mo>=</mo><mn>47</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">4 \times 7\,\text{W} + 1 \times 10\,\text{W} + 3 \times 3\,\text{W} = 28 + 10 + 9 = 47\,\text{W}.</annotation></semantics></math></p>
+<p>A switch teljes PoE-kerete 65 W, ez kisebb, mint a nyolc port
+névleges összege
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>⋅</mo><mn>15</mn><mo>,</mo><mn>4</mn><mo>=</mo><mn>123</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">8 \cdot 15{,}4 = 123{,}2</annotation></semantics></math>
+W), tehát a keretet kell a fogyasztók igényével összevetni.</p>
+<p>Tényleges igény szerint a fogyasztók összesen 47 W-ot vesznek fel
+(kábelveszteséggel ennél kicsit többet). Osztály szerinti foglalásnál a
+switch a készülék PoE-osztályához rendel teljesítményt: a 7 W-ot igénylő
+kamera meghaladja a 2. osztály 6,49 W-os fogyasztói határát, ezért 3.
+osztályú, és 15,4 W-ot foglal; az AP is 3. osztályú (15,4 W); a 3 W-os
+telefon 1. osztályú (4,0 W). Az osztályos foglalás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>⋅</mo><mn>15</mn><mo>,</mo><mn>4</mn><mo>+</mo><mn>15</mn><mo>,</mo><mn>4</mn><mo>+</mo><mn>3</mn><mo>⋅</mo><mn>4</mn><mo>,</mo><mn>0</mn><mo>=</mo><mn>61</mn><mo>,</mo><mn>6</mn><mo>+</mo><mn>15</mn><mo>,</mo><mn>4</mn><mo>+</mo><mn>12</mn><mo>,</mo><mn>0</mn><mo>=</mo><mn>89</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>&gt;</mo><mn>65</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">4 \cdot 15{,}4 + 15{,}4 + 3 \cdot 4{,}0 = 61{,}6 + 15{,}4 + 12{,}0 = 89{,}0\,\text{W} &gt; 65\,\text{W}.</annotation></semantics></math></p>
+<p>Válasz: osztály szerinti foglalással a rendszer nem fér el a 65 W-os
+keretben. Ha a switch és az eszközök LLDP-alapú (a tényleges igény
+szerinti) teljesítmény-egyeztetést támogatnak, a kb. 47 W igény és a
+kábelveszteség elférhet <strong>(ellenőrizendő: switch adatlapja, IEEE
+802.3 osztályok)</strong>. A példa azt tanítja, hogy nemcsak a
+portonkénti teljesítményt, hanem a készülék teljes PoE-keretét és a
+foglalási módot is ellenőrizni kell.</p>
+<p><strong>6. feladat</strong></p>
+<p>Ha a teszter 3→6 és 6→3 kapcsolatot mutat, az egyik végen a zöld pár
+két ere (zöld-fehér és zöld) fel van cserélve. T568A/B keveredésnél
+ezzel szemben az 1↔︎3 és 2↔︎6 keresztezés látszik (két pár cseréje).
+Javítás: bontsuk le a hibás csatlakozót, rendezzük az ereket mindkét
+végén <strong>T568B</strong> szerint, krimpeljük újra, és teszterrel
+ellenőrizzük, hogy az 1–8 LED-ek sorban, párban világítanak.</p>
+<h3 data-number="14.3.14" id="rövid-összefoglaló"><span
+class="header-section-number">14.3.14</span> Rövid összefoglaló</h3>
+<p>A számítógépes hálózatok a villanyszerelő munkájában a gyengeáramú
+kábelezés, a felügyeleti rendszerek és az épületautomatika miatt
+jelennek meg. A modern Ethernet-hálózatok csillag topológiájúak; az
+eszközöket switch köti össze, a hálózatok közötti forgalmat router
+irányítja. Az IPv4-cím a hálózati és hoszt részre oszlik; a maszk
+(<code>/24</code>, <code>255.255.255.0</code>) mutatja, hány bit a
+hálózati rész. A hálózati címet IP-cím és maszk bitenkénti ÉS
+műveletével kapjuk, a broadcast az összes hosztbitet 1-re állítva; a
+használható hosztok száma
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mn>32</mn><mo>−</mo><mi>p</mi></mrow></msup><mo>−</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2^{32-p}-2</annotation></semantics></math>.
+A UTP-kábel 4 csavart érpárból áll, az RJ45-csatlakozót leggyakrabban
+<strong>T568B</strong> szerint krimpeljük. A PoE a hálózati kábelen
+keresztül táplál készülékeket, ezért ellenőrizni kell a fogyasztó és a
+switch teljesítményigényét. A hálózati ismeretek a <a
+href="ve072.html">KNX, DALI és más épületautomatikai rendszerek</a> és a
+<a href="ve130.html">Vezérlőberendezések informatikai hálózatai és
+HMI</a> alfejezetekben térnek vissza. Hálózati feszültségű hálózati
+készülék táplálását csak jogosult személy végezheti; a szerelés előtt
+mindig tartsuk be az öt biztonsági szabályt.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve050.html">← 14.2 Irodai alkalmazások a szakmában</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve052.html">15.1 Felmérés, tervértelmezés és szerelési technológia →</a></div>
+</nav>
+</body>
+</html>

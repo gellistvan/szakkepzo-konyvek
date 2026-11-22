@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>U/f-görbe és lágyindító-rámpa</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="g">U/f-görbe (0 = lineáris, 1 = kvadratikus)</label><input id="g" type="range" min="0" max="1" step="1" value="1" aria-label="U/f-görbe (0 = lineáris, 1 = kvadratikus)"><output id="g_o" for="g"></output></div>
+<div class="row"><label for="b">Boost (0 Hz-en)</label><input id="b" type="range" min="0" max="5" step="0.5" value="0" aria-label="Boost (0 Hz-en)"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="x0">Kezdeti feszültség</label><input id="x0" type="range" min="10" max="60" step="1" value="35" aria-label="Kezdeti feszültség"><output id="x0_o" for="x0"></output></div>
+<div class="row"><label for="tr">Felfutási idő</label><input id="tr" type="range" min="5" max="20" step="1" value="10" aria-label="Felfutási idő"><output id="tr_o" for="tr"></output></div>
+<div class="row"><label for="il">Áramkorlát</label><input id="il" type="range" min="44" max="110" step="1" value="75" aria-label="Áramkorlát"><output id="il_o" for="il"></output></div>
+<div class="row"><label for="ml">Terhelő nyomaték indításkor</label><input id="ml" type="range" min="0" max="40" step="1" value="8" aria-label="Terhelő nyomaték indításkor"><output id="ml_o" for="ml"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 300" role="img" aria-label="Lineáris és kvadratikus U/f-görbe, valamint lágyindító feszültségrámpája és nyomatéka."></svg>
+<p class="small">Szemléltető modell: U/f-görbék a 400 V / 50 Hz névleges pontra (boost 0 Hz-en, 50 Hz felé lineárisan kifutva). Lágyindító: a nyomaték az U² szerint arányosodik az álló forgórészre vett indítónyomatékhoz; az áramot álló forgórészre, I_ind = 6·Iₙ feltételezésével becsüljük (ellenőrizendő a motor adattábláján); a szürke sávban a becsült áram meghaladná a korlátot, ott a lágyindító a feszültséget a korláthoz tartozó szinten tartja, amíg a motor fel nem gyorsul. A felgyorsulás idejét a modell nem számolja: szemléltetésül a beállított rámpaidő 80%-ánál veszi, utána a feszültség a beállított meredekséggel nő 100%-ig, ezért a 100% (és a by-pass) a rámpaidőnél később jön. Nem mért görbék.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"g":"", "b":"%", "x0":"%", "tr":"s", "il":"A", "ml":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const UN=400.0,FN=50.0,IN=22.0,KIND=6.0;
+const L=css("--line"),H=css("--hl2"),Hb=css("--hl"),G=css("--grid");
+const bo=v.b/100, x0=v.x0/100;
+const Uf=(f,q)=>Math.min(UN,UN*(bo+(1-bo)*(q?Math.pow(f/FN,2):f/FN)));
+const axes=(X0,Y0,W,Hh,xt,yt,xl,yl,xmax,ymax)=>{el("line",{x1:X0,x2:X0+W,y1:Y0,y2:Y0,stroke:L,"stroke-width":1.5});el("line",{x1:X0,x2:X0,y1:Y0,y2:Y0-Hh,stroke:L,"stroke-width":1.5});
+ xt.forEach(a=>el("text",{x:X0+W*a/xmax,y:Y0+15,"text-anchor":"middle","font-size":10},String(a)));
+ yt.forEach(a=>{el("text",{x:X0-5,y:Y0-Hh*a/ymax+4,"text-anchor":"end","font-size":10},String(a));el("line",{x1:X0,x2:X0+W,y1:Y0-Hh*a/ymax,y2:Y0-Hh*a/ymax,stroke:G});});
+ el("text",{x:X0+W/2,y:Y0+32,"text-anchor":"middle","font-size":11},xl);el("text",{x:X0,y:Y0-Hh-10,"font-size":11},yl);};
+const path=(fn,n,X,Y)=>{let d="";for(let i=0;i<=n;i++){const p=fn(i/n);d+=(i?"L":"M")+X(p[0])+" "+Y(p[1]);}return d;};
+// (a) U/f
+const A0=45,B0=250,AW=210,AH=200,XA=f=>A0+AW*f/50,YA=u=>B0-AH*u/420;
+axes(A0,B0,AW,AH,[0,10,20,30,40,50],[0,100,200,300,400],"f (Hz)","U (V)",50,420);
+el("path",{d:path(s=>[50*s,Uf(50*s,0)],100,XA,YA),fill:"none",stroke:v.g?G:H,"stroke-width":v.g?1.5:3});
+el("path",{d:path(s=>[50*s,Uf(50*s,1)],100,XA,YA),fill:"none",stroke:v.g?H:G,"stroke-width":v.g?3:1.5,"stroke-dasharray":"7 4"});
+el("text",{x:A0+8,y:B0-AH-24,"font-size":11},"folytonos: lineáris, szaggatott: kvadratikus");
+// (b) lágyindító: feszültség, nyomaték, becsült áram
+const ilim=v.il, xlim=ilim/(KIND*IN), ACC=0.8, kr=(1-x0)/v.tr;
+const xr=t=>Math.min(1,x0+kr*t);
+// áramkorlátos rámpa (szemléltető): korlátig a rámpa, a sávban U = xlim, a felgyorsulás (ACC·tr) után ugyanazzal a meredekséggel
+const ta=xlim<1?Math.max(0,(xlim-x0)/kr):v.tr, tacc=xlim<1?Math.max(ta,ACC*v.tr):v.tr, xh=xlim;
+const t100=xlim<1?tacc+(1-xh)/kr:v.tr;
+const xl=t=>xlim>=1?xr(t):(t<ta?Math.min(xr(t),xlim):(t<tacc?xh:Math.min(1,xh+kr*(t-tacc))));
+const C0=340,CW=240,CH=200,TM=2*Math.ceil(Math.max(12,t100+1.5)/2),XC=t=>C0+CW*t/TM,YC=p=>B0-CH*p/110;
+axes(C0,B0,CW,CH,[0,Math.round(TM/2),TM],[0,25,50,75,100],"t (s)","%",TM,110);
+if(xlim<1){el("rect",{x:XC(ta),y:B0-CH,width:Math.max(0,XC(tacc)-XC(ta)),height:CH,fill:G,opacity:0.45});
+ el("text",{x:XC(ta)+3,y:B0-CH+12,"font-size":10},"áramkorlát: U ≈ "+fmt(xlim*100,0)+"%-on tartva");
+ el("text",{x:XC(tacc)+3,y:B0-6,"font-size":10},"← motor felgyorsult (szemléltető)");}
+el("path",{d:path(s=>[v.tr*s,xr(v.tr*s)*100],100,XC,YC),fill:"none",stroke:G,"stroke-width":1.5});
+el("path",{d:path(s=>[TM*s,xl(TM*s)*100],300,XC,YC),fill:"none",stroke:Hb,"stroke-width":3});
+el("path",{d:path(s=>[TM*s,Math.pow(xl(TM*s),2)*100],300,XC,YC),fill:"none",stroke:H,"stroke-width":3,"stroke-dasharray":"7 4"});
+el("line",{x1:C0,x2:C0+CW,y1:YC(v.ml),y2:YC(v.ml),stroke:css("--bad"),"stroke-width":1.5,"stroke-dasharray":"4 3"});
+el("text",{x:C0+CW,y:YC(v.ml)-4,"text-anchor":"end","font-size":10},"terhelő nyomaték");
+el("text",{x:C0+4,y:B0-CH-24,"font-size":11},"kék: U/Uₙ (szürke: korlát nélkül), narancs: M ∝ U²");
+const m0=x0*x0*100, i0=x0*KIND*IN;
+let msg="Kezdeti feszültség "+fmt(v.x0,0)+"% → indítónyomaték "+fmt(m0,1)+"% (∝ U²); becsült indítási áram (álló forgórész) "+fmt(Math.min(i0,ilim),0)+" A";
+if(i0>ilim) msg+=" – az áramkorlát ("+fmt(ilim,0)+" A) már a kezdeti feszültséget is "+fmt(xlim*100,0)+"%-ra fogja vissza";
+msg+=". ";
+if(xlim<1&&xlim>x0) msg+="Korlát nélkül a 100% "+fmt(v.tr,0)+" s-nál, áramkorláttal (szemléltető felgyorsulással) ≈ "+fmt(t100,1)+" s-nál jön (by-pass). ";
+if(Math.min(x0,xlim)*Math.min(x0,xlim)*100<v.ml) msg+="<span class='bad'>A kezdeti nyomaték kisebb a terhelő nyomatéknál: a motor nem indul, brummog (4. feladat) – növeld a kezdeti feszültséget.</span>";
+else msg+="<span class='ok'>A kezdeti nyomaték meghaladja a terhelő nyomatékot, a motor elindul.</span>";
+msg+=" U/f: 25 Hz-en "+(v.g?"kvadratikus":"lineáris")+" görbével U = "+fmt(Uf(25,v.g),0)+" V.";
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

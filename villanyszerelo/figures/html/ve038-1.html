@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vezetékméretező kalkulátor (feszültségesés)</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ph">Fázisok száma (1 vagy 3)</label><input id="ph" type="range" min="1" max="3" step="2" value="1" aria-label="Fázisok száma (1 vagy 3)"><output id="ph_o" for="ph"></output></div>
+<div class="row"><label for="I">Terhelőáram I</label><input id="I" type="range" min="1" max="100" step="0.5" value="10" aria-label="Terhelőáram I"><output id="I_o" for="I"></output></div>
+<div class="row"><label for="l">Egyirányú hossz l</label><input id="l" type="range" min="1" max="200" step="1" value="30" aria-label="Egyirányú hossz l"><output id="l_o" for="l"></output></div>
+<div class="row"><label for="cf">Teljesítménytényező cosφ (ohmos terhelés: 1)</label><input id="cf" type="range" min="0.3" max="1" step="0.05" value="1" aria-label="Teljesítménytényező cosφ (ohmos terhelés: 1)"><output id="cf_o" for="cf"></output></div>
+<div class="row"><label for="m">Anyag (0 = réz, 1 = alumínium)</label><input id="m" type="range" min="0" max="1" step="1" value="0" aria-label="Anyag (0 = réz, 1 = alumínium)"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="lim">Megengedett ε</label><input id="lim" type="range" min="1" max="6" step="0.5" value="3" aria-label="Megengedett ε"><output id="lim_o" for="lim"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 40 560 260" role="img" aria-label="Feszültségesés százalékban a szabványos keresztmetszetek szerint, a megengedett határral és a szükséges legkisebb keresztmetszettel"></svg>
+<p class="small">A vezeték ellenállásával számolt, a reaktancia elhanyagolva (egyszerű képlet, mint a fejezetben: egyfázisú 2·I·l·cosφ/(κA), háromfázisú √3·I·l·cosφ/(κA)). Egyszerű κ-értékek hideg állapotra (ellenőrizendő: meleg üzemi érték, MSZ HD 60364-5-52, hálózati engedélyes). Példa: 1f 10 A, 30 m, réz, cosφ = 1: 1,5 mm² → 3,1 %; 3f 20,8 A, 60 m, cosφ 0,85: A_min = 2,73 mm² → 4 mm², ΔU = 8,20 V, 2,1 %.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"ph":"", "I":"A", "l":"m", "cf":"", "m":"", "lim":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const S3=Math.sqrt(3), SECT=[1.5,2.5,4,6,10,16,25,35,50,70,95], k=v.m==0?56:35, ph=v.ph>=2?3:1, Un=ph==1?230:400;
+const dU=A=>ph==1?2*v.I*v.l*v.cf/(k*A):S3*v.I*v.l*v.cf/(k*A);
+const eps=A=>dU(A)/Un*100;
+const Amin=dU(1)/(v.lim/100*Un), std=SECT.find(s=>s>=Amin-1e-12);
+const x0=50, W=490, base=250, H=190, ymax=Math.max(v.lim*1.6, 1);
+const bw=W/SECT.length;
+const Y=e=>base-Math.min(e,ymax)/ymax*H;
+el("line",{x1:x0,x2:x0+W,y1:base,y2:base,stroke:css("--line"),"stroke-width":1.5});
+SECT.forEach((s,i)=>{const e=eps(s), ok=e<=v.lim, x=x0+i*bw+6;
+ el("rect",{x:x,y:Y(e),width:bw-12,height:base-Y(e),fill:ok?css("--ok"):css("--bad"),opacity:s===std?.95:.4,stroke:s===std?css("--line"):"none","stroke-width":2});
+ el("text",{x:x+(bw-12)/2,y:base+16,"text-anchor":"middle","font-size":12},fmt(s,s%1?1:0).replace(",0",""));
+ el("text",{x:x+(bw-12)/2,y:Y(e)-4,"text-anchor":"middle","font-size":10},fmt(e,1)+(e>ymax?"+":""));});
+el("line",{x1:x0,x2:x0+W,y1:Y(v.lim),y2:Y(v.lim),stroke:css("--hl2"),"stroke-width":2.5,"stroke-dasharray":"7 4"});
+el("text",{x:x0+W,y:Y(v.lim)-5,"text-anchor":"end","font-size":12,fill:css("--hl2")},"megengedett: "+fmt(v.lim,1)+" %");
+el("text",{x:x0+W/2,y:base+36,"text-anchor":"middle","font-size":12},"szabványos keresztmetszet (mm²); oszlop: ε (%), vastag keret: legkisebb megfelelő");
+status("ΔU(A) = "+(ph==1?"2·I·l·cosφ/(κA)":"√3·I·l·cosφ/(κA)")+", κ = "+k+" m/(Ω·mm²), Uₙ = "+Un+" V. Szükséges: <b>A ≥ "+fmt(Amin)+" mm²</b> → "+
+ (std?"<b>szabványos "+fmt(std,1).replace(",0","")+" mm²</b>, ε = "+fmt(eps(std))+" %, ΔU = "+fmt(dU(std))+" V.":"<span class='bad'>95 mm² felett nincs a listán.</span>")+
+ " (A terhelhetőséget külön ellenőrizni kell.)");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

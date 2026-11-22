@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gömbmódszer</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="cls">LPS osztály (1–4)</label><input id="cls" type="range" min="1" max="4" step="1" value="3" aria-label="LPS osztály (1–4)"><output id="cls_o" for="cls"></output></div>
+<div class="row"><label for="d">Felfogók távolsága d</label><input id="d" type="range" min="4" max="40" step="0.5" value="10" aria-label="Felfogók távolsága d"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="hr">Felfogó magassága</label><input id="hr" type="range" min="0.2" max="5" step="0.1" value="1" aria-label="Felfogó magassága"><output id="hr_o" for="hr"></output></div>
+<div class="row"><label for="xc">Gömb helyzete</label><input id="xc" type="range" min="-20" max="50" step="0.5" value="5" aria-label="Gömb helyzete"><output id="xc_o" for="xc"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Gördülő gömb egy ház metszete fölött: a gömb által nem érintett tér védett; két felfogó között a gömb p mélységig behatol."></svg>
+<p class="small">Lapostetős épület (7 m) metszete két felfogórúddal a tető két szélén; a szürke terület a gördülő gömb által be nem járt, védett tér. A gömbsugarak a fejezet tanulási értékei (ellenőrizendő: MSZ EN 62305-3). Rácsozat nélküli, léptékhelyes vázlat.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"cls":"", "d":"m", "hr":"m", "xc":"m"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const RR=[20,30,45,60], r=RR[v.cls-1], d=v.d, H=7, hr=v.hr;
+const xs0=-25, xs1=d+25, sx=520/(xs1-xs0), sy=sx, X=x=>20+(x-xs0)*sx, Y=y=>270-y*sy;
+const pts=[];for(let i=0;i<=400;i++){const x=xs0+i*(xs1-xs0)/400;pts.push([x,(x>=0&&x<=d)?H:0]);}
+pts.push([0,H+hr],[d,H+hr],[0,H],[d,H]);
+function cy(xc){let b=-1e9;for(const q of pts){const dx=Math.abs(q[0]-xc);if(dx<=r)b=Math.max(b,q[1]+Math.sqrt(r*r-dx*dx));}return b;}
+// burkoló
+const N=260, ex=[], ey=[];for(let i=0;i<=N;i++){ex.push(xs0+i*(xs1-xs0)/N);ey.push(1e9);}
+for(let k=0;k<=300;k++){const c=xs0-r+k*(xs1-xs0+2*r)/300, y0=cy(c);for(let i=0;i<=N;i++){const dx=Math.abs(ex[i]-c);if(dx<=r)ey[i]=Math.min(ey[i],y0-Math.sqrt(r*r-dx*dx));}}
+let dp="M"+X(ex[0])+","+Y(0);for(let i=0;i<=N;i++){const s=(ex[i]>=0&&ex[i]<=d)?H:0;dp+="L"+X(ex[i]).toFixed(1)+","+Y(Math.max(ey[i],s)).toFixed(1);}
+for(let i=N;i>=0;i--){const s=(ex[i]>=0&&ex[i]<=d)?H:0;dp+="L"+X(ex[i]).toFixed(1)+","+Y(s).toFixed(1);}
+el("path",{d:dp+"Z",fill:css("--grid")});
+el("line",{x1:X(xs0),x2:X(xs1),y1:Y(0),y2:Y(0),stroke:css("--line"),"stroke-width":2});
+el("rect",{x:X(0),y:Y(H),width:d*sx,height:H*sy,fill:css("--bg"),stroke:css("--line"),"stroke-width":2});
+[0,d].forEach(x=>el("line",{x1:X(x),x2:X(x),y1:Y(H),y2:Y(H+hr),stroke:css("--line"),"stroke-width":4}));
+const xc=Math.min(Math.max(v.xc,xs0),xs1), yc=cy(xc);
+el("circle",{cx:X(xc),cy:Y(yc),r:r*sx,fill:"none",stroke:css("--hl2"),"stroke-width":2,"stroke-dasharray":"8 5"});
+const p=r-Math.sqrt(Math.max(0,r*r-d*d/4)), touch=p>=hr;
+status("LPS "+["I","II","III","IV"][v.cls-1]+": r = "+r+" m · behatolás két felfogó között: <b>p = r − √(r² − (d/2)²) = "+fmt(p,2)+" m</b> "+(touch?'<span class="bad">≥ felfogómagasság ('+fmt(hr,1)+' m): a gömb eléri a tetőt – sűrűbb vagy magasabb felfogó kell.</span>':'<span class="ok">&lt; felfogómagasság ('+fmt(hr,1)+' m): a tető a két felfogó között védett.</span>'));
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

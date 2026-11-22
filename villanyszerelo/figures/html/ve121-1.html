@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ipari leágazás-méretező</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="Sn">Trafó Sn</label><input id="Sn" type="range" min="100" max="2000" step="10" value="630" aria-label="Trafó Sn"><output id="Sn_o" for="Sn"></output></div>
+<div class="row"><label for="l">Kábelhossz l</label><input id="l" type="range" min="5" max="200" step="1" value="80" aria-label="Kábelhossz l"><output id="l_o" for="l"></output></div>
+<div class="row"><label for="ai">Keresztmetszet (sorszám: 1,5 2,5 4 6 10 16 25 35 mm²)</label><input id="ai" type="range" min="1" max="8" step="1" value="5" aria-label="Keresztmetszet (sorszám: 1,5 2,5 4 6 10 16 25 35 mm²)"><output id="ai_o" for="ai"></output></div>
+<div class="row"><label for="Im">Motor névleges árama</label><input id="Im" type="range" min="5" max="100" step="1" value="28" aria-label="Motor névleges árama"><output id="Im_o" for="Im"></output></div>
+<div class="row"><label for="ty">Kismegszakító (1 = B, 2 = C, 3 = D)</label><input id="ty" type="range" min="1" max="3" step="1" value="2" aria-label="Kismegszakító (1 = B, 2 = C, 3 = D)"><output id="ty_o" for="ty"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 255" role="img" aria-label="Méretező kalkulátor: transzformátor teljesítménye, kábelhossz, keresztmetszet, motoráram és kismegszakító típusa alapján zárlati áram és indítási feszültségesés"></svg>
+<p class="small">Tanulási példa (ellenőrizendő): a fejezet képletei – Ztr = uk/100·U²/Sn (uk = 4 %), κ = 56, c = 1,0 (Ik3, egyvezetős ellenállás); a gyors kioldást az Ik1,min = 0,95·230 V/√((Rtr + 2·1,2·Rvez)² + Xtr²) dönti el (azonos keresztmetszetű PE), mágneses szorzók B 5 / C 10 / D 20 ·In (felső határ), 10 % indítási határ, 6 kA megszakítóképesség. Túlterhelési (Iz) ellenőrzés nincs benne; tervezéshez nem használható.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"Sn":"kVA", "l":"m", "ai":"", "Im":"A", "ty":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const AS=[1.5,2.5,4,6,10,16,25,35], A=AS[v.ai-1], TY=["B","C","D"][v.ty-1], KM=[5,10,20][v.ty-1];
+const STD=[6,10,13,16,20,25,32,40,50,63,80,100], UV=400, K=56, C=1.0;
+const Ztr=0.04*UV*UV/(v.Sn*1000), Xtr=Ztr/Math.sqrt(1.04), Rtr=0.2*Xtr, Rv=v.l/(K*A), Z=Math.hypot(Rtr+Rv,Xtr);
+const Ik=C*UV/(Math.sqrt(3)*Z), Ik1=0.95*230/Math.hypot(Rtr+2*1.2*Rv,Xtr), Ibus=C*UV/(Math.sqrt(3)*Math.hypot(Rtr,Xtr)), Iind=6*v.Im, dU=Math.sqrt(3)*Iind*v.l*0.4/(K*A), dUp=100*dU/UV;
+const In=STD.find(x=>x>=v.Im), Imag=KM*In;
+const okM=Ik1>=Imag, okU=dUp<=10, okB=Ibus<=6000;
+const row=(y,t,val,cls)=>{el("text",{x:20,y:y,"font-size":13},t);el("text",{x:330,y:y,"font-size":13,"font-weight":"bold",fill:cls?css(cls):css("--fg")},val);};
+row(30,"Trafó impedancia Ztr (R = 0,2·X)",fmt(Ztr*1000,1)+" mΩ");
+row(55,"Kábelellenállás Rvez = l/(κA), A = "+fmt(A,1)+" mm²",fmt(Rv*1000,1)+" mΩ");
+row(80,"Eredő impedancia Z",fmt(Z*1000,1)+" mΩ");
+row(105,"Háromfázisú (legnagyobb) Ik3 a kábel végén",fmt(Ik,0)+" A");
+row(130,"Legkisebb (L–PE, üzemmeleg) Ik1,min",fmt(Ik1,0)+" A");
+row(155,"Gyors kioldás: "+TY+fmt(In,0)+" ("+KM+"·In), Ik1,min-nel",">"+fmt(Imag,0)+" A  "+(okM?"✔":"✘"),okM?"--ok":"--bad");
+row(180,"Indítási feszültségesés (6·In = "+fmt(Iind,0)+" A, cosφ 0,4)",fmt(dU,1)+" V = "+fmt(dUp,1)+" %  "+(okU?"✔":"✘"),okU?"--ok":"--bad");
+row(205,"Várható Ik a trafó kapcsán (kábel nélkül)",fmt(Ibus/1000,1)+" kA  "+(okB?"✔ ≤ 6 kA":"✘ > 6 kA"),okB?"--ok":"--bad");
+status((okM?'<span class="ok">A mágneses kioldáshoz elég a zárlati áram.</span>':'<span class="bad">Ik1,min < '+fmt(Imag,0)+' A: a zárlat csak a hőkioldóval szakad meg – nagyobb keresztmetszet vagy rövidebb kábel kell.</span>')+" "+
+  (okU?'':'<span class="bad">Az indítási feszültségesés meghaladja a 10 %-ot. </span>')+(okB?'':'<span class="bad">Nagyobb megszakítóképességű készülék kell (a 6 kA tanulási érték). </span>'));
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

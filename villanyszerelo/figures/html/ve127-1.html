@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indítási módok összehasonlítása</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="u0">Lágyindító kezdőfeszültség U0</label><input id="u0" type="range" min="30" max="70" step="1" value="40" aria-label="Lágyindító kezdőfeszültség U0"><output id="u0_o" for="u0"></output></div>
+<div class="row"><label for="tr">Lágyindító rámpaidő</label><input id="tr" type="range" min="2" max="20" step="1" value="10" aria-label="Lágyindító rámpaidő"><output id="tr_o" for="tr"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 330" role="img" aria-label="Indítási áram és nyomaték az idő függvényében direkt, csillag-delta, lágyindítós és frekvenciaváltós indításnál, állítható lágyindító-paraméterekkel"></svg>
+<p class="small"><span id="cbx" class="bar" style="display:flex;gap:12px;flex-wrap:wrap;margin:4px 0"><label><input type="checkbox" id="c_dol" checked> direkt (fekete, folytonos)</label><label><input type="checkbox" id="c_yd" checked> csillag–delta (szaggatott)</label><label><input type="checkbox" id="c_soft" checked> lágyindító (pontozott, vastag)</label><label><input type="checkbox" id="c_vfd" checked> frekvenciaváltó (pont-vonal)</label></span>Szemléltető, idealizált görbék (nem mérés): a tényleges értékek a motortól, a terheléstől és a készülék beállításától függnek (ellenőrizendő: motor- és készülékadatlap).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"u0":"%", "tr":"s"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+if(!window._cb){window._cb=1;const b=document.getElementById("cbx");S.parentNode.insertBefore(b,S);
+ b.querySelectorAll("input").forEach(c=>c.addEventListener("change",draw));}
+const ILR=6.5,MLR=2.0,UEND=0.62, u0=v.u0/100, tr=v.tr;
+const lin=(t,t0,t1,a,b)=>a+(b-a)*Math.min(Math.max((t-t0)/(t1-t0),0),1);
+const dol=t=>t<0.8?[ILR,lin(t,0,0.7,MLR,2.6)]:[lin(t,0.8,1,ILR,1),lin(t,0.8,1,2.6,1)];
+const yd=t=>t<3?[ILR/3,MLR/3]:(t<3.15?[5,2]:[lin(t,3.15,3.4,5,1),lin(t,3.15,3.4,2,1)]);
+const te=tr*Math.max(UEND-u0,0)/(1-u0), ue=Math.min(1,Math.max(u0,UEND));
+const soft=t=>{const u=Math.min(1,u0+(1-u0)*t/tr);return t<te?[ILR*u,MLR*u*u]:[lin(t,te,te+0.3,ILR*ue,1),lin(t,te,te+0.3,MLR*ue*ue,1)];};
+const vfd=t=>t<3?[1.3,1.2]:[1,1];
+const tmax=Math.max(5,Math.ceil(te+1.5));
+const X0=60,X1=540, X=t=>X0+(X1-X0)*t/tmax;
+const P1={y0:150,y1:12,max:7}, P2={y0:300,y1:175,max:3};
+const Y=(p,v)=>p.y0-(p.y0-p.y1)*v/p.max;
+[[P1,"I/In",[0,2,4,6]],[P2,"M/Mn",[0,1,2,3]]].forEach(([p,lab,ticks])=>{
+ ticks.forEach(k=>{el("line",{x1:X0,x2:X1,y1:Y(p,k),y2:Y(p,k),stroke:css("--grid")});el("text",{x:X0-6,y:Y(p,k)+4,"text-anchor":"end","font-size":12},k);});
+ el("text",{x:14,y:(p.y0+p.y1)/2,"font-size":12,"text-anchor":"middle",transform:"rotate(-90 14 "+((p.y0+p.y1)/2)+")"},lab);});
+for(let t=0;t<=tmax;t+=(tmax>10?2:1))el("text",{x:X(t),y:P2.y0+16,"text-anchor":"middle","font-size":12},t);
+el("text",{x:X1,y:P2.y0+28,"text-anchor":"end","font-size":12},"t (s)");
+const CS=[["dol",dol,"",css("--line")],["yd",yd,"8 4",css("--muted")],["soft",soft,"2 4",css("--hl2")],["vfd",vfd,"10 4 2 4",css("--hl")]];
+CS.forEach(([id,f,dash,col])=>{if(!document.getElementById("c_"+id).checked)return;
+ [0,1].forEach(j=>{const p=j?P2:P1;let d="";for(let n=0;n<=400;n++){const t=tmax*n/400;d+=(n?"L":"M")+X(t).toFixed(1)+" "+Y(p,Math.min(f(t)[j],p.max)).toFixed(1);}
+  el("path",{d:d,fill:"none",stroke:col,"stroke-width":id==="soft"?3:2,"stroke-dasharray":dash});});});
+const s0=soft(0);
+status("Lágyindító: U0 = "+fmt(v.u0,0)+" %, rámpa "+fmt(tr,0)+" s → indítási áram ≈ <b>"+fmt(s0[0],1)+"·In</b> (direkt: 6,5·In), indítónyomaték ≈ <b>"+fmt(s0[1],2)+"·Mn</b> (M ∝ U²: "+fmt(u0*u0*100,0)+" % a direktének). "+
+ (te>0?"A felfutás (feltevés: u ≥ 0,62) kb. "+fmt(te,1)+" s alatt ér véget.":"Az U0 már elég a felfutáshoz.")+" Frekvenciaváltó: ≈ 1,3·In mellett ≈ 1,2·Mn.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

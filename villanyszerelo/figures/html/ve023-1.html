@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teljesítményháromszög és fázisjavítás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="U">Feszültség U</label><input id="U" type="range" min="12" max="400" step="1" value="230" aria-label="Feszültség U"><output id="U_o" for="U"></output></div>
+<div class="row"><label for="I">Áram I</label><input id="I" type="range" min="0.5" max="40" step="0.1" value="6" aria-label="Áram I"><output id="I_o" for="I"></output></div>
+<div class="row"><label for="c1">cos φ (most)</label><input id="c1" type="range" min="0.3" max="1" step="0.01" value="0.75" aria-label="cos φ (most)"><output id="c1_o" for="c1"></output></div>
+<div class="row"><label for="c2">cos φ (cél)</label><input id="c2" type="range" min="0.5" max="1" step="0.01" value="0.95" aria-label="cos φ (cél)"><output id="c2_o" for="c2"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Teljesítményháromszög P, Q, S oldalakkal és a cél teljesítménytényezőhöz szükséges kondenzátor meddőteljesítménye és kapacitása"></svg>
+<p class="small">Szemléltetés (6.4): alap U = 230 V, I = 6 A, cos φ = 0,75 → P = 1035 W, Q ≈ 913 var; cos φ = 0,95-re Q_C = 572,6 var, C ≈ 34,5 µF. A kondenzátor és a védelem tényleges kiválasztása gyártói adat és előírás alapján ellenőrizendő; kis kapacitásoknál a tolóállás érzékeny.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"U":"V", "I":"A", "c1":"", "c2":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const f=50,Sa=v.U*v.I,P=Sa*v.c1,Q=Sa*Math.sqrt(1-v.c1*v.c1),t1=Math.tan(Math.acos(v.c1)),t2=Math.tan(Math.acos(v.c2)),QC=Math.max(0,P*(t1-t2)),C=QC/(2*Math.PI*f*v.U*v.U),Q2=Q-QC,S2=Math.hypot(P,Q2),I2=S2/v.U;
+const sc=Math.min(400/Sa,230/Math.max(Q,1)),ox=60,oy=250,X=x=>ox+x*sc,Y=y=>oy-y*sc;
+const L=(x1,y1,x2,y2,c,w,d)=>el("line",{x1:X(x1),y1:Y(y1),x2:X(x2),y2:Y(y2),stroke:c,"stroke-width":w,"stroke-dasharray":d||""});
+L(0,0,P,0,css("--fg"),3);L(P,0,P,Q,css("--hl"),3,"6 4");L(0,0,P,Q,css("--hl2"),3.5);
+if(QC>0){L(0,0,P,Q2,css("--ok"),2.5,"2 4");L(P+8/sc,Q2,P+8/sc,Q,css("--bad"),2);}
+el("text",{x:X(P/2),y:oy+20,"text-anchor":"middle","font-size":13},"P = "+fmt(P,0)+" W");
+el("text",{x:X(P)+14,y:Y(QC>0?Q2/2:Q/2),"font-size":13},"Q = "+fmt(Q,0)+" var (teljes)");if(QC>0)el("text",{x:X(P)+18,y:Y((Q+Q2)/2)+4,"font-size":12,fill:css("--bad")},"Q_C = "+fmt(QC,1)+" var");
+el("text",{x:X(P/2)-8,y:Y(Q/2)-8,"text-anchor":"end","font-size":13,fill:css("--hl2")},"S = "+fmt(Sa,0)+" VA");
+if(QC>0)el("text",{x:X(P)+14,y:Y(Q2)+16,"font-size":12,fill:css("--ok")},"javítva: Q = "+fmt(Q2,0)+" var");
+status("S = U·I = <b>"+fmt(Sa,0)+" VA</b>, P = S·cos φ = <b>"+fmt(P,0)+" W</b>, Q = <b>"+fmt(Q,0)+" var</b> (φ = "+fmt(Math.acos(v.c1)*180/Math.PI,1)+"°). Cél cos φ = "+fmt(v.c2)+": Q<sub>C</sub> = P(tg φ₁ − tg φ₂) = <b>"+fmt(QC,1)+" var</b>, C = Q<sub>C</sub>/(2πfU²) = <b>"+fmt(C*1e6,1)+" µF</b> (50 Hz). Az áram "+fmt(v.I,2)+" A-ről "+fmt(QC>0?I2:v.I,2)+" A-re csökken.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

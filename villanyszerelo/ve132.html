@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>36.2 Szünetmentes áramforrások, aggregátorok és akkumulátorok –
+Villanyszerelő – villamos berendezés- és készülékszerelő
+szakirány</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Kapcsoló- és vezérlőkészülékek, ipari elosztóberendezések</a> › <a href="index.html#vech35">36 Meddőteljesítmény, UPS és energiaellátás</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve131.html">← 36.1 Fázisjavítás méretezése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve133.html">36.3 Napelemes rendszerek és háztartási méretű kiserőmű →</a></div>
+</nav>
+<h2 data-number="36.2" id="ve132"><span
+class="header-section-number">36.2</span> Szünetmentes áramforrások,
+aggregátorok és akkumulátorok</h2>
+<h3 data-number="36.2.1" id="motiváció"><span
+class="header-section-number">36.2.1</span> Motiváció</h3>
+<p>Egy kisebb ipari üzem irodájában a szerelő azt a feladatot kapja,
+hogy a szerver és az adatmentő rendszer mellé szünetmentes tápegységet
+(UPS) telepítsen, mert a környéken gyakoriak a rövid, néhány másodperces
+hálózati feszültségkimaradások. A karbantartó műhelyben emellett egy
+dízelaggregátort is üzemeltetnek, amely áramszünet esetén át kell, hogy
+vegye a fontos fogyasztók ellátását. A szerelőnek nem elég csak bekötnie
+a készülékeket: tudnia kell, milyen UPS típus illik az adott
+fogyasztóhoz, mekkora akkumulátor szükséges a kívánt üzemidőhöz, és
+hogyan kell reteszelni az aggregátor átkapcsolóját, hogy soha ne
+kerülhessen össze a hálózattal. Ez az alfejezet ezt a három területet
+tanítja meg: a szünetmentes áramforrásokat, az akkumulátorok méretezését
+és az aggregátoros betáplálás átkapcsolását.</p>
+<h3 data-number="36.2.2" id="szemléletes-kép"><span
+class="header-section-number">36.2.2</span> Szemléletes kép</h3>
+<p>Egy kis irodai UPS dobozán a következő adatok szerepelnek: bemenet
+230 V, 50 Hz; kimenet 230 V, 650 VA / 390 W; akkumulátor 12 V, 9 Ah,
+ólom-savas. A hálózati feszültség kiesésekor a készülék egy rövid
+kattanással átkapcsol belső akkumulátoros üzemre, és a számítógép tovább
+működik. Ha viszont a szerelő rosszul választ UPS-t, az átkapcsolás
+alatt a számítógép újraindul, vagy a túl nagy terhelés miatt az
+akkumulátor néhány másodperc alatt lemerül, és az adatmentés meghiúsul.
+A következő ábra egy ilyen méretezési helyzetet mutat, de már egy
+nagyobb, 24 V-os, 9 Ah-s akkumulátorú UPS-re – ugyanarra, amellyel a
+fejezet számpéldái is számolnak –: adott akkumulátor-energiánál hogyan
+csökken az elérhető üzemidő a terhelés növelésével (100–1000 W). A
+dobozon látott 12 V-os, 390 W-os kis UPS ennél kisebb: tárolt hasznos
+energiája fele akkora
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>⋅</mo><mn>9</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn><mo>≈</mo><mn>77</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext></mrow><annotation encoding="application/x-tex">12 \cdot 9 \cdot 0{,}8 \cdot 0{,}9 \approx 77{,}8\,\text{Wh}</annotation></semantics></math>,
+300 W-on kb. 16 perc), és 390 W fölött már túlterhelt.</p>
+<figure>
+<img src="assets/ve132-plot-1.png"
+alt="UPS-üzemidő a terhelés függvényében (24 V, 9 Ah) - Képletből számolt, szemléltető értékek 50 W-os lépésközzel: ólom-savas akkumulátor, U_akk = 24 V, C = 9 Ah, mélykisülési tényező 0,8, inverter hatásfok 0,9; t = U·C·DOD·η / P (hiperbola). A nagy kisütőáram miatti kapacitáscsökkenést nem tartalmazza." />
+<figcaption aria-hidden="true">UPS-üzemidő a terhelés függvényében (24
+V, 9 Ah) - Képletből számolt, szemléltető értékek 50 W-os lépésközzel:
+ólom-savas akkumulátor, U_akk = 24 V, C = 9 Ah, mélykisülési tényező
+0,8, inverter hatásfok 0,9; t = U·C·DOD·η / P (hiperbola). A nagy
+kisütőáram miatti kapacitáscsökkenést nem tartalmazza.</figcaption>
+</figure>
+<p>Az ábra számszerűen is mutatja: ha a terhelést 100 W-ról 1000 W-ra
+növeljük, az üzemidő 1,55 óráról körülbelül 9 percre csökken ugyanazzal
+az akkumulátorral.</p>
+<h3 data-number="36.2.3"
+id="definíciók-alapfogalmak-és-ups-típusok"><span
+class="header-section-number">36.2.3</span> Definíciók, alapfogalmak és
+UPS-típusok</h3>
+<p><strong>Definíció.</strong> A szünetmentes áramforrás
+(uninterruptible power supply, UPS) olyan villamos készülék vagy
+berendezés, amely a hálózati feszültség kiesése, jelentős eltérése vagy
+megszakadása esetén a hozzá csatlakoztatott fogyasztókat
+energiaforrásból – jellemzően akkumulátorból – tovább táplálja, és ezzel
+megakadályozza az üzemzavart, adatvesztést vagy folyamatleállást.</p>
+<p><strong>Definíció.</strong> Az átkapcsolási idő az az időtartam,
+amely a hálózati feszültség meghibásodásának érzékelésétől a fogyasztó
+akkumulátoros ellátásának megkezdéséig eltelik. Minél rövidebb ez az
+idő, annál kisebb a fogyasztó működésében bekövetkező zavar.</p>
+<p>A UPS-eket a fogyasztó szempontjából lényeges működési mód szerint
+három alapvető csoportba soroljuk: offline, line-interaktív és online. A
+megnevezés nem a minőség, hanem a bemeneti áram útjának és a
+feszültségkezelésnek a jellegére utal.</p>
+<p><strong>Offline (standby) UPS.</strong> Normál üzemben a fogyasztó
+közvetlenül, gyakorlatilag a hálózatról kapja a feszültséget; az
+akkumulátortöltő a belső akkumulátort karbantartó töltéssel tölti.
+Hálózati feszültségkimaradáskor a készülék érzékelője kapcsol, és az
+inverter az akkumulátorból állítja elő a kimeneti feszültséget. Az
+átkapcsolási idő tipikusan néhány milliszekundum, ezért irodai
+számítógéphez, kisméretű hálózati eszközhöz, kijelzőhöz általában
+elegendő. Hátránya, hogy a feszültség-ingadozásokat, gyors tranziens
+zavarokat normál üzemben nem szabályozza, legfeljebb szűrőelemekkel
+csökkenti.</p>
+<p><strong>Line-interaktív UPS.</strong> Normál üzemben a fogyasztó a
+hálózatra csatlakozik, de egy fokozatkapcsolós feszültségszabályozó
+(AVR) a bemenő feszültség csökkenése vagy emelkedése esetén korrigálja a
+kimenő feszültséget, ezért kisebb ingadozásoknál nem kell átkapcsolni
+akkumulátoros üzemre. Feszültségkimaradáskor az inverterrel ellátott
+akkumulátor veszi át a terhelést. Az átkapcsolási idő szintén rövid, de
+a feszültségszabályozás miatt jobb minőségű ellátást ad, mint az offline
+típus. Gyakori választás irodai szerverek, kasszarendszerek, hálózati
+kapcsolók, kisebb vezérlők mellé.</p>
+<p><strong>Online (dupla konverziós) UPS.</strong> A hálózati
+feszültséget az egyenirányító folyamatosan egyenárammá alakítja, az
+egyenáramú köztes körről tölti az akkumulátort, és az inverter
+folyamatosan állítja elő a kimeneti váltakozó feszültséget. A fogyasztó
+tehát normál üzemben is az inverterről kapja a feszültséget, ezért
+hálózati kimaradáskor nincs átkapcsolási idő, a kimenet zavartalan
+marad. Ez a legjobb minőségű megoldás, de a kétszeres energiaátalakítás
+miatt magasabb a vesztesége és az ára. Kritikus orvosi, kórházi,
+adatközponti, biztonsági berendezéseknél, hálózati frekvencia- vagy
+feszültségproblémák esetén ezt a típust alkalmazzák.</p>
+<p><strong>Összefoglaló összehasonlítás.</strong> Az offline a
+legegyszerűbb és legolcsóbb, de csak feszültségkimaradásra reagál, és
+átkapcsolási ideje van. A line-interaktív a kismértékű
+feszültség-ingadozásokat is szabályozza. Az online típus a bemeneti
+hálózat zavaraitól gyakorlatilag teljesen független kimenő feszültséget
+biztosít, de nagyobb a fogyasztása és melegedése.</p>
+<h3 data-number="36.2.4" id="akkumulátorok-és-üzemidő-számítása"><span
+class="header-section-number">36.2.4</span> Akkumulátorok és üzemidő
+számítása</h3>
+<p><strong>Definíció.</strong> Az akkumulátor kapacitása (C) azt a
+töltésmennyiséget adja meg, amelyet a feltöltött akkumulátor
+meghatározott feltételek között leadni képes. Mértékegysége az amperóra
+(Ah), kisebb egységeknél milliamperóra (mAh). Egy 9 Ah kapacitású
+akkumulátor elvileg 9 A áramot 1 órán át, vagy 1 A áramot 9 órán át
+tudna leadni.</p>
+<p>A gyakorlatban két tényezőt mindig figyelembe kell venni:</p>
+<ul>
+<li><strong>Mélykisülési tényező (DOD, depth of discharge).</strong> Az
+ólom-savas akkumulátorokat nem szabad teljesen kisütni, mert az
+élettartamuk jelentősen csökken. A gyártók gyakran a kapacitás
+50–80%-ának felhasználását engedik meg rendszeres üzemben. A DOD tehát
+azt mutatja meg, hogy a névleges kapacitás mekkora hányadát használjuk
+ki.</li>
+<li><strong>Inverter hatásfoka (η_inv).</strong> Az akkumulátor
+egyenfeszültségű energiáját az inverter alakítja a fogyasztó számára
+szükséges váltakozó feszültséggé. A hatásfok jellemzően 0,85–0,95,
+vagyis a bemenő egyenáramú teljesítmény 5–15%-a hővé válik.</li>
+</ul>
+<p><strong>Összefüggés.</strong> Az akkumulátorban tárolt, a fogyasztó
+rendelkezésére álló energia:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">akk</mtext></msub><mo>⋅</mo><mi>C</mi><mo>⋅</mo><mtext mathvariant="normal">DOD</mtext><mo>⋅</mo><msub><mi>η</mi><mtext mathvariant="normal">inv</mtext></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">W_{\text{terh}} = U_{\text{akk}} \cdot C \cdot \text{DOD} \cdot \eta_{\text{inv}},</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mtext mathvariant="normal">akk</mtext></msub><annotation encoding="application/x-tex">U_{\text{akk}}</annotation></semantics></math>
+az akkumulátor névleges feszültsége voltban,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
+a kapacitás amperórában,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><annotation encoding="application/x-tex">W_{\text{terh}}</annotation></semantics></math>
+pedig a kimenő váltakozó áramú oldalon hasznosítható energia wattórában
+(Wh). A kifejezés abból indul ki, hogy az akkumulátor tárolt energiája
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mtext mathvariant="normal">akk</mtext></msub><mo>⋅</mo><mi>C</mi></mrow><annotation encoding="application/x-tex">U_{\text{akk}} \cdot C</annotation></semantics></math>,
+ezt csökkenti a mélykisülési tényező és az inverter hatásfoka.</p>
+<p>Az üzemidő állandó terhelés mellett:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub></mfrac><mo>=</mo><mfrac><mrow><msub><mi>U</mi><mtext mathvariant="normal">akk</mtext></msub><mo>⋅</mo><mi>C</mi><mo>⋅</mo><mtext mathvariant="normal">DOD</mtext><mo>⋅</mo><msub><mi>η</mi><mtext mathvariant="normal">inv</mtext></msub></mrow><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">t = \frac{W_{\text{terh}}}{P_{\text{terh}}} = \frac{U_{\text{akk}} \cdot C \cdot \text{DOD} \cdot \eta_{\text{inv}}}{P_{\text{terh}}},</annotation></semantics></math></p>
+<p>ahol
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub><annotation encoding="application/x-tex">P_{\text{terh}}</annotation></semantics></math>
+a fogyasztó hatásos teljesítménye wattban, az eredményül kapott
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+pedig órában értendő.</p>
+<p><strong>Példa.</strong> Egy UPS akkumulátorfeszültsége 24 V,
+kapacitása 9 Ah, a megengedett mélykisülés 80%, az inverter hatásfoka
+90%. A tárolt hasznos energia:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn><mo>=</mo><mn>155</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">W_{\text{terh}} = 24\,\text{V} \cdot 9\,\text{Ah} \cdot 0{,}8 \cdot 0{,}9 = 155{,}5\,\text{Wh}.</annotation></semantics></math></p>
+<p>Ha a terhelés 300 W, az üzemidő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mn>155</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext></mrow><mrow><mn>300</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>518</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>31</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">min</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t = \frac{155{,}5\,\text{Wh}}{300\,\text{W}} = 0{,}518\,\text{h} \approx 31\,\text{min}.</annotation></semantics></math></p>
+<p><strong>Figyelem.</strong> Az ólom-savas akkumulátorok kapacitása
+nagy kisütőáramnál kisebb, mint a katalógusban megadott névleges érték
+(a gyártók általában 10 vagy 20 órás kisütésre adják meg a kapacitást).
+Ezért a fenti képlet közelítő értéket ad; a pontos méretezéshez a
+gyártói kisütési táblázatot kell használni. <strong>(ellenőrizendő:
+gyártói adatlap)</strong></p>
+<p><strong>Li-ion akkumulátorok.</strong> A modern UPS-ekben egyre
+gyakrabban lítium-ion (Li-ion) vagy lítium-vasfoszfát (LiFePO₄)
+akkumulátorokat alkalmaznak. Előnyük a kisebb tömeg és méret, a nagyobb
+ciklusélettartam, a kisebb önkisülés, valamint az, hogy jobban tűrik a
+nagyobb kisütőáramokat. Hátrányuk a magasabb ár, és az, hogy a töltést
+és kisütést elektronikusan, cellaszinten is felügyelni kell; a
+túltöltés, mélykisülés vagy hőmérséklet-túllépés tüzet vagy robbanást
+okozhat. A beépített akkumulátorkezelő rendszer (BMS) ezt a védelmet
+látja el.</p>
+<p><strong>Szabvány.</strong> A szünetmentes áramforrásokkal és azok
+akkumulátoraival szembeni követelményeket az MSZ EN 62040 sorozat
+tárgyalja (ellenőrizendő: a pontos szabványszám és kiadás). A biztonsági
+táplálás kialakítására, például a biztonsági világításnál, az MSZ HD
+60364 sorozat vonatkozó részei és a tűzvédelmi előírások adnak
+követelményeket. <strong>(ellenőrizendő: aktuális szabványkiadás,
+biztonsági táplálásra vonatkozó előírások)</strong></p>
+<h3 data-number="36.2.5"
+id="kidolgozott-példa-ups-kiválasztása-és-üzemidő-számítása"><span
+class="header-section-number">36.2.5</span> Kidolgozott példa: UPS
+kiválasztása és üzemidő számítása</h3>
+<p><strong>Számítás.</strong> Egy kisebb irodai szerverterembe olyan
+UPS-t kell választani, amely a következő fogyasztókat látja el: szerver
+450 W, hálózati kapcsoló 50 W, mentőegység 70 W. A fogyasztók együttes
+hatásos teljesítménye:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><mn>450</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>+</mo><mn>50</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>+</mo><mn>70</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>=</mo><mn>570</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{terh}} = 450\,\text{W} + 50\,\text{W} + 70\,\text{W} = 570\,\text{W}.</annotation></semantics></math></p>
+<p>A UPS kimeneti teljesítményadatait látszólagos teljesítményben (VA)
+és hatásos teljesítményben (W) adják meg. Ha a választott készülék 1000
+VA, és a megadott teljesítménytényezője
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><msub><mi>φ</mi><mtext mathvariant="normal">UPS</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">\cos\varphi_{\text{UPS}} = 0{,}8</annotation></semantics></math>,
+akkor a leadható hatásos teljesítmény:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">UPS</mtext></msub><mo>=</mo><mi>S</mi><mo>⋅</mo><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mo>=</mo><mn>1000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">VA</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>=</mo><mn>800</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">P_{\text{UPS}} = S \cdot \cos\varphi = 1000\,\text{VA} \cdot 0{,}8 = 800\,\text{W}.</annotation></semantics></math></p>
+<p>Mivel 800 W &gt; 570 W, a készülék teljesítménye megfelelő. A
+terhelési arány:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub><msub><mi>P</mi><mtext mathvariant="normal">UPS</mtext></msub></mfrac><mo>=</mo><mfrac><mrow><mn>570</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><mrow><mn>800</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>7125</mn><mo>≈</mo><mn>71</mn><mi>%</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">\frac{P_{\text{terh}}}{P_{\text{UPS}}} = \frac{570\,\text{W}}{800\,\text{W}} = 0{,}7125 \approx 71\%.</annotation></semantics></math></p>
+<p>Ez jellemzően kedvező tartomány, mert a UPS kihasználtsága nem túl
+alacsony, de marad tartalék.</p>
+<p>Az UPS beépített akkumulátora 24 V, 9 Ah, a mélykisülési tényező 0,8,
+az inverter hatásfoka 0,9. A hasznos energia:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn><mo>=</mo><mn>155</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">W_{\text{terh}} = 24\,\text{V} \cdot 9\,\text{Ah} \cdot 0{,}8 \cdot 0{,}9 = 155{,}5\,\text{Wh}.</annotation></semantics></math></p>
+<p>Az üzemidő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mn>155</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext></mrow><mrow><mn>570</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>273</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>16</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">min</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t = \frac{155{,}5\,\text{Wh}}{570\,\text{W}} = 0{,}273\,\text{h} \approx 16{,}4\,\text{min}.</annotation></semantics></math></p>
+<p>Tehát a képlet szerint kb. 16 perc adódik; ez felső becslés. Ilyen
+nagy kisütőáramnál
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><mn>26</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">\approx 26\,\text{A}</annotation></semantics></math>,
+a 9 Ah-s akkumulátorra kb. 3C) a gyártói kisütési táblázat ennél
+kevesebbet, jellemzően kb. 9–10 percet ad <strong>(ellenőrizendő:
+gyártói adatlap)</strong>, ezért a leállítási időt a táblázatból
+ellenőrizzük. Ha ennél hosszabb üzemidő kell, nagyobb kapacitású külső
+akkumulátor modult kell csatlakoztatni.</p>
+<p><strong>Számítás.</strong> A tervező azt kéri, hogy ugyanennél a 570
+W-os terhelésnél legalább 2 óra üzemidő álljon rendelkezésre. Mekkora
+akkumulátor-kapacitás szükséges, ha az akkumulátorfeszültség 48 V, a DOD
+továbbra is 0,8, az inverter hatásfoka 0,9? A kiinduló képletből a
+kapacitást kifejezve:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mfrac><mrow><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub><mo>⋅</mo><mi>t</mi></mrow><mrow><msub><mi>U</mi><mtext mathvariant="normal">akk</mtext></msub><mo>⋅</mo><mtext mathvariant="normal">DOD</mtext><mo>⋅</mo><msub><mi>η</mi><mtext mathvariant="normal">inv</mtext></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>570</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>⋅</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext></mrow><mrow><mn>48</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">C = \frac{P_{\text{terh}} \cdot t}{U_{\text{akk}} \cdot \text{DOD} \cdot \eta_{\text{inv}}} = \frac{570\,\text{W} \cdot 2\,\text{h}}{48\,\text{V} \cdot 0{,}8 \cdot 0{,}9}.</annotation></semantics></math></p>
+<p>A számláló
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1140</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext></mrow><annotation encoding="application/x-tex">1140\,\text{Wh}</annotation></semantics></math>,
+a nevező
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>34</mn><mo>,</mo><mn>56</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">34{,}56\,\text{V}</annotation></semantics></math>,
+így:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>≈</mo><mn>33</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ah</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">C \approx 33{,}0\,\text{Ah}.</annotation></semantics></math></p>
+<p>A gyakorlatban felfelé kerekítve például 40 Ah kapacitású
+akkumulátorcsomagot választanánk, és a gyártói kisütési görbe alapján
+ellenőriznénk a tényleges üzemidőt. ∎</p>
+<h3 data-number="36.2.6"
+id="aggregátor-és-hálózati-átkapcsoló-ats"><span
+class="header-section-number">36.2.6</span> Aggregátor és hálózati
+átkapcsoló (ATS)</h3>
+<p><strong>Definíció.</strong> Az automatikus átkapcsoló (automatic
+transfer switch, ATS) olyan kapcsolókészülék vagy berendezés, amely a
+hálózati feszültség kiesésekor a fogyasztót automatikusan átkapcsolja a
+tartalék energiaforrásra – például dízelaggregátorra –, és a hálózat
+visszatérésekor visszakapcsolja arra.</p>
+<p>A legegyszerűbb elvi kapcsolásban két mágneskapcsoló vagy motoros
+megszakító kimenete egy közös csomópontra fut, és innen táplálja a
+terhelést: az egyik a hálózati oldalról, a másik az aggregátor oldalról.
+A két kapcsoló egyszerre soha nem lehet bekapcsolva, mert akkor a
+hálózat és a generátor összekapcsolódna. Ez rendkívül veszélyes: a
+generátor visszatáplálhat a hálózatba, hálózat-visszatéréskor a
+feszültségkülönbség hatalmas áramlökést és súlyos gépsérülést okozhat,
+valamint a szigetüzemi generátor nem szinkronizált a hálózattal.</p>
+<figure>
+<img src="assets/ve132-diagram-1.png"
+alt="Hálózat–aggregátor átkapcsolás reteszelt mágneskapcsolókkal (elvi, egyfázisú) - K1 a hálózati, K2 az aggregátoros mágneskapcsoló (alapállapotban mindkettő nyitva). A két kimenet a ponttal jelölt közös csomópontban találkozik, és innen táplálja a terhelést; a forrásoknak és a terhelésnek közös az N-vezetője. Mivel a két ág ugyanarra a csomópontra fut, K1 és K2 egyszerre soha nem zárhat: mechanikus és villamos reteszelés kell. Egyszerűsített elvi rajz: a védelmek, a PE, a vezérlés és a nullavezető kapcsolása (négypólusú átkapcsoló) nincs feltüntetve." />
+<figcaption aria-hidden="true">Hálózat–aggregátor átkapcsolás reteszelt
+mágneskapcsolókkal (elvi, egyfázisú) - K1 a hálózati, K2 az aggregátoros
+mágneskapcsoló (alapállapotban mindkettő nyitva). A két kimenet a
+ponttal jelölt közös csomópontban találkozik, és innen táplálja a
+terhelést; a forrásoknak és a terhelésnek közös az N-vezetője. Mivel a
+két ág ugyanarra a csomópontra fut, K1 és K2 egyszerre soha nem zárhat:
+mechanikus és villamos reteszelés kell. Egyszerűsített elvi rajz: a
+védelmek, a PE, a vezérlés és a nullavezető kapcsolása (négypólusú
+átkapcsoló) nincs feltüntetve.</figcaption>
+</figure>
+<p><strong>Szabály.</strong> Az átkapcsoló kapcsolóit reteszelni kell:
+mechanikusan, hogy a két főérintkező egyszerre ne tudjon bekapcsolni, és
+elektromosan, hogy a vezérlésben a másik kapcsoló segédérintkezője
+megakadályozza az egyidejű behúzást. Háromfázisú rendszerben a
+fázissorrendet is ellenőrizni kell, mert a motorok forgásiránya a
+fázissorrendtől függ.</p>
+<p><strong>Szabály.</strong> Generátoros üzemben is teljesülnie kell a
+hibavédelem feltételeinek: a generátor kis zárlati árama miatt a
+kioldási feltételt (hurokimpedancia, kioldási idő) generátoros
+táplálásra külön kell ellenőrizni. El kell dönteni, hogy az átkapcsoló a
+nullavezetőt is kapcsolja-e (négypólusú átkapcsolás, 4P) vagy csak a
+fázisvezetőket (3P), és hogy hol van a generátoroldali N–PE kötés: ettől
+függ a hibavédelem és az áram-védőkapcsoló (RCD) helyes működése,
+valamint a visszatáplálás elleni védelem. A fenti elvi rajz közös
+N-vezetőt mutat, ezért ez egyszerűsített szemléltetés, nem kivitelezési
+minta <strong>(ellenőrizendő: MSZ HD 60364 vonatkozó része a tartalék-
+és szigetüzemi betáplálásról, a generátor gyártói előírása és a hálózati
+engedélyes követelményei)</strong>.</p>
+<p><strong>Összefüggés.</strong> Az aggregátor kiválasztásánál a
+hálózati oldalról ismert fogyasztói teljesítményt legalább a berendezés
+látszólagos teljesítmény-igénye szerint kell méretezni:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><mfrac><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub><mrow><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><msub><mi>φ</mi><mtext mathvariant="normal">terh</mtext></msub></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">S_{\text{terh}} = \frac{P_{\text{terh}}}{\cos\varphi_{\text{terh}}}.</annotation></semantics></math></p>
+<p>Ha például a fontos fogyasztók hatásos teljesítménye 12 kW, és a
+teljesítménytényező 0,85, akkor:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><mfrac><mrow><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext></mrow><mrow><mn>0</mn><mo>,</mo><mn>85</mn></mrow></mfrac><mo>=</mo><mn>14</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kVA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">S_{\text{terh}} = \frac{12\,\text{kW}}{0{,}85} = 14{,}1\,\text{kVA}.</annotation></semantics></math></p>
+<p>A gyakorlatban ennél nagyobb, például 20 kVA névleges teljesítményű
+aggregátort választanak, hogy a motorindítási áramlökések, a klimatikus
+viszonyok és a későbbi bővítés is beleférjenek. A generátor rövid idejű
+túlterhelhetőségét a gyártói adatlap alapján kell ellenőrizni.
+<strong>(ellenőrizendő: gyártói adatlap)</strong></p>
+<p><strong>Továbbvitt eredmény.</strong> A szinkron generátor hálózatra
+kapcsolásakor a <a href="ve100.html">Hálózatra kapcsolás, V-görbe,
+fázisjavítás és aggregátor</a> alfejezetben megismert négy feltételt is
+figyelembe kell venni, ha a generátort szinkronozva, hálózattal
+párhuzamosan szeretnék üzemeltetni. A gyakorlati aggregátoros
+tartalékbetáplálásnál azonban az ATS segítségével szigetüzemi, reteszelt
+átkapcsolást alkalmaznak, így a szinkronozás feltételei nem lépnek
+fel.</p>
+<h3 data-number="36.2.7" id="karbantartás-és-biztonság"><span
+class="header-section-number">36.2.7</span> Karbantartás és
+biztonság</h3>
+<p>Az UPS és az aggregátoros betáplálás megbízhatósága csak rendszeres
+karbantartással tartható fenn. Az akkumulátorok az élettartamuk során
+fokozatosan veszítenek kapacitásukból, ezért az üzemidőt időszakosan
+ellenőrizni kell. Az ólom-savas akkumulátoroknál a töltőfeszültséget, a
+cellák feszültségkiegyenlítettségét és a hőmérsékletet kell mérni. A
+Li-ion rendszereknél a beépített BMS adatait lehet kiolvasni.</p>
+<p><strong>Biztonsági figyelmeztetések.</strong></p>
+<ul>
+<li><strong>Tilos</strong> az UPS akkumulátorának sarkait közvetlenül,
+szigeteletlen szerszámmal megérinteni. Az egyenáramú oldal feszültsége –
+egyes nagyobb készülékeknél 200 V felett – szintén életveszélyes
+lehet.</li>
+<li><strong>Tilos</strong> a zárlatos akkumulátort, a megduzzadt,
+szivárgó vagy túlhevült cellát tovább üzemeltetni. A sérült akkumulátor
+tüzet vagy vegyi égési sérülést okozhat.</li>
+<li><strong>Tilos</strong> a hálózati feszültségű betáplálást
+feszültségmentesítés nélkül megbontani.</li>
+<li>Az aggregátor üzemeltetésekor gondoskodni kell a füstgáz
+elvezetéséről, a megfelelő szellőzésről, a tűzveszélyes anyagok
+távoltartásáról és a rendszeres próbaindításról.</li>
+</ul>
+<p><strong>Szabvány.</strong> Az épületbe szerelt aggregátoros
+betáplálásra az MSZ HD 60364 sorozat áramfejlesztő egységekről és a
+biztonsági célú ellátásról szóló részei, az automatikus átkapcsoló
+készülékre az MSZ EN 60947-6-1 (átkapcsoló berendezések), valamint a
+generátor gyártójának előírásai vonatkoznak <strong>(ellenőrizendő: a
+60364 részeinek pontos száma és hatályos kiadása)</strong>. Az MSZ EN
+60204-1 (gépek villamos berendezése) csak akkor kerül elő, ha az
+aggregátor egy gép villamos berendezésének része. A visszatáplálás
+elleni védelmet és a hálózati elosztóval való együttműködést a hálózati
+engedélyes csatlakozási feltételei is szabályozzák.
+<strong>(ellenőrizendő: aktuális szabványkiadás, hálózati engedélyes
+előírásai)</strong></p>
+<h3 data-number="36.2.8" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">36.2.8</span> Valós életbeli
+alkalmazás</h3>
+<p>Egy raktárépületben a biztonsági rendszer, a tűzjelző és a beléptető
+kapu ellátására line-interaktív UPS-t szereltek. A korábbi offline UPS
+két év után többször is újraindította a betáplált vezérlőt, mert a
+hálózati feszültség gyakran 190 V alá esett, és az egyszerű UPS ezt nem
+tudta kezelni. A csere után a line-interaktív készülék a
+feszültségszabályozóval korrigálta a bemenő ingadozást, így
+akkumulátoros üzem nélkül is stabil kimenetet adott. A szerelő a
+telepítéskor a védővezető (PE) bekötését is ellenőrizte, mert PE nélkül
+a UPS fémháza testzárlatkor feszültség alá kerülhet, és a hibavédelem
+nem működik. A hálózati oldali biztosítékot a gyártó által előírt
+értékre választotta, és a kimeneti oldalt külön kismegszakítóval
+védte.</p>
+<h3 data-number="36.2.9"
+id="gyakorlati-útmutató-kis-ups-akkumulátorának-cseréje-és-próbája"><span
+class="header-section-number">36.2.9</span> Gyakorlati útmutató: kis UPS
+akkumulátorának cseréje és próbája</h3>
+<p><strong>Cél.</strong> UPS belső akkumulátorának cseréje vagy
+állapotfelmérése, valamint a készülék üzemi próbája.</p>
+<p><strong>Eszközök, anyagok:</strong> szigetelt kéziszerszám,
+feszültségmérő, árammérő lakatfogó, csavarhúzó, megfelelő
+pótakkumulátor, gyártói dokumentáció, védőkesztyű, védőszemüveg.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi környezetre
+vagy jogosult oktató felügyeletére vonatkozik; hálózati feszültségen
+önállóan ne végezd. A készülék belsejében lévő egyenáramú kör és a
+hálózati oldal is feszültség alatt lehet, ezért minden munkát csak a
+gyártói utasítás és a munkavédelmi előírások szerint szabad végezni.</p>
+<p>Az öt biztonsági szabály lépései:</p>
+<ol type="1">
+<li><strong>Lekapcsolás.</strong> Előbb állítsd le a UPS-t a
+kezelőszervvel (inverter KI), majd húzd ki a hálózati csatlakozót vagy
+nyisd a leválasztót, és válaszd le a kimeneti fogyasztókat. Figyelem: a
+UPS rendeltetése, hogy a hálózat kiesése után is 230 V-ot adjon, ezért a
+kimenet és a belső kör az akkumulátorról a leválasztásig feszültség
+alatt maradhat.</li>
+<li><strong>Visszakapcsolás elleni biztosítás.</strong> A leválasztó
+kapcsolót reteszeld vagy a csatlakozódugót zárd el, hogy senki ne tudja
+visszakapcsolni.</li>
+<li><strong>Feszültségmentesség ellenőrzése.</strong> Mérőműszerrel
+(megfelelő CAT-kategória, mérés előtti műszerellenőrzés) győződj meg
+arról, hogy a bemeneti ÉS a kimeneti kapcsokon sincs feszültség. A belső
+akkumulátorkör a leválasztásig feszültség alatt van, ezért a fedél
+kinyitása után szigetelt szerszámmal dolgozz, és elsőként az
+akkumulátort válaszd le, majd a kondenzátorok kisülését is mérd
+meg.</li>
+<li><strong>Földelés és rövidre zárás.</strong> A gyártói utasítás
+szerint járj el, ha a munkavégzéshez szükséges; kis kapacitású
+akkumulátoros készülékeknél a gyakorlatban a feszültségmentesítés és a
+kapocsleválasztás a jellemző.</li>
+<li><strong>Szomszédos feszültség alatti részek lefedése.</strong> Ha a
+munkahelyen más feszültség alatti áramkörök is vannak, azokat
+szigetelőlemezzel takard le.</li>
+</ol>
+<p>A cseréhez használt számozott lépések:</p>
+<ol type="1">
+<li>Nyisd ki a gyártó által megengedett módon a UPS akkumulátortartó
+fedelét.</li>
+<li>Az akkumulátor csatlakozóját óvatosan húzd le, először a negatív,
+majd a pozitív pólust válaszd le.</li>
+<li>Mérjük meg a régi akkumulátor üresjárási feszültségét. Egy 12 V-os
+ólom-savas akkumulátor teljesen feltöltve kb. 12,7–12,9 V, egy 24 V-os
+akkucsomag 25,4–25,8 V körüli feszültséget mutat; ha jelentősen
+alacsonyabb, az akkumulátor lemerült vagy hibás.</li>
+<li>Helyezd be a megfelelő típusú, polaritáshelyes új akkumulátort, és
+csatlakoztasd először a pozitív, majd a negatív pólust.</li>
+<li>Zárd a fedelet, majd csatlakoztasd a UPS-t a hálózathoz, és
+ellenőrizd, hogy a töltésjelző működik.</li>
+<li>Végezz próbát: a hálózati leválasztóval szakítsd meg a bemenő
+táplálást, és figyeld meg, hogy a terhelés feszültség alatt marad-e. Az
+üzemidőt a várható terheléssel hasonlítsd össze.</li>
+<li>Dokumentáld a csere dátumát, a régi és új akkumulátor adatait,
+valamint a mért üresjárási feszültséget.</li>
+</ol>
+<p><strong>Ellenőrzési pontok.</strong> Hálózatról leválasztott
+állapotban a bemeneti kapcsokon a feszültség 0 V; az új akkumulátor
+feszültsége a gyártói tartományban van; a próbaüzemben a terhelés nem
+szakad meg, és az UPS nem jelez hibát.</p>
+<h3 data-number="36.2.10" id="tipikus-hibák"><span
+class="header-section-number">36.2.10</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>Túlméretezett terhelés.</strong> A szerelő csak a VA-értéket
+nézi, és figyelmen kívül hagyja a hatásos teljesítmény-korlátot. Egy
+1000 VA-es UPS cosφ = 0,7 mellett csak 700 W-ot adhat le; ha a terhelés
+750 W, a készülék túlterhelődik. Helyes gyakorlat: mindkét adatot
+ellenőrizni, és a hatásos terhelést a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">UPS</mtext></msub><mo>=</mo><mi>S</mi><mo>⋅</mo><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi></mrow><annotation encoding="application/x-tex">P_{\text{UPS}} = S \cdot \cos\varphi</annotation></semantics></math>
+képlettel számítani.</li>
+<li><strong>Nincs reteszelés az átkapcsolónál.</strong> Ha az ATS két
+mágneskapcsolója közül mindkettő behúzhat, a hálózat és a generátor
+összekapcsolódik. A visszatáplálás a hálózati elosztóban dolgozó
+szerelőt is veszélyezteti, és súlyos gépsérülést okoz. Helyes gyakorlat:
+mechanikus és elektromos reteszelés együtt.</li>
+<li><strong>Mélykisütés.</strong> Az ólom-savas akkumulátort többször
+teljesen kisütik, majd hetekig lemerült állapotban hagyják. A kapacitása
+hamar lecsökken, és az UPS a próbán csak néhány másodpercig üzemel.
+Helyes gyakorlat: a gyártó által megadott mélykisülési határt betartani,
+az akkumulátort feltöltve tárolni, rendszeresen (a gyártó előírása
+szerinti időközönként) tesztelni, és a gyártó által megadott élettartam
+végén cserélni (a csere gyakorisága típusfüggő, ellenőrizendő: gyártói
+adatlap).</li>
+<li><strong>A fázissorrend figyelmen kívül hagyása.</strong> Háromfázisú
+motorokat tartalmazó rendszernél az aggregátoros átkapcsolás után a
+motorok forgásiránya megfordul, ha a fázissorrend eltér. Helyes
+gyakorlat: átkapcsolás után fázissorrend-mérővel ellenőrizni, és szükség
+esetén az aggregátor csatlakoztatását a fázissorrendnek megfelelően
+kialakítani.</li>
+</ol>
+<h3 data-number="36.2.11" id="önellenőrzés"><span
+class="header-section-number">36.2.11</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Mi a különbség az offline és az online UPS átkapcsolási
+idejében?</li>
+<li>Egy UPS akkumulátorának feszültsége 48 V, kapacitása 20 Ah, DOD 0,8,
+inverter hatásfoka 0,9. Mekkora hasznos energia érhető el a fogyasztó
+oldalán?</li>
+<li>Miért kell reteszelni az aggregátoros átkapcsoló két
+kapcsolóját?</li>
+<li>Igaz vagy hamis: a Li-ion akkumulátorokat bármilyen mélyen le lehet
+sütni, mert a BMS megvédi őket, ezért a méretezésnél nem kell DOD-ot
+figyelembe venni. Indokold!</li>
+<li>Egy UPS terhelése 600 W, a készülék 1500 VA / 1200 W-os. Hány
+százalékos a hatásos terhelési arány?</li>
+</ol>
+<h3 data-number="36.2.12" id="feladatok"><span
+class="header-section-number">36.2.12</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Sorold fel a három UPS-típus nevét,
+és mindegyikhez írj egy-egy jellemző alkalmazási példát.</p>
+<p><strong>2. feladat (A)</strong> Egy UPS kimeneti adatai: 2000 VA,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi>cos</mi><mo>&#8289;</mo></mrow><mi>φ</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">\cos\varphi = 0{,}9</annotation></semantics></math>.
+Mekkora a leadható hatásos teljesítmény?</p>
+<p><strong>3. feladat (B)</strong> Egy 36 V-os, 15 Ah-s ólom
+akkumulátorral rendelkező UPS-t 450 W-os terheléssel használunk. A DOD =
+0,8, az inverter hatásfoka 0,88. Számítsd ki az elérhető üzemidőt
+percben.</p>
+<p><strong>4. feladat (B)</strong> Háromfázisú, fontos fogyasztók
+hatásos teljesítménye 8 kW, teljesítménytényezője 0,8. Mekkora minimális
+látszólagos teljesítményű aggregátort válassz, ha legalább 20%
+tartalékot akarsz? A számítást indokold.</p>
+<p><strong>5. feladat (C)</strong> Egy ATS átkapcsolóval rendelkező
+elosztóban a hálózati mágneskapcsoló K1 segédérintkezője NC (zárt)
+érintkezővel van beépítve, és a generátoros mágneskapcsoló K2
+vezérlőkörébe van bekötve. Magyarázd el, hogyan akadályozza meg ez az
+elektromos reteszelés a két kapcsoló egyidejű behúzását, és miért kell
+emellett mechanikus reteszt is alkalmazni.</p>
+<p><strong>6. feladat (D)</strong> Egy karbantartás során a szerelő azt
+méri, hogy a 24 V-os UPS akkumulátorcsomagjának üresjárási feszültsége
+21,8 V. A terhelés 500 W, a katalógus szerint 24 V, 12 Ah akkumulátorral
+a készülék 15 percig üzemel. A szerelő elvégzi a próbát, és a készülék 3
+perc után kikapcsol. Mi a feltételezhető hiba, milyen méréssel
+igazolnád, és mi a javítás?</p>
+<h3 data-number="36.2.13" id="megoldások"><span
+class="header-section-number">36.2.13</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok.</strong></p>
+<ol type="1">
+<li>Az offline UPS normál üzemben a hálózatról táplálja a fogyasztót, és
+feszültségkimaradáskor néhány milliszekundumos átkapcsolással lép
+működésbe. Az online UPS az inverterről folyamatosan táplálja a
+fogyasztót, ezért nincs érzékelhető átkapcsolási idő.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><mn>48</mn><mo>⋅</mo><mn>20</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn><mo>=</mo><mn>691</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext></mrow><annotation encoding="application/x-tex">W_{\text{terh}} = 48 \cdot 20 \cdot 0{,}8 \cdot 0{,}9 = 691{,}2\,\text{Wh}</annotation></semantics></math>.</li>
+<li>Mert ha mindkét kapcsoló egyszerre behúz, a hálózat és a generátor
+összekapcsolódik. Ez visszatáplálást, rövidzárlati áramot, gépsérülést
+és balesetveszélyt okoz.</li>
+<li>Hamis. A BMS véd a veszélyes határértékek túllépése ellen, de a
+gyakorlati üzemidő számításánál a kivehető kapacitást a gyártó által
+engedélyezett mélykisülési tényezővel kell csökkenteni, és a BMS is
+korlátozza a kisütést.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub><mi>/</mi><msub><mi>P</mi><mtext mathvariant="normal">UPS</mtext></msub><mo>=</mo><mn>600</mn><mi>/</mi><mn>1200</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo>=</mo><mn>50</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">P_{\text{terh}}/P_{\text{UPS}} = 600/1200 = 0{,}5 = 50\%</annotation></semantics></math>.</li>
+</ol>
+<p><strong>1. feladat (A)</strong> Offline (standby): kisebb irodai
+számítógép, otthoni periféria, játékkonzol. Line-interaktív: szerver,
+kasszarendszer, hálózati kapcsoló, biztonsági kamera. Online (dupla
+konverziós): kritikus orvosi berendezés, adatközpont, folyamatirányító
+szerver, ahol a feszültségkimaradás sem engedhető meg.</p>
+<p><strong>2. feladat (A)</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">UPS</mtext></msub><mo>=</mo><mn>2000</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn><mo>=</mo><mn>1800</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P_{\text{UPS}} = 2000 \cdot 0{,}9 = 1800\,\text{W}</annotation></semantics></math>.</p>
+<p><strong>3. feladat (B)</strong> A hasznos energia:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><mn>36</mn><mo>⋅</mo><mn>15</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>88</mn><mo>=</mo><mn>380</mn><mo>,</mo><mn>16</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">W_{\text{terh}} = 36 \cdot 15 \cdot 0{,}8 \cdot 0{,}88 = 380{,}16\,\text{Wh}.</annotation></semantics></math></p>
+<p>Az üzemidő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mn>380</mn><mo>,</mo><mn>16</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext></mrow><mrow><mn>450</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>845</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>50</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">min</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">t = \frac{380{,}16\,\text{Wh}}{450\,\text{W}} = 0{,}845\,\text{h} \approx 50{,}7\,\text{min}.</annotation></semantics></math></p>
+<p><strong>4. feladat (B)</strong> A fogyasztók látszólagos
+teljesítménye:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><mfrac><mrow><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext></mrow><mrow><mn>0</mn><mo>,</mo><mn>8</mn></mrow></mfrac><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kVA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">S_{\text{terh}} = \frac{8\,\text{kW}}{0{,}8} = 10\,\text{kVA}.</annotation></semantics></math></p>
+<p>20% tartalékkal:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mtext mathvariant="normal">agg</mtext></msub><mo>=</mo><mn>10</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kVA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">S_{\text{agg}} = 10 \cdot 1{,}2 = 12\,\text{kVA}.</annotation></semantics></math></p>
+<p>Tehát legalább 12 kVA-es aggregátort választunk, a gyakorlatban pedig
+a motorindítási áramlökések miatt a gyártói adatlapon ellenőrizzük a
+dinamikus terhelhetőséget.</p>
+<p><strong>5. feladat (C)</strong> Az elektromos reteszelésben K1 NC
+segédérintkezője sorba van kötve K2 tekercsének vezérlőkörével. Ha K1
+behúz, az NC érintkezője nyit, így K2 tekercse nem kaphat feszültséget.
+Hasonlóan K2 NC segédérintkezője K1 vezérlését tiltja. Ez megakadályozza
+az egyidejű behúzást, de ha az NC érintkező hegesztett, elakadt vagy a
+vezérlés hibás, a reteszelés meghiúsulhat. A mechanikus retesz a két
+főérintkezőt fizikailag is megakadályozza abban, hogy egyszerre
+zárjanak, így a hibától függetlenül is véd.</p>
+<p><strong>6. feladat (D)</strong> A 21,8 V üresjárási feszültség egy 24
+V-os, 12 cellás ólom-savas akkucsomagnál erősen lemerült vagy hibás
+állapotot jelez: teljesen feltöltve, nyugalmi állapotban kb. 25,4–25,8 V
+(2,12–2,15 V/cella) várható; a 21,8 V kb. 1,82 V/cella, ami mélykisülést
+vagy cellazárlatot jelez <strong>(ellenőrizendő: gyártói
+adatlap)</strong>. A próba során a 3 perc utáni kikapcsolás azt mutatja,
+hogy a kapacitás gyakorlatilag összeomlott. A mérési igazoláshoz a
+terhelést leválasztva meg kell mérni az akkumulátor feszültségét, majd a
+feltöltési ciklus után terheléses kapacitásmérést kell végezni. A
+katalógus 15 perce kisebb, mint a képlet 24,9 perce
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>24</mn><mo>⋅</mo><mn>12</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>8</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn><mi>/</mi><mn>500</mn><mo>≈</mo><mn>0</mn><mo>,</mo><mn>415</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext></mrow><annotation encoding="application/x-tex">24 \cdot 12 \cdot 0{,}8 \cdot 0{,}9 / 500 \approx 0{,}415\,\text{h}</annotation></semantics></math>),
+mert nagy kisütőáramnál a kivehető kapacitás csökken – ez nem hiba. A
+javítás: az akkumulátorcsomag cseréje, a töltő feszültségének
+ellenőrzése, és a hőmérséklet, valamint a korábbi mélykisülések
+dokumentálása.</p>
+<h3 data-number="36.2.14" id="rövid-összefoglaló"><span
+class="header-section-number">36.2.14</span> Rövid összefoglaló</h3>
+<p>A szünetmentes áramforrás (UPS) a hálózati feszültség kiesésekor a
+fogyasztót tovább táplálja, így megelőzi az adatvesztést és a
+folyamatleállást. Három alapvető típusa van: offline (standby),
+line-interaktív és online (dupla konverziós). Az offline UPS
+átkapcsolási idővel dolgozik, a line-interaktív a feszültség-ingadozást
+is szabályozza, az online típus folyamatosan inverterről táplál, ezért
+nincs értékelhető átkapcsolási idő. Az akkumulátoros üzemidőt a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><mo>=</mo><msub><mi>U</mi><mtext mathvariant="normal">akk</mtext></msub><mo>⋅</mo><mi>C</mi><mo>⋅</mo><mtext mathvariant="normal">DOD</mtext><mo>⋅</mo><msub><mi>η</mi><mtext mathvariant="normal">inv</mtext></msub></mrow><annotation encoding="application/x-tex">W_{\text{terh}} = U_{\text{akk}} \cdot C \cdot \text{DOD} \cdot \eta_{\text{inv}}</annotation></semantics></math>
+képletből, majd a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><msub><mi>W</mi><mtext mathvariant="normal">terh</mtext></msub><mi>/</mi><msub><mi>P</mi><mtext mathvariant="normal">terh</mtext></msub></mrow><annotation encoding="application/x-tex">t = W_{\text{terh}} / P_{\text{terh}}</annotation></semantics></math>
+összefüggésből lehet közelítőleg meghatározni. Az ólom-savas akkumulátor
+mélykisülését kerülni kell, a Li-ion rendszereknél a BMS védelmet nyújt,
+de a kapacitásadatokat a gyártó adatlapján kell ellenőrizni.
+Aggregátoros betáplálásnál automatikus átkapcsoló (ATS) választja ki a
+hálózati vagy generátoros oldalt; a két kapcsoló reteszelése kötelező,
+hogy a hálózat és a generátor soha ne kapcsolódjon össze.
+<strong>Továbbvitt eredmény.</strong> A szünetmentes áramforrást a <a
+href="ve133.html">Napelemes rendszerek és háztartási méretű kiserőmű</a>
+alfejezet is használja, mert a biztonsági világítás és egyes kritikus
+fogyasztók ellátása UPS-sel és tartalékbetáplálással egészülhet ki; az
+ottani rendszertervezésnél az itt megismert UPS-típusok és
+üzemidő-számítás képezik az alapot. A munkavégzés során minden hálózati
+feszültségű részt az öt biztonsági szabály szerint kell
+feszültségmentesíteni, és az egyenáramú akkumulátoros oldalt is
+feszültség alatt lévő, veszélyes körként kell kezelni.</p>
+<h3 data-number="36.2.15" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">36.2.15</span> Források és ellenőrzési
+hiányok</h3>
+<p>A leírt UPS-típusok, az akkumulátor-energiaszámítás és az ATS
+reteszelés elve a klasszikus villamosipari ismereteken alapul. A
+szabványok – MSZ EN 62040 sorozat, MSZ HD 60364 sorozat, MSZ EN
+60947-6-1 (az MSZ EN 60204-1 csak gépbe épített aggregátornál) – pontos
+szakaszait, az akkumulátorokra vonatkozó kapacitásadatokat, a
+mélykisülési tényezőket és az átkapcsolási időket a kiadás előtt
+ellenőrizni kell. A gyártói adatlapokon szereplő katalógusértékek, az
+aggregátor dinamikus terhelhetősége és a hálózati engedélyes aktuális
+csatlakozási előírásai szintén ellenőrzendők. <strong>(ellenőrizendő:
+szabványok, gyártói adatlapok, hálózati engedélyes
+előírásai)</strong></p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve131.html">← 36.1 Fázisjavítás méretezése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve133.html">36.3 Napelemes rendszerek és háztartási méretű kiserőmű →</a></div>
+</nav>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lámpaszám-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="E">Megvilágítás E</label><input id="E" type="range" min="50" max="1000" step="10" value="500" aria-label="Megvilágítás E"><output id="E_o" for="E"></output></div>
+<div class="row"><label for="w">Helyiség szélessége</label><input id="w" type="range" min="2" max="30" step="0.5" value="5" aria-label="Helyiség szélessége"><output id="w_o" for="w"></output></div>
+<div class="row"><label for="d">Helyiség hossza</label><input id="d" type="range" min="2" max="40" step="0.5" value="6" aria-label="Helyiség hossza"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="phi">Egy lámpatest fényárama Φ</label><input id="phi" type="range" min="500" max="20000" step="100" value="3600" aria-label="Egy lámpatest fényárama Φ"><output id="phi_o" for="phi"></output></div>
+<div class="row"><label for="UF">Hasznosítási tényező UF</label><input id="UF" type="range" min="0.2" max="0.9" step="0.01" value="0.6" aria-label="Hasznosítási tényező UF"><output id="UF_o" for="UF"></output></div>
+<div class="row"><label for="MF">Karbantartási tényező MF</label><input id="MF" type="range" min="0.4" max="1" step="0.01" value="0.85" aria-label="Karbantartási tényező MF"><output id="MF_o" for="MF"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 250" role="img" aria-label="Lámpaszám a helyiség méretéből, a szükséges megvilágításból, a fényáramból, a hasznosítási és a karbantartási tényezőből, a lámpák elrendezésének vázlatával"></svg>
+<p class="small">Az átlagos megvilágítást adó hasznosítási-tényező módszer; az egyenletességhez az elrendezést külön kell tervezni. Az UF és MF gyártói adat (itt tanulási példaérték); a megvilágítási irányértékek ellenőrizendők (MSZ EN 12464-1). Az elrendezésrajz csak szemléltető rács.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"E":"lx", "w":"m", "d":"m", "phi":"lm", "UF":"", "MF":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const A=v.w*v.d, k=v.phi*v.UF*v.MF, nr=v.E*A/k, n=Math.max(1,Math.ceil(nr-1e-9)), Et=n*k/A;
+const sc=Math.min(300/v.w,200/v.d), RW=v.w*sc, RH=v.d*sc, x0=20, y0=20;
+el("rect",{x:x0,y:y0,width:RW,height:RH,fill:"none",stroke:css("--line"),"stroke-width":2});
+const cols=Math.max(1,Math.min(n,Math.round(Math.sqrt(n*v.w/v.d)))), rows=Math.ceil(n/cols);
+for(let i=0;i<n;i++){const r=Math.floor(i/cols), c=i%cols, inRow=(r===rows-1)?n-(rows-1)*cols:cols;
+ const cx=x0+RW*(c+.5)/inRow, cy=y0+RH*(r+.5)/rows;
+ el("rect",{x:cx-6,y:cy-3,width:12,height:6,fill:css("--hl2"),stroke:css("--line")});}
+el("text",{x:x0+RW/2,y:y0+RH+18,"text-anchor":"middle","font-size":12},fmt(v.w,1)+" m × "+fmt(v.d,1)+" m = "+fmt(A,1)+" m²");
+el("text",{x:370,y:70,"font-size":13,fill:css("--muted")},"Szükséges lámpaszám");
+el("text",{x:370,y:115,"font-size":44,"font-weight":"bold"},n+" db");
+el("text",{x:370,y:145,"font-size":13},"n = E·A/(Φ·UF·MF) = "+fmt(nr)+"");
+el("text",{x:370,y:170,"font-size":13},"tényleges E = "+fmt(Et,0)+" lx");
+status("n = "+v.E+"·"+fmt(A,1)+" / ("+v.phi+"·"+fmt(v.UF)+"·"+fmt(v.MF)+") = "+fmt(nr)+" → felfelé kerekítve <b>"+n+" lámpatest</b>; tényleges átlagos megvilágítás "+fmt(Et,0)+" lx "+(Et>=v.E?"<span class='ok'>(eléri az előírtat)</span>":"<span class='bad'>(nem éri el)</span>")+". Alapeset: 500 lx, 30 m², 3600 lm, UF 0,60, MF 0,85 → 8,17 → 9 db, 551 lx.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

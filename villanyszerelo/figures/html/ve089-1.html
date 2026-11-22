@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transzformátor üresjárási feszültsége</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="U1">Primer feszültség U1</label><input id="U1" type="range" min="0" max="260" step="1" value="230" aria-label="Primer feszültség U1"><output id="U1_o" for="U1"></output></div>
+<div class="row"><label for="U2n">Szekunder névleges U2n (230 V primerre)</label><input id="U2n" type="range" min="6" max="110" step="1" value="24" aria-label="Szekunder névleges U2n (230 V primerre)"><output id="U2n_o" for="U2n"></output></div>
+<div class="row"><label for="P">Szekunder teljesítmény P2 (a példához)</label><input id="P" type="range" min="10" max="500" step="1" value="96" aria-label="Szekunder teljesítmény P2 (a példához)"><output id="P_o" for="P"></output></div>
+<div class="row"><label for="cf">cosφ2</label><input id="cf" type="range" min="0.3" max="1" step="0.05" value="0.85" aria-label="cosφ2"><output id="cf_o" for="cf"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 270" role="img" aria-label="A szekunder üresjárási feszültség a primer feszültség egyenesen arányos függvénye az áttételtől függően, valamint az áram- és teljesítményviszonyok"></svg>
+<p class="small">Ideális közelítés (U1/U2 ≈ N1/N2 = a); a valóságos transzformátor üresjárási feszültsége kissé eltérhet, tervezéshez a gyártói adat szükséges (ellenőrizendő). Alapeset: 230/24 V, 96 W, cosφ2 = 0,85 → I2 = 4,71 A, I1 = 0,492 A, S = 113 VA.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"U1":"V", "U2n":"V", "P":"W", "cf":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const a=230/v.U2n, U20=v.U1/a, I2=v.P/(v.U2n*v.cf), I1=I2/a, Sva=v.U2n*I2;
+const L=60,R=540,T=15,B=220, X=u=>L+u/270*(R-L), ym=Math.ceil(Math.max(30,v.U2n*1.2)/20)*20, Y=u=>B-u/ym*(B-T);
+el("line",{x1:L,x2:R,y1:B,y2:B,stroke:css("--line")});el("line",{x1:L,x2:L,y1:T,y2:B,stroke:css("--line")});
+[0,50,100,150,200,250].forEach(u=>{el("text",{x:X(u),y:B+16,"text-anchor":"middle","font-size":12},u);el("line",{x1:X(u),x2:X(u),y1:T,y2:B,stroke:css("--grid")});});
+[0,0.25,0.5,0.75,1].forEach(f=>{const y=f*ym;el("text",{x:L-6,y:Y(y)+4,"text-anchor":"end","font-size":12},fmt(y,0));el("line",{x1:L,x2:R,y1:Y(y),y2:Y(y),stroke:css("--grid")});});
+el("line",{x1:X(0),y1:Y(0),x2:X(260),y2:Y(260/a),stroke:css("--hl"),"stroke-width":3});
+el("line",{x1:X(230),x2:X(230),y1:T,y2:B,stroke:css("--muted"),"stroke-dasharray":"4 4"});
+el("line",{x1:X(v.U1),x2:X(v.U1),y1:Y(U20),y2:B,stroke:css("--hl2"),"stroke-dasharray":"5 3"});
+el("line",{x1:L,x2:X(v.U1),y1:Y(U20),y2:Y(U20),stroke:css("--hl2"),"stroke-dasharray":"5 3"});
+el("circle",{cx:X(v.U1),cy:Y(U20),r:7,fill:css("--hl2")});
+el("text",{x:(L+R)/2,y:B+36,"text-anchor":"middle","font-size":13},"primer feszültség U1 (V)");
+el("text",{x:14,y:(T+B)/2,"font-size":13,transform:"rotate(-90 14 "+((T+B)/2)+")","text-anchor":"middle"},"U20 (V)");
+status("Áttétel <b>a = 230/"+v.U2n+" = "+fmt(a)+"</b>; U1 = "+v.U1+" V esetén az üresjárási szekunder feszültség <b>U20 = U1/a = "+fmt(U20)+" V</b>. "+
+ "Terheléssel (névleges U2n, P2 = "+v.P+" W, cosφ2 = "+fmt(v.cf)+"): I2 = "+fmt(I2)+" A, I1 ≈ I2/a = "+fmt(I1,3)+" A, S = "+fmt(Sva,0)+" VA (U1·I1 = "+fmt(230*I1,0)+" VA).");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

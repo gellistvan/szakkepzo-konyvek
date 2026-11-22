@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fázisjavítási kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="P">Hatásos teljesítmény P</label><input id="P" type="range" min="1" max="200" step="1" value="30" aria-label="Hatásos teljesítmény P"><output id="P_o" for="P"></output></div>
+<div class="row"><label for="c1">Kezdeti cos φ1</label><input id="c1" type="range" min="0.5" max="0.95" step="0.01" value="0.75" aria-label="Kezdeti cos φ1"><output id="c1_o" for="c1"></output></div>
+<div class="row"><label for="c2">Cél cos φ2</label><input id="c2" type="range" min="0.85" max="1.0" step="0.01" value="0.95" aria-label="Cél cos φ2"><output id="c2_o" for="c2"></output></div>
+<div class="row"><label for="st">Lépcső (1: 2,5; 2: 5; 3: 10; 4: 12,5 kvar)</label><input id="st" type="range" min="1" max="4" step="1" value="2" aria-label="Lépcső (1: 2,5; 2: 5; 3: 10; 4: 12,5 kvar)"><output id="st_o" for="st"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Fázisjavítási kalkulátor és teljesítmény-háromszög: P, cos φ1, cos φ2 és lépcsőméret csúszkával"></svg>
+<p class="small">A képletek a fejezet (5)–(7) összefüggései és a 4. feladat delta-kapacitás képlete (U_v = 400 V, 50 Hz). A lépcsőméretek szemléltető katalógusértékek (ellenőrizendő: gyártói katalógus). A számított érték nem helyettesíti a mérésen alapuló méretezést és a rezonanciavizsgálatot.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"P":"kW", "c1":"", "c2":"", "st":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const STEP=[2.5,5,10,12.5][v.st-1], c1=v.c1, c2=Math.max(v.c2,v.c1);
+const t1=Math.tan(Math.acos(c1)), t2=Math.tan(Math.acos(c2));
+const Q1=v.P*t1, Q2=v.P*t2, QC=Q1-Q2, S1=v.P/c1, S2=v.P/c2;
+const n=Math.ceil(QC/STEP-1e-9), QCr=n*STEP, Q2r=Q1-QCr, cr=v.P/Math.hypot(v.P,Q2r);
+const Cd=QC*1000/(3*2*Math.PI*50*400*400)*1e6, dI=(1-Math.hypot(v.P,Q2r)/S1)*100;
+// háromszög: skála a Q1 / P legnagyobbikára
+const L=40,B=270, sc=Math.min(320/v.P, 240/Math.max(Q1,1));
+const X=p=>L+p*sc, Y=q=>B-q*sc;
+function arr(x1,y1,x2,y2,col,dash,w){el("line",{x1:x1,y1:y1,x2:x2,y2:y2,stroke:col,"stroke-width":w||2.5,"stroke-dasharray":dash||""});
+ const a=Math.atan2(y2-y1,x2-x1),h=10;el("path",{d:"M"+x2+" "+y2+" L"+(x2-h*Math.cos(a-0.4))+" "+(y2-h*Math.sin(a-0.4))+" L"+(x2-h*Math.cos(a+0.4))+" "+(y2-h*Math.sin(a+0.4))+"Z",fill:col});}
+const ln=css("--line"), hl=css("--hl"), hl2=css("--hl2");
+arr(X(0),Y(0),X(v.P),Y(0),ln); arr(X(v.P),Y(0),X(v.P),Y(Q1),ln); arr(X(0),Y(0),X(v.P),Y(Q1),ln,"7 5",1.8);
+arr(X(v.P)+6,Y(Q1),X(v.P)+6,Y(Q2r),hl2,"",4); arr(X(0),Y(0),X(v.P),Y(Q2r),hl,"2 4",2.2);
+el("text",{x:X(v.P/2),y:B+18,"text-anchor":"middle","font-size":13},"P = "+fmt(v.P,0)+" kW");
+el("text",{x:X(v.P)-8,y:Y(Q1*0.42),"text-anchor":"end","font-size":13},"Q1 = "+fmt(Q1,1)+" kvar");
+el("text",{x:X(v.P)+14,y:Y((Q1+Q2r)/2),"font-size":13,fill:hl2},"−QC = "+fmt(QCr,1)+" kvar");
+el("text",{x:X(v.P)+14,y:Y(Q2r/2)+4,"font-size":13},"Q2 = "+fmt(Q2r,1)+" kvar");
+el("text",{x:X(v.P*0.45),y:Y(Q1*0.45)-8,"text-anchor":"end","font-size":13},"S1 = "+fmt(S1,1)+" kVA");
+let h="Szükséges Q<sub>C</sub> = P(tan φ1 − tan φ2) = <b>"+fmt(QC,1)+" kvar</b> (Q1 = "+fmt(Q1,1)+", Q2 = "+fmt(Q2,1)+" kvar). ";
+h+="Lépcsők: <b>"+n+" × "+fmt(STEP,1)+" kvar = "+fmt(QCr,1)+" kvar</b> → elért cos φ ≈ <b>"+fmt(cr,3)+"</b>; a hálózati áram ≈ "+fmt(dI,0)+" %-kal csökken. ";
+h+="Delta-kapcsolás, 400 V: C<sub>Δ</sub> ≈ <b>"+fmt(Cd,0)+" µF</b> fázisonként (a számított Q<sub>C</sub>-re).";
+if(Q2r<-0.01) h+=" <span class='bad'>A lépcsőzés miatt a telep túlkompenzál (kapacitív).</span>";
+else if(c2>0.98) h+=" <span class='bad'>cos φ2 > 0,98: terhelésváltozáskor túlkompenzálás veszélye.</span>";
+status(h);
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>41.2 Vezérlések építése: direkt, reverzáló, Y-Δ –
+Villanyszerelő – villamos berendezés- és készülékszerelő
+szakirány</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz9">IX. RÉSZ – Gyakorlati útmutatók</a> › <a href="index.html#vech40">41 Gépek és vezérlések gyakorlatai</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve147.html">← 41.1 Motor kapocsbekötése és beüzemelése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve149.html">41.3 Transzformátor- és gépmérések →</a></div>
+</nav>
+<h2 data-number="41.2" id="ve148"><span
+class="header-section-number">41.2</span> Vezérlések építése: direkt,
+reverzáló, Y-Δ</h2>
+<h3 data-number="41.2.1" id="motiváció"><span
+class="header-section-number">41.2.1</span> Motiváció</h3>
+<p>Egy kapcsolószekrényben a motor nem indul, a mágneskapcsoló zúg, a
+biztosító leold, vagy a forgásirány rossz: ilyen helyzetekben a
+szerelőnek a kapcsolási rajz alapján gyorsan meg kell találnia a hibát.
+A tanműhelyben a vezérlések építése nem egyszerűen „vezetékek
+összekötése”: a rajz–valóság–mérés hármas elsajátítása dönti el, hogy a
+kész kapcsolás elsőre működik-e, és hogy a hibát meg tudjuk-e találni
+feszültség alatt nem tapogatva. Ebben az alfejezetben a három
+legalapvetőbb motorvezérlést építjük meg fokozatosan: a direkt
+(önfenntartásos) indítást, a reverzáló (irányváltó) kapcsolást és a
+csillag–delta (Y-Δ) indítást. Mindegyiknél az építés előtti ellenőrzés,
+a bekötési logika, a kipróbálás és a dokumentálás a hangsúly.</p>
+<h3 data-number="41.2.2"
+id="szemléletes-kép-direkt-indítás-vezérlőáramköre"><span
+class="header-section-number">41.2.2</span> Szemléletes kép: direkt
+indítás vezérlőáramköre</h3>
+<p>A direkt indítás a legegyszerűbb motorvezérlés: egy mágneskapcsoló
+(K1) kapcsolja a motor főáramkörét, a vezérlőáramkörben pedig az indító
+nyomógomb egy pillanatnyi zárása behúzza K1-et, és egy K1 segédérintkező
+(13–14) önfenntartja a kapcsolást. A stop nyomógomb (S0) sorosan bontja
+az áramkört.</p>
+<figure>
+<img src="assets/ve148-diagram-1.png"
+alt="Direkt indítás vezérlőáramköre - Önfenntartásos mágneskapcsoló-vezérlés: L → F2 vezérlőbiztosító → F3 hőkioldó 95-96 (NC) → S0 STOP (NC) → (S1 START (NO) ∥ K1 13-14 önfenntartó) → K1 tekercs (A1-A2) → N. Túlterhelésnél az F3 95-96 bont, és K1 elenged." />
+<figcaption aria-hidden="true">Direkt indítás vezérlőáramköre -
+Önfenntartásos mágneskapcsoló-vezérlés: L → F2 vezérlőbiztosító → F3
+hőkioldó 95-96 (NC) → S0 STOP (NC) → (S1 START (NO) ∥ K1 13-14
+önfenntartó) → K1 tekercs (A1-A2) → N. Túlterhelésnél az F3 95-96 bont,
+és K1 elenged.</figcaption>
+</figure>
+<p>A rajzon a vezérlőáramkör fázisa (itt tanműhelyben 24 V AC, de
+iparban gyakran 230 V AC) a bal oldalról indul. Az F2 vezérlőbiztosító
+és az F3 hőkioldó 95–96 bontóérintkezője után az S0 NC stop nyomógomb
+következik. Amikor a start (S1) nyomógombot megnyomjuk, a K1 tekercs
+áramot kap, behúz, és a 13–14 segédérintkezője párhuzamosan zárja az
+S1-et. A start gomb elengedése után az áram a 13–14 érintkezőn keresztül
+folyik tovább, így a kapcsolás „beragad”. A stop megnyomásával
+megszakítjuk a tekercs áramát, és a kapcsolás kiesik.</p>
+<p>A főáramkörben a K1 főérintkezői kapcsolják a motort; a hőkioldó (F3)
+a motor vezetékeiben méri az áramot, és túlterhelésnél a vezérlőkörbe
+kötött 95–96 bontóérintkezőjével ejti K1-et:</p>
+<figure>
+<img src="assets/ve148-diagram-2.png"
+alt="Direkt indítás főáramköre - L1, L2, L3 → Q1 háromfázisú kismegszakító/motorvédő → K1 főérintkezői → F3 hőkioldó (a motor névleges áramára állítva) → M1 (U1, V1, W1); a motor fém testén PE. A K1 tekercsét a vezérlőáramkör kapcsolja." />
+<figcaption aria-hidden="true">Direkt indítás főáramköre - L1, L2, L3 →
+Q1 háromfázisú kismegszakító/motorvédő → K1 főérintkezői → F3 hőkioldó
+(a motor névleges áramára állítva) → M1 (U1, V1, W1); a motor fém testén
+PE. A K1 tekercsét a vezérlőáramkör kapcsolja.</figcaption>
+</figure>
+<h3 data-number="41.2.3" id="a-vezérlésépítés-általános-rendje"><span
+class="header-section-number">41.2.3</span> A vezérlésépítés általános
+rendje</h3>
+<p><strong>Szabály.</strong> Minden vezérlésépítést ugyanazzal a hármas
+módszerrel végezzünk: <em>rajz</em> → <em>valóság</em> → <em>mérés</em>.
+Először a rajzot értelmezzük és a kapcsolást bekötjük, majd
+szemrevételezéssel és tápfeszültség nélküli mérésekkel ellenőrizzük,
+végül feszültség alatt működési próbát végzünk. Ez megfelel a
+gépvillamos berendezések szerelésénél előírt szemléletnek, amelyet az <a
+href="index.html#vech23">Ellenőrzés, mérés és felülvizsgálat</a>
+fejezetben is használunk (vö. MSZ EN 60204-1 ellenőrzési előírásai;
+ellenőrizendő).</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
+(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
+vonatkozik; hálózati feszültségen önállóan ne végezd. Minden szerelés
+előtt feszültségmentesítünk, és betartjuk az öt biztonsági szabályt:
+lekapcsolás, visszakapcsolás elleni biztosítás, feszültségmentesség
+ellenőrzése, földelés és rövidre zárás, szomszédos feszültség alatti
+részek lefedése.</p>
+<h3 data-number="41.2.4" id="direkt-és-reverzáló-vezérlés-építése"><span
+class="header-section-number">41.2.4</span> Direkt és reverzáló vezérlés
+építése</h3>
+<h4 data-number="41.2.4.1" id="direkt-indítás-építése"><span
+class="header-section-number">41.2.4.1</span> Direkt indítás
+építése</h4>
+<p><strong>Gyakorlat.</strong> A direkt indítás vezérlőáramkörét az
+alábbi anyagokkal építjük fel:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Megnevezés</th>
+<th>Rajzjel</th>
+<th>Példa típus / érték</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mágneskapcsoló</td>
+<td>K1</td>
+<td>3 pólusú főérintkező, 1 NO segédérintkező (13–14), 24 V AC
+tekercs</td>
+</tr>
+<tr>
+<td>Nyomógomb NC</td>
+<td>S0 (STOP)</td>
+<td>piros, bontó érintkező</td>
+</tr>
+<tr>
+<td>Nyomógomb NO</td>
+<td>S1 (START)</td>
+<td>zöld, záró érintkező</td>
+</tr>
+<tr>
+<td>Vezérlőbiztosító</td>
+<td>F2</td>
+<td>2 A, 24 V AC körhöz</td>
+</tr>
+<tr>
+<td>Hőkioldó (motorvédő relé)</td>
+<td>F3</td>
+<td>95–96 bontó, a motor névleges áramára állítva</td>
+</tr>
+<tr>
+<td>Jelzőlámpa (opcionális)</td>
+<td>H1</td>
+<td>24 V AC</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recept.</strong> Direkt indítás bekötési algoritmusa:</p>
+<ol type="1">
+<li><strong>Szereld fel az alkatrészeket</strong> a kapcsolási rajz
+sorrendjében, balról jobbra: biztosító, hőkioldó 95–96 bontója, stop,
+start, mágneskapcsoló.</li>
+<li><strong>Kösd be a táp felőli oldalt</strong>: F2 bemenete a 24 V AC
+fázisra, kimenete az F3 hőkioldó 95. kapcsára; az F3 96. kapcsa az S0 NC
+bemenetére (11. kapocs; régi/egyszerű jelöléssel 1).</li>
+<li><strong>Kösd az S0 kimenetét (12. kapocs; régi jelöléssel
+2)</strong> az S1 NO bemenetére (13. kapocs; régi jelöléssel 3) és a K1
+segédérintkező 13. kapcsára.</li>
+<li><strong>Kösd az S1 kimenetét (14. kapocs; régi jelöléssel
+4)</strong> és a K1 segédérintkező 14. kapcsát közösítve a K1 tekercs A1
+kapcsára.</li>
+<li><strong>Kösd a K1 tekercs A2 kapcsát</strong> a 24 V AC nulla
+visszatérőre.</li>
+<li><strong>Ellenőrizd a csatlakozásokat</strong> a rajz alapján, majd
+mérd meg a folytonosságot.</li>
+</ol>
+<h4 data-number="41.2.4.2"
+id="reverzáló-irányváltó-vezérlés-építése"><span
+class="header-section-number">41.2.4.2</span> Reverzáló (irányváltó)
+vezérlés építése</h4>
+<p>A reverzáló kapcsolás két mágneskapcsolót használ: K1 az előre, K2 a
+hátra irányt kapcsolja. A főáramkörben a két kapcsoló két fázist
+felcserél, ezért <strong>K1 és K2 egyidejű behúzása tilos</strong>, mert
+két fázis közvetlenül zárlatba kerül. A reteszelés két szintű: villamos
+reteszelés (a másik kapcsoló NC segédérintkezője a tekercs áramkörében)
+és mechanikus reteszelés (a két mágneskapcsoló közé szerelt mechanikus
+blokk).</p>
+<p><strong>Kapcsolási logika:</strong></p>
+<ul>
+<li>F2 vezérlőbiztosító és F3 hőkioldó 95–96 sorosan a közös ágban, az
+S0 előtt.</li>
+<li>S0 NC stop nyomógomb közös.</li>
+<li>S1 NO start „előre”, K1 tekercs; K1 NO önfenntartó (13–14) az
+S1-gyel párhuzamosan.</li>
+<li>S2 NO start „hátra”, K2 tekercs; K2 NO önfenntartó (13–14) az S2-vel
+párhuzamosan.</li>
+<li>K2 NC segédérintkező (21–22) a K1 tekercs áramkörében sorosan.</li>
+<li>K1 NC segédérintkező (21–22) a K2 tekercs áramkörében sorosan.</li>
+</ul>
+<p>A főáramkört és a vezérlőkört az alábbi két rajz mutatja. A főkörben
+K2 az L1 és az L3 fázist felcseréli; a vezérlőkörben a két start ág
+közös része F2, F3 95–96 és S0, az egyes ágakban az önfenntartó 13–14 a
+start gombbal párhuzamos, a másik mágneskapcsoló 21–22 bontója pedig a
+tekercs előtt sorosan reteszel.</p>
+<figure>
+<img src="assets/ve148-diagram-3.png"
+alt="Reverzáló indítás főáramköre - K1 (előre) a fázisokat sorrendben (L1→U1, L2→V1, L3→W1), K2 (hátra) az L1 és L3 felcserélésével kapcsolja a motorra; a két mágneskapcsoló egyidejű behúzása fázis–fázis zárlat, ezért villamos és mechanikus reteszelés kell. F3 hőkioldó a közös ágban, a motor névleges áramára állítva; a motortesten PE. A vezeték-keresztezések pont nélkül nem csatlakoznak." />
+<figcaption aria-hidden="true">Reverzáló indítás főáramköre - K1 (előre)
+a fázisokat sorrendben (L1→U1, L2→V1, L3→W1), K2 (hátra) az L1 és L3
+felcserélésével kapcsolja a motorra; a két mágneskapcsoló egyidejű
+behúzása fázis–fázis zárlat, ezért villamos és mechanikus reteszelés
+kell. F3 hőkioldó a közös ágban, a motor névleges áramára állítva; a
+motortesten PE. A vezeték-keresztezések pont nélkül nem
+csatlakoznak.</figcaption>
+</figure>
+<figure id="fig-ve148-1">
+<div class="fig-interactive"><iframe src="figures/html/ve148-1.html" title="Reverzáló motorvezérlés fő- és vezérlőköre kölcsönös villamos reteszeléssel" loading="lazy" style="width:100%;border:0;height:560px"></iframe><noscript><img src="figures/img/ve148-1.png" style="width:90.0%"
+alt="Reverzáló motorvezérlés fő- és vezérlőköre kölcsönös villamos reteszeléssel" /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve148-1.png" style="width:90.0%"
+alt="Reverzáló motorvezérlés fő- és vezérlőköre kölcsönös villamos reteszeléssel" /></details></div>
+<figcaption>Reverzáló vezérlés vezérlőköre: L → F2 → F3 95-96 → S0 → (S1
+∥ K1 13-14) → K2 21-22 → K1, illetve (S2 ∥ K2 13-14) → K1 21-22 → K2 →
+N</figcaption>
+</figure>
+<p>A HTML-kiadásban a vezérlőkör kipróbálható: az S1, S2, S0 gombokkal a
+mágneskapcsolók behúznak és elengednek, az áramot vivő ág kiemelődik, a
+„Mindkét start egyszerre” próba pedig megmutatja, hogy a villamos
+reteszelés miatt csak az egyik mágneskapcsoló húzhat be.</p>
+<p><strong>Ellenőrzés tápfeszültség nélkül.</strong> Mielőtt
+feszültséget adnánk, multiméterrel folytonosságot mérünk:</p>
+<ul>
+<li>Az S0 (STOP, NC) nyugalmi állapotban zárt, megnyomva bont. Ha S1 és
+S2 sincs megnyomva, a vezérlő tápkapocs (F2 kimenete) és a K1, illetve
+K2 A1 kapcsa között nincs folytonosság.</li>
+<li>S1 megnyomva (S0 nyugalomban): a vezérlő tápkapocs és K1 A1 között
+folytonosság van. S1 és S0 egyszerre megnyomva: szakadás (a STOP
+bont).</li>
+<li>K1 kézzel behúzva, S2 megnyomva: a K2 ágában a K1 21–22 bontó
+nyitott, ezért nincs folytonosság K2 A1-ig. Ugyanez fordítva: K2 kézzel
+behúzva, S1 megnyomva: nincs folytonosság K1 A1-ig.</li>
+<li>Az önfenntartó érintkezők kézzel történő behúzásával szimulálható,
+hogy a start gomb elengedése után is zárt marad-e az áramkör.</li>
+</ul>
+<h3 data-number="41.2.5" id="y-δ-vezérlés-és-időrelé-beállítás"><span
+class="header-section-number">41.2.5</span> Y-Δ vezérlés és időrelé
+beállítás</h3>
+<p>Az Y-Δ indítás elvét a <a href="ve115.html">Csillag–delta indítás
+vezérlése</a> alfejezetben már megismertük. Most a gyakorlati építés a
+cél. A vezérlőáramkörben három mágneskapcsoló van:</p>
+<ul>
+<li><strong>K1</strong> – hálózati kapcsoló, a tekercskezdetekre (U1,
+V1, W1) kapcsolja a tápot.</li>
+<li><strong>K2</strong> – csillagkapcsoló, a tekercsvégeket (U2, V2, W2)
+közösítve csillagpontba köti.</li>
+<li><strong>K3</strong> – deltakapcsoló, a tekercsvégeket delta
+mintázatba köti (U1–W2, V1–U2, W1–V2).</li>
+<li><strong>KT</strong> – időrelé, amely az indítási idő letelte után
+átvált csillagról deltára.</li>
+</ul>
+<p><strong>Reteszelés:</strong> K2 és K3 soha nem húzhat egyszerre. A
+főáramkörben ez fáziszárlatot okozna, ezért villamos reteszelés (K2 NC a
+K3 áramkörében, K3 NC a K2 áramkörében) és mechanikus reteszelés is
+szükséges.</p>
+<p>A csillag–delta indítás főáramkörét és vezérlőkörét az alábbi rajzok
+mutatják. A főkörben F3 a tekercsáramkörben van, ezért a motor névleges
+áramának
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msqrt><mn>3</mn></msqrt></mrow><annotation encoding="application/x-tex">1/\sqrt{3}</annotation></semantics></math>-szorosára
+állítjuk; a vezérlőkörben START után K1 és K2 (csillag) húz be, KT méri
+az indítási időt, majd a késleltetve bontó 55–56 ejti K2-t, a
+késleltetve záró 67–68 behúzza K3-at (delta). A K2 és K3 21–22 bontói
+kölcsönösen reteszelnek.</p>
+<figure>
+<img src="assets/ve148-diagram-4.png"
+alt="Csillag–delta (Y-Δ) indítás főáramköre - K1 a hálózatot a tekercskezdetekre (U1, V1, W1) kapcsolja; K2 a végeket (U2, V2, W2) csillagpontba köti; K3 deltába köt (U1–W2, V1–U2, W1–V2: a szabványos kapocstábla függőleges hídjai). F3 a tekercsáramkörben van, ezért a motor névleges áramának 1/√3-szorosára állítjuk. K2 és K3 egyidejű behúzása zárlat: villamos és mechanikus reteszelés kell. A motortesten PE. A vezeték-keresztezések pont nélkül nem csatlakoznak." />
+<figcaption aria-hidden="true">Csillag–delta (Y-Δ) indítás főáramköre -
+K1 a hálózatot a tekercskezdetekre (U1, V1, W1) kapcsolja; K2 a végeket
+(U2, V2, W2) csillagpontba köti; K3 deltába köt (U1–W2, V1–U2, W1–V2: a
+szabványos kapocstábla függőleges hídjai). F3 a tekercsáramkörben van,
+ezért a motor névleges áramának 1/√3-szorosára állítjuk. K2 és K3
+egyidejű behúzása zárlat: villamos és mechanikus reteszelés kell. A
+motortesten PE. A vezeték-keresztezések pont nélkül nem
+csatlakoznak.</figcaption>
+</figure>
+<figure id="fig-ve148-2">
+<div class="fig-interactive"><iframe src="figures/html/ve148-2.html" title="Csillag–delta indítás vezérlőköre időrelével és K2–K3 kölcsönös reteszeléssel" loading="lazy" style="width:100%;border:0;height:600px"></iframe><noscript><img src="figures/img/ve148-2.png" style="width:90.0%"
+alt="Csillag–delta indítás vezérlőköre időrelével és K2–K3 kölcsönös reteszeléssel" /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve148-2.png" style="width:90.0%"
+alt="Csillag–delta indítás vezérlőköre időrelével és K2–K3 kölcsönös reteszeléssel" /></details></div>
+<figcaption>Csillag–delta indítás vezérlőköre: K1 önfenntartással, KT
+időrelé, KT 55-56 → K3 21-22 → K2 (csillag), KT 67-68 → K2 21-22 → K3
+(delta)</figcaption>
+</figure>
+<p>A HTML-kiadásban a START gombbal indítható a folyamat, az
+átkapcsolási idő csúszkával állítható, és lépésről lépésre látszik,
+melyik mágneskapcsoló van behúzva; K2 és K3 egyszerre sosem kap
+feszültséget. Az időrelé kapocsszámai (55–56, 67–68) tipikus jelölések,
+a gyártói adatlap szerint ellenőrizendők.</p>
+<p><strong>Indítási sorrend:</strong></p>
+<ol type="1">
+<li>A start nyomógomb behúzza K1-et, amely önfenntart.</li>
+<li>K1 zárja a K2 áramkörét (a K3 NC érintkezőn keresztül): a motor
+csillagban indul.</li>
+<li>Ezzel egyidejűleg az időrelé (KT) feszültséget kap, és elkezdi mérni
+az indítási időt.</li>
+<li>Az idő lejárta után a KT késleltetett érintkezője bontja K2-t, majd
+egy másik késleltetett érintkezője zárja K3-at.</li>
+<li>A motor deltában fut tovább.</li>
+</ol>
+<p><strong>Időrelé beállítása.</strong> Az átkapcsolási időt úgy kell
+beállítani, hogy a motor csillagban elérje a fordulatszámának 80–90%-át.
+Tipikus értékek: kis motoroknál 3–10 s, nagyobbaknál 10–30 s. A pontos
+időt az adattábla és a terhelés határozza meg; túl rövid idő esetén a
+motor még nem gyorsult fel, és nagy áramlökéssel vált deltába, túl
+hosszú időnél a motor csillagban melegszik. <strong>(ellenőrizendő: a
+konkrét motor gyártói adatlapja és a terhelési viszonyok)</strong>.</p>
+<p><strong>Szabvány.</strong> A gépvillamos berendezések vezérléseire az
+MSZ EN 60204-1, a kapcsolókészülékekre és motorindítókra az MSZ EN 60947
+sorozat vonatkozik. A vezérlési rajzokon az MSZ EN 60617 szerinti
+jelöléseket használjuk. A kapcsolások típusvizsgálati követelményeit, a
+reteszelés kialakítását és az érintkezők terhelhetőségét a gyártói
+adatlapok és a hatályos szabványok rögzítik <strong>(ellenőrizendő:
+aktuális kiadások)</strong>.</p>
+<h3 data-number="41.2.6" id="hibakeresés-és-dokumentáció"><span
+class="header-section-number">41.2.6</span> Hibakeresés és
+dokumentáció</h3>
+<p>A vezérlések építésénél a hibakeresés nem a feszültség alatti
+tapogatásról szól, hanem a tünet → hipotézis → mérés → ok → javítás →
+megelőzés láncolatról. Ezt az algoritmust használjuk később a gyakorlati
+vizsgán is (<a href="ve158.html">Gyakorlati vizsgafeladatok és
+hibakeresés, értékelési szempontok</a> alfejezet).</p>
+<p><strong>Hibakeresési eset.</strong> Tünet: a reverzáló kapcsolás
+„előre” irányban működik, de „hátra” irányban a K2 mágneskapcsoló nem
+húz be, semmi nem történik (csend).</p>
+<ul>
+<li><strong>Hipotézisek:</strong> (1) a K1 NC reteszelő érintkező
+szakadt vagy rossz típusú; (2) a K2 tekercs szakadt; (3) a hátra start
+nyomógomb érintkezője rossz; (4) szakadás a vezérlőágban. (Zúgás –
+feszültséget kapó, de be nem húzó tekercs – esetén alacsony
+tekercsfeszültség, rossz tekercsfeszültség-típus vagy mechanikai
+szorulás gyanús.)</li>
+<li><strong>Mérés:</strong> feszültségmentes állapotban (öt szabály)
+multiméterrel mérjük a vezérlőágat: S0 nyugalomban (zárt), S2 megnyomva,
+K1 nincs behúzva; az F2 kimenete és a K2 A1 kapocs között folytonosságot
+várunk (a tekercs ellenállását külön, A1–A2 között mérjük). Ha nincs
+folytonosság, szakaszosan keressük a hibát: az S2 érintkező, a K1 NC
+érintkező, a tekercs.</li>
+<li><strong>Ok:</strong> a K1 NC érintkezőt tévedésből a K1 NO
+érintkezővel cserélték fel, így álló K1 mellett a K2 ága nem
+záródik.</li>
+<li><strong>Figyelem.</strong> Ez a hiba nem ártalmatlan: előre futás
+közben az S2 megnyomásakor a K1 záró érintkezője épp engedélyezi a K2-t,
+így K1 és K2 egyszerre lehet behúzva, ami a főáramkörben fázis–fázis
+zárlat (mechanikus retesz nélkül biztosan). Ezért a próbát először
+főáramkör nélkül (motor és főérintkezők lekötve) végezzük, és a
+reteszelés ellenőrzése (K1 kézzel behúzva, a K2 ága szakadt) a működési
+próba előfeltétele.</li>
+<li><strong>Javítás:</strong> a megfelelő NC (21–22) érintkezőt
+bekötni.</li>
+<li><strong>Megelőzés:</strong> a kapcsolási rajz alapján minden
+érintkező típusát ellenőrizni, és a bekötés után a reteszelés
+folytonossági ellenőrzését (K1 kézzel behúzva, a K2 ága szakadt) nem
+kihagyni.</li>
+</ul>
+<p><strong>Dokumentáció.</strong> Minden megépített vezérlésről
+jegyzőkönyvet készítünk, amely tartalmazza: a kapcsolási rajz
+azonosítóját, az alkatrészek típusát és névleges adatait, a beállított
+időrelé-értéket, a mérési eredményeket (folytonosság, tekercsellenállás,
+szigetelés), és a működési próba eredményét. Ez a dokumentáció szolgál
+alapul a későbbi felülvizsgálathoz és a vizsgán a szóbeli
+bemutatáshoz.</p>
+<h3 data-number="41.2.7" id="gyakorlati-útmutató"><span
+class="header-section-number">41.2.7</span> Gyakorlati útmutató</h3>
+<p><strong>Cél:</strong> megépíteni a direkt, reverzáló és Y-Δ
+vezérléseket tanműhelyi modellen, és tápfeszültség nélkül, majd
+feszültség alatt ellenőrizni.</p>
+<p><strong>Eszközök és anyagok:</strong> mágneskapcsolók (K1, K2, K3),
+időrelé, nyomógombok (NC/NO), vezérlőbiztosítók, multiméter, 24 V AC
+vagy DC tápegység (törpefeszültség), csatlakozó vezetékek, csavarhúzó,
+fogó, szigetelőszalag, kapcsolási rajz.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
+(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
+vonatkozik; hálózati feszültségen önállóan ne végezd. A
+feszültségmentesítés öt szabályát minden szerelés előtt be kell
+tartani.</p>
+<p><strong>Recept – lépéssor a szereléshez:</strong></p>
+<ol type="1">
+<li><strong>Lekapcsolás és biztosítás.</strong> A modell áramtalanítása,
+a tápegység kikapcsolása, a visszakapcsolás elleni biztosítás.</li>
+<li><strong>Feszültségmentesség ellenőrzése.</strong> Multiméterrel
+mérjük meg a tápoldali kapcsokon a feszültséget.</li>
+<li><strong>Szerelés a rajz szerint.</strong> Először a direkt indítást,
+majd a reverzálót, végül az Y-Δ-t. Minden alkatrészt a rajz pozíciójába
+rögzítsünk.</li>
+<li><strong>Bekötési ellenőrzés tápfeszültség nélkül.</strong>
+Folytonosságméréssel ellenőrizzük az összes áramutat, a reteszeléseket
+és az önfenntartásokat. Rövidzárlatot a tekercs és a kapcsok között ne
+mérjünk.</li>
+<li><strong>Tápfeszültség rákapcsolása (oktató felügyeletével).</strong>
+Kapcsoljuk be a 24 V-os tápegységet.</li>
+<li><strong>Működési próbák.</strong> Direkt indításnál: start → behúz,
+önfenntartás, stop → kiesik. Reverzálónál: előre start → K1 behúz, hátra
+start → K2 behúz, egyszerre ne húzhasson be mindkettő. Y-Δ-nél: start →
+K1+K2 behúz (csillag), az idő letelte után K2 ejt, K3 behúz
+(delta).</li>
+<li><strong>Hibakeresés, ha nem működik.</strong> A hibakeresési
+algoritmus szerint mérjük a tekercsek feszültségét, az érintkezők
+folytonosságát.</li>
+<li><strong>Dokumentálás.</strong> A mérési eredményeket és a beállított
+értékeket jegyzőkönyvben rögzítjük.</li>
+</ol>
+<p><strong>Ellenőrzési pontok:</strong></p>
+<ul>
+<li>A tekercsellenállás mérése: a 24 V-os tekercsek tipikusan néhány tíz
+ohmosak. Ha 0 ohmot mérünk, rövidzár van; ha végtelen, szakadt a
+tekercs.</li>
+<li>A reteszelő NC érintkezők folytonosságát a behúzott állapotban is
+ellenőrizzük: a K1 kézzel benyomva a K2 áramköre szakadt legyen, és
+fordítva.</li>
+<li>Az időrelé beállítását stopperrel ellenőrizzük: a beállított idő
+leteltével a kimenetnek váltania kell.</li>
+</ul>
+<h3 data-number="41.2.8" id="tipikus-hibák"><span
+class="header-section-number">41.2.8</span> Tipikus hibák</h3>
+<ol type="1">
+<li><strong>Az önfenntartó érintkezőt a start nyomógombbal sorosan
+kötik.</strong> A kapcsolás nem marad behúzva, mert a start gomb
+elengedésekor az áramkör megszakad. Helyes: a 13–14 érintkezőt az
+S1-gyel párhuzamosan kell kötni.</li>
+<li><strong>A reteszelő NC érintkezők felcserélése vagy
+elhagyása.</strong> Reverzálónál mindkét irány behúzhat, ami a
+főáramkörben fáziszárlatot okoz; a biztosító leold, vagy a kapcsoló
+összeég. Helyes: mindkét irány tekercsének áramkörébe a másik kapcsoló
+NC érintkezőjét sorosan bekötni.</li>
+<li><strong>Az Y-Δ időrelé átkapcsolási idejét túl rövidre
+állítják.</strong> A motor csillagban nem gyorsul fel kellően, és a
+delta átváltáskor nagy áramlökés keletkezik, ami leoldhatja a
+túláramvédelmet. Helyes: az időt a motor és a terhelés alapján úgy
+megválasztani, hogy a motor elérje a 80–90%-os fordulatszámot.</li>
+<li><strong>A főáramkörben a K2 és K3 kapcsolók tekercsvégekhez való
+bekötését felcserélik.</strong> A motor nem delta mintázatba kapcsol,
+hanem például egy tekercsre nem jut feszültség, vagy rossz fázissorrend
+alakul ki. Helyes: a kapocsjelölések (U1, V1, W1, U2, V2, W2) szerinti
+bekötés.</li>
+</ol>
+<h3 data-number="41.2.9" id="önellenőrzés"><span
+class="header-section-number">41.2.9</span> Önellenőrzés</h3>
+<ol type="1">
+<li><strong>Igaz vagy hamis?</strong> A direkt indításnál az önfenntartó
+érintkezőt a stop nyomógombbal sorosan kell kötni. Indokold.</li>
+<li><strong>Miért kell reteszelés a reverzáló kapcsolásban?</strong>
+Sorold fel a két reteszelési módot.</li>
+<li><strong>Számítsd ki</strong> a vezérlőáramköri biztosító áramát, ha
+három mágneskapcsoló tekercse egyenként 8 W-ot fogyaszt 24 V DC-n, és az
+időrelé 2 W-ot fogyaszt ugyanazon a feszültségen. Mekkora legyen a
+biztosító névleges árama?</li>
+<li><strong>Mi a hiba ebben a kapcsolásban?</strong> Egy tanuló a Y-Δ
+vezérlésnél a K2 és K3 mágneskapcsolók NC reteszelő érintkezőit
+kihagyta, és csak mechanikus reteszelést szerelt be. Mi történhet, ha a
+mechanikus reteszelés elhasználódik?</li>
+<li><strong>Számítási feladat:</strong> Egy 24 V DC-s kivitelű K1
+tekercs ellenállása 60 Ω. Mekkora az árama és a teljesítménye 24 V DC-n?
+Miért nem lehet ugyanígy számolni egy 24 V AC-s tekercs áramát?</li>
+<li><strong>Rajzolvasás:</strong> A direkt indítás rajzán az S1 start
+nyomógomb kimenete (14. kapocs) és a K1 önfenntartó érintkező 14. kapcsa
+közösítve van. Miért szükséges ez a közösítés?</li>
+</ol>
+<h3 data-number="41.2.10" id="feladatok"><span
+class="header-section-number">41.2.10</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Rajzold le a direkt indítás
+vezérlőáramkörét kapcsolási rajzon, és nevezd meg az alkatrészeket,
+valamint a kapcsok jelölését.</p>
+<p><strong>2. feladat (A).</strong> Sorold fel a reverzáló vezérlésben
+használt kontaktusok típusait (NO/NC) és azok szerepét.</p>
+<p><strong>3. feladat (B).</strong> Egy Y-Δ indító vezérlőáramkörében a
+K1, K2, K3 mágneskapcsolók tekercsei egyenként 10 VA tartóteljesítményt
+vesznek fel 230 V AC-n, az időrelé 3 VA-t. Számítsd ki a vezérlőáramkör
+látszólagos teljesítményét és a tartóáramot. Mekkora legyen a
+vezérlőbiztosító árama, ha a tekercsek egyidejűleg legfeljebb ketten
+húznak be (K1+K2 vagy K1+K3)?</p>
+<p><strong>4. feladat (B).</strong> Tervezd meg a reverzáló vezérlés
+huzalozási rajzát: a K1 és K2 mágneskapcsolók tekercseit, a reteszelő NC
+érintkezőket és az önfenntartó NO érintkezőket. A rajzot írd le
+szövegesen vagy diagramblokkban.</p>
+<p><strong>5. feladat (C).</strong> Hibaelemzés: A Y-Δ vezérlésnél a
+start gomb megnyomásakor K1 behúz, de K2 nem húz be, a motor áll, és nem
+vesz fel áramot (lakatfogó: 0 A). Sorold fel a lehetséges hibákat, és
+írd le a hibakeresési lépéseket feszültségmentes állapotban.</p>
+<p><strong>6. feladat (D).</strong> Gyakorlati feladat: Építsd meg a
+direkt indítás vezérlőáramkörét 24 V AC törpefeszültséggel. Mérd meg a
+K1 tekercs áramát behúzott állapotban (24 V AC körben soros
+multiméterrel az A-tartományban – a mérőzsinór az A-aljzatban, mérés
+után vissza a V-aljzatba –, vagy mA-felbontású lakatfogóval). Ellenőrizd
+az önfenntartást: a start gomb elengedése után a kapcsolás maradjon
+behúzva. Dokumentáld a mérést: a mért feszültség, áram,
+tekercsellenállás.</p>
+<h3 data-number="41.2.11" id="megoldások"><span
+class="header-section-number">41.2.11</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li><strong>Hamis.</strong> Az önfenntartó érintkezőt a start
+nyomógombbal párhuzamosan kell kötni. Soros kötésnél a start
+elengedésekor az áram megszakad, a kapcsoló kiesik.</li>
+<li>A reteszelés azért kell, mert a reverzáló kapcsolásnál a két
+mágneskapcsoló egyidejű behúzása két fázis közvetlen zárlatát okozná.
+Villamos reteszelés (a másik kapcsoló NC érintkezője a tekercs
+áramkörében) és mechanikus reteszelés (a két mágneskapcsoló közötti
+mechanikus blokk).</li>
+<li>Teljes teljesítmény:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mn>3</mn><mo>⋅</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>+</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>=</mo><mn>26</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P = 3 \cdot 8\,\text{W} + 2\,\text{W} = 26\,\text{W}</annotation></semantics></math>.
+Áram:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>P</mi><mi>U</mi></mfrac><mo>=</mo><mfrac><mrow><mn>26</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><mrow><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow></mfrac><mo>=</mo><mn>1</mn><mo>,</mo><mn>08</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = \frac{P}{U} = \frac{26\,\text{W}}{24\,\text{V}} = 1{,}08\,\text{A}</annotation></semantics></math>.
+A biztosítót 1,6 A-re vagy 2 A-re választjuk, hogy a bekapcsolási
+áramlökés ne okozza leoldást.</li>
+<li>Ha a villamos reteszelés hiányzik, és a mechanikus reteszelés
+elhasználódik (kopás, szennyeződés), mindkét mágneskapcsoló egyszerre
+behúzhat, ami a főáramkörben fáziszárlatot okoz. A védelmek leoldanak,
+de a kapcsoló összeéghet, és balesetveszély alakul ki.</li>
+<li>Ohm törvénye:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>U</mi><mi>R</mi></mfrac><mo>=</mo><mfrac><mrow><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>60</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = \frac{U}{R} = \frac{24\,\text{V}}{60\,\Omega} = 0{,}4\,\text{A}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mi>U</mi><mo>⋅</mo><mi>I</mi><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>9</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P = U \cdot I = 24\,\text{V} \cdot 0{,}4\,\text{A} = 9{,}6\,\text{W}</annotation></semantics></math>
+(DC tekercsre). Váltakozó áramú tekercsnél az áramot az impedancia
+(induktív reaktancia) szabja meg, a DC-ellenállás ennek csak kis része,
+ezért az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mi>/</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">U/R</annotation></semantics></math>
+becslés félrevisz (a meghúzási áram ráadásul a tartóáram sokszorosa); AC
+tekercs áramát az adatlap VA-értékéből számoljuk:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mi>S</mi><mi>/</mi><mi>U</mi></mrow><annotation encoding="application/x-tex">I = S/U</annotation></semantics></math>.</li>
+<li>A közösítés biztosítja, hogy az áram a start gomb elengedése után a
+K1 önfenntartó érintkezőn keresztül is eljusson a tekercshez. Ha nem
+közösítenénk, az önfenntartó érintkező nem tudná átvenni a start gomb
+szerepét.</li>
+</ol>
+<p><strong>Feladatok – megoldások</strong></p>
+<p><strong>1. feladat (A).</strong> A kapcsolási rajz az alábbi áramutat
+tartalmazza: a 24 V AC fázisról az F2 biztosítón és az F3 hőkioldó 95–96
+bontóján át az S0 NC stop nyomógomb 11. kapcsára, onnan (12. kapocs) az
+S1 NO start 13. kapcsára, onnan (14. kapocs) a K1 tekercs A1 kapcsára. A
+K1 önfenntartó NO érintkező (13) az S1 bemenetével közösítve, a (14) az
+S1 kimenetével és a K1 A1 kapcsával közösítve. A K1 A2 a nulla
+visszatérőre. A kapcsok: S0: 11–12 (NC, bontó; egyszerűsített jelöléssel
+1–2), S1: 13–14 (NO, záró; 3–4), K1: A1–A2, 13–14. A bontó érintkező
+x1–x2, a záró x3–x4 kapocspárt kap (MSZ EN 60947-5-1; ellenőrizendő:
+aktuális kiadás).</p>
+<p><strong>2. feladat (A).</strong> A reverzáló vezérlésben a
+kontaktusok: - K1 NO 13–14: önfenntartó érintkező a start előre
+nyomógombbal párhuzamosan. - K2 NO 13–14: önfenntartó érintkező a start
+hátra nyomógombbal párhuzamosan. - K1 NC 21–22: reteszelő érintkező a K2
+tekercs áramkörében. - K2 NC 21–22: reteszelő érintkező a K1 tekercs
+áramkörében. - S0 NC: stop nyomógomb, sorosan a teljes
+vezérlőáramkörben. - S1, S2 NO: indító nyomógombok.</p>
+<p><strong>3. feladat (B).</strong> Egyidejűleg legfeljebb K1+K2 vagy
+K1+K3 húz be, tehát két tekercs + időrelé. Látszólagos teljesítmény:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">VA</mtext><mo>+</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">VA</mtext><mo>=</mo><mn>23</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">VA</mtext></mrow><annotation encoding="application/x-tex">S = 2 \cdot 10\,\text{VA} + 3\,\text{VA} = 23\,\text{VA}</annotation></semantics></math>.
+Áram:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>S</mi><mi>U</mi></mfrac><mo>=</mo><mfrac><mrow><mn>23</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">VA</mtext></mrow><mrow><mn>230</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I = \frac{S}{U} = \frac{23\,\text{VA}}{230\,\text{V}} = 0{,}1\,\text{A}</annotation></semantics></math>.
+A meghúzási teljesítmény a tartásinak többszöröse (adatlap), ezért a
+vezérlőbiztosító névleges árama ennél lényegesen nagyobb, például lomha
+0,5–1 A (ellenőrizendő: gyártói adatlap és a vezérlőkör védelme).</p>
+<p><strong>4. feladat (B).</strong> A reverzáló huzalozás leírása: a
+fázis az F2 biztosítón és az F3 95–96 bontón át az S0 NC stop 11.
+kapcsára kerül. Az S0 12. kapcsa két ágra oszlik: az egyik ágon az S1 NO
+start (13–14) és a K1 önfenntartó NO 13–14 párhuzamosan, majd a K2 NC
+21–22 reteszelőn át a K1 tekercs A1 kapcsára; a másik ágon az S2 NO
+start (13–14) és a K2 önfenntartó NO 13–14 párhuzamosan, majd a K1 NC
+21–22 reteszelőn át a K2 tekercs A1 kapcsára. Mindkét tekercs A2 kapcsa
+a nulla visszatérőre csatlakozik. A mechanikus reteszelés a két
+mágneskapcsoló közé szerelt blokk.</p>
+<p><strong>5. feladat (C).</strong> Csak K1 behúzott állapotában a
+tekercsek kezdetei kapnak feszültséget, a végek (U2, V2, W2) nyitottak:
+zárt áramkör nincs, a motor áll, nem vesz fel áramot, és nem is zúg.
+Lehetséges hibák: - A K2 tekercs szakadt vagy nem kap feszültséget. - A
+K3 NC reteszelő érintkezője (21–22) szakadt. - Az időrelé csillagágban
+lévő érintkezője vagy a K2 tekercs ágának egy érintkezője rossz. - A K2
+tekercs áramkörében laza kötés van. (Ha K1 és K2 behúz, de a motor zúg
+és nem indul, az más hiba: a K2 egyik pólusa nem zár, vagy fázis
+hiányzik.) Hibakeresés feszültségmentes állapotban: multiméterrel
+folytonosságot mérünk a vezérlő tápkapocs és a K2 A1 között a K1 kézzel
+behúzott állapotában. Ha nincs folytonosság, szakaszonként mérünk: a K3
+NC érintkező, az időrelé érintkezője, a K2 tekercs ellenállása. Ha a
+tekercs ellenállása végtelen, a tekercs cseréje szükséges. Ha minden
+folytonos, a hiba a tápoldalon keresendő (biztosító, vezeték).</p>
+<p><strong>6. feladat (D).</strong> A mérés során a 24 V AC tápegységről
+behúzott K1 tekercs árama az adatlap VA-értékéből becsülhető:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mi>S</mi><mi>/</mi><mi>U</mi></mrow><annotation encoding="application/x-tex">I = S/U</annotation></semantics></math>
+(pl. 7 VA / 24 V ≈ 0,3 A); a DC-ellenállásból nem számolható. A
+tényleges értéket a 24 V-os törpefeszültségű körben soros multiméterrel
+(váltakozó áramú A-tartomány, a mérőzsinór az A-aljzatban, mérés után
+vissza a V-aljzatba), vagy mA-felbontású lakatfogóval mérjük; a
+hajlékony (Rogowski-tekercses) áramváltós lakatfogó ilyen kis áramra nem
+alkalmas (ellenőrizendő: műszer-adatlap). A mért feszültségnek 24 V-nak
+kell lennie, a tekercsellenállásnak pedig a névleges értéknek
+megfelelőnek. Az önfenntartást úgy ellenőrizzük, hogy a start gombot
+megnyomjuk, elengedjük, és a kapcsolás továbbra is behúzva marad. A
+dokumentációban feljegyezzük a mért feszültséget, áramot,
+tekercsellenállást, és a működési próba eredményét.</p>
+<h3 data-number="41.2.12" id="rövid-összefoglaló"><span
+class="header-section-number">41.2.12</span> Rövid összefoglaló</h3>
+<p>A motorvezérlések építése a rajz–valóság–mérés hármas módszerével
+történik: a kapcsolási rajzot először bekötjük, majd tápfeszültség
+nélkül folytonosságméréssel ellenőrizzük, végül törpefeszültségen
+működési próbát végzünk. A direkt indításnál az önfenntartó érintkezőt
+(13–14) a start nyomógombbal párhuzamosan kötjük; a stop NC nyomógomb
+sorosan bont. A reverzáló kapcsolás két mágneskapcsolót használ, és a
+két irány egyidejű behúzását villamos (NC reteszelő érintkezők) és
+mechanikus reteszeléssel akadályozzuk meg, mert a fáziszárlatot okozna.
+Az Y-Δ indításnál három mágneskapcsoló (K1 hálózat, K2 csillag, K3
+delta) és egy időrelé dolgozik: indításkor K1+K2 húz, majd az idő
+lejárta után K2 ejt, K3 húz; a K2 és K3 egyidejű behúzása tilos. A
+hibakeresés tünet → hipotézis → mérés → ok → javítás → megelőzés
+láncolatban történik, feszültségmentes állapotban. <strong>Továbbvitt
+eredmény.</strong> Az itt tanult rajzolvasási, bekötési és mérési
+módszert használjuk a <a href="ve149.html">Transzformátor- és
+gépmérések</a>, a <a href="ve150.html">Frekvenciaváltó és lágyindító
+paraméterezése</a> és a <a href="ve158.html">Gyakorlati vizsgafeladatok
+és hibakeresés, értékelési szempontok</a> alfejezetekben; a
+dokumentációs fegyelem és a feszültségmentes hibakeresés minden későbbi
+gyakorlat alapfeltétele.</p>
+<h3 data-number="41.2.13" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">41.2.13</span> Források és ellenőrzési
+hiányok</h3>
+<ul>
+<li>MSZ EN 60204-1 (gépek villamos berendezése): a vezérlőáramkörök
+kialakítására, a védelmek és reteszelések követelményeire vonatkozik; a
+konkrét szakaszszámokat és határértékeket ellenőrizni kell.</li>
+<li>MSZ EN 60947 sorozat (kapcsolókészülékek): a mágneskapcsolók
+használati kategóriáit, az érintkezők terhelhetőségét és a motorindítók
+koordinációját rögzíti <strong>(ellenőrizendő: aktuális
+kiadás)</strong>.</li>
+<li>MSZ EN 60617 (rajzjelek): a kapcsolási rajzok szabványos
+jelöléseihez.</li>
+<li>A tekercsellenállás, a bekapcsolási áramlökés és a biztosítóérték
+példaértékek; a tényleges értékeket a gyártói adatlapok és a mindenkori
+szabványok határozzák meg. A 80–90%-os fordulatszámarány az Y-Δ
+átkapcsoláshoz gyakorlati ökölszabály, amely a terheléstől függően
+pontosítandó.</li>
+</ul>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve147.html">← 41.1 Motor kapocsbekötése és beüzemelése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve149.html">41.3 Transzformátor- és gépmérések →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

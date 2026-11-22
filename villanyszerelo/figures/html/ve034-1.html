@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Színkód- és kondenzátorkód-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 150" role="img" aria-label="Négysávos ellenállás sárga, lila, piros, arany sávokkal: 4,7 kΩ ±5 %; a 104K 100V kondenzátorkód bontása 100 nF ±10 %, 100 V."></svg>
+<p class="small">A színek a fejezet táblázata szerint; minden sáv neve és értéke szövegesen is látszik. Tűrésbetűk (J ±5 %, K ±10 %, M ±20 % stb.) és E12/E24 értékek: tanulási adatok, ellenőrizendő (IEC 60062, IEC 60063). A legközelebbi E-érték a logaritmikus távolság szerint.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const D={"colors": [["fekete", 0, 0, null, "#000000"], ["barna", 1, 1, 1, "#7b4a12"], ["vörös (piros)", 2, 2, 2, "#d01c1c"], ["narancs", 3, 3, null, "#f08a00"], ["sárga", 4, 4, null, "#f5d000"], ["zöld", 5, 5, 0.5, "#1f9d2b"], ["kék", 6, 6, 0.25, "#1f5fd0"], ["ibolya (lila)", 7, 7, 0.1, "#7d3cb5"], ["szürke", 8, 8, 0.05, "#8c8c8c"], ["fehér", 9, 9, null, "#ffffff"], ["arany", null, -1, 5, "#c9a227"], ["ezüst", null, -2, 10, "#c0c0c0"]], "letters": {"B": 0.1, "C": 0.25, "D": 0.5, "F": 1, "G": 2, "J": 5, "K": 10, "M": 20}, "e12": [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2], "e24": [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1]};
+if(!document.getElementById("ui")){const u=document.createElement("div");u.id="ui";
+ let h='<p><label>Sávok száma <select id="nb"><option value="4">4</option><option value="5">5</option></select></label></p><p id="bands"></p>';
+ h+='<p><label>Kondenzátorkód <input id="cc" value="104K 100V" size="12"></label> <span id="cr"></span></p>';
+ h+='<p><label>Ellenállás (Ω) <input id="ro" value="653" size="8"></label> <span id="er"></span></p>';
+ u.innerHTML=h;document.getElementById("v").before(u);
+ const opt=(kind)=>D.colors.map((c,i)=>{const ok=kind=="d"?c[1]!==null:kind=="m"?true:c[3]!==null;return ok?'<option value="'+i+'">'+c[0]+'</option>':"";}).join("");
+ const mk=()=>{const n=+document.getElementById("nb").value;let s="";const def=n==4?[4,7,2,10]:[2,0,0,1,1];
+  for(let i=0;i<n;i++){const kind=i<n-2?"d":(i==n-2?"m":"t");s+='<select id="b'+i+'" aria-label="'+(i+1)+'. sáv">'+opt(kind)+'</select> ';}
+  document.getElementById("bands").innerHTML=s;for(let i=0;i<n;i++){document.getElementById("b"+i).value=def[i];document.getElementById("b"+i).onchange=draw;}draw();};
+ document.getElementById("nb").onchange=mk;document.getElementById("cc").oninput=draw;document.getElementById("ro").oninput=draw;mk();return;}
+const n=+document.getElementById("nb").value, b=[];for(let i=0;i<n;i++){const e=document.getElementById("b"+i);if(!e)return;b.push(D.colors[+e.value]);}
+let num=0;for(let i=0;i<n-2;i++)num=num*10+b[i][1];
+const R=num*Math.pow(10,b[n-2][2]), tol=b[n-1][3];
+const po=x=>fmt(x,x%1?2:0)+" Ω";
+const pr=x=>x>=1e6?fmt(x/1e6,x%1e6?2:0)+" MΩ":x>=1e3?fmt(x/1e3,x%1e3?2:0)+" kΩ":fmt(x,x%1?2:0)+" Ω";
+el("line",{x1:20,y1:60,x2:110,y2:60,stroke:css("--line"),"stroke-width":4});el("line",{x1:450,y1:60,x2:540,y2:60,stroke:css("--line"),"stroke-width":4});
+el("rect",{x:110,y:30,width:340,height:60,rx:22,fill:"#efe4c8",stroke:css("--line"),"stroke-width":2});
+const xs=[];for(let i=0;i<n-1;i++)xs.push(150+i*48);xs.push(410);
+for(let i=0;i<n;i++){el("rect",{x:xs[i]-11,y:30,width:22,height:60,fill:b[i][4],stroke:"#000","stroke-width":1});
+ el("text",{x:xs[i],y:22,"font-size":11,"text-anchor":"middle"},b[i][0].split(" ")[0]);
+ el("text",{x:xs[i],y:108,"font-size":11,"text-anchor":"middle"},i<n-2?String(b[i][1]):(i==n-2?"×10^"+b[i][2]:"±"+fmt(tol,tol%1?((tol*10)%1?2:1):0)+"%"));}
+el("text",{x:280,y:135,"font-size":14,"text-anchor":"middle","font-weight":"bold"},pr(R)+" ±"+fmt(tol,tol%1?((tol*10)%1?2:1):0)+" %  ("+po(R*(1-tol/100))+" … "+po(R*(1+tol/100))+")");
+let s="Ellenállás: <b>"+pr(R)+" ±"+fmt(tol,tol%1?((tol*10)%1?2:1):0)+" %</b>, tartomány "+po(R*(1-tol/100))+" … "+po(R*(1+tol/100));
+const m=document.getElementById("cc").value.trim().toUpperCase().match(/^(\d)(\d)(\d)\s*([A-Z]?)\s*(.*)$/);
+if(m){const pf=(10*m[1]+ +m[2])*Math.pow(10,+m[3]);const t=D.letters[m[4]];
+ const pu=pf>=1e6?fmt(pf/1e6,pf%1e6?2:0)+" µF":pf>=1e3?fmt(pf/1e3,pf%1e3?1:0)+" nF":fmt(pf,0)+" pF";
+ document.getElementById("cr").innerHTML="= "+(10*m[1]+ +m[2])+" × 10^"+m[3]+" pF = "+fmt(pf,0)+" pF = <b>"+pu+"</b>"+(m[4]?(t!==undefined?", "+m[4]+" = ±"+fmt(t,t%1?2:0)+" %":", ismeretlen tűrésbetű"):"")+(m[5]?", névleges feszültség "+m[5]:"");}
+else document.getElementById("cr").innerHTML="<span class='bad'>háromjegyű kód kell (pl. 104K 100V)</span>";
+const ro=parseFloat(document.getElementById("ro").value.replace(",","."));
+if(ro>0){const near=(E)=>{const dec=Math.pow(10,Math.floor(Math.log10(ro)));let best=null;
+  [dec/10,dec,dec*10].forEach(d=>E.forEach(e=>{const c=e*d;if(best===null||Math.abs(Math.log(c/ro))<Math.abs(Math.log(best/ro)))best=c;}));return best;};
+ document.getElementById("er").innerHTML="legközelebbi E12: <b>"+pr(+near(D.e12).toPrecision(2))+"</b>, E24: <b>"+pr(+near(D.e24).toPrecision(2))+"</b>";}
+status(s);
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

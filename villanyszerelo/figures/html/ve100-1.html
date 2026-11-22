@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szinkron motor V-görbéje és fázorábrája</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="If">Gerjesztőáram</label><input id="If" type="range" min="0.5" max="8" step="0.05" value="5" aria-label="Gerjesztőáram"><output id="If_o" for="If"></output></div>
+<div class="row"><label for="P">Hatásos teljesítmény P</label><input id="P" type="range" min="0" max="120" step="5" value="100" aria-label="Hatásos teljesítmény P"><output id="P_o" for="P"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 300" role="img" aria-label="A gerjesztés növelésével az E fázor hossza nő, az áram a feszültséghez képest késésből sietésbe fordul; a V-görbe minimuma a cos φ = 1 állapot."></svg>
+<p class="small">Szemléltető modell (ellenőrizendő): Xₛ = 1,2 Ω, telítetlen gép, E arányos a gerjesztőárammal (4 A-nél E = Uf = 231 V), az állórész-ellenállás elhanyagolva. Motoros előjel: U = E + jXₛ·I. A fejezet példája: P = 100 kW, U = 400 V, cos φ = 1-nél 144 A, cos φ = 0,8 induktívnál 180 A.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const UN={"If":"A", "P":"kW"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
+function status(h){ST.innerHTML=h;}
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
+function draw(){S.innerHTML="";const v=values();
+
+const UF=230.940108, XS=1.200, KF=57.735027;
+const Ip=v.P*1000/(Math.sqrt(3)*400), E=KF*v.If, a=XS*Ip;
+function isOf(f){const e=KF*f; if(e<a-1e-9) return null; const q=(UF-Math.sqrt(Math.max(e*e-a*a,0)))/XS; return Math.hypot(Ip,q);}
+// bal panel: fázorábra
+const s=0.6, ox=30, oy=120, PX=z=>ox+z[0]*s, PY=z=>oy-z[1]*s;
+function arrow(z0,z1,col,w,dash,lab,dx,dy){el("line",{x1:PX(z0),y1:PY(z0),x2:PX(z1),y2:PY(z1),stroke:col,"stroke-width":w,"stroke-dasharray":dash||"","marker-end":"url(#ah)"});
+ if(lab) el("text",{x:PX(z1)+(dx||0),y:PY(z1)+(dy||0),"font-size":14,"font-weight":"bold",fill:col},lab);}
+const defs=el("defs",{}); const m=document.createElementNS(NS,"marker");
+[["id","ah"],["viewBox","0 0 10 10"],["refX","9"],["refY","5"],["markerWidth","11"],["markerHeight","11"],["markerUnits","userSpaceOnUse"],["orient","auto-start-reverse"]].forEach(p=>m.setAttribute(p[0],p[1]));
+const mp=document.createElementNS(NS,"path"); mp.setAttribute("d","M0,0 L10,5 L0,10 z"); mp.setAttribute("fill",css("--fg")); m.appendChild(mp); defs.appendChild(m);
+el("line",{x1:ox,x2:ox+290,y1:oy,y2:oy,stroke:css("--grid")});
+el("text",{x:10,y:16,"font-size":13,"font-weight":"bold"},"Fázorábra (fázisonként, motoros előjel)");
+let st="";
+if(E<a-1e-9){
+ el("text",{x:ox,y:oy+40,"font-size":13,fill:css("--bad")},"E < Xₛ·Iₚ: a gép kiesik a szinkronizmusból");
+ st='<span class="bad">Túl kicsi gerjesztés: E = '+fmt(E,0)+' V &lt; Xₛ·Iₚ = '+fmt(a,0)+' V – a terhelési szög elérné a 90°-ot, a motor kiesik a szinkronizmusból.</span>';
+}else{
+ const q=(UF-Math.sqrt(E*E-a*a))/XS, Ez=[UF-XS*q,-XS*Ip], Iz=[Ip,-q], Is=Math.hypot(Ip,q), cphi=Is>0?Ip/Is:1, d=Math.atan2(XS*Ip,UF-XS*q)*180/Math.PI;
+ arrow([0,0],[UF,0],css("--fg"),2,"","U",6,-6);
+ arrow([0,0],Ez,css("--fg"),4,"","E",-30,6);
+ arrow(Ez,[UF,0],css("--muted"),1.5,"2 4","jXₛI",8,30);
+ arrow([0,0],Iz,css("--hl"),2,"7 4","I",4,q>=0?18:-6);
+ const Q=Math.abs(3*UF*q/1000)<0.05?0:3*UF*q/1000, kind=Math.abs(q)<1?"cos φ ≈ 1 (csak hatásos áram)":(q>0?"alulgerjesztett – induktív meddőt vesz fel":"felülgerjesztett – kapacitív (meddőt ad a hálózatnak)");
+ st="E = <b>"+fmt(E,0)+" V</b> (U<sub>f</sub> = "+fmt(UF,0)+" V), δ = <b>"+fmt(d,1)+"°</b>, I<sub>s</sub> = <b>"+fmt(Is,0)+" A</b>, cos φ = <b>"+fmt(cphi,3)+"</b>, Q = <b>"+fmt(Q,1)+" kvar</b> – "+kind+".";
+ if(Ip>0&&Math.abs(q)>=1&&q>0&&E>UF) st+=" Figyeld meg: terhelt gépnél itt már E &gt; U, mégis alulgerjesztett.";
+}
+// jobb panel: V-görbe
+const X0=360,Y0=270,W=240,H=230,FM=8,IM=260,X=f=>X0+W*f/FM,Y=i=>Y0-H*i/IM;
+el("text",{x:X0,y:16,"font-size":13,"font-weight":"bold"},"V-görbe (P = "+v.P+" kW)");
+el("line",{x1:X0,x2:X0+W,y1:Y0,y2:Y0,stroke:css("--line")});el("line",{x1:X0,x2:X0,y1:Y0,y2:Y0-H,stroke:css("--line")});
+for(let f=0;f<=8;f+=2){el("text",{x:X(f),y:Y0+15,"text-anchor":"middle","font-size":11},String(f));}
+for(let i=0;i<=250;i+=50){el("text",{x:X0-4,y:Y(i)+4,"text-anchor":"end","font-size":11},String(i));el("line",{x1:X0,x2:X0+W,y1:Y(i),y2:Y(i),stroke:css("--grid")});}
+el("text",{x:X0+W/2,y:Y0+28,"text-anchor":"middle","font-size":12},"gerjesztőáram (A)");el("text",{x:X0+4,y:Y(255),"font-size":12},"állórészáram (A)");
+let dd="";for(let k=0;k<=400;k++){const f=FM*k/400,i=isOf(f);if(i===null||i>IM)continue;dd+=(dd?"L":"M")+X(f).toFixed(1)+" "+Y(i).toFixed(1);}
+el("path",{d:dd,fill:"none",stroke:css("--fg"),"stroke-width":2.2});
+const fm=Math.sqrt(UF*UF+a*a)/KF; el("circle",{cx:X(fm),cy:Y(Ip),r:5,fill:css("--bg"),stroke:css("--fg"),"stroke-width":2});
+const iw=isOf(v.If); if(iw!==null&&iw<=IM) el("circle",{cx:X(v.If),cy:Y(iw),r:7,fill:css("--hl2")});
+status(st+" A V-görbe minimuma (cos φ = 1) ennél a terhelésnél I<sub>f</sub> = "+fmt(fm,2)+" A-nél van.");
+
+}
+document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>
