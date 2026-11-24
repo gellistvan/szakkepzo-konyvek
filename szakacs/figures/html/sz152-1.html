@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anyaghányad-átszámító</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="an">Új adagszám</label><input id="an" type="range" min="1" max="200" step="1" value="35" aria-label="Új adagszám"><output id="an_o" for="an"></output></div>
+<div class="row"><label for="ma">Alap adagsúly</label><input id="ma" type="range" min="100" max="500" step="10" value="250" aria-label="Alap adagsúly"><output id="ma_o" for="ma"></output></div>
+<div class="row"><label for="mu">Új adagsúly</label><input id="mu" type="range" min="100" max="500" step="10" value="200" aria-label="Új adagsúly"><output id="mu_o" for="mu"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 610 230" role="img" aria-label="Anyaghányad-átszámító kalkulátor: bal oldalon a 10 adagos mennyiségek, jobb oldalon az új adagszámra számított mennyiségek."></svg>
+<p class="small">A 10 adagos marhapörkölt anyaghányada a fejezet táblázatából; tanulási példa, az üzemi receptúra a mérvadó. A kerekítést a kiadási egységhez igazítsd.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"an":"adag", "ma":"g", "mu":"g"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const IT=[["marhalábszár",1200],["vöröshagyma",500],["étolaj",100],["fűszerpaprika",30],["só",20],["paradicsom",200],["zöldpaprika",150]];
+const k=(v.an*v.mu)/(10*v.ma), kn=v.an/10, n=x=>Math.round(x).toLocaleString("hu-HU");
+el("text",{x:6,y:20,"font-size":13,"font-weight":"bold"},"Nyersanyag");el("text",{x:230,y:20,"font-size":13,"font-weight":"bold","text-anchor":"end"},"10 adagra");
+el("text",{x:400,y:20,"font-size":13,"font-weight":"bold","text-anchor":"end"},v.an+" adagra");el("text",{x:600,y:20,"font-size":13,"text-anchor":"end"},"(csak adagszámmal)");
+IT.forEach((t,i)=>{const y=46+i*26;el("text",{x:6,y:y,"font-size":13},t[0]);el("text",{x:230,y:y,"font-size":13,"text-anchor":"end"},n(t[1])+" g");
+ el("text",{x:400,y:y,"font-size":13,"font-weight":"bold","text-anchor":"end"},n(t[1]*k)+" g");el("text",{x:600,y:y,"font-size":12,"text-anchor":"end","font-style":"italic"},n(t[1]*kn)+" g");});
+status("k = ("+v.an+" · "+v.mu+" g) / (10 · "+v.ma+" g) = "+n(v.an*v.mu)+" / "+n(10*v.ma)+" = <b>"+fmt(k,2)+"</b>"+
+ (Math.abs(k-kn)>0.005?'<br><span class="bad">Az adagsúly változott: a csak adagszámból számolt '+fmt(kn,2)+' szorzó itt hibás lenne.</span>':'')+
+ "<br>Ellenőrzés: új teljes készétel-tömeg "+n(v.an*v.mu)+" g = alap "+n(10*v.ma)+" g · k.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

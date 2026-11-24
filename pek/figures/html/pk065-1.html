@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dagasztóvíz-hőmérséklet kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="tt">cél tésztahőm.</label><input id="tt" type="range" min="20" max="32" step="0.5" value="26" aria-label="cél tésztahőm."><output id="tt_o" for="tt"></output></div>
+<div class="row"><label for="ml">liszt</label><input id="ml" type="range" min="10" max="300" step="5" value="100" aria-label="liszt"><output id="ml_o" for="ml"></output></div>
+<div class="row"><label for="tl">liszthőmérséklet</label><input id="tl" type="range" min="5" max="35" step="0.5" value="20" aria-label="liszthőmérséklet"><output id="tl_o" for="tl"></output></div>
+<div class="row"><label for="mw">víz</label><input id="mw" type="range" min="5" max="200" step="1" value="60" aria-label="víz"><output id="mw_o" for="mw"></output></div>
+<div class="row"><label for="mk">kovász</label><input id="mk" type="range" min="0" max="200" step="1" value="0" aria-label="kovász"><output id="mk_o" for="mk"></output></div>
+<div class="row"><label for="tk">kovászhőm.</label><input id="tk" type="range" min="10" max="35" step="0.5" value="26" aria-label="kovászhőm."><output id="tk_o" for="tk"></output></div>
+<div class="row"><label for="ck">kovász fajhője</label><input id="ck" type="range" min="2.0" max="3.6" step="0.1" value="2.8" aria-label="kovász fajhője"><output id="ck_o" for="ck"></output></div>
+<div class="row"><label for="f">súrlódás (tészta hőemelkedése)</label><input id="f" type="range" min="0" max="10" step="0.5" value="2" aria-label="súrlódás (tészta hőemelkedése)"><output id="f_o" for="f"></output></div>
+<div class="row"><label for="tc">csapvíz</label><input id="tc" type="range" min="5" max="25" step="0.5" value="18" aria-label="csapvíz"><output id="tc_o" for="tc"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 540 270" role="img" aria-label="A szükséges vízhőmérséklet a liszt hőmérsékletével csökken; a 2×-es szabály 3–4 °C-kal melegebb vizet ad, mint a pontos hőmérleg."></svg>
+<p class="small">Képletből számolt tanulási példa (a fejezet hőmérlege, liszt 1,7, víz 4,18 kJ/(kg·°C); a kovász fajhője becsült érték, ellenőrizendő). A súrlódás a tészta dagasztás közbeni hőmérséklet-emelkedése °C-ban; üzemi méréssel kalibrálandó. A víz hőmérsékletét bekeverés előtt mérni kell.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"tt":"°C", "ml":"kg", "tl":"°C", "mw":"kg", "mk":"kg", "tk":"°C", "ck":"kJ/kg°C", "f":"°C", "tc":"°C"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const CL=1.7, CW=4.18;
+const Cl=v.ml*CL, Cw=v.mw*CW, Ck=v.mk*v.ck;
+const tex=((Cl+Cw+Ck)*(v.tt-v.f)-Cl*v.tl-Ck*v.tk)/Cw;
+const t2=v.mk>0 ? 2*v.tt-(v.tl+v.tk)/2-v.f : 2*v.tt-v.tl-v.f;
+const X=t=>50+(t-10)*20, Y=y=>230-y*4.6;
+el("rect",{x:X(10),y:Y(v.tc),width:X(32)-X(10),height:Y(0)-Y(v.tc),fill:css("--grid")});
+el("line",{x1:X(10),y1:Y(0),x2:X(32),y2:Y(0),stroke:css("--line")});el("line",{x1:X(10),y1:Y(0),x2:X(10),y2:Y(45),stroke:css("--line")});
+for(let t=10;t<=32;t+=4)el("text",{x:X(t),y:Y(0)+15,"text-anchor":"middle","font-size":11},String(t));
+for(let y=0;y<=40;y+=10)el("text",{x:X(10)-6,y:Y(y)+4,"text-anchor":"end","font-size":11},String(y));
+el("text",{x:X(21),y:Y(0)+30,"text-anchor":"middle","font-size":12},"liszthőmérséklet (°C)");
+let d1="",d2="";for(let t=10;t<=32;t+=0.5){const a=((Cl+Cw+Ck)*(v.tt-v.f)-Cl*t-Ck*v.tk)/Cw;const b=v.mk>0?2*v.tt-(t+v.tk)/2-v.f:2*v.tt-t-v.f;
+ d1+=(t>10?"L":"M")+X(t)+" "+Y(Math.max(-2,Math.min(47,a)));d2+=(t>10?"L":"M")+X(t)+" "+Y(Math.max(-2,Math.min(47,b)));}
+el("path",{d:d1,fill:"none",stroke:css("--line"),"stroke-width":2.5});
+el("path",{d:d2,fill:"none",stroke:css("--hl"),"stroke-width":2.2,"stroke-dasharray":"7 4"});
+el("circle",{cx:X(Math.max(10,Math.min(32,v.tl))),cy:Y(Math.max(0,Math.min(45,tex))),r:5,fill:css("--hl2")});
+el("text",{x:X(31.5),y:Y(v.tc)-5,"text-anchor":"end","font-size":11},"csapvíz "+fmt(v.tc,0)+" °C");
+let msg="Pontos hőmérleg: <b>"+fmt(tex,1)+" °C</b>; 2×-es szabály"+(v.mk>0?" (kovásszal: liszt és kovász átlaga)":"")+": <b>"+fmt(t2,1)+" °C</b> (eltérés "+fmt(t2-tex,1)+" °C).";
+if(tex<0){msg+='<br><span class="bad">0 °C alatti vízhőmérséklet jönne ki: jéggel sem érhető el – hűtsd a lisztet/kovászt, vagy módosítsd a célt.</span>';}
+else if(tex<v.tc){const ice=v.mw*CW*(v.tc-tex)/(334+CW*v.tc);msg+="<br>Jég kell: <b>"+fmt(ice,1)+" kg jég</b> + "+fmt(v.mw-ice,1)+" kg csapvíz ("+fmt(v.tc,0)+" °C-ról "+fmt(tex,1)+" °C-ra).";}
+else if(tex>40){msg+='<br><span class="bad">40 °C fölötti víz az élesztőt károsíthatja (ellenőrizendő: gyártói adatlap) – melegítsd inkább a lisztet/helyiséget.</span>';}
+else msg+="<br>Csapvíz melegítésével/keverésével beállítható.";
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

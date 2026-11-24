@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Akciókalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pre">példa</label><select id="pre" aria-label="példa"><option value="f5" selected>5. feladat (380 / 320 / 200 Ft, 500 db)</option><option value="ex">kidolgozott példa (80 / 70 / 50 Ft, 400 db)</option><option value="own">saját</option></select></div>
+<div class="row"><label for="pn">normál nettó ár</label><input id="pn" type="range" min="50" max="600" step="5" value="380" aria-label="normál nettó ár"><output id="pn_o" for="pn"></output></div>
+<div class="row"><label for="pa">akciós nettó ár</label><input id="pa" type="range" min="50" max="600" step="5" value="320" aria-label="akciós nettó ár"><output id="pa_o" for="pa"></output></div>
+<div class="row"><label for="cc">közvetlen önköltség</label><input id="cc" type="range" min="20" max="500" step="5" value="200" aria-label="közvetlen önköltség"><output id="cc_o" for="cc"></output></div>
+<div class="row"><label for="n0">normál napi darabszám</label><input id="n0" type="range" min="50" max="1500" step="10" value="500" aria-label="normál napi darabszám"><output id="n0_o" for="n0"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 240" role="img" aria-label="Fedezetsemleges darabszám az akciós ár függvényében: 380 Ft-ról 320 Ft-ra csökkentett ár mellett 500 helyett 750 darabot kell eladni."></svg>
+<p class="small">Képletből számolt tanulási példa: n_akció = (p_normál − c) · n_normál / (p_akció − c). Az árak nettó (ÁFA nélküli) árak; az ÁFA nem a pékség bevétele.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"pn":"Ft", "pa":"Ft", "cc":"Ft", "n0":"db"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const fg=css("--fg"), mu=css("--muted"), hl=css("--hl"), hl2=css("--hl2");
+const PRE={f5:[380,320,200,500],ex:[80,70,50,400]};
+if(v.pre!==window._lp){window._lp=v.pre;const q=PRE[v.pre];if(q){["pn","pa","cc","n0"].forEach((k,i)=>document.getElementById(k).value=q[i]);draw();return;}}
+if(v.pn<=v.cc){status('<span class="bad">A normál ár nem fedezi az önköltséget – nincs fedezet.</span>');return;}
+const F=(v.pn-v.cc)*v.n0, X0=60,W=460,Y0=220,H=190, xmin=v.cc, xmax=v.pn, nmax=Math.max(4*v.n0,10);
+const sx=p=>X0+W*(p-xmin)/(xmax-xmin), sy=n=>Y0-H*Math.min(n,nmax)/nmax;
+el("line",{x1:X0,y1:Y0,x2:X0+W,y2:Y0,stroke:fg});el("line",{x1:X0,y1:Y0,x2:X0,y2:Y0-H,stroke:fg,"stroke-dasharray":"3 3"});
+let d="";for(let k=1;k<=200;k++){const p=xmin+(xmax-xmin)*k/200,n=F/(p-v.cc);d+=(d?"L":"M")+sx(p).toFixed(1)+","+sy(n).toFixed(1);}
+el("path",{d:d,fill:"none",stroke:fg,"stroke-width":2});
+el("line",{x1:X0,y1:sy(v.n0),x2:X0+W,y2:sy(v.n0),stroke:mu,"stroke-dasharray":"6 4"});
+el("text",{x:X0+4,y:Y0-H+12,"font-size":11,fill:mu},"önköltség: "+fmt(v.cc,0)+" Ft (aszimptota)");
+el("text",{x:X0+W,y:Y0+16,"font-size":11,"text-anchor":"end",fill:fg},fmt(xmax,0)+" Ft");
+el("text",{x:X0,y:Y0+16,"font-size":11,fill:fg},fmt(xmin,0)+" Ft");
+el("text",{x:X0-6,y:sy(v.n0)+4,"font-size":11,"text-anchor":"end",fill:fg},fmt(v.n0,0));
+let s;
+if(v.pa<=v.cc){s='<span class="bad">Az akciós ár nem haladja meg az önköltséget: minden eladott darab veszteséges, a fedezet semmilyen darabszámmal nem tartható.</span>';}
+else{const fa=v.pa-v.cc,na=F/fa,inc=(na/v.n0-1)*100,disc=(1-v.pa/v.pn)*100;
+ if(v.pa<=v.pn){el("rect",{x:sx(v.pa)-6,y:sy(na)-6,width:12,height:12,fill:hl});
+  el("text",{x:sx(v.pa)+10,y:Math.max(sy(na)-8,Y0-H+26),"font-size":12,fill:hl},fmt(Math.ceil(na),0)+" db");}
+ s=`Normál fajlagos fedezet: ${fmt(v.pn-v.cc,0)} Ft/db, napi fedezet: <b>${fmt(F,0)} Ft</b>. Akciós fajlagos fedezet: ${fmt(fa,0)} Ft/db.`+
+   `<br>Szükséges darabszám: ${fmt(F,0)} / ${fmt(fa,0)} = <b>${fmt(na,1)} → ${fmt(Math.ceil(na),0)} db</b> (+${fmt(inc,1)} %), miközben az árengedmény csak ${fmt(disc,1)} %.`;}
+status(s);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

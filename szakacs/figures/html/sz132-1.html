@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sous-vide idődiagram</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="tb">Vízfürdő hőmérséklete</label><input id="tb" type="range" min="55" max="70" step="1" value="60" aria-label="Vízfürdő hőmérséklete"><output id="tb_o" for="tb"></output></div>
+<div class="row"><label for="th">Felfűtési idő (a mag eléri)</label><input id="th" type="range" min="10" max="60" step="1" value="35" aria-label="Felfűtési idő (a mag eléri)"><output id="th_o" for="th"></output></div>
+<div class="row"><label for="ho">Előírt tartás</label><input id="ho" type="range" min="10" max="180" step="5" value="60" aria-label="Előírt tartás"><output id="ho_o" for="ho"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 344" role="img" aria-label="Grafikon: a hús maghőmérséklete 35 perc alatt éri el a 60 °C-os vízfürdő hőmérsékletét, ezután 60 perc tartás következik, a kivétel a 95. percben."></svg>
+<p class="small">Szemléltető modell, nem mérés; tanulási adatok a 2. Számításból és a fejezet táblázatából (ellenőrizendő: HACCP-terv, NÉBIH-útmutató). A felfűtési időt a konyhán mindig a tűszondás maghőmérő adja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"tb":"°C", "th":"perc", "ho":"perc"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const TB=v.tb,TH=v.th,HO=v.ho,T0=5,fg=css("--fg")||"#111",mu="#8a8a8a";
+const tau=TH/Math.log((TB-T0)/0.5), tend=Math.max(TH+HO,10), tmax=Math.max(120,Math.ceil((tend+10)/30)*30);
+const X=m=>60+m*(560/tmax),Y=c=>300-c*(270/75);
+el("rect",{x:X(0),y:Y(60),width:560,height:Y(5)-Y(60),fill:"rgba(138,138,138,.13)"});
+el("text",{x:X(tmax)-4,y:Y(7),"text-anchor":"end","font-size":12,fill:fg},"veszélyes zóna (kb. 5–60 °C, ellenőrizendő)");
+el("rect",{x:X(TH),y:Y(75),width:X(TH+HO)-X(TH),height:Y(0)-Y(75),fill:"rgba(138,138,138,.3)"});
+[0,10,20,30,40,50,60,70].forEach(c=>{el("line",{x1:60,x2:620,y1:Y(c),y2:Y(c),stroke:mu,"stroke-width":.4});el("text",{x:52,y:Y(c)+4,"text-anchor":"end","font-size":12,fill:fg},c);});
+const st=tmax<=120?15:30;for(let m=0;m<=tmax;m+=st)el("text",{x:X(m),y:318,"text-anchor":"middle","font-size":12,fill:fg},m);
+el("text",{x:340,y:336,"text-anchor":"middle","font-size":12,fill:fg},"idő a behelyezéstől (perc)");
+el("line",{x1:60,x2:620,y1:Y(TB),y2:Y(TB),stroke:fg,"stroke-dasharray":"6 4"});
+let d="";for(let i=0;i<=300;i++){const m=tend*i/300;d+=(i?"L":"M")+X(m)+","+Y(TB-(TB-T0)*Math.exp(-m/tau));}
+el("path",{d:d,fill:"none",stroke:fg,"stroke-width":2.6});
+el("line",{x1:X(TH),x2:X(TH),y1:Y(0),y2:Y(75),stroke:fg});el("line",{x1:X(tend),x2:X(tend),y1:Y(0),y2:Y(75),stroke:fg,"stroke-width":2});
+const tmin=60*Math.pow(2,(60-TB)/5);
+let w="";
+if(TB<55||TB>70)w="<br><b>Figyelem:</b> a vízfürdő a fejezet táblázatának tartományán (55–70 °C) kívül esik.";
+if(HO<tmin)w+="<br><b>Figyelem:</b> a tartás rövidebb, mint a fejezet táblázatának tanulási értéke ehhez a hőmérséklethez (kb. "+fmt(tmin,0)+" perc, ellenőrizendő: HACCP-terv).";
+status("Kivétel a behelyezéstől számított <b>"+fmt(TH+HO,0)+". percben</b> ("+fmt(TH,0)+" perc felfűtés + "+fmt(HO,0)+" perc tartás). "+
+ "Ha a tartást hibásan a behelyezéstől számolnád, a "+fmt(HO,0)+". percben a valódi tartás csak "+fmt(Math.max(HO-TH,0),0)+" perc lenne."+w);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hígításkalkulátor – munkaoldat koncentrátumból</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="vm">munkaoldat V_munka</label><input id="vm" type="range" min="1" max="50" step="0.5" value="25" aria-label="munkaoldat V_munka"><output id="vm_o" for="vm"></output></div>
+<div class="row"><label for="mode">megadás módja</label><select id="mode" aria-label="megadás módja"><option value="1" selected>1 : F (munkaoldat)</option><option value="2">1 rész szer + N rész víz</option><option value="3">termék-% (a munkaoldatban)</option><option value="4">hatóanyag-% (koncentrátum %-ával)</option></select></div>
+<div class="row"><label for="f">F vagy N</label><input id="f" type="range" min="5" max="200" step="1" value="50" aria-label="F vagy N"><output id="f_o" for="f"></output></div>
+<div class="row"><label for="p">kért % (termék / hatóanyag)</label><input id="p" type="range" min="0.1" max="10" step="0.1" value="2" aria-label="kért % (termék / hatóanyag)"><output id="p_o" for="p"></output></div>
+<div class="row"><label for="c">koncentrátum hatóanyag-% (c)</label><input id="c" type="range" min="1" max="100" step="1" value="40" aria-label="koncentrátum hatóanyag-% (c)"><output id="c_o" for="c"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 130" role="img" aria-label="Osztott oszlop: 25 liter munkaoldat 1:50 hígításban 0,5 liter koncentrátumból és 24,5 liter vízből áll."></svg>
+<p class="small">Tanulási példa. A fejezet példái: 10 l, 40 % → 2 % (4. mód, p = 2, c = 40): 500 ml + 9,5 l; 25 l, 1 : 50: 500 ml + 24,5 l; 20 l, 1 : 40: 500 ml + 19,5 l; „1 rész + 50 rész víz”: F = 51. Mindig a termék címkéje és biztonsági adatlapja a mérvadó (ellenőrizendő: gyártói utasítás).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"vm":"l", "f":"", "p":"%", "c":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const V=v.vm, m=v.mode;
+let F=null, Vk=0, frm="", warn="";
+if(m===1){F=v.f; Vk=V/F; frm="1 : F munkaoldat → V_konc = V_munka / F = "+fmt(V,1)+" l / "+fmt(F,0)+" = "+fmt(Vk*1000,0)+" ml";}
+else if(m===2){F=v.f+1; Vk=V/F; frm="1 rész szer + "+fmt(v.f,0)+" rész víz → F = 1 + "+fmt(v.f,0)+" = "+fmt(F,0)+"; V_konc = "+fmt(V,1)+" l / "+fmt(F,0)+" = "+fmt(Vk*1000,0)+" ml";}
+else if(m===3){Vk=V*v.p/100; frm="termék-%: a munkaoldat "+fmt(v.p,1)+" %-a koncentrátum → V_konc = V_munka · p / 100 = "+fmt(Vk*1000,0)+" ml";}
+else {if(v.p>v.c){warn="A kért hatóanyag-% ("+fmt(v.p,1)+" %) nagyobb, mint a koncentrátumé ("+fmt(v.c,0)+" %) – így nem állítható elő!";}
+  Vk=V*v.p/v.c; frm="hatóanyag-%: φ₁V₁ = φ₂V₂ → V₁ = φ₂ · V₂ / φ₁ = "+fmt(v.p,1)+" % · "+fmt(V,1)+" l / "+fmt(v.c,0)+" % = "+fmt(Vk*1000,0)+" ml";}
+const W=560,H=150,L=20,R=20, X=x=>L+x/Math.max(V,1e-9)*(W-L-R);
+if(warn){status('<span class="bad">'+warn+'</span>');return;}
+const Vw=V-Vk;
+el("rect",{x:X(0),y:40,width:X(Vk)-X(0),height:40,fill:css("--fg")});
+el("rect",{x:X(Vk),y:40,width:X(V)-X(Vk),height:40,fill:"none",stroke:css("--line"),"stroke-width":1.5});
+for(let x=X(Vk)+8;x<X(V);x+=10)el("line",{x1:x,y1:80,x2:x+10,y2:40,stroke:css("--grid")});
+el("text",{x:L,y:30,"font-size":13},"koncentrátum: "+fmt(Vk*1000,0)+" ml");
+el("text",{x:W-R,y:30,"font-size":13,"text-anchor":"end"},"víz: "+fmt(Vw,2)+" l");
+el("text",{x:(L+W)/2,y:110,"font-size":13,"text-anchor":"middle"},"munkaoldat összesen: "+fmt(V,1)+" l"+(F?" (F = "+fmt(F,0)+")":""));
+status("<b>"+frm+"</b><br>víz: V_víz = V_munka − V_konc = "+fmt(V,1)+" − "+fmt(Vk,3)+" = <b>"+fmt(Vw,2)+" l</b>"+
+ "<br><small>Csak a használt mód csúszkái számítanak (1–2. mód: F/N; 3. mód: p; 4. mód: p és c). Előbb a víz, utána a szer; a mérvadó a gyártói utasítás.</small>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

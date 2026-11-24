@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nedves hőkezelések hőmérséklete</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="t">A víz / gőz hőmérséklete</label><input id="t" type="range" min="50" max="125" step="1" value="80" aria-label="A víz / gőz hőmérséklete"><output id="t_o" for="t"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 250" role="img" aria-label="Sávdiagram: a buggyantás 75–85 °C, a párolás 85–95 °C, a gyöngyöző forralás 95–98 °C, a főzés 95–100 °C, a gőzölés 100 °C, a kuktás gőzölés 110–120 °C körül."></svg>
+<p class="small">Tanulási értékek a fejezet táblázatából; a pontos hőmérséklet eszköztől, légnyomástól és a gyártói utasítástól függ (ellenőrizendő: HACCP-terv / gyártói utasítás).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"t":"°C"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P=[["buggyantás", 75, 85, "....", "a víz remeg, enyhén gőzölög", "tojás, hal, csirkemell, gyümölcs", "ha forr: a tojás szétfolyik, a hal szétesik"], ["párolás", 85, 95, "////", "fedő alatt, éppen gyöngyözik", "húsok, zöldségek, halak", "erős forralás: kemény hús, zavaros lé"], ["gyöngyöző forralás", 95, 98, "xx", "apró buborékok", "alaplé, húsleves, kíméletes főzés", "heves forrás: zavaros alaplé, szétfőtt zöldség"], ["főzés", 95, 100, "\\\\\\\\", "erős forrás (100 °C körül)", "tészta, burgonya, rizs, hüvelyesek", "túl hosszú főzés: szétfő, színét veszti"], ["gőzölés", 99.4, 100.6, "", "gőz, a víz nem éri az ételt", "zöldség, hal, tészta", "túlzsúfolt tálca: egyenetlen átsülés"], ["kuktás gőzölés", 110, 120, "oo", "zárt edény, nyomás alatt", "kemény húsok, hüvelyesek", "eltakart szelep, nyomás alatti nyitás – baleset"]];
+const fg=css("--fg")||"#111",mu="#8a8a8a",X=c=>150+(c-50)*(470/80),RH=34;
+for(let c=50;c<=130;c+=10){el("line",{x1:X(c),x2:X(c),y1:20,y2:20+RH*P.length,stroke:mu,"stroke-width":.4});
+ el("text",{x:X(c),y:36+RH*P.length,"text-anchor":"middle","font-size":12,fill:fg},c);}
+el("line",{x1:X(75),x2:X(75),y1:14,y2:24+RH*P.length,stroke:fg,"stroke-width":1.4,"stroke-dasharray":"6 4"});
+let hit=[];
+P.forEach((p,i)=>{const y=22+i*RH,lo=p[1],hi=p[2],on=v.t>=lo&&v.t<=hi;if(on)hit.push(p);
+ el("text",{x:142,y:y+19,"text-anchor":"end","font-size":13,fill:fg,"font-weight":on?"bold":"normal"},p[0]);
+ el("rect",{x:X(lo),y:y+4,width:Math.max(4,X(hi)-X(lo)),height:22,fill:on?"rgba(31,78,121,.55)":"rgba(138,138,138,.25)",stroke:fg,"stroke-width":on?2:1});});
+el("line",{x1:X(v.t),x2:X(v.t),y1:10,y2:26+RH*P.length,stroke:"#d32f2f","stroke-width":2.4});
+el("text",{x:X(v.t),y:10,"text-anchor":"middle","font-size":12,fill:"#d32f2f"},fmt(v.t,0)+" °C");
+status(hit.length?hit.map(p=>`<b>${p[0]}</b> (${p[1]}–${p[2]} °C): ${p[4]}. Jellemző alapanyag: ${p[5]}. Tipikus hiba: ${p[6]}.`).join("<br>")
+ :"Ezen a hőmérsékleten egyik nedves hőkezelési tartományban sem vagy."+(v.t<75?" (75 °C alatt: a fehérje csak részben alvad – a maghőmérsékleti tanulási határ 75 °C, ellenőrizendő.)":""));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dagasztási görbe – liszterősség és idő</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="liszt">liszt</label><select id="liszt" aria-label="liszt"><option value="1">gyenge</option><option value="2" selected>közepes</option><option value="3">erős</option></select></div>
+<div class="row"><label for="t">dagasztási idő</label><input id="t" type="range" min="0" max="18" step="0.5" value="9" aria-label="dagasztási idő"><output id="t_o" for="t"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 580 275" role="img" aria-label="A tészta feszessége a dagasztási idővel nő, 8–10 perc körül a legnagyobb, majd csökken; aluldagasztott, optimális és túldagasztott sáv."></svg>
+<p class="small">Szemléltető modell, nem mért adat: a csúcs helye lisztfajtától, vízmennyiségtől, adalékanyagtól és géptípustól függ; a dagasztás végpontját mindig a tészta vizsgálata (ablakpróba) dönti el.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"t":"perc"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P={1:[7,5.6,4.0,"gyenge liszt"],2:[9,6.2,4.8,"közepes liszt"],3:[11,6.6,5.6,"erős liszt"]}[v.liszt];
+const tp=P[0], A=P[1], s=P[2];
+const X=t=>50+t*28, Y=y=>230-y*25;
+const lo=tp-4, o1=tp-1, o2=tp+1, hi=tp+3;
+el("rect",{x:X(0),y:Y(8.6),width:X(Math.max(0,lo))-X(0),height:Y(0)-Y(8.6),fill:css("--grid"),opacity:0.5});
+el("rect",{x:X(o1),y:Y(8.6),width:X(o2)-X(o1),height:Y(0)-Y(8.6),fill:css("--ok"),opacity:0.25});
+el("rect",{x:X(hi),y:Y(8.6),width:X(18)-X(hi),height:Y(0)-Y(8.6),fill:css("--bad"),opacity:0.18});
+el("line",{x1:X(0),y1:Y(0),x2:X(18),y2:Y(0),stroke:css("--line")});el("line",{x1:X(0),y1:Y(0),x2:X(0),y2:Y(8.6),stroke:css("--line")});
+for(let t=0;t<=18;t+=2){el("text",{x:X(t),y:Y(0)+16,"text-anchor":"middle","font-size":11},String(t));}
+el("text",{x:X(9),y:Y(0)+32,"text-anchor":"middle","font-size":12},"dagasztási idő (perc)");
+el("text",{x:14,y:Y(4.3),"font-size":12,transform:"rotate(-90 14 "+Y(4.3)+")","text-anchor":"middle"},"feszesség (relatív)");
+let d="";for(let t=0;t<=18;t+=0.2){const w=t<tp?s:s*0.75;const y=1+A*Math.exp(-(((t-tp)/w)**2));d+=(t?"L":"M")+X(t)+" "+Y(y);}
+el("path",{d:d,fill:"none",stroke:css("--line"),"stroke-width":2.5});
+const t=v.t, w=t<tp?s:s*0.75, yy=1+A*Math.exp(-(((t-tp)/w)**2));
+el("circle",{cx:X(t),cy:Y(yy),r:6,fill:css("--hl2")});
+el("text",{x:X((o1+o2)/2),y:Y(8.2),"text-anchor":"middle","font-size":12,"font-weight":"bold"},"optimális");
+let st, cls;
+if(t<lo){st="aluldagasztott: darabos, szakadozó; ablakpróba: vastag, azonnal szakad";cls="bad";}
+else if(t<o1){st="fejlődő tészta: még nem elég sima; dagaszd tovább, ellenőrizd";cls="";}
+else if(t<=o2){st="optimális: sima, feszes, rugalmas; ablakpróba: vékony, áttetsző hártya";cls="ok";}
+else if(t<=hi){st="határeset: azonnal állítsd le a dagasztást";cls="";}
+else {st="túldagasztott: ellágyul, ragad, kenődik; hártya nem készíthető";cls="bad";}
+status(P[3]+", "+fmt(t,1)+" perc: <span class='"+cls+"'>"+st+"</span>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

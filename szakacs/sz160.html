@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>39.7 Számítógépes konyhai adminisztráció és kalkuláció –
+Szakács</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz10">X. RÉSZ – Vendéglátó gazdálkodás és szakmai számítások</a> › <a href="index.html#szch38">39 Szakmai számítások II.: árképzés, bér, jövedelmezőség, készlet és elszámoltatás</a></p>
+<div class="links"><a class="prev" rel="prev" href="sz159.html">← 39.6 Elszámoltatás: leltárhiány, raktár, termelés, értékesítés</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="sz161.html">40.1 Nyersanyagok, ételek, italok és cukrászkészítmények nevei →</a></div>
+</nav>
+<h2 data-number="39.7" id="sz160"><span
+class="header-section-number">39.7</span> Számítógépes konyhai
+adminisztráció és kalkuláció</h2>
+<h3 data-number="39.7.1" id="motiváció"><span
+class="header-section-number">39.7.1</span> Motiváció</h3>
+<p>A konyhai munkában egyre kevesebb idő marad a papíralapú számolásra.
+A séfnek és a konyhafőnöknek gyakran kell gyorsan válaszolnia: mennyibe
+kerül egy mai menü, miből mennyit használtunk el a héten, mi szerepeljen
+a rendezvényajánlatban. A számítógépes konyhai adminisztráció ebben
+segít. Nem helyettesíti a szakács szaktudását, de a számolást, a
+nyilvántartást és a kalkulációt gyorssá, átláthatóvá teszi.</p>
+<p>Ebben az alfejezetben megtanulod, hogyan használd a vendéglátó
+adminisztrációs programokat és a táblázatkezelőt. A cél nem az, hogy
+programozó legyél, hanem hogy a konyhán magabiztosan készíts
+kalkulációt, tápértékszámítást és rendezvényajánlatot.</p>
+<h3 data-number="39.7.2" id="szemléletes-kép"><span
+class="header-section-number">39.7.2</span> Szemléletes kép</h3>
+<p>Képzeld el, hogy a konyhafőnök azt kéri: „Számold ki a szombati
+esküvői menü anyagköltségét, és készíts belőle ajánlatot 60 főre.”
+Papíron ez órákig tartana. Táblázatkezelőben azonban egy jól felépített
+kalkulációs tábla néhány perc alatt megadja az eredményt, és ha a
+vendégszám változik, csak egy cellát kell módosítani.</p>
+<p>Nézzünk egy egyszerű példát: egy étel anyaghányadát és egységárait
+táblázatba rendezzük. A táblázatkezelő minden sorban kiszámolja a tétel
+költségét, majd összegzi azokat. Ha a receptúra változik, a program
+automatikusan frissíti az eredményt. Ez a konyhai adminisztráció
+alapja.</p>
+<h3 data-number="39.7.3" id="fogalmak-programok-és-adatbiztonság"><span
+class="header-section-number">39.7.3</span> Fogalmak, programok és
+adatbiztonság</h3>
+<p><strong>Definíció.</strong> A <strong>vendéglátó adminisztrációs
+program</strong> olyan szoftver, amely a vendéglátó üzlet mindennapi
+nyilvántartásait kezeli: készlet, receptúra, kalkuláció, értékesítés. A
+program modulokból épül fel. Minden modul egy-egy feladatkört lát
+el.</p>
+<p>A tipikus menüpontok:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Modul</th>
+<th>Mit kezel</th>
+<th>Példa a konyhán</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Készlet</td>
+<td>Alapanyagok bevételezése, kiadása, tárolása, leltár</td>
+<td>Liszt, hús, zöldség mennyiségének nyomon követése</td>
+</tr>
+<tr>
+<td>Receptúra</td>
+<td>Anyaghányadok, elkészítési lépések, adagszám</td>
+<td>Rántott szelet receptúrája 10 adagra</td>
+</tr>
+<tr>
+<td>Kalkuláció</td>
+<td>Anyagköltség, árrés, eladási ár</td>
+<td>1 adag étel árának meghatározása</td>
+</tr>
+<tr>
+<td>Értékesítés</td>
+<td>Rendelések, számlázás, napi bevétel</td>
+<td>Asztali rendelések rögzítése</td>
+</tr>
+<tr>
+<td>Beszerzés</td>
+<td>Rendelések, szállítók, árak összehasonlítása</td>
+<td>Hús beszerzése kedvező áron</td>
+</tr>
+<tr>
+<td>Jelentés</td>
+<td>Napi, heti, havi összesítések</td>
+<td>Aznapi anyagfelhasználás kimutatása</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Megjegyzés.</strong> A programok felépítése gyártónként
+eltér, de a logikájuk közös: az alapanyag-bevételezéstől a készétel
+értékesítéséig minden adatot egy rendszerben tartanak nyilván.</p>
+<p>A <strong>táblázatkezelő</strong> (például LibreOffice Calc,
+Microsoft Excel) általános célú program. Nem kifejezetten vendéglátó
+szoftver, de rugalmasan használható kalkulációkhoz, tápértékszámításhoz,
+munkatervhez. A könyv ebben a fejezetben elsősorban táblázatkezelővel
+tanít, mert az iskolában és a gyakorlatban is elérhető, és a logikája
+átvihető a professzionális programokra.</p>
+<p><strong>Adatbiztonság.</strong> A konyhai nyilvántartások üzleti
+titkot és személyes adatokat is tartalmazhatnak. Ezért: - Mindig készíts
+biztonsági mentést. - A mentést tárold külön helyen (felhő, külső
+meghajtó). - Jelszóval védd az érzékeny fájlokat. - Ne hagyd a
+pénztárgépet vagy a számítógépet felügyelet nélkül bejelentkezve. - A
+programfrissítések előtt is készíts mentést.</p>
+<p><strong>Szabály.</strong> A számítógépes nyilvántartásnak meg kell
+felelnie a hatályos adatvédelmi és számviteli előírásoknak. A mentés
+gyakoriságát és módját az üzlet szabályzata vagy a szoftver
+dokumentációja határozza meg (ellenőrizendő: aktuális előírások, GDPR,
+NAV adatszolgáltatási szabályok).</p>
+<h3 data-number="39.7.4" id="anyagfelhasználás-követése-és-leltár"><span
+class="header-section-number">39.7.4</span> Anyagfelhasználás követése
+és leltár</h3>
+<p>A konyhában az anyagfelhasználás követése azt jelenti, hogy pontosan
+tudjuk, melyik alapanyagból mennyit vételeztünk, mennyit használtunk
+fel, és mennyi maradt. A nyilvántartás a bevételezést (szállítólevél,
+számla) és a kiadást (vételezés a raktárból a konyhára) rögzíti. A
+kiadásnál a <strong>FIFO</strong> elv (first in, first out – először be,
+először ki) szerint a korábban beérkezett tételt adjuk ki előbb; a
+program ezt a tételek beérkezési dátumával vagy tételszámával
+segítheti.</p>
+<p>A napi anyagfelhasználás legegyszerűbben egy <strong>vételezési
+napló</strong> táblázattal követhető. Ennek oszlopai például: - Dátum -
+Nyersanyag neve - Mennyiség (kg, l, db) - Egységár (Ft/kg, Ft/l, Ft/db)
+- Kiadva (konyhára) - Maradék a raktárban</p>
+<p>A heti és havi anyagfelhasználást a napi sorok összesítésével kapjuk.
+A táblázatkezelőben az <code>=SZUM(B2:B10)</code> függvény (magyar
+felületen; angolul <code>=SUM(B2:B10)</code>) adja össze a megadott
+cellákat.</p>
+<p>A leltározás célja, hogy ellenőrizzük, a nyilvántartott készlet
+megegyezik-e a ténylegesen meglévő mennyiséggel. A leltárt elő kell
+készíteni: rendet kell rakni a raktárban, a méréseket pontosan
+elvégezni, majd a leltárívet kitölteni. A táblázatkezelőben a leltárívet
+össze lehet hasonlítani a nyilvántartással: a különbség adja a hiányt
+vagy a többletet.</p>
+<p><strong>Számítás.</strong> Ha a nyilvántartás szerint 25 kg liszt
+van, de a mérlegen csak 23,5 kg, akkor a hiány:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>m</mi><mo>=</mo><msub><mi>m</mi><mtext mathvariant="normal">nyilvántartott</mtext></msub><mo>−</mo><msub><mi>m</mi><mtext mathvariant="normal">leltározott</mtext></msub><mo>=</mo><mn>25</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kg</mtext><mo>−</mo><mn>23</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kg</mtext><mo>=</mo><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kg</mtext></mrow><annotation encoding="application/x-tex">
+\Delta m = m_{\text{nyilvántartott}} - m_{\text{leltározott}} = 25\,\text{kg} - 23{,}5\,\text{kg} = 1{,}5\,\text{kg}
+</annotation></semantics></math></p>
+<p>A hiányt %-ban is kifejezhetjük:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mtext mathvariant="normal">hiány</mtext></msub><mspace width="0.167em"></mspace><mi>%</mi><mo>=</mo><mfrac><mrow><mi mathvariant="normal">Δ</mi><mi>m</mi></mrow><msub><mi>m</mi><mtext mathvariant="normal">nyilvántartott</mtext></msub></mfrac><mo>⋅</mo><mn>100</mn><mo>=</mo><mfrac><mrow><mn>1</mn><mo>,</mo><mn>5</mn></mrow><mn>25</mn></mfrac><mo>⋅</mo><mn>100</mn><mo>=</mo><mn>6</mn><mspace width="0.167em"></mspace><mi>%</mi></mrow><annotation encoding="application/x-tex">
+h_{\text{hiány}}\,\% = \frac{\Delta m}{m_{\text{nyilvántartott}}} \cdot 100 = \frac{1{,}5}{25} \cdot 100 = 6\,\%
+</annotation></semantics></math></p>
+<p>Az üzemben a megengedett eltérést (leltárhiány vagy többlet
+tűréshatárát) az üzlet szabályzata vagy a tulajdonos határozza meg
+(ellenőrizendő: belső szabályzat).</p>
+<h3 data-number="39.7.5"
+id="kalkuláció-és-tápanyagszámítás-táblázatkezelőben"><span
+class="header-section-number">39.7.5</span> Kalkuláció és
+tápanyagszámítás táblázatkezelőben</h3>
+<p><strong>Definíció.</strong> A <strong>kalkulációs táblázat</strong>
+az étel anyaghányadát, anyagköltségét és eladási árát számítja ki. A
+táblázatkezelőben a képletek automatikusan frissülnek, ha a mennyiséget
+vagy az árat megváltoztatod.</p>
+<p>A kalkulációs tábla alap felépítése:</p>
+<table>
+<thead>
+<tr>
+<th>Oszlop</th>
+<th>Tartalom</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>Nyersanyag neve</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Mennyiség az adott adagszámhoz (kg, l, db)</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Egységár (Ft/kg, Ft/l, Ft/db)</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Tétel költsége = B * C</td>
+</tr>
+<tr>
+<td>E</td>
+<td>Megjegyzés (pl. „tisztítva”, „allergén”)</td>
+</tr>
+</tbody>
+</table>
+<p>Az utolsó sorban az anyagköltség összesen:
+<code>=SZUM(D2:D10)</code>. Ez az étel nettó anyagköltsége. A
+kalkulációt az <a href="sz154.html">Árképzés: beszerzési ár, árrés,
+haszonkulcs, ÁFA</a> alfejezetben tanultak szerint folytatjuk: az
+anyagköltséghez hozzáadjuk az árrést, és kiszámítjuk a nettó, majd a
+bruttó eladási árat.</p>
+<p><strong>Továbbvitt eredmény.</strong> A kalkulációs táblázat
+felépítése – nyersanyag, mennyiség, egységár, tételköltség, összesítés,
+árrés, eladási ár – a(z) <a href="sz168.html">A szakmai vizsga
+felépítése és az elméleti felkészülés</a> alfejezetben a vizsgafeladat
+kalkulációjánál is előkerül.</p>
+<p>A tápanyagszámítás táblázatban hasonló elven működik. Minden
+nyersanyaghoz megadjuk a 100 grammra vagy 100 ml-re vonatkozó energia-
+és tápanyagtartalmat (a tápanyagtáblázatból), majd a felhasznált
+mennyiség alapján arányosítunk.</p>
+<p><strong>Számítás.</strong> Ha 150 g csirkemell filé 100 grammja 105
+kcal (tájékoztató érték, ellenőrizendő: tápanyagtáblázat), akkor a 150 g
+energiája:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">csirkemell</mtext></msub><mo>=</mo><mfrac><mrow><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">g</mtext></mrow><mrow><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">g</mtext></mrow></mfrac><mo>⋅</mo><mn>105</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kcal</mtext><mo>=</mo><mn>157</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kcal</mtext></mrow><annotation encoding="application/x-tex">
+E_{\text{csirkemell}} = \frac{150\,\text{g}}{100\,\text{g}} \cdot 105\,\text{kcal} = 157{,}5\,\text{kcal}
+</annotation></semantics></math></p>
+<p>Táblázatkezelőben ezt egy cellába írhatjuk:</p>
+<pre><code>=B2/100*C2</code></pre>
+<p>ahol B2 a felhasznált mennyiség (150), C2 a 100 g-ra vonatkozó
+energia (105). A tápanyagokra (fehérje, zsír, szénhidrát) ugyanezt
+tesszük.</p>
+<h3 data-number="39.7.6" id="számítási-példa-kalkulációs-táblázat"><span
+class="header-section-number">39.7.6</span> Számítási példa: kalkulációs
+táblázat</h3>
+<p><strong>Példa.</strong> Készítsünk kalkulációt egy adag rántott
+sertésszelethez. Az anyaghányad 1 adagra (nyersanyag bruttó mennyiség;
+tanulási adatok és tanulási árak – az egységárak más alfejezetek
+példáitól eltérhetnek, mert az árak időben és beszállítónként változnak,
+ellenőrizendő):</p>
+<table>
+<thead>
+<tr>
+<th>Nyersanyag</th>
+<th>Mennyiség 1 adagra</th>
+<th>Egységár</th>
+<th>Tétel költség (Ft)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sertéskaraj</td>
+<td>150 g</td>
+<td>2 200 Ft/kg</td>
+<td>?</td>
+</tr>
+<tr>
+<td>Liszt</td>
+<td>20 g</td>
+<td>180 Ft/kg</td>
+<td>?</td>
+</tr>
+<tr>
+<td>Tojás</td>
+<td>0,5 db</td>
+<td>55 Ft/db</td>
+<td>?</td>
+</tr>
+<tr>
+<td>Zsemlemorzsa</td>
+<td>30 g</td>
+<td>600 Ft/kg</td>
+<td>?</td>
+</tr>
+<tr>
+<td>Olaj</td>
+<td>20 ml</td>
+<td>800 Ft/l</td>
+<td>?</td>
+</tr>
+</tbody>
+</table>
+<p>A tétel költségét minden sorban kiszámoljuk. A képlet: mennyiség ×
+egységár, figyelve a mértékegység-átváltásra. Például a sertéskaraj
+esetében:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mtext mathvariant="normal">karaj</mtext></msub><mo>=</mo><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">g</mtext><mo>=</mo><mn>0</mn><mo>,</mo><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kg</mtext></mrow><annotation encoding="application/x-tex">
+m_{\text{karaj}} = 150\,\text{g} = 0{,}150\,\text{kg}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mtext mathvariant="normal">karaj</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>150</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kg</mtext><mo>⋅</mo><mn>2200</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/kg</mtext><mo>=</mo><mn>330</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext></mrow><annotation encoding="application/x-tex">
+K_{\text{karaj}} = 0{,}150\,\text{kg} \cdot 2200\,\text{Ft/kg} = 330\,\text{Ft}
+</annotation></semantics></math></p>
+<p>A lisztnél: 20 g = 0,020 kg.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mtext mathvariant="normal">liszt</mtext></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>020</mn><mo>⋅</mo><mn>180</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>6</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext><mo>≈</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext></mrow><annotation encoding="application/x-tex">
+K_{\text{liszt}} = 0{,}020 \cdot 180 = 3{,}6\,\text{Ft} \approx 4\,\text{Ft}
+</annotation></semantics></math></p>
+<p>A tojásnál: 0,5 db × 55 Ft/db = 27,5 Ft ≈ 28 Ft.</p>
+<p>A zsemlemorzsánál: 30 g = 0,030 kg × 600 Ft/kg = 18 Ft.</p>
+<p>Az olaj: 20 ml = 0,020 l × 800 Ft/l = 16 Ft.</p>
+<p>Az összes anyagköltség:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>330</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>28</mn><mo>+</mo><mn>18</mn><mo>+</mo><mn>16</mn><mo>=</mo><mn>396</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext></mrow><annotation encoding="application/x-tex">
+A = 330 + 4 + 28 + 18 + 16 = 396\,\text{Ft}
+</annotation></semantics></math></p>
+<p>Ha az üzlet 130%-os haszonkulcsot alkalmaz (ellenőrizendő: az üzlet
+árképzési szabályzata), akkor a nettó eladási ár:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">n</mtext></msub><mo>=</mo><mi>A</mi><mo>⋅</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><msub><mi>h</mi><mtext mathvariant="normal">k</mtext></msub><mspace width="0.167em"></mspace><mi>%</mi></mrow><mn>100</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>396</mn><mo>⋅</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>=</mo><mn>910</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext><mo>≈</mo><mn>911</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{n}} = A \cdot \left(1 + \frac{h_{\text{k}}\,\%}{100}\right) = 396 \cdot 2{,}3 = 910{,}8\,\text{Ft} \approx 911\,\text{Ft}
+</annotation></semantics></math></p>
+<p>A bruttó ár 27%-os tanulási áfakulccsal (a példa a módszert mutatja;
+a helyben fogyasztott ételre 5%-os kulcs vonatkozhat, lásd az <a
+href="sz154.html">Árképzés: beszerzési ár, árrés, haszonkulcs, ÁFA</a>
+alfejezetet; ellenőrizendő: aktuális ÁFA-kulcs):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mtext mathvariant="normal">b</mtext></msub><mo>=</mo><mn>911</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>27</mn><mo>≈</mo><mn>1157</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext></mrow><annotation encoding="application/x-tex">
+P_{\text{b}} = 911 \cdot 1{,}27 \approx 1157\,\text{Ft}
+</annotation></semantics></math></p>
+<p>Helyben fogyasztva 5%-os kulccsal:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>911</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>05</mn><mo>≈</mo><mn>957</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext></mrow><annotation encoding="application/x-tex">911 \cdot 1{,}05 \approx 957\,\text{Ft}</annotation></semantics></math>
+(ellenőrizendő: hatályos Áfa tv.).</p>
+<p>A táblázatkezelőben ezt soronként számoljuk, és a
+<code>=SZUM()</code> függvénnyel összegezzük. A haszonkulcsot és az
+áfakulcsot külön cellába írjuk, hogy az értékük változtatható
+legyen.</p>
+<h3 data-number="39.7.7" id="gyakorlati-útmutató"><span
+class="header-section-number">39.7.7</span> Gyakorlati útmutató</h3>
+<p><strong>Cél.</strong> Készíts táblázatkezelőben egy kalkulációs lapot
+és egy rendezvényajánlatot 60 főre.</p>
+<p><strong>Eszközök és anyagok.</strong> Számítógép táblázatkezelővel,
+kalkulátor, a korábban tanult kalkulációs képletek,
+nyersanyag-egységárak listája (tanulási adatok, jelölten).</p>
+<p><strong>Biztonsági korlát.</strong> Ezt a munkát számítógépen végezd.
+Ügyelj az adatbiztonságra: rendszeresen mentsd a fájlt, és a fontos
+táblázatokat tárold biztonságos helyen. Ne használj valós vendégadatokat
+a gyakorlás során; csak fiktív adatokkal dolgozz.</p>
+<p><strong>Higiéniai előkészület.</strong> Bár ez adminisztratív munka,
+a konyhai környezetben a számítógépet is tisztán kell tartani. Munka
+előtt moss kezet, és a billentyűzetet, egeret tartsd tisztán. Az étkezés
+és a számítógép-használat ne keveredjen a konyhai munkafelülettel.</p>
+<p><strong>Számozott lépések:</strong></p>
+<ol type="1">
+<li><p>Nyiss új táblázatot, és készíts egy „Kalkuláció”
+munkalapot.</p></li>
+<li><p>Az első sorba írd a fejléceket: Nyersanyag | Mennyiség (kg/l/db)
+| Egységár (Ft) | Tétel költség (Ft).</p></li>
+<li><p>Írj be legalább öt nyersanyagot egy választott ételhez (pl.
+rántott szelet) a mennyiségekkel és egységárakkal.</p></li>
+<li><p>A tétel költség oszlopban írj képletet: <code>=B2*C2</code>, majd
+húzd le a többi sorra.</p></li>
+<li><p>Az utolsó sorban összegezd: <code>=SZUM(D2:D6)</code> – ez az
+anyagköltség.</p></li>
+<li><p>Egy külön cellába írd be a haszonkulcsot százalékformátumban
+(130%) és az áfakulcsot (pl. 5% vagy 27%; ellenőrizendő). A
+táblázatkezelő a 130%-ot 1,3-ként tárolja.</p></li>
+<li><p>Számold ki a nettó eladási árat:
+<code>=D7*(1+haszonkulcs_cella)</code>.</p></li>
+<li><p>Számold ki a bruttó árat:
+<code>=nettó_cella*(1+áfakulcs_cella)</code>.</p>
+<p><em>Megjegyzés:</em> ha a cellába a 130-at %-jel nélkül írod be,
+akkor kell a <code>/100</code>. Ellenőrzési pont: a 396 Ft-os példára
+911 Ft nettó ár jöjjön ki.</p></li>
+<li><p>Készíts egy „Rendezvényajánlat” munkalapot. Sorold fel a menü
+ételeit, add meg az adagonkénti nettó árat, és szorozd meg
+60-nal.</p></li>
+<li><p>Mentsd el a fájlt, és nyomtasd ki (vagy mentsd PDF-be) az
+ajánlatot.</p></li>
+</ol>
+<p><strong>Ellenőrzési pontok.</strong> Nézd meg, hogy a képletek helyes
+cellákra hivatkoznak-e. Ellenőrizd kézi számítással legalább egy tétel
+költségét. Győződj meg arról, hogy a haszonkulcs és az áfa cella értéke
+helyes. Mentsd a fájlt.</p>
+<p><strong>Dokumentálás.</strong> A gyakorlat során készült kalkulációs
+táblázat és rendezvényajánlat a tanulási dokumentáció része. Jegyezd fel
+a használt képleteket és az egységárak forrását (pl. „tanulási
+adat”).</p>
+<h3 data-number="39.7.8" id="minőségellenőrzés"><span
+class="header-section-number">39.7.8</span> Minőségellenőrzés</h3>
+<p>A számítógépes táblázat akkor jó, ha:</p>
+<ul>
+<li>A képletek minden sorban helyesen hivatkoznak.</li>
+<li>A mértékegység-átváltások pontosak (g → kg, ml → l).</li>
+<li>Az összegzés a teljes anyagköltséget adja, nem hagy ki sort.</li>
+<li>A haszonkulcs és áfa alkalmazása a tanultak szerint történik.</li>
+<li>A táblázat adatai nyomon követhetők: minden egységár és mennyiség
+forrása ismert.</li>
+<li>A fájl mentve van, és a biztonsági másolat készült.</li>
+</ul>
+<h3 data-number="39.7.9" id="tipikus-hibák-és-okaik"><span
+class="header-section-number">39.7.9</span> Tipikus hibák és okaik</h3>
+<p><strong>Hiba.</strong> A táblázatban a képlet <code>=B2*C3</code>-ra
+hivatkozik egy másik sorra. <strong>Ok:</strong> a képlet lehúzása
+közben a cellahivatkozás elcsúszott, vagy kézzel rossz cellát írtak be.
+<strong>Helyes gyakorlat:</strong> mindig ellenőrizd a képletet, és
+használj abszolút hivatkozást, ha szükséges (pl. a haszonkulcs celláját
+<code>$E$1</code>-ként írd be).</p>
+<p><strong>Hiba.</strong> Az egységárat Ft/kg-ban, a mennyiséget
+grammban vitték be, így a szorzat ezerszeres lett (például 150 × 2200 =
+330 000 Ft a helyes 0,150 × 2200 = 330 Ft helyett). <strong>Ok:</strong>
+mértékegység-átváltás hiánya. <strong>Helyes gyakorlat:</strong> minden
+mennyiséget azonos egységre válts át a képletben, vagy jelöld az
+egységet a fejlécben, és a bevitelnél figyelj.</p>
+<p><strong>Hiba.</strong> A táblázatot nem mentik, és a számítógép
+lefagy vagy áramkimaradás történik. <strong>Ok:</strong> mentési rutin
+hiánya. <strong>Helyes gyakorlat:</strong> állíts be automatikus
+mentést, és minden fontos lépés után mentsd a fájlt.</p>
+<h3 data-number="39.7.10" id="valós-eset"><span
+class="header-section-number">39.7.10</span> Valós eset</h3>
+<p>Egy kisebb étterem konyháján a séf minden héten papíron számolta ki a
+menük anyagköltségét. Amikor egy vállalati rendezvényre kértek ajánlatot
+80 főre, a számolás sok időt vett igénybe, és egy hiba miatt a desszert
+anyagköltségét kétszer számolta be. A tulajdonos javaslatára a séf
+táblázatkezelőben készítette el a kalkulációt. A táblázatban a mennyiség
+oszlopba beírta a receptúra 10 adagra vonatkozó értékeit, és egy külön
+cellába a vendégszámot. Egy <code>=B2/10*vendégszám</code> képlettel a
+program automatikusan átszámolta a mennyiségeket. Az anyagköltség
+összesítése után a haszonkulcsot és az áfát is alkalmazta. Az ajánlat 20
+perc alatt elkészült, és a hibalehetőség csökkent. A tanulság: a jól
+felépített táblázat gyorsabb és pontosabb a kézi számolásnál.</p>
+<h3 data-number="39.7.11" id="önellenőrzés"><span
+class="header-section-number">39.7.11</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Mi a különbség a vendéglátó adminisztrációs program és a
+táblázatkezelő között?</li>
+<li>Miért fontos a kalkulációs táblázatban a mértékegység-átváltás?</li>
+<li>Mit jelent a <code>=SZUM(D2:D10)</code> képlet a
+táblázatkezelőben?</li>
+<li>Hogyan számolod ki 1 adag étel anyagköltségét, ha ismered a 10
+adagos receptúra költségét?</li>
+<li>Miért kell rendszeresen menteni a számítógépes nyilvántartást?</li>
+</ol>
+<h3 data-number="39.7.12" id="feladatok"><span
+class="header-section-number">39.7.12</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Sorold fel a vendéglátó
+adminisztrációs program legalább négy modulját, és írd le mindegyikről
+egy mondatban, mire használják.</p>
+<p><strong>2. feladat (A).</strong> Számold ki 30 g liszt költségét, ha
+az egységár 180 Ft/kg.</p>
+<p><strong>3. feladat (B).</strong> Készíts táblázatkezelőben (vagy
+manuálisan) egy kalkulációs táblázatot az alábbi anyaghányadhoz:
+sertésszelet 150 g, egységár 2 200 Ft/kg; étolaj 20 ml, egységár 800
+Ft/l. Számold ki mindkét tétel költségét, és add meg az összesített
+anyagköltséget.</p>
+<p><strong>4. feladat (B).</strong> Egy étel 10 adagos anyagköltsége 3
+960 Ft. Mennyi az 1 adagos anyagköltség, és mennyi a 60 adagos
+anyagköltség?</p>
+<p><strong>5. feladat (C).</strong> Készíts rendezvényajánlatot 60 főre
+a következő menühöz: előétel 1 adag nettó ára 850 Ft, főétel 1 950 Ft,
+desszert 620 Ft. Számold ki a menü nettó árát 1 főre, majd 60 főre.
+Alkalmazz 27% tanulási áfakulcsot és 5%-os (helyben fogyasztott) kulcsot
+is, és add meg a bruttó árat 60 főre (ellenőrizendő: aktuális
+ÁFA-kulcs).</p>
+<p><strong>6. feladat (D).</strong> Hibaelemzés: a kalkulációs
+táblázatban a liszt mennyiségét 20 g helyett 200 g-nak írták be. Hogyan
+változik a tétel költsége? Mi a hiba oka, és hogyan javítható ki?</p>
+<h3 data-number="39.7.13" id="megoldások"><span
+class="header-section-number">39.7.13</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok.</strong></p>
+<ol type="1">
+<li>A vendéglátó program célzottan a konyhai folyamatokat kezeli
+(készlet, kalkuláció, értékesítés), míg a táblázatkezelő általános, de
+rugalmasan alakítható.</li>
+<li>Mert ha grammot viszünk be, de az egységár Ft/kg-ban van, a szorzat
+hibás lesz. Azonos mértékegységre kell váltani.</li>
+<li>Összeadja a D2-től D10-ig terjedő cellák értékeit.</li>
+<li>A 10 adagos anyagköltséget elosztod 10-zel, hogy megkapd az 1 adag
+költségét.</li>
+<li>Az adatbiztonság miatt, hogy áramkimaradás vagy meghibásodás esetén
+ne vesszenek el az adatok.</li>
+</ol>
+<p><strong>Feladatok – megoldások.</strong></p>
+<p><strong>1. feladat (A).</strong> Például: Készlet – az alapanyagok
+bevételezésének és kiadásának nyilvántartása; Receptúra – az ételek
+anyaghányadainak tárolása; Kalkuláció – az anyagköltség és eladási ár
+kiszámítása; Értékesítés – a rendelések és számlázás kezelése.</p>
+<p><strong>2. feladat (A).</strong> 30 g = 0,030 kg. Költség = 0,030 kg
+× 180 Ft/kg = 5,4 Ft ≈ 5 Ft.</p>
+<p><strong>3. feladat (B).</strong> Sertésszelet: 150 g = 0,150 kg;
+0,150 × 2200 = 330 Ft. Étolaj: 20 ml = 0,020 l; 0,020 × 800 = 16 Ft.
+Összes anyagköltség = 330 + 16 = 346 Ft.</p>
+<p><strong>4. feladat (B).</strong> 1 adag = 3 960 Ft / 10 = 396 Ft. 60
+adag = 396 × 60 = 23 760 Ft.</p>
+<p><strong>5. feladat (C).</strong> Nettó ár 1 főre: 850 + 1 950 + 620 =
+3 420 Ft. Nettó ár 60 főre: 3 420 × 60 = 205 200 Ft. Bruttó ár 27%
+tanulási áfakulccsal: 205 200 × 1,27 = 260 604 Ft; 5%-os kulccsal: 205
+200 × 1,05 = 215 460 Ft.</p>
+<p><strong>6. feladat (D).</strong> Ha 20 g helyett 200 g lisztet írnak
+be, a mennyiség tízszerese lesz, így a tétel költsége is tízszeres: 20 g
+× 180 Ft/kg = 3,6 Ft helyett 200 g × 180 Ft/kg = 36 Ft lesz. Hiba oka:
+adatbeviteli hiba, elírás. Javítás: a cellában a 200-at 20-ra kell
+módosítani, és ellenőrizni a képletet.</p>
+<h3 data-number="39.7.14" id="rövid-összefoglaló"><span
+class="header-section-number">39.7.14</span> Rövid összefoglaló</h3>
+<p>A számítógépes konyhai adminisztráció célja, hogy a
+készletnyilvántartást, a kalkulációt és a tápanyagszámítást gyorsan és
+pontosan végezzük. A vendéglátó adminisztrációs program moduljai
+(készlet, receptúra, kalkuláció, értékesítés) célzottan kezelik a
+konyhai folyamatokat. A táblázatkezelő rugalmas eszköz: a kalkulációs
+táblázatban minden tétel költségét a mennyiség × egységár képlettel
+számoljuk, majd <code>=SZUM()</code> függvénnyel összegezzük. Az egy
+adagos anyagköltséget a 10 adagos költség tizede adja. A
+rendezvényajánlatnál a vendégszámot külön cellába írjuk, és a
+mennyiségeket arányosan növeljük. Az árrés és az áfa alkalmazása a
+tanult képletekkel történik, az adatokat külön cellában tároljuk, hogy
+könnyen módosíthatók legyenek. Az adatbiztonság alapja a rendszeres
+mentés és a jelszavas védelem. <strong>Továbbvitt eredmény:</strong> a
+kalkulációs táblázat felépítése (nyersanyag, mennyiség, egységár,
+tételköltség, összesítés, árrés, eladási ár) a(z) <a href="sz168.html">A
+szakmai vizsga felépítése és az elméleti felkészülés</a> alfejezetben a
+vizsgafeladat kalkulációjánál is alkalmazott.</p>
+<h3 data-number="39.7.15" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">39.7.15</span> Források és ellenőrzési
+hiányok</h3>
+<ul>
+<li>Vendéglátó adminisztrációs programok: gyártói dokumentációk
+(ellenőrizendő: konkrét programok, pl. a magyar piacon elterjedt
+szoftverek).</li>
+<li>Táblázatkezelő függvények: LibreOffice Calc / Microsoft Excel súgó
+(a függvénynevek magyar/angol nyelvűek lehetnek).</li>
+<li>Adatvédelem: GDPR, hatályos magyar adatvédelmi törvény
+(ellenőrizendő: pontos jogszabályszámok).</li>
+<li>Adózás, számlázás: NAV online számla rendszer, ÁFA-törvény
+(ellenőrizendő: aktuális kulcsok, szabályok).</li>
+<li>Tápanyagtáblázat: hazai élelmiszer-tápanyagtáblázat (ellenőrizendő:
+pontos adatforrás).</li>
+<li>A haszonkulcs és árrés értékei az üzlet árképzési szabályzatától
+függnek (ellenőrizendő: belső szabályzat).</li>
+</ul>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="sz159.html">← 39.6 Elszámoltatás: leltárhiány, raktár, termelés, értékesítés</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="sz161.html">40.1 Nyersanyagok, ételek, italok és cukrászkészítmények nevei →</a></div>
+</nav>
+</body>
+</html>

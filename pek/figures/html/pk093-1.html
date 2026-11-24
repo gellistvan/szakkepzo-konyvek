@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maghőmérséklet és bélzetfolyamatok</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ex">kidolgozott példa</label><select id="ex" aria-label="kidolgozott példa"><option value="0" selected>kézi (csúszka)</option><option value="2">2. példa: 78 °C</option><option value="3">3. példa: 70 °C</option></select></div>
+<div class="row"><label for="t">sütési idő</label><input id="t" type="range" min="0" max="40" step="0.5" value="15" aria-label="sütési idő"><output id="t_o" for="t"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 300" role="img" aria-label="A kenyérbél maghőmérséklete a sütési idő függvényében, a bélzetben lejátszódó folyamatok hőmérsékleti sávjaival."></svg>
+<p class="small">Szemléltető görbe a fejezet pontjaival (1 kg-os búzakenyér), lineáris interpolációval; nem mért adat. A célértéket a technológiai lap és a HACCP-terv adja (ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"t":"perc"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P=[[0,30],[10,55],[20,80],[30,92],[40,96]];
+const PR=[["gáztágulás, kemencerugás",30,60],["élesztő pusztulása",55,60],["keményítő-csirizesedés",60,80],["fehérjék kicsapódása",60,75],["enzimek inaktiválódása",75,90],["vízelpárolgás, ellaposodás",90,96]];
+const Tof=t=>{for(let i=1;i<P.length;i++){if(t<=P[i][0]){const a=P[i-1],b=P[i];return a[1]+(b[1]-a[1])*(t-a[0])/(b[0]-a[0]);}}return 96;};
+const tOf=T=>{for(let i=1;i<P.length;i++){if(T<=P[i][1]){const a=P[i-1],b=P[i];return a[0]+(b[0]-a[0])*(T-a[1])/(b[1]-a[1]);}}return 40;};
+let t=v.t; if(v.ex==2&&window._ex!==2){t=tOf(78);} if(v.ex==3&&window._ex!==3){t=tOf(70);} window._ex=v.ex;
+if(v.ex!=0){document.getElementById("t").value=t.toFixed(1);}
+const T=Tof(t);
+const W=600,H=300,L=46,R=12,Tp=12,B=34, X=x=>L+x/40*(W-L-R), Y=y=>Tp+(100-y)/75*(H-Tp-B);
+PR.forEach(([n,lo,hi],i)=>{el("rect",{x:L,y:Y(hi),width:W-L-R,height:Y(lo)-Y(hi),fill:i%2?css("--grid"):"none",opacity:0.35});});
+el("line",{x1:L,x2:W-R,y1:Y(92),y2:Y(92),stroke:css("--line"),"stroke-dasharray":"6 4"});
+el("line",{x1:L,y1:H-B,x2:W-R,y2:H-B,stroke:css("--line")});el("line",{x1:L,y1:Tp,x2:L,y2:H-B,stroke:css("--line")});
+for(let x=0;x<=40;x+=10)el("text",{x:X(x),y:H-B+15,"text-anchor":"middle","font-size":11},x+" perc");
+for(let y=30;y<=100;y+=10)el("text",{x:L-5,y:Y(y)+4,"text-anchor":"end","font-size":11},y);
+el("polyline",{points:P.map(p=>X(p[0])+","+Y(p[1])).join(" "),fill:"none",stroke:css("--hl"),"stroke-width":3});
+el("circle",{cx:X(t),cy:Y(T),r:6,fill:css("--hl2")});
+let done=[],now=[],todo=[];PR.forEach(([n,lo,hi])=>{const s=n+" ("+lo+"–"+hi+" °C)";if(T>=hi)done.push(s);else if(T>=lo)now.push(s);else todo.push(s);});
+status("<b>"+fmt(t,1)+". perc – maghőmérséklet ≈ "+fmt(T,0)+" °C</b>"+(T>=92?' <span class="ok">átsültségi zónában (példa)</span>':'')+
+ "<br>lezajlott: "+(done.join("; ")||"–")+"<br>folyamatban: "+(now.join("; ")||"–")+"<br>hátravan: "+(todo.join("; ")||"–")+
+ "<br><small>A határok közelítők, a folyamatok átfednek; tanulási példa.</small>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

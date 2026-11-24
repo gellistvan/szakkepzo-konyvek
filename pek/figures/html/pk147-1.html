@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tömegellenőrző kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pre">adatkészlet</label><select id="pre" aria-label="adatkészlet"><option value="f4" selected>4. feladat (8 db)</option><option value="fig">„Figyelem” tétel (10 db)</option><option value="own">saját mérés</option></select></div>
+<div class="row"><label for="nd">darabszám</label><select id="nd" aria-label="darabszám"><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8" selected>8</option><option value="9">9</option><option value="10">10</option></select></div>
+<div class="row"><label for="d1">1. darab</label><input id="d1" type="range" min="400" max="600" step="1" value="480" aria-label="1. darab"><output id="d1_o" for="d1"></output></div>
+<div class="row"><label for="d2">2. darab</label><input id="d2" type="range" min="400" max="600" step="1" value="490" aria-label="2. darab"><output id="d2_o" for="d2"></output></div>
+<div class="row"><label for="d3">3. darab</label><input id="d3" type="range" min="400" max="600" step="1" value="495" aria-label="3. darab"><output id="d3_o" for="d3"></output></div>
+<div class="row"><label for="d4">4. darab</label><input id="d4" type="range" min="400" max="600" step="1" value="500" aria-label="4. darab"><output id="d4_o" for="d4"></output></div>
+<div class="row"><label for="d5">5. darab</label><input id="d5" type="range" min="400" max="600" step="1" value="505" aria-label="5. darab"><output id="d5_o" for="d5"></output></div>
+<div class="row"><label for="d6">6. darab</label><input id="d6" type="range" min="400" max="600" step="1" value="510" aria-label="6. darab"><output id="d6_o" for="d6"></output></div>
+<div class="row"><label for="d7">7. darab</label><input id="d7" type="range" min="400" max="600" step="1" value="515" aria-label="7. darab"><output id="d7_o" for="d7"></output></div>
+<div class="row"><label for="d8">8. darab</label><input id="d8" type="range" min="400" max="600" step="1" value="520" aria-label="8. darab"><output id="d8_o" for="d8"></output></div>
+<div class="row"><label for="d9">9. darab</label><input id="d9" type="range" min="400" max="600" step="1" value="500" aria-label="9. darab"><output id="d9_o" for="d9"></output></div>
+<div class="row"><label for="d10">10. darab</label><input id="d10" type="range" min="400" max="600" step="1" value="500" aria-label="10. darab"><output id="d10_o" for="d10"></output></div>
+<div class="row"><label for="mn">névleges tömeg</label><input id="mn" type="range" min="300" max="1200" step="10" value="500" aria-label="névleges tömeg"><output id="mn_o" for="mn"></output></div>
+<div class="row"><label for="tt">tűrés ±</label><input id="tt" type="range" min="0.5" max="5" step="0.5" value="3" aria-label="tűrés ±"><output id="tt_o" for="tt"></output></div>
+<div class="row"><label for="vp">tervezett veszteség</label><input id="vp" type="range" min="5" max="20" step="0.1" value="12" aria-label="tervezett veszteség"><output id="vp_o" for="vp"></output></div>
+<div class="row"><label for="mf">feladási tömeg</label><input id="mf" type="range" min="300" max="1500" step="1" value="1136" aria-label="feladási tömeg"><output id="mf_o" for="mf"></output></div>
+<div class="row"><label for="mk">mért késztömeg-átlag</label><input id="mk" type="range" min="300" max="1200" step="1" value="980" aria-label="mért késztömeg-átlag"><output id="mk_o" for="mk"></output></div>
+<div class="row"><label for="mc">céltömeg</label><input id="mc" type="range" min="300" max="1200" step="10" value="1000" aria-label="céltömeg"><output id="mc_o" for="mc"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 580 235" role="img" aria-label="Nyolc darab mért tömege a ±3%-os tűréssávval; az átlag a sávban van, de két darab kívül esik; mellette a feladási tömeg korrekciója a tényleges veszteséggel."></svg>
+<p class="small">Képletből számolt tanulási példa (átlag, Δm% = (m̄ − m_n)/m_n · 100, v = (m_f − m̄)/m_f · 100, m_f,korr = m_cél/(1 − v/100)). A tűrés és a veszteség tanulási példa (ellenőrizendő: aktuális előírás és technológiai lap).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"d1":"g", "d2":"g", "d3":"g", "d4":"g", "d5":"g", "d6":"g", "d7":"g", "d8":"g", "d9":"g", "d10":"g", "mn":"g", "tt":"%", "vp":"%", "mf":"g", "mk":"g", "mc":"g"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const fg=css("--fg"), mu=css("--muted"), hl=css("--hl"), hl2=css("--hl2"), gr=css("--grid");
+const PRE={f4:{n:8,d:[480,490,495,500,505,510,515,520],mn:500},fig:{n:10,d:[470,470,520,520,520,520,520,520,520,520],mn:500}};
+if(v.pre!==window._lp){window._lp=v.pre;const P=PRE[v.pre];
+  if(P){document.getElementById("nd").value=P.n;P.d.forEach((g,i)=>{document.getElementById("d"+(i+1)).value=g;});
+        document.getElementById("mn").value=P.mn;draw();return;}}
+for(let i=1;i<=10;i++)document.getElementById("d"+i).closest(".row").style.display=i<=v.nd?"":"none";
+const D=[];for(let i=1;i<=v.nd;i++)D.push(v["d"+i]);
+const lo=v.mn*(1-v.tt/100), hi=v.mn*(1+v.tt/100), avg=D.reduce((a,b)=>a+b,0)/D.length, dev=(avg-v.mn)/v.mn*100;
+const outN=D.filter(g=>g<lo-1e-9||g>hi+1e-9).length;
+const ymin=Math.min(lo,...D)-10, ymax=Math.max(hi,...D)+10, X0=60,W=300,Y0=210,H=180, sy=g=>Y0-H*(g-ymin)/(ymax-ymin), sx=i=>X0+W*(i+0.5)/D.length;
+el("rect",{x:X0,y:sy(hi),width:W,height:sy(lo)-sy(hi),fill:gr});
+el("line",{x1:X0,y1:sy(v.mn),x2:X0+W,y2:sy(v.mn),stroke:fg,"stroke-width":1.5});
+el("line",{x1:X0,y1:sy(avg),x2:X0+W,y2:sy(avg),stroke:hl,"stroke-width":2.5,"stroke-dasharray":"8 4"});
+el("line",{x1:X0,y1:Y0+5,x2:X0+W,y2:Y0+5,stroke:fg});
+[ymin+10,v.mn,ymax-10].forEach(g=>el("text",{x:X0-6,y:sy(g)+4,"font-size":11,"text-anchor":"end",fill:fg},fmt(g,0)));
+D.forEach((g,i)=>{const o=g<lo-1e-9||g>hi+1e-9;
+  if(o){el("line",{x1:sx(i)-6,y1:sy(g)-6,x2:sx(i)+6,y2:sy(g)+6,stroke:hl2,"stroke-width":3});el("line",{x1:sx(i)-6,y1:sy(g)+6,x2:sx(i)+6,y2:sy(g)-6,stroke:hl2,"stroke-width":3});}
+  else el("circle",{cx:sx(i),cy:sy(g),r:5,fill:fg});
+  el("text",{x:sx(i),y:Y0+20,"font-size":11,"text-anchor":"middle",fill:fg},i+1);});
+el("text",{x:X0,y:16,"font-size":12,fill:fg},"darabtömegek (g), szürke: tűréssáv, szaggatott: átlag");
+// korrekció
+const vt=(v.mf-v.mk)/v.mf*100, mfk=v.mc/(1-vt/100), mft=v.mc/(1-v.vp/100), X1=400, S=150/Math.max(v.mf,mfk,mft);
+[["tervezett",mft,v.mc],["tényleges",v.mf,v.mk],["korrigált",mfk,v.mc]].forEach((r,k)=>{const y=40+k*55;
+  el("text",{x:X1,y:y-6,"font-size":11,fill:fg},r[0]+": "+fmt(r[1],0)+" g → "+fmt(r[2],0)+" g");
+  el("rect",{x:X1,y:y,width:S*r[2],height:18,fill:mu,opacity:0.5,stroke:fg});
+  el("rect",{x:X1+S*r[2],y:y,width:S*(r[1]-r[2]),height:18,fill:"none",stroke:fg,"stroke-dasharray":"4 2"});});
+let s=`Átlag: <b>${fmt(avg,1)} g</b>, eltérés a névlegestől: <b>${fmt(dev,2)} %</b>; tűréssáv ${fmt(lo,1)}–${fmt(hi,1)} g. `+
+ (avg>=lo&&avg<=hi?'Az átlag a sávban van':'<span class="bad">Az átlag a sávon kívül van</span>')+
+ `, sávon kívüli darab: <b>${outN}</b>`+(outN?' – az osztást/présgépet ellenőrizni kell.':'.');
+s+=`<br>Tényleges veszteség: (${fmt(v.mf,0)} − ${fmt(v.mk,0)}) / ${fmt(v.mf,0)} · 100 = <b>${fmt(vt,1)} %</b>; korrigált feladási tömeg: ${fmt(v.mc,0)} / (1 − ${fmt(vt/100,3)}) = <b>${fmt(mfk,0)} g</b> (tervezett veszteséggel ${fmt(mft,0)} g).`;
+status(s);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

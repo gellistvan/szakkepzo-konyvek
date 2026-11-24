@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lisztre vetített ↔ összetétel-% átváltó</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pre">előbeállítás</label><select id="pre" aria-label="előbeállítás"><option value="0">kézi</option><option value="1" selected>fejezet táblázata</option><option value="2">Önellenőrzés 3.</option><option value="3">3. feladat</option></select></div>
+<div class="row"><label for="dir">irány</label><select id="dir" aria-label="irány"><option value="1" selected>lisztre vetített → összetétel</option><option value="2">összetétel → lisztre vetített</option></select></div>
+<div class="row"><label for="w">víz (lisztre vetítve)</label><input id="w" type="range" min="50" max="80" step="0.5" value="60" aria-label="víz (lisztre vetítve)"><output id="w_o" for="w"></output></div>
+<div class="row"><label for="y">élesztő</label><input id="y" type="range" min="0" max="6" step="0.1" value="2" aria-label="élesztő"><output id="y_o" for="y"></output></div>
+<div class="row"><label for="s">só</label><input id="s" type="range" min="0" max="3" step="0.1" value="2" aria-label="só"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="f">zsiradék/egyéb</label><input id="f" type="range" min="0" max="30" step="0.1" value="3" aria-label="zsiradék/egyéb"><output id="f_o" for="f"></output></div>
+<div class="row"><label for="m">liszt tömege</label><input id="m" type="range" min="1" max="200" step="1" value="100" aria-label="liszt tömege"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="cl">összetétel: liszt</label><input id="cl" type="range" min="30" max="80" step="0.1" value="59.9" aria-label="összetétel: liszt"><output id="cl_o" for="cl"></output></div>
+<div class="row"><label for="cw">összetétel: víz</label><input id="cw" type="range" min="10" max="50" step="0.1" value="35.9" aria-label="összetétel: víz"><output id="cw_o" for="cw"></output></div>
+<div class="row"><label for="cy">összetétel: élesztő</label><input id="cy" type="range" min="0" max="5" step="0.01" value="1.2" aria-label="összetétel: élesztő"><output id="cy_o" for="cy"></output></div>
+<div class="row"><label for="cs">összetétel: só</label><input id="cs" type="range" min="0" max="3" step="0.01" value="1.2" aria-label="összetétel: só"><output id="cs_o" for="cs"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 260" role="img" aria-label="Két halmozott oszlop: lisztre vetítve a tészta 167%, összetétel-százalékban 100%; a liszt 100%, illetve 59,9%."></svg>
+<p class="small">Tanulási példa. Az 1. irányban a felső csúszkák (víz, élesztő, só, zsiradék), a 2. irányban az „összetétel:” csúszkák számítanak; a maradék összetétel-% a zsiradék/egyéb sor. A TA itt a hagyományos 100 + víz% (ellenőrizendő: üzemi technológiai definíció).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"w":"%", "y":"%", "s":"%", "f":"%", "m":"kg", "cl":"%", "cw":"%", "cy":"%", "cs":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P={1:[1,60,2,2,3,100],2:[2,0,0,0,0,100],3:[2,0,0,0,0,100]};
+const C={2:[55,33,1.1,1.1,9.8],3:[56,34,2*56/100,2*56/100,7.8]};
+if(v.pre && v.pre!==window._lp){window._lp=v.pre;
+  if(v.pre===1){document.getElementById("dir").value=1;[["w",60],["y",2],["s",2],["f",3],["m",100]].forEach(a=>document.getElementById(a[0]).value=a[1]);}
+  else{document.getElementById("dir").value=2;const c=C[v.pre];[["cl",c[0]],["cw",c[1]],["cy",c[2]],["cs",c[3]]].forEach(a=>document.getElementById(a[0]).value=a[1]);}
+  draw();return;}
+window._lp=v.pre;
+let fp;  // lisztre vetített %
+if(v.dir===1){fp=[100,v.w,v.y,v.s,v.f];}
+else{const cf=100-v.cl-v.cw-v.cy-v.cs; if(cf<0){status('<span class="bad">Az összetétel-%-ok összege 100 fölött van – csökkents valamelyiket.</span>');return;}
+  const comp=[v.cl,v.cw,v.cy,v.cs,cf]; fp=comp.map(c=>c/v.cl*100);}
+const tot=fp.reduce((a,b)=>a+b,0), comp=fp.map(x=>x/tot*100), N=["liszt","víz","élesztő","só","zsiradék/egyéb"];
+const H=260,B=230,sc=200/Math.max(tot,100);
+let y=B; fp.forEach((p,i)=>{const h=p*sc; el("rect",{x:60,y:y-h,width:90,height:h,fill:i===0?css("--hl"):"none",stroke:css("--line"),"fill-opacity":i===0?0.35:1});
+  if(h>12)el("text",{x:105,y:y-h/2+4,"text-anchor":"middle","font-size":11},N[i]+" "+fmt(p,1)+" %"); y-=h;});
+el("text",{x:105,y:y-6,"text-anchor":"middle","font-size":12,"font-weight":"bold"},"Σ "+fmt(tot,1)+" %");
+y=B; comp.forEach((p,i)=>{const h=p*200/100*(100*sc/200*2); const hh=p*sc; el("rect",{x:240,y:y-hh,width:90,height:hh,fill:i===0?css("--hl"):"none",stroke:css("--line"),"fill-opacity":i===0?0.35:1});
+  if(hh>12)el("text",{x:285,y:y-hh/2+4,"text-anchor":"middle","font-size":11},N[i]+" "+fmt(p,1)+" %"); y-=hh;});
+el("text",{x:285,y:y-6,"text-anchor":"middle","font-size":12,"font-weight":"bold"},"Σ 100 %");
+el("text",{x:105,y:B+18,"text-anchor":"middle","font-size":12},"lisztre vetített");el("text",{x:285,y:B+18,"text-anchor":"middle","font-size":12},"összetétel");
+const TA=100+fp[1], dough=v.m*tot/100;
+el("text",{x:380,y:60,"font-size":13},"TA = 100 + víz% = "+fmt(TA,1));
+el("text",{x:380,y:85,"font-size":13},"tészta "+fmt(v.m,0)+" kg lisztből: "+fmt(dough,1)+" kg");
+el("text",{x:380,y:110,"font-size":13},"víz: "+fmt(v.m*fp[1]/100,1)+" kg");
+status((v.dir===1?"Lisztre vetített → összetétel: c_i = p_i / Σp · 100":"Összetétel → lisztre vetített: p_i = c_i / c_liszt · 100")+
+  "<br>víz lisztre vetítve: <b>"+fmt(fp[1],1)+" %</b>; zsiradék/egyéb: <b>"+fmt(fp[4],1)+" %</b>; TA = <b>"+fmt(TA,1)+"</b>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

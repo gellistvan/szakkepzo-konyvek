@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rostirány és vágásvonal</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ang">A vágásvonal szöge a rostokhoz</label><input id="ang" type="range" min="0" max="90" step="5" value="90" aria-label="A vágásvonal szöge a rostokhoz"><output id="ang_o" for="ang"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 580 210" role="img" aria-label="Húsdarab vízszintes rostokkal és forgatható vágásvonallal; a szelet rostjai a vágás szögének megfelelően rövidek vagy hosszúak."></svg>
+<p class="small">Szemléltető modell: 90° = a rostokra merőleges vágás, 0° = a rostokkal párhuzamos vágás.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"ang":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const a=v.ang*Math.PI/180, fg=css("--fg")||"#111";
+el("rect",{x:20,y:30,width:300,height:160,rx:20,fill:"#e6c9c9",stroke:fg,"stroke-width":2});
+for(let i=0;i<12;i++){const y=42+i*13; el("line",{x1:30,y1:y,x2:310,y2:y,stroke:"#8a5a5a","stroke-width":1});}
+const cx=170, cy=110, L=110, dx=Math.cos(a)*L, dy=-Math.sin(a)*L;
+el("line",{x1:cx-dx,y1:cy-dy,x2:cx+dx,y2:cy+dy,stroke:"#111","stroke-width":3,"stroke-dasharray":"8 5"});
+// a szelet nagyítva: a rostok látszó hossza a szöggel arányos
+const s=Math.abs(Math.sin(a));
+el("rect",{x:360,y:60,width:200,height:100,rx:12,fill:"#e6c9c9",stroke:fg,"stroke-width":2});
+const n=Math.round(6+s*10);
+for(let i=0;i<n;i++){const x=372+i*(176/n), y=75+((i*37)%70); el("line",{x1:x,y1:y,x2:Math.min(x+4+(1-s)*150,556),y2:y,stroke:"#8a5a5a","stroke-width":2});}
+el("text",{x:460,y:185,"text-anchor":"middle","font-size":13,fill:fg},"a szelet rostjai");
+const q=s>0.85?"rostra merőleges: rövid rostvégek – omlós ✓":(s<0.35?"rostokkal párhuzamos: hosszú rostok – rágós ✗":"ferde: részben hosszú rostok – kevésbé omlós");
+status(`Vágásvonal a rostirányhoz képest: <b>${v.ang}°</b> – ${q}`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

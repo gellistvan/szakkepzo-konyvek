@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hajtáslánc- és áttételkalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="n1">motor n₁</label><input id="n1" type="range" min="700" max="3000" step="10" value="1440" aria-label="motor n₁"><output id="n1_o" for="n1"></output></div>
+<div class="row"><label for="d1">hajtó tárcsa d₁</label><input id="d1" type="range" min="50" max="200" step="5" value="80" aria-label="hajtó tárcsa d₁"><output id="d1_o" for="d1"></output></div>
+<div class="row"><label for="d2">hajtott tárcsa d₂</label><input id="d2" type="range" min="80" max="500" step="5" value="240" aria-label="hajtott tárcsa d₂"><output id="d2_o" for="d2"></output></div>
+<div class="row"><label for="z1">hajtó kerék z₁</label><input id="z1" type="range" min="10" max="40" step="1" value="18" aria-label="hajtó kerék z₁"><output id="z1_o" for="z1"></output></div>
+<div class="row"><label for="z2">hajtott kerék z₂</label><input id="z2" type="range" min="20" max="120" step="1" value="54" aria-label="hajtott kerék z₂"><output id="z2_o" for="z2"></output></div>
+<div class="row"><label for="D">hajtódob D</label><input id="D" type="range" min="60" max="400" step="10" value="200" aria-label="hajtódob D"><output id="D_o" for="D"></output></div>
+<div class="row"><label for="s">szakasz s</label><input id="s" type="range" min="0.5" max="10" step="0.5" value="2.5" aria-label="szakasz s"><output id="s_o" for="s"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Motor–ékszíj–fogaskerék–dob hajtáslánc, a fokozatonként csökkenő fordulatszámokkal."></svg>
+<p class="small">Képletből számolt tanulási példa (csúszásmentes szíj). Az animáció lassított, a forgási idő a fordulatszámmal fordítottan arányos; a fogaskerékpár ellentétes irányba forog. Az alapértékek a 3. kidolgozott példáé (160 1/min).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n1":"1/min", "d1":"mm", "d2":"mm", "z1":"fog", "z2":"fog", "D":"mm", "s":"m"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const i1=v.d2/v.d1, i2=v.z2/v.z1, I=i1*i2, n2=v.n1/i1, n3=n2/i2, vs=v.D/1000*Math.PI*n3, t=v.s/vs*60;
+const K=0.11, Y=150, r1=v.d1/2*K, r2=v.d2/2*K, g1=v.z1*1.0, g2=v.z2*1.0;
+const x1=70, x2=x1+r1+r2+40, x3=x2+r2+g1+40, x4=x3+g1+g2, x5=x4+g2+45;
+const W=x5+40; S.setAttribute("viewBox","0 0 "+Math.max(560,W)+" 300");
+const ln=css("--line");
+function wheel(cx,r,n,dir,teeth){ const g=el("g",{});
+  const c=document.createElementNS(NS,"circle");c.setAttribute("cx",cx);c.setAttribute("cy",Y);c.setAttribute("r",r);
+  c.setAttribute("fill",teeth?css("--grid"):"none");c.setAttribute("stroke",ln);c.setAttribute("stroke-width",teeth?3:2);
+  if(teeth){c.setAttribute("stroke-dasharray","3 2");} g.appendChild(c);
+  for(const a of [0,60,120]){const l=document.createElementNS(NS,"line");const rad=a*Math.PI/180;
+    l.setAttribute("x1",cx-r*Math.cos(rad));l.setAttribute("y1",Y-r*Math.sin(rad));l.setAttribute("x2",cx+r*Math.cos(rad));l.setAttribute("y2",Y+r*Math.sin(rad));
+    l.setAttribute("stroke",ln);l.setAttribute("stroke-width",1);g.appendChild(l);}
+  const an=document.createElementNS(NS,"animateTransform");an.setAttribute("attributeName","transform");an.setAttribute("type","rotate");
+  const per=Math.max(0.15, 120/n); an.setAttribute("from",(dir>0?0:360)+" "+cx+" "+Y);an.setAttribute("to",(dir>0?360:0)+" "+cx+" "+Y);
+  an.setAttribute("dur",per.toFixed(2)+"s");an.setAttribute("repeatCount","indefinite");g.appendChild(an);return g;}
+el("rect",{x:5,y:Y-22,width:40,height:44,fill:css("--grid"),stroke:ln});el("text",{x:25,y:Y+6,"text-anchor":"middle","font-size":15,"font-weight":"bold"},"M");
+el("line",{x1:45,y1:Y,x2:x1,y2:Y,stroke:ln,"stroke-width":3});
+const dx=x2-x1, b=Math.acos((r1-r2)/dx);
+el("line",{x1:x1+r1*Math.cos(b),y1:Y-r1*Math.sin(b),x2:x2+r2*Math.cos(b),y2:Y-r2*Math.sin(b),stroke:ln,"stroke-width":3});
+el("line",{x1:x1+r1*Math.cos(b),y1:Y+r1*Math.sin(b),x2:x2+r2*Math.cos(b),y2:Y+r2*Math.sin(b),stroke:ln,"stroke-width":3});
+wheel(x1,r1,v.n1,1,false);wheel(x2,r2,n2,1,false);
+el("line",{x1:x2,y1:Y,x2:x3,y2:Y,stroke:css("--muted"),"stroke-dasharray":"8 3 2 3"});
+wheel(x3,g1,n2,1,true);wheel(x4,g2,n3,-1,true);
+el("line",{x1:x4,y1:Y,x2:x5,y2:Y,stroke:css("--muted"),"stroke-dasharray":"8 3 2 3"});
+wheel(x5,Math.max(8,v.D/2*0.25),n3,-1,false);
+el("line",{x1:x5-30,y1:Y-Math.max(8,v.D/2*0.25),x2:x5+30,y2:Y-Math.max(8,v.D/2*0.25),stroke:css("--hl2"),"stroke-width":4});
+const T=(x,y,s,b)=>el("text",{x:x,y:y,"text-anchor":"middle","font-size":12,"font-weight":b?"bold":"normal"},s);
+T(x1,Y+r1+18,"d₁ "+fmt(v.d1,0)+" mm");T(x2,Y+r2+18,"d₂ "+fmt(v.d2,0)+" mm");
+T(x3,Y+g1+18,"z₁ "+fmt(v.z1,0));T(x4,Y+g2+18,"z₂ "+fmt(v.z2,0));T(x5,Y+40,"D "+fmt(v.D,0)+" mm");
+T(25,Y+45,fmt(v.n1,0)+" 1/min",true);T((x2+x3)/2,Y-r2-12>20?Y-Math.max(r2,g1)-14:24,fmt(n2,0)+" 1/min",true);T(x5,Y-60,fmt(n3,1)+" 1/min",true);
+const bad = (vs<1||vs>50);
+status("i₁ = "+fmt(v.d2,0)+"/"+fmt(v.d1,0)+" = <b>"+fmt(i1,2)+"</b>; i₂ = "+fmt(v.z2,0)+"/"+fmt(v.z1,0)+" = <b>"+fmt(i2,2)+"</b>; i<sub>össz</sub> = <b>"+fmt(I,2)+
+ "</b><br>n: "+fmt(v.n1,0)+" → "+fmt(n2,0)+" → <b>"+fmt(n3,1)+" 1/min</b>; szalagsebesség v = D·π·n = <b>"+fmt(vs,1)+" m/min</b>; "+fmt(v.s,1)+" m megtétele: <b>"+fmt(t,1)+" s</b>"+
+ (bad?'<br><span class="bad">A szalagsebesség kívül esik a tanulási példa 1–50 m/min tartományán – ellenőrizd az adatokat (a valós érték a gépkönyv szerint).</span>':''));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

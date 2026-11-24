@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Többlépcsős kovászkalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="L">teljes liszt</label><input id="L" type="range" min="20" max="400" step="1" value="150" aria-label="teljes liszt"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="K">kovásznagyság K</label><input id="K" type="range" min="10" max="60" step="1" value="40" aria-label="kovásznagyság K"><output id="K_o" for="K"></output></div>
+<div class="row"><label for="TA">kovász-TA</label><input id="TA" type="range" min="150" max="220" step="1" value="180" aria-label="kovász-TA"><output id="TA_o" for="TA"></output></div>
+<div class="row"><label for="Pm">mag P_mag</label><input id="Pm" type="range" min="0" max="30" step="1" value="10" aria-label="mag P_mag"><output id="Pm_o" for="Pm"></output></div>
+<div class="row"><label for="TAm">mag TA</label><input id="TAm" type="range" min="150" max="220" step="1" value="180" aria-label="mag TA"><output id="TAm_o" for="TAm"></output></div>
+<div class="row"><label for="n">lépésszám</label><select id="n" aria-label="lépésszám"><option value="1">1 lépés</option><option value="2">2 lépés</option><option value="3" selected>3 lépés</option></select></div>
+<div class="row"><label for="a1">1. lépés aránya</label><input id="a1" type="range" min="0" max="100" step="5" value="20" aria-label="1. lépés aránya"><output id="a1_o" for="a1"></output></div>
+<div class="row"><label for="a2">2. lépés aránya</label><input id="a2" type="range" min="0" max="100" step="5" value="30" aria-label="2. lépés aránya"><output id="a2_o" for="a2"></output></div>
+<div class="row"><label for="a3">3. lépés aránya</label><input id="a3" type="range" min="0" max="100" step="5" value="50" aria-label="3. lépés aránya"><output id="a3_o" for="a3"></output></div>
+<div class="row"><label for="Pv">tészta víz (lisztre)</label><input id="Pv" type="range" min="50" max="90" step="1" value="64" aria-label="tészta víz (lisztre)"><output id="Pv_o" for="Pv"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 270" role="img" aria-label="A kovász lisztje lépésenként 16,8, 33 és 60 kg-ra, vize 13,44, 26,4 és 48 kg-ra nő; a TA mindhárom lépésben 180."></svg>
+<p class="small">Képletből számolt tanulási példa (a fejezet képletei). Sötét: kovászmag, szürke: előző lépésből átvitt, üres: az adott lépés friss anyaga; szaggatott keret: víz. A dagasztóvíz a tészta teljes vízigényéből a kovászvíz levonásával adódik.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"L":"kg", "K":"%", "TA":"", "Pm":"%", "TAm":"", "a1":"%", "a2":"%", "a3":"%", "Pv":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const L=v.L,K=v.K,TA=v.TA,Pm=v.Pm,TAm=v.TAm,n=v.n;
+let ratios=[v.a1,v.a2,v.a3].slice(0,n); if(n===1) ratios=[100];
+const sum=ratios.reduce((a,b)=>a+b,0);
+const Mk=L*K/100, Wk=Mk*(TA-100)/100, ml=Mk*Pm/100, mw=ml*(TAm-100)/100, Fl=Mk-ml, Fw=Wk-mw;
+let cl=ml,cw=mw,rows="";const Xb=i=>70+i*150, H=y=>y*1.35;
+let maxT=(Mk+Wk)*1.05; const sc=200/Math.max(maxT,1);
+ratios.forEach((a,i)=>{const fl=Fl*a/100,fw=Fw*a/100; const pl=cl-ml,pw=cw-mw; cl+=fl;cw+=fw;
+  let y=240; const seg=(val,fill,dash)=>{const h=val*sc; el("rect",{x:Xb(i),y:y-h,width:70,height:h,fill:fill,stroke:css("--line"),"stroke-dasharray":dash||""}); y-=h;};
+  seg(ml,css("--muted"));seg(mw,css("--muted"),"3 2");seg(pl,css("--grid"));seg(pw,css("--grid"),"3 2");seg(fl,"none");seg(fw,"none","3 2");
+  el("text",{x:Xb(i)+35,y:y-6,"text-anchor":"middle","font-size":12},"TA "+fmt((cl+cw)/cl*100,0));
+  el("text",{x:Xb(i)+35,y:258,"text-anchor":"middle","font-size":12},(i+1)+". lépés ("+fmt(a,0)+" %)");
+  rows+="<tr><td>"+(i+1)+".</td><td>"+fmt(fl,2)+"</td><td>"+fmt(fw,2)+"</td><td>"+fmt(cl+cw,2)+"</td><td>"+fmt((cl+cw)/cl*100,0)+"</td></tr>";});
+const dl=L-Mk, dw=L*v.Pv/100-Wk;
+let warn=Math.abs(sum-100)>0.01?'<br><span class="bad">A lépésarányok összege '+fmt(sum,0)+' % – 100 %-nak kell lennie!</span>':'';
+if(dw<0) warn+='<br><span class="bad">A kovász több vizet visz be, mint a tészta teljes vízigénye – ellenőrizd a receptet!</span>';
+status("Kovászliszt "+fmt(Mk,2)+" kg, kovászvíz "+fmt(Wk,2)+" kg; mag: "+fmt(ml,2)+" kg liszt + "+fmt(mw,2)+" kg víz = "+fmt(ml+mw,2)+" kg; friss összesen: "+fmt(Fl,2)+" kg liszt + "+fmt(Fw,2)+" kg víz."+
+ "<table style='border-collapse:collapse;margin-top:4px' border='1' cellpadding='3'><tr><th>lépés</th><th>friss liszt (kg)</th><th>friss víz (kg)</th><th>halmozott (kg)</th><th>TA</th></tr>"+rows+"</table>"+
+ "Dagasztóliszt: <b>"+fmt(dl,2)+" kg</b>; dagasztóvíz: "+fmt(L,0)+"·"+fmt(v.Pv,0)+" % − "+fmt(Wk,2)+" = <b>"+fmt(dw,2)+" kg</b>"+warn);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

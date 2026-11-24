@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bruttó–nettó és veszteség</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mod">Üzemmód</label><select id="mod" aria-label="Üzemmód"><option value="1" selected>1. tisztítási veszteség: nettóból bruttó</option><option value="2">2. hőkezelési veszteség: nyersből kész</option><option value="3">3. tömegnövekedés: szárazból főtt</option></select></div>
+<div class="row"><label for="m">Ismert tömeg (nettó / nyers / száraz)</label><input id="m" type="range" min="0.5" max="30" step="0.1" value="8" aria-label="Ismert tömeg (nettó / nyers / száraz)"><output id="m_o" for="m"></output></div>
+<div class="row"><label for="q">Hulladék / veszteség / növekedés</label><input id="q" type="range" min="0" max="200" step="1" value="20" aria-label="Hulladék / veszteség / növekedés"><output id="q_o" for="q"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 135" role="img" aria-label="Három sávdiagram a bruttó–nettó, a sütési veszteség és a tömegnövekedés arányaival."></svg>
+<p class="small">1. példa: nettó 8 kg, 20% → bruttó 10 kg; 2. példa: nyers 8 kg, 28% → kész 5,76 kg; 3. példa: száraz 1,8 kg, +150% → főtt 4,5 kg. Tanulási értékek (ellenőrizendő: üzemi anyaghányad).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"m":"kg", "q":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const fg=css("--fg")||"#111";let segs=[],f="",chk="";const m=v.m,q=v.q/100;
+el("defs",{}).innerHTML='<pattern id="h1" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="white"/><line x1="0" y1="0" x2="0" y2="8" stroke="black" stroke-width="2"/></pattern>';
+if(v.mod==1){const b=m/(1-q);segs=[["nettó "+fmt(m,2)+" kg",m],["hulladék "+fmt(b-m,2)+" kg",b-m]];f="bruttó = nettó / (1 − "+fmt(q,2)+") = <b>"+fmt(b,2)+" kg</b>";chk="Visszaszámolás: "+fmt(b,2)+" · (1 − "+fmt(q,2)+") = "+fmt(b*(1-q),2)+" kg nettó";}
+if(v.mod==2){const k=m*(1-q);segs=[["kész "+fmt(k,2)+" kg",k],["veszteség "+fmt(m-k,2)+" kg",m-k]];f="kész = nyers · (1 − "+fmt(q,2)+") = <b>"+fmt(k,2)+" kg</b>";chk="Visszaszámolás: "+fmt(k,2)+" / (1 − "+fmt(q,2)+") = "+fmt(k/(1-q),2)+" kg nyers";}
+if(v.mod==3){const g=m*(1+q);segs=[["száraz "+fmt(m,2)+" kg",m],["víz +"+fmt(g-m,2)+" kg",g-m]];f="főtt = száraz · (1 + "+fmt(q,2)+") = száraz · "+fmt(1+q,2)+" = <b>"+fmt(g,2)+" kg</b>";chk="A szorzó "+fmt(1+q,2)+", a növekmény "+v.q+"% – a kettő nem ugyanaz!";}
+const tot=segs[0][1]+segs[1][1],sc=600/Math.max(tot,0.01);let x=20;
+segs.forEach((s,i)=>{const w=s[1]*sc;el("rect",{x:x,y:40,width:Math.max(w,0),height:50,fill:i?"url(#h1)":"#c4c4c4",stroke:"black","stroke-width":1.2});
+ if(w>90){el("rect",{x:x+w/2-70,y:54,width:140,height:22,fill:"white"});el("text",{x:x+w/2,y:70,"text-anchor":"middle","font-size":13,fill:"#111"},s[0]);}x+=w;});
+el("text",{x:20,y:120,"font-size":13},"teljes sáv: "+fmt(tot,2)+" kg");
+status(f+"<br>"+chk+"<br><i>Tanulási értékek; az üzemi anyaghányad-gyűjtemény a mérvadó.</i>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

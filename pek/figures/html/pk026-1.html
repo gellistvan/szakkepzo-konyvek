@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Receptúra-átméretező</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="pre">előbeállítás</label><select id="pre" aria-label="előbeállítás"><option value="0">kézi</option><option value="1" selected>10 → 32 kg (λ = 3,2)</option><option value="2">8 → 22 kg (λ = 2,75)</option><option value="3">35 → 14 kg (λ = 0,4)</option><option value="4">tipikus hiba: 10 → 18 kg</option></select></div>
+<div class="row"><label for="l">alap liszt</label><input id="l" type="range" min="1" max="60" step="0.5" value="10" aria-label="alap liszt"><output id="l_o" for="l"></output></div>
+<div class="row"><label for="w">alap víz</label><input id="w" type="range" min="0" max="40" step="0.01" value="6.2" aria-label="alap víz"><output id="w_o" for="w"></output></div>
+<div class="row"><label for="y">alap élesztő</label><input id="y" type="range" min="0" max="3" step="0.01" value="0.35" aria-label="alap élesztő"><output id="y_o" for="y"></output></div>
+<div class="row"><label for="s">alap só</label><input id="s" type="range" min="0" max="2" step="0.01" value="0.18" aria-label="alap só"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="x">egyéb (szabad sor)</label><input id="x" type="range" min="0" max="10" step="0.01" value="0" aria-label="egyéb (szabad sor)"><output id="x_o" for="x"></output></div>
+<div class="row"><label for="mode">célmegadás</label><select id="mode" aria-label="célmegadás"><option value="1" selected>cél-lisztmennyiség</option><option value="2">darabszám × darabtömeg</option></select></div>
+<div class="row"><label for="cel">cél liszt</label><input id="cel" type="range" min="1" max="100" step="0.5" value="32" aria-label="cél liszt"><output id="cel_o" for="cel"></output></div>
+<div class="row"><label for="db">darabszám</label><input id="db" type="range" min="10" max="2000" step="10" value="100" aria-label="darabszám"><output id="db_o" for="db"></output></div>
+<div class="row"><label for="dbg">darab feladási tömeg</label><input id="dbg" type="range" min="30" max="1500" step="5" value="70" aria-label="darab feladási tömeg"><output id="dbg_o" for="dbg"></output></div>
+<div class="row"><label for="kerek">kerekítés</label><select id="kerek" aria-label="kerekítés"><option value="0.001">1 g</option><option value="0.01" selected>10 g</option><option value="0.1">0,1 kg</option></select></div>
+<div class="row"><label for="hiba">hibamód: csak a lisztet méretezem át</label><input id="hiba" type="checkbox" aria-label="hibamód: csak a lisztet méretezem át"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 210" role="img" aria-label="Táblázat: a 10 kg-os alaprecept 3,2-szeres szorzóval 32 kg lisztre átszámítva, a tésztatömeg 16,73 kg-ról 53,536 kg-ra nő."></svg>
+<p class="small">Tanulási példa a 8.2 fejezet adataival. A kerekítést a mérleg pontosságához igazítsd; a technológiai lapon a pontos értéket is tüntesd fel (ellenőrizendő: üzemi technológiai lap).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"l":"kg", "w":"kg", "y":"kg", "s":"kg", "x":"kg", "cel":"kg", "db":"db", "dbg":"g"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const P={1:[10,6.2,0.35,0.18,0,32],2:[8,4.96,0.28,0.16,0,22],3:[35,21,1.05,0.70,0,14],4:[10,6.2,0.35,0.18,0,18]};
+if(v.pre && v.pre!==window._lp){const p=P[v.pre];["l","w","y","s","x","cel"].forEach((id,i)=>{document.getElementById(id).value=p[i];});
+  document.getElementById("mode").value=1;document.getElementById("hiba").checked=(v.pre===4);window._lp=v.pre;draw();return;}
+window._lp=v.pre;
+const base=[["liszt",v.l],["víz",v.w],["élesztő",v.y],["só",v.s],["egyéb",v.x]];
+const mb=base.reduce((a,b)=>a+b[1],0);
+let lam, how;
+if(v.mode===1){lam=v.cel/v.l; how="λ = m_cél / m_alap = "+fmt(v.cel,2)+" / "+fmt(v.l,2)+" = "+fmt(lam,3);}
+else{const need=v.db*v.dbg/1000; lam=need/mb; how="kért tészta = "+fmt(v.db,0)+" db × "+fmt(v.dbg,0)+" g = "+fmt(need,3)+" kg; λ = "+fmt(need,3)+" / "+fmt(mb,3)+" = "+fmt(lam,3)+
+  " (a feladási tömeg a sütési veszteséggel már növelt tömeg legyen)";}
+const R=v.kerek, rnd=x=>Math.round(x/R)*R, dec=R>=0.1?1:(R>=0.01?2:3);
+const W=560,rowH=24; let y=20;
+el("text",{x:10,y:y,"font-size":13,"font-weight":"bold"},how); y+=26;
+[["összetevő",10,"start"],["alap (kg)",250,"end"],["új (kg)",400,"end"],["kerekítve",540,"end"]].forEach(h=>el("text",{x:h[1],y:y,"font-size":12,"font-weight":"bold","text-anchor":h[2]},h[0]));
+let mn=0;
+base.forEach((b,i)=>{if(i===4&&b[1]===0)return;y+=rowH;
+  let nv=(v.hiba&&i>0)?b[1]:b[1]*lam; if(v.hiba&&i===0)nv=b[1]*lam; mn+=nv;
+  el("line",{x1:10,x2:550,y1:y-17,y2:y-17,stroke:css("--grid")});
+  el("text",{x:10,y:y,"font-size":12},b[0]);el("text",{x:250,y:y,"font-size":12,"text-anchor":"end"},fmt(b[1],3));
+  el("text",{x:400,y:y,"font-size":12,"text-anchor":"end",fill:(v.hiba&&i>0)?css("--bad"):css("--fg")},fmt(nv,3));
+  el("text",{x:540,y:y,"font-size":12,"text-anchor":"end"},fmt(rnd(nv),dec));});
+y+=rowH;el("line",{x1:10,x2:550,y1:y-17,y2:y-17,stroke:css("--line")});
+el("text",{x:10,y:y,"font-size":12,"font-weight":"bold"},"tészta");el("text",{x:250,y:y,"font-size":12,"text-anchor":"end","font-weight":"bold"},fmt(mb,3));
+el("text",{x:400,y:y,"font-size":12,"text-anchor":"end","font-weight":"bold"},fmt(mn,3));
+const ta0=(v.l+v.w)/v.l*100, ta1=v.hiba?(v.l*lam+v.w)/(v.l*lam)*100:ta0;
+let msg="Ellenőrzés: új tészta = λ × alaptészta = "+fmt(lam,3)+" · "+fmt(mb,3)+" = <b>"+fmt(lam*mb,3)+" kg</b>"+(v.hiba?" (a hibás számítás összege: "+fmt(mn,3)+" kg)":" ✓")+
+ "<br>TA (alap) = "+fmt(ta0,0)+"; TA (új) = "+fmt(ta1,0);
+if(v.hiba)msg+='<br><span class="bad">Hibamód: csak a liszt nőtt, a víz, az élesztő és a só a régi sorból maradt – a tészta TA-ja '+fmt(ta1,0)+' a helyes '+fmt(ta0,0)+' helyett: kemény, lassan kelő tészta.</span>';
+status(msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

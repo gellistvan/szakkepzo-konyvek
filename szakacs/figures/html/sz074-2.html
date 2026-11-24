@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kétlépcsős visszahűtés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="d">Rétegvastagság</label><input id="d" type="range" min="2" max="20" step="1" value="5" aria-label="Rétegvastagság"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="mode">Hűtési mód</label><select id="mode" aria-label="Hűtési mód"><option value="sokk">sokkoló (−20 °C levegő)</option><option value="huto" selected>hűtőszekrény (3 °C)</option><option value="pult">konyhai pult (22 °C) – hibás</option></select></div>
+<div class="row"><label for="lid">Lefedve hűl</label><input id="lid" type="checkbox" aria-label="Lefedve hűl"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 362" role="img" aria-label="Grafikon: a főzés végétől (85 °C) a sokkolóban hűtött sekély étel 2 órán belül 20 °C alá hűl, az 5 cm-es réteg a hűtőszekrényben nem, a lefedett nagy lábas órákig a veszélyes zónában marad."></svg>
+<p class="small">Szemléltető, Newton-lehűlési modellel számolt, nem mért adat. A határok tanulási értékek (ellenőrizendő: HACCP-terv / NÉBIH-útmutató). Az üzemben a maghőmérővel mért érték dönt.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"d":"cm"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const M={"sokk": ["sokkoló (−20 °C levegő)", -20.0, 0.015], "huto": ["hűtőszekrény (3 °C)", 3.0, 0.009], "pult": ["konyhai pult (22 °C) – hibás", 22.0, 0.006]};
+const m=M[v.mode],Ta=m[1],k=m[2]*Math.pow(5/v.d,1.5)*(v.lid?0.75:1);
+const T0=85, tt=Tc=>Tc<=Ta?Infinity:Math.log((T0-Ta)/(Tc-Ta))/k;
+const fg=css("--fg")||"#111",mu="#8a8a8a",X=h=>60+h*(560/6),Y=c=>320-c*(290/90);
+el("path",{d:`M${X(2)},${Y(90)} L${X(2)},${Y(20)} L${X(6)},${Y(20)} L${X(6)},${Y(5)} L${X(6.15)},${Y(5)} L${X(6.15)},${Y(90)} Z`,fill:"rgba(138,138,138,.22)",stroke:fg,"stroke-width":1});
+[0,5,20,40,60,80].forEach(c=>{el("line",{x1:60,x2:620,y1:Y(c),y2:Y(c),stroke:mu,"stroke-width":.4});el("text",{x:52,y:Y(c)+4,"text-anchor":"end","font-size":12,fill:fg},c);});
+for(let h=0;h<=6;h++)el("text",{x:X(h),y:338,"text-anchor":"middle","font-size":12,fill:fg},h);
+el("text",{x:340,y:356,"text-anchor":"middle","font-size":12,fill:fg},"idő a főzés végétől, 85 °C-tól (h)");
+let d="";for(let i=0;i<=360;i++){const c=Ta+(T0-Ta)*Math.exp(-k*i);d+=(i?"L":"M")+X(i/60)+","+Y(Math.max(0,Math.min(90,c)));}
+el("path",{d:d,fill:"none",stroke:fg,"stroke-width":2.6});
+const t20=tt(20),t5=tt(5),ok20=t20<=120,ok5=t5<=360,ok=ok20&&ok5;
+const f=x=>isFinite(x)?fmt(x/60,1)+" h":"soha (a környezet melegebb)";
+status(`<b>${ok?"MEGFELEL":"NEM FELEL MEG"}</b> a kétlépcsős tanulási szabálynak (2 órán belül 20 °C alá, további 4 órán belül 5 °C alá) – ${m[0]}, ${fmt(v.d,0)} cm réteg${v.lid?", lefedve":""}.<br>`+
+ `Főzés vége → 20 °C: ${f(t20)} (határ: 2 h) ${ok20?"✓":"✗"}; főzés vége → 5 °C: ${f(t5)} (határ: összesen 6 h) ${ok5?"✓":"✗"}.`);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

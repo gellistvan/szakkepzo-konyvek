@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cukorfőzés fokai</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="t">Hőmérséklet</label><input id="t" type="range" min="100" max="190" step="1" value="121" aria-label="Hőmérséklet"><output id="t_o" for="t"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 345" role="img" aria-label="Hőmérőskála 100 és 190 °C között a cukorfőzés fokaival a sziruptól a karamellig; a csúszkával választott hőmérséklethez a fokozat neve, próbája és felhasználása jelenik meg."></svg>
+<p class="small">Tanulási értékek (ellenőrizendő: cukrászati szakkönyv, hőmérő kalibrálása); a szín csak szemléltető. Forró cukorral csak hőálló kesztyűben, felügyelettel dolgozz.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"t":"°C"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const S=[["szirup", 103, 105, "áttetsző, folyós", "áztató- és ízesítőszirup"], ["gyenge szál", 105, 107, "rövid szál az ujjak között", "szirupok"], ["erős szál", 107, 110, "hosszabb, erős szál", "sűrű szirupok (recept szerint)"], ["kis gyöngy", 110, 112, "apró gyöngyszerű buborékok", "sűrű szirupok (recept szerint)"], ["nagy gyöngy", 112, 115, "nagyobb gyöngyök", "sűrű szirupok (recept szerint)"], ["kis labda", 116, 118, "hideg vízben puha golyó", "fondant"], ["nagy labda", 120, 125, "hideg vízben keményebb golyó", "olasz hab, vajkrém, puha karamella"], ["kis törés", 135, 140, "megkeményedik, a fogra ragad", "—"], ["nagy törés", 145, 155, "üvegesen törik", "grillázs, húzott és öntött cukor"], ["karamell", 160, 180, "aranyból borostyánbarnába", "karamellmártás, díszítés, flan"]];
+const t=v.t, fg=css("--fg")||"#111";
+const Y=(c)=>330-(c-100)*(300/90);
+el("rect",{x:60,y:Y(190),width:40,height:Y(100)-Y(190),fill:"none",stroke:fg,"stroke-width":1.5,rx:6});
+S.forEach((s,i)=>{const on=t>=s[1]&&t<=s[2];
+ let f="none"; if(s[0]==="karamell"){const k=Math.max(0,Math.min(1,(Math.min(t,180)-160)/20));}
+ el("rect",{x:60,y:Y(s[2]),width:40,height:Y(s[1])-Y(s[2]),fill:on?"#d32f2f":"#c4c4c4",stroke:fg,"stroke-width":.6});
+ el("text",{x:110,y:Y((s[1]+s[2])/2)+4,"font-size":11,fill:fg},s[0]+" "+s[1]+"–"+s[2]+" °C");});
+for(let c=100;c<=190;c+=10)el("text",{x:52,y:Y(c)+4,"text-anchor":"end","font-size":11,fill:fg},c);
+el("line",{x1:50,x2:300,y1:Y(t),y2:Y(t),stroke:"#d32f2f","stroke-width":2.5});
+// karamell színminta
+const k=Math.max(0,Math.min(1,(t-150)/35));const r=Math.round(250-150*k),g=Math.round(235-175*k),b=Math.round(200-180*k);
+el("rect",{x:420,y:120,width:120,height:80,fill:t<150?"#f5f5f0":`rgb(${r},${g},${b})`,stroke:fg});
+el("text",{x:480,y:220,"text-anchor":"middle","font-size":11,fill:fg},"a szirup színe (szemléltető)");
+const cur=S.find(s=>t>=s[1]&&t<=s[2]);
+status(cur?`<b>${t} °C – ${cur[0]}</b><br>Próba: ${cur[3]}<br>Felhasználás: ${cur[4]}`:
+ (t>180?`<b>${t} °C – túlhevített, égett cukor</b>: keserű, nem használható.`:`<b>${t} °C</b> – két fokozat között; a szirup tovább sűrűsödik.`)+
+ "<br><i>Égésveszély: a forró cukor a bőrre tapad (tanulási értékek, ellenőrizendő).</i>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

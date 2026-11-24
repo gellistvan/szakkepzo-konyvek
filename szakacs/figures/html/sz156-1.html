@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bruttó bér, nettó bér, bérköltség</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="br">Bruttó bértömeg</label><input id="br" type="range" min="500000" max="5000000" step="50000" value="2400000" aria-label="Bruttó bértömeg"><output id="br_o" for="br"></output></div>
+<div class="row"><label for="dl">Dolgozói levonás (tanulási kulcs)</label><input id="dl" type="range" min="0" max="50" step="0.5" value="33.5" aria-label="Dolgozói levonás (tanulási kulcs)"><output id="dl_o" for="dl"></output></div>
+<div class="row"><label for="ck">Munkáltatói közteher (tanulási kulcs)</label><input id="ck" type="range" min="0" max="30" step="0.5" value="13" aria-label="Munkáltatói közteher (tanulási kulcs)"><output id="ck_o" for="ck"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 215" role="img" aria-label="A bruttó bér, a nettó bér és a teljes bérköltség viszonya."></svg>
+<p class="small">Tanulási kulcsok; az aktuális SZJA-, járulék- és szociális hozzájárulási adó kulcsát, valamint a kedvezményeket ellenőrizni kell.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"br":"Ft", "dl":"%", "ck":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const br=v.br, lev=br*v.dl/100, net=br-lev, kt=br*v.ck/100, tot=br+kt, sc=180/Math.max(tot,1), fg=css("--fg")||"#111";
+const n=x=>Math.round(x).toLocaleString("hu-HU");
+function bar(x,segs,label){let y=200;segs.forEach(s=>{const h=s[0]*sc;y-=h;el("rect",{x:x,y:y,width:90,height:h,fill:s[2],stroke:fg,"stroke-width":1.2});
+ el("text",{x:x+98,y:y+h/2+4,"font-size":12},s[1]+": "+n(s[0])+" Ft");});el("text",{x:x+45,y:y-6,"text-anchor":"middle","font-size":12,"font-weight":"bold"},label);}
+bar(20,[[net,"nettó bér","#ffffff"],[lev,"levonások","#c4c4c4"]],"bruttó "+n(br)+" Ft");
+bar(330,[[br,"bruttó bér","#c4c4c4"],[kt,"közteher","#8a8a8a"]],"bérköltség "+n(tot)+" Ft");
+status("Dolgozó: nettó <b>"+n(net)+" Ft</b> = bruttó − levonások ("+fmt(v.dl,1)+"%).<br>Munkáltató: bérköltség <b>"+n(tot)+" Ft</b> = bruttó + közteher ("+fmt(v.ck,1)+"%)."+
+ "<br>A bérköltség a nettó bér <b>"+fmt(tot/Math.max(net,1),2)+"</b>-szerese – a bérköltség nem azonos a nettó bérrel.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

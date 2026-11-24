@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generációs idő és sejtszám</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="n0m">N₀ mantissza</label><input id="n0m" type="range" min="1" max="9.9" step="0.1" value="1" aria-label="N₀ mantissza"><output id="n0m_o" for="n0m"></output></div>
+<div class="row"><label for="n0e">N₀ kitevő (10^)</label><input id="n0e" type="range" min="0" max="8" step="1" value="6" aria-label="N₀ kitevő (10^)"><output id="n0e_o" for="n0e"></output></div>
+<div class="row"><label for="gmin">generációs idő g</label><input id="gmin" type="range" min="10" max="360" step="5" value="90" aria-label="generációs idő g"><output id="gmin_o" for="gmin"></output></div>
+<div class="row"><label for="th">idő t</label><input id="th" type="range" min="0.5" max="12" step="0.5" value="6" aria-label="idő t"><output id="th_o" for="th"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 300" role="img" aria-label="Szigmoid szaporodási görbe logaritmikus tengelyen, felcímkézett lag, log, stacioner és pusztulási szakasszal; a kalkulátor N(t) = N0 · 2^(t/g) alapján számol."></svg>
+<p class="small">Előbeállítások a fejezet példáihoz: élesztő g = 90 perc, t = 6 óra, N₀ = 1·10^6 → 1,6·10^7; baktérium g = 20 perc, t = 2 óra → 64-szeres; 3. feladat: N₀ = 8·10^5, g = 90 perc, t = 4,5 óra → 6,4·10^6. A modell csak a log szakaszra érvényes; tanulási példa, nem mért adat.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n0m":"", "n0e":"", "gmin":"perc", "th":"óra"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const W=560,H=300,L=58,R=14,T=14,B=40;
+const N0=v.n0m*Math.pow(10,v.n0e), g=v.gmin/60, t=v.th;
+const k=t/g, N=N0*Math.pow(2,k);
+const lmin=Math.floor(Math.log10(N0))-0.2, lmax=Math.ceil(Math.log10(N)+0.2);
+const X=x=>L+x/Math.max(t,0.1)*(W-L-R), Y=y=>T+(lmax-y)/(lmax-lmin)*(H-T-B);
+el("line",{x1:L,y1:T,x2:L,y2:H-B,stroke:css("--line")});el("line",{x1:L,y1:H-B,x2:W-R,y2:H-B,stroke:css("--line")});
+for(let e=Math.ceil(lmin);e<=lmax;e++){el("line",{x1:L,x2:W-R,y1:Y(e),y2:Y(e),stroke:css("--grid")});
+  el("text",{x:L-6,y:Y(e)+4,"text-anchor":"end","font-size":11},"10^"+e);}
+let d="";for(let i=0;i<=100;i++){const tt=t*i/100;d+=(i?"L":"M")+X(tt).toFixed(1)+","+Y(Math.log10(N0)+tt/g*Math.log10(2)).toFixed(1);}
+el("path",{d:d,fill:"none",stroke:css("--hl"),"stroke-width":2.5});
+for(let j=0;j<=Math.min(Math.floor(k),40);j++){const tt=j*g;el("circle",{cx:X(tt),cy:Y(Math.log10(N0)+j*Math.log10(2)),r:3.5,fill:"none",stroke:css("--line")});}
+el("text",{x:(L+W)/2,y:H-8,"text-anchor":"middle","font-size":11},"idő (óra), 0 – "+fmt(t,1));
+el("text",{x:12,y:(T+H-B)/2,"font-size":11,transform:"rotate(-90 12 "+((T+H-B)/2)+")","text-anchor":"middle"},"sejtszám (log skála)");
+const sci=x=>{const e=Math.floor(Math.log10(x));return fmt(x/Math.pow(10,e),2)+"·10^"+e;};
+status("N(t) = N₀ · 2^(t/g) = "+sci(N0)+" · 2^("+fmt(t,2)+" h / "+fmt(g,3)+" h) = "+sci(N0)+" · 2^"+fmt(k,2)+
+  " = <b>"+sci(N)+" sejt/ml</b><br>duplázódások száma: "+fmt(k,2)+" · növekedés: "+fmt(Math.pow(2,k),1)+"-szoros"+
+  "<br><small>Csak az exponenciális (log) szakaszra érvényes becslés; tanulási példa.</small>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keresztszabály – lisztkeverés-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="c1">c₁ – 1. liszt hamutartalma</label><input id="c1" type="range" min="0.4" max="1.5" step="0.01" value="0.55" aria-label="c₁ – 1. liszt hamutartalma"><output id="c1_o" for="c1"></output></div>
+<div class="row"><label for="c2">c₂ – 2. liszt hamutartalma</label><input id="c2" type="range" min="0.4" max="1.5" step="0.01" value="0.8" aria-label="c₂ – 2. liszt hamutartalma"><output id="c2_o" for="c2"></output></div>
+<div class="row"><label for="c">c – a keverék célértéke</label><input id="c" type="range" min="0.4" max="1.5" step="0.01" value="0.65" aria-label="c – a keverék célértéke"><output id="c_o" for="c"></output></div>
+<div class="row"><label for="M">M – a keverék össztömege</label><input id="M" type="range" min="10" max="500" step="10" value="100" aria-label="M – a keverék össztömege"><output id="M_o" for="M"></output></div>
+<div class="row"><label for="s1">1. liszt sikértartalma</label><input id="s1" type="range" min="20" max="40" step="0.5" value="28" aria-label="1. liszt sikértartalma"><output id="s1_o" for="s1"></output></div>
+<div class="row"><label for="s2">2. liszt sikértartalma</label><input id="s2" type="range" min="20" max="40" step="0.5" value="32" aria-label="2. liszt sikértartalma"><output id="s2_o" for="s2"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 250" role="img" aria-label="Keresztszabály: két liszt hamutartalmából és a célértékből a részarányok és a tömegek; Pearson-négyzet és emelőkar."></svg>
+<p class="small">A keresztszabály egyetlen jellemzőt állít be; a többit (itt a sikért) súlyozott átlaggal ellenőrizzük. Kezdőértékek: a 21.2. alfejezet 2. és 3. példája. Próbáld ki a 4. feladatot: 0,55 / 0,80 / 0,70 %, 200 kg → 80 / 120 kg.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"c1":"%", "c2":"%", "c":"%", "M":"kg", "s1":"%", "s2":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const c1=v.c1, c2=v.c2, c=v.c, M=v.M, s1=v.s1, s2=v.s2;
+const W=640;
+const lo=Math.min(c1,c2), hi=Math.max(c1,c2);
+if(!(c>lo && c<hi)){
+  status('<b style="color:#c00000">Nincs megoldás:</b> a célérték ('+fmt(c)+' %) nem esik a két liszt értéke ('+fmt(c1)+' % és '+fmt(c2)+' %) közé. Két liszt keverésével nem állítható be.');
+  el("text",{x:20,y:60,"font-size":15},"A célértéknek c₁ és c₂ közé kell esnie.");
+  return;
+}
+const w1=(c2-c)/(c2-c1), w2=(c-c1)/(c2-c1), m1=w1*M, m2=w2*M;
+const chk=(m1*c1+m2*c2)/M, sik=(m1*s1+m2*s2)/M;
+status('<b>BL '+Math.round(c1*100)+' (1. liszt):</b> '+fmt(w1*100,1)+' % → <b>'+fmt(m1,1)+' kg</b>; '+
+  '<b>BL '+Math.round(c2*100)+' (2. liszt):</b> '+fmt(w2*100,1)+' % → <b>'+fmt(m2,1)+' kg</b><br>'+
+  'Ellenőrzés (súlyozott átlag): ('+fmt(m1,1)+'·'+fmt(c1)+' + '+fmt(m2,1)+'·'+fmt(c2)+') / '+fmt(M,0)+' = <b>'+fmt(chk,3)+' %</b>; '+
+  'a keverék sikértartalma: <b>'+fmt(sik,1)+' %</b>');
+// Pearson-négyzet
+const fg=css("--fg")||"#000";
+function box(x,y,t1,t2,dash,fill){el("rect",{x:x-62,y:y-22,width:124,height:44,rx:8,fill:fill,stroke:fg,"stroke-width":1.4,"stroke-dasharray":dash?"5 3":""});
+  el("text",{x:x,y:y-4,"text-anchor":"middle","font-size":13},t1);el("text",{x:x,y:y+13,"text-anchor":"middle","font-size":12},t2);}
+el("line",{x1:80,y1:40,x2:300,y2:200,stroke:fg,"stroke-width":1.5});
+el("line",{x1:80,y1:200,x2:300,y2:40,stroke:fg,"stroke-width":1.5,"stroke-dasharray":"6 4"});
+box(80,40,"c₁ = "+fmt(c1)+" %","1. liszt",false,"none");
+box(80,200,"c₂ = "+fmt(c2)+" %","2. liszt",true,"none");
+box(190,120,"cél c = "+fmt(c)+" %","",false,"none");
+box(300,40,"c₂−c = "+fmt(c2-c),"→ 1. liszt része",false,"none");
+box(300,200,"c−c₁ = "+fmt(c-c1),"→ 2. liszt része",true,"none");
+// emelőkar
+const X0=400,X1=620,Y=150;
+const px=x=>X0+(x-lo)/(hi-lo)*(X1-X0);
+el("line",{x1:X0,y1:Y,x2:X1,y2:Y,stroke:fg,"stroke-width":3});
+el("polygon",{points:(px(c))+","+(Y+2)+" "+(px(c)-10)+","+(Y+40)+" "+(px(c)+10)+","+(Y+40),fill:"#999",stroke:fg});
+el("text",{x:px(c),y:Y+56,"text-anchor":"middle","font-size":12},"cél "+fmt(c)+" %");
+const r1=8+30*Math.sqrt(w1), r2=8+30*Math.sqrt(w2);
+el("rect",{x:px(c1)-r1/2,y:Y-r1-2,width:r1,height:r1,fill:"none",stroke:fg,"stroke-width":1.4});
+el("rect",{x:px(c2)-r2/2,y:Y-r2-2,width:r2,height:r2,fill:"#bbb",stroke:fg,"stroke-width":1.4,"stroke-dasharray":"5 3"});
+el("text",{x:px(c1),y:Y-r1-8,"text-anchor":"middle","font-size":12},fmt(m1,1)+" kg");
+el("text",{x:px(c2),y:Y-r2-8,"text-anchor":"middle","font-size":12},fmt(m2,1)+" kg");
+el("text",{x:px(c1),y:Y+20,"text-anchor":"middle","font-size":11},fmt(c1)+" %");
+el("text",{x:px(c2),y:Y+20,"text-anchor":"middle","font-size":11},fmt(c2)+" %");
+el("text",{x:510,y:235,"text-anchor":"middle","font-size":11},"emelőkar: a célhoz közelebbi lisztből kell több");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

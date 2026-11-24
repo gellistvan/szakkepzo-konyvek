@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testáram 230 V-on</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="rlog">testellenállás R</label><input id="rlog" type="range" min="500" max="200000" step="100" value="100000" aria-label="testellenállás R"><output id="rlog_o" for="rlog"></output></div>
+<div class="row"><label for="preset">előbeállítás</label><select id="preset" aria-label="előbeállítás"><option value="0" selected>kézi (csúszka)</option><option value="1">száraz bőr: 100 kΩ</option><option value="2">nedves, sós kéz: 1 kΩ</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 330" role="img" aria-label="Csökkenő görbe: 100 kΩ-nál 2,3 mA bizsergés, 1 kΩ-nál 230 mA életveszély; a 30 mA-es védőkapcsoló-határ jelölve."></svg>
+<p class="small">Tanulási példa (Ohm-törvény, U = 230 V); a hatássávok a fejezet táblázatának tájékoztató értékei. A 30 mA-es áram-védőkapcsoló nem korlátozza az áramot, hanem a hibaáramot érzékelve gyorsan lekapcsol (ellenőrizendő: a pékség villamos terve). Minden villamos érintés életveszélyes.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"rlog":"Ω"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const W=560,H=330,L=62,Rr=14,T=12,B=40;
+const lx=x=>L+(Math.log10(x)-Math.log10(500))/(Math.log10(200000)-Math.log10(500))*(W-L-Rr);
+const ly=y=>T+(Math.log10(600)-Math.log10(y))/(Math.log10(600)-Math.log10(0.3))*(H-T-B);
+const bands=[[0.5,1,"érzékelés","#e8e8e8"],[30,50,"légzés, szívritmus","#cfcfcf"],[100,600,"súlyos életveszély","#b0b0b0"]];
+bands.forEach(b=>{el("rect",{x:L,y:ly(b[1]),width:W-L-Rr,height:ly(b[0])-ly(b[1]),fill:b[3],opacity:0.6});
+  el("text",{x:W-Rr-4,y:(ly(b[0])+ly(b[1]))/2+4,"text-anchor":"end","font-size":11,fill:"#111"},b[2]);});
+el("line",{x1:L,x2:W-Rr,y1:ly(10),y2:ly(10),stroke:css("--line"),"stroke-dasharray":"6 3 1 3"});
+el("text",{x:L+4,y:ly(10)-4,"font-size":11},"kb. 10 mA elengedési küszöb");
+el("line",{x1:L,x2:W-Rr,y1:ly(30),y2:ly(30),stroke:css("--hl2"),"stroke-width":2,"stroke-dasharray":"7 4"});
+el("text",{x:L+4,y:ly(30)+14,"font-size":11,fill:css("--hl2")},"30 mA: áram-védőkapcsoló (ellenőrizendő)");
+let d="";for(let k=0;k<=120;k++){const r=500*Math.pow(400,k/120);d+=(k?"L":"M")+lx(r).toFixed(1)+","+ly(230/r*1000).toFixed(1);}
+el("path",{d:d,fill:"none",stroke:css("--line"),"stroke-width":2.2});
+el("line",{x1:L,x2:L,y1:T,y2:H-B,stroke:css("--line")});el("line",{x1:L,x2:W-Rr,y1:H-B,y2:H-B,stroke:css("--line")});
+[500,1000,5000,10000,50000,100000,200000].forEach(x=>{el("line",{x1:lx(x),x2:lx(x),y1:H-B,y2:H-B+5,stroke:css("--line")});
+  el("text",{x:lx(x),y:H-B+18,"text-anchor":"middle","font-size":10},x.toLocaleString("hu-HU"));});
+[0.5,1,10,30,100,500].forEach(y=>{el("text",{x:L-6,y:ly(y)+4,"text-anchor":"end","font-size":10},String(y).replace(".",","));});
+el("text",{x:(L+W)/2,y:H-6,"text-anchor":"middle","font-size":11},"testellenállás R (Ω), log skála");
+el("text",{x:14,y:(T+H-B)/2,"font-size":11,transform:"rotate(-90 14 "+((T+H-B)/2)+")","text-anchor":"middle"},"testáram I (mA)");
+let R=v.preset? (v.preset==1?100000:1000) : v.rlog;
+if(v.preset){document.getElementById("rlog").value=R;document.getElementById("preset").value="0";document.getElementById("rlog_o").textContent=R+" Ω";}
+R=+document.getElementById("rlog").value; const I=230/R*1000;
+el("circle",{cx:lx(R),cy:ly(Math.max(0.3,Math.min(600,I))),r:6,fill:css("--hl"),stroke:css("--line")});
+const band=I<0.5?"jellemzően nem érzékelhető":I<=1?"érzékelési küszöb, bizsergés":I<10?"érezhető, fájdalmas áramütés":I<30?"izomgörcs – „nem tudom elengedni”":I<=100?"légzési nehézség, szívritmuszavar veszélye":"súlyos életveszély";
+status("R = "+Math.round(R).toLocaleString("hu-HU")+" Ω → I = 230 V / R = <b>"+fmt(I,1)+" mA</b> – "+(I>=30?'<span class="bad">':'<b>')+band+(I>=30?'</span>':'</b>')+
+ "<br><small>Tanulási példa: a valódi testellenállás a bőr állapotától, az áramúttól, a cipőtől függ. Minden villamos érintés életveszélyes!</small>");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

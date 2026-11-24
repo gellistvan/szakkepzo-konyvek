@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gabona:folyadék kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="gab">Gabona</label><select id="gab" aria-label="Gabona"><option value="0" selected>Hosszú szemű fehér rizs</option><option value="1">Barna rizs</option><option value="2">Basmati rizs</option><option value="3">Bulgur (durum)</option><option value="4">Kuszkusz</option><option value="5">Köles</option><option value="6">Hajdina</option><option value="7">Quinoa</option></select></div>
+<div class="row"><label for="pg">Száraz gabona adagonként</label><input id="pg" type="range" min="20" max="120" step="5" value="50" aria-label="Száraz gabona adagonként"><output id="pg_o" for="pg"></output></div>
+<div class="row"><label for="n">Adagszám</label><input id="n" type="range" min="1" max="100" step="1" value="60" aria-label="Adagszám"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="ev">Párolgási veszteség (példa)</label><input id="ev" type="range" min="0" max="30" step="1" value="10" aria-label="Párolgási veszteség (példa)"><output id="ev_o" for="ev"></output></div>
+<div class="row"><label for="own">Saját folyadékarány</label><input id="own" type="checkbox" aria-label="Saját folyadékarány"></div>
+<div class="row"><label for="r">Saját arány</label><input id="r" type="range" min="0.2" max="5" step="0.05" value="1.8" aria-label="Saját arány"><output id="r_o" for="r"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 210" role="img" aria-label="Kalkulátor: gabonafajta, adagonkénti száraz gabona és adagszám alapján a szükséges folyadék, a várható kész tömeg és a kész adagsúly."></svg>
+<p class="small">Tanulási értékek a fejezet táblázatából (ellenőrizendő: gyártói utasítás, üzemi receptúra). A párolgási veszteség és az edényméret példa, nem mért adat. Mintapélda: 60 adag × 50 g = 3 kg rizs, 1,8 ml/g aránnyal 5,4 l folyadék.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"pg":"g", "n":"adag", "ev":"%", "r":"ml/g"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const G=[["Hosszú szemű fehér rizs", 1.5, 2.0, 1.8, "15–18 perc"], ["Barna rizs", 2.0, 2.5, 2.25, "35–45 perc"], ["Basmati rizs", 1.5, 1.5, 1.5, "12–15 perc"], ["Bulgur (durum)", 2.0, 2.0, 2.0, "12–15 perc"], ["Kuszkusz", 1.0, 1.5, 1.25, "5–8 perc (duzzasztás)"], ["Köles", 2.0, 2.5, 2.25, "20–25 perc"], ["Hajdina", 2.0, 2.0, 2.0, "15–18 perc"], ["Quinoa", 2.0, 2.0, 2.0, "15 perc"]];
+const g=G[v.gab], r=v.own?v.r:g[3];
+const dry=v.pg*v.n, liq=dry*r, maxw=dry+liq, cooked=dry+liq*(1-v.ev/100), pw=cooked/v.n;
+const fg=css("--fg")||"#111";
+const W=560, sc=W/Math.max(maxw,1);
+el("rect",{x:40,y:40,width:dry*sc,height:44,fill:"#c4c4c4",stroke:fg});
+el("rect",{x:40+dry*sc,y:40,width:liq*sc,height:44,fill:"none",stroke:fg,"stroke-dasharray":"5 3"});
+el("text",{x:44,y:30,"font-size":13,fill:fg},"száraz gabona "+fmt(dry/1000,2)+" kg");
+el("text",{x:40+dry*sc+4,y:104,"font-size":13,fill:fg},"folyadék "+fmt(liq/1000,2)+" l");
+el("rect",{x:40,y:130,width:cooked*sc,height:44,fill:"#ececec",stroke:fg,"stroke-width":2});
+el("text",{x:44,y:196,"font-size":13,fill:fg},"várható kész tömeg ≈ "+fmt(cooked/1000,2)+" kg (felső határ: "+fmt(maxw/1000,2)+" kg)");
+let warn="";
+if(r<0.5||r>4)warn="<br><b>Figyelem:</b> ez az arány fizikailag nem értelmes köretnél (túl kevés folyadéktól a szem nyers marad, túl soktól pépes/leveses lesz).";
+else if(v.own&&(r<g[1]-0.25||r>g[2]+0.25))warn="<br><b>Figyelem:</b> a választott arány messze esik a táblázat tartományától ("+fmt(g[1],1)+"–"+fmt(g[2],1)+" ml/g).";
+status(`<b>${g[0]}</b>, arány ${fmt(r,2)} ml/g, főzési idő ${g[4]} (ellenőrizendő: gyártói utasítás).<br>`+
+ `Száraz gabona: ${fmt(v.n,0)} adag × ${fmt(v.pg,0)} g = <b>${fmt(dry,0)} g</b>; folyadék: <b>${fmt(liq,0)} ml</b> = ${fmt(liq/1000,2)} l.<br>`+
+ `Várható kész tömeg ≈ ${fmt(cooked,0)} g (a gabona + folyadék ${fmt(maxw,0)} g-jánál több nem lehet), kész adagsúly ≈ ${fmt(pw,0)} g. `+
+ `Edény: a kész étel térfogatánál legalább kb. másfélszer nagyobb (példa, a felforrás és habzás miatt).`+warn);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feladási tömeg és veszteséglánc</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:system-ui,sans-serif} svg text:not([fill]){fill:var(--fg)}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mk">kívánt késztömeg</label><input id="mk" type="range" min="0.1" max="2.0" step="0.01" value="0.75" aria-label="kívánt késztömeg"><output id="mk_o" for="mk"></output></div>
+<div class="row"><label for="ve">erjedési veszteség v_e</label><input id="ve" type="range" min="0" max="4" step="0.1" value="1.8" aria-label="erjedési veszteség v_e"><output id="ve_o" for="ve"></output></div>
+<div class="row"><label for="vs">sütési veszteség v_s (feladási alap)</label><input id="vs" type="range" min="5" max="25" step="0.5" value="13" aria-label="sütési veszteség v_s (feladási alap)"><output id="vs_o" for="vs"></output></div>
+<div class="row"><label for="vh">hűlési veszteség v_h</label><input id="vh" type="range" min="0" max="5" step="0.1" value="2.5" aria-label="hűlési veszteség v_h"><output id="vh_o" for="vh"></output></div>
+<div class="row"><label for="alap">a hűlési veszteség alapja (a vízeséshez)</label><select id="alap" aria-label="a hűlési veszteség alapja (a vízeséshez)"><option value="meleg" selected>meleg tömeg (láncolt képlet)</option><option value="felad">feladási tömeg (összegzett képlet)</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 660 270" role="img" aria-label="Vízesés-diagram a tészta tömegétől a késztermékig, a feladási tömeg két képlettel számolva."></svg>
+<p class="small">Tanulási értékek; a vetítési alapot a technológiai lapon rögzíteni kell. Próba: 0,75 kg, 13 %, 2,5 % → 884 g (meleg alap) és 888 g (feladási alap).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"mk":"kg", "ve":"%", "vs":"%", "vh":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const mk=v.mk, ve=v.ve, vs=v.vs, vh=v.vh, alap=v.alap;
+const fChain = mk/((1-vs/100)*(1-vh/100));
+const fSum = mk/(1-(vs+vh)/100);
+const mf = (alap==="meleg") ? fChain : fSum;
+const m0 = mf/(1-ve/100);
+const mm = mf*(1-vs/100);
+status('Feladási tömeg – láncolt képlet (hűlés a meleg tömegre): <b>'+fmt(fChain*1000,0)+' g</b>; '+
+  'összegzett képlet (v<sub>s</sub>+v<sub>h</sub> a feladási tömegre): <b>'+fmt(fSum*1000,0)+' g</b>; '+
+  'különbség: <b>'+fmt((fSum-fChain)*1000,1)+' g</b>.<br>A választott alap szerint a tészta erjedés előtt: '+fmt(m0*1000,0)+
+  ' g, meleg termék: '+fmt(mm*1000,0)+' g, késztermék: '+fmt(mk*1000,0)+' g.');
+const fg=css("--fg")||"#000";
+const vals=[["tészta",m0,0],["erjedés",m0-mf,1],["feladott",mf,0],["sütés",mf-mm,1],["meleg",mm,0],["hűlés",mm-mk,1],["kész",mk,0]];
+const H=220, base=240, sc=H/m0, bw=60, gap=26, x0=40;
+el("defs",{}).innerHTML='<pattern id="h" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="'+fg+'" stroke-width="1.2"/></pattern>';
+let top=m0;
+vals.forEach((d,i)=>{
+  const x=x0+i*(bw+gap);
+  if(!d[2]){el("rect",{x:x,y:base-d[1]*sc,width:bw,height:d[1]*sc,fill:"#aaa",stroke:fg});top=d[1];
+     el("text",{x:x+bw/2,y:base-d[1]*sc-5,"text-anchor":"middle","font-size":12},fmt(d[1]*1000,0)+" g");}
+  else{el("rect",{x:x,y:base-top*sc,width:bw,height:Math.max(d[1]*sc,1),fill:"url(#h)",stroke:fg});
+     el("text",{x:x+bw/2,y:base-top*sc-5,"text-anchor":"middle","font-size":12},"−"+fmt(d[1]*1000,0)+" g");top=top-d[1];}
+  el("text",{x:x+bw/2,y:base+16,"text-anchor":"middle","font-size":12},d[0]);
+});
+el("line",{x1:30,y1:base,x2:640,y2:base,stroke:fg});
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>
