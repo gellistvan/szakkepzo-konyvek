@@ -25,15 +25,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 330" role="img" aria-label="Dióda nyitóirányú áram-feszültség karakterisztikája 0, 25 és 50 Celsius-fokon és a kiválasztott hőmérsékleten"></svg>
 <p class="small">Shockley-modell (n = 1), IS(T) általános szilíciummodellel (Eg = 1,12 eV, XTI = 3). Szemléltető, számított görbék; a konkrét dióda hőmérsékletfüggése az adatlapból ellenőrizendő. Mért adat nincs.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"T":"°C", "lis":"", "lia":""};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const KQ=8.617333262e-5,T0=298.15,EG=1.12,XTI=3,N=1;
 const ut=t=>KQ*(t+273.15), is=(t,i25)=>i25*Math.pow((t+273.15)/T0,XTI/N)*Math.exp((EG/N)*(1/ut(25)-1/ut(t)));
@@ -58,7 +62,7 @@ status("T = <b>"+fmt(v.T,0)+" °C</b>, U<sub>T</sub> = "+fmt(ut(v.T)*1000,1)+" m
  "Ugyanennél az áramnál: 0 °C: "+fmt(vol(Iw,0,I25),3)+" V, 25 °C: "+fmt(vol(Iw,25,I25),3)+" V, 50 °C: "+fmt(vol(Iw,50,I25),3)+" V.");
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

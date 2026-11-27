@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Villámáram-hullámformák: 10/350 µs és 8/20 µs</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="I">Csúcsáram I</label><input id="I" type="range" min="5" max="100" step="5" value="100" aria-label="Csúcsáram I"><output id="I_o" for="I"></output></div>
+<div class="row"><label for="tw">Időtartomány</label><select id="tw" aria-label="Időtartomány"><option value="60" selected>0–60 µs (homlok)</option><option value="200">0–200 µs</option><option value="1000">0–1000 µs (hát)</option></select></div>
+<div class="row"><label for="lev">10 / 50 / 90 % szintek</label><input id="lev" type="checkbox" checked aria-label="10 / 50 / 90 % szintek"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 330" role="img" aria-label="Két impulzusgörbe közös tengelyen: a 10/350 µs-os hullám 10 µs alatt fut fel és 350 µs alatt csökken a felére; a 8/20 µs-os 8 µs alatt fut fel és 20 µs-nál már a felére csökkent. A csúszkával a csúcsáram, a választóval az időtartomány állítható; a lap kiírja a töltést és a fajlagos energiát."></svg>
+<p class="small">Képletből számolt görbék, nem mérés: 10/350 µs – Heidler-függvény (τ1 = 19 µs, τ2 = 485 µs, k = 0,93; ellenőrizendő: MSZ EN 62305-1 B melléklet); 8/20 µs – i(t) ∝ t³·e^(−t/3,911 µs) (ellenőrizendő: MSZ EN 61000-4-5). Homlokidő T1 = 1,25·(t90 − t10), félérték-idő a látszólagos kezdőponttól (MSZ EN 60060-1). Q = ∫i dt, W/R = ∫i² dt numerikus integrállal.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"I":"kA"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const C={"hn": 0.9987307546556187, "sn": 0.7439087749328765, "qh": 0.0005003845320977645, "wh": 0.00025623146346894144, "qs": 1.745656331257488e-05, "ws": 1.217445996412104e-05, "h": {"T1": 9.98017172912881, "T2": 356.57059722562906, "O1": 14.186596385308139, "t50": 370.7571936109372}, "s": {"T1": 8.022696325904377, "T2": 19.93823089223972, "O1": 1.671413779426877, "t50": 21.609644671666597}};
+const H=t=>{const x=Math.pow(t/19,10);return C.hn/0.93*x/(1+x)*Math.exp(-t/485);};
+const P=t=>C.sn*Math.pow(t/3.911,3)*Math.exp(-t/3.911);
+const X0=58,X1=585,Y0=280,Y1=22,tw=v.tw,X=t=>X0+t/tw*(X1-X0),Y=r=>Y0-r/1.12*(Y0-Y1);
+for(let k=0;k<=5;k++){const t=tw*k/5;el("line",{x1:X(t),x2:X(t),y1:Y1,y2:Y0,stroke:css("--grid")});
+  el("text",{x:X(t),y:Y0+16,"text-anchor":"middle","font-size":12},fmt(t,0));}
+[0,0.25,0.5,0.75,1].forEach(r=>{el("line",{x1:X0,x2:X1,y1:Y(r),y2:Y(r),stroke:css("--grid")});
+  el("text",{x:X0-6,y:Y(r)+4,"text-anchor":"end","font-size":12},fmt(r*v.I,0));});
+el("text",{x:14,y:150,"font-size":12,transform:"rotate(-90 14 150)","text-anchor":"middle"},"i (kA)");
+el("text",{x:(X0+X1)/2,y:Y0+34,"text-anchor":"middle","font-size":12},"idő t (µs)");
+if(v.lev)[0.1,0.5,0.9].forEach(r=>{el("line",{x1:X0,x2:X1,y1:Y(r),y2:Y(r),stroke:css("--muted"),"stroke-dasharray":"5 4"});
+  el("text",{x:X1-4,y:Y(r)+14,"text-anchor":"end","font-size":11,fill:css("--muted")},fmt(r*100,0)+" %");});
+let a="",b="";for(let k=0;k<=600;k++){const t=tw*k/600;a+=(k?"L":"M")+X(t).toFixed(1)+" "+Y(H(t)).toFixed(1);b+=(k?"L":"M")+X(t).toFixed(1)+" "+Y(P(t)).toFixed(1);}
+el("path",{d:a,fill:"none",stroke:css("--hl"),"stroke-width":3.2});
+el("path",{d:b,fill:"none",stroke:css("--hl2"),"stroke-width":2.2,"stroke-dasharray":"8 5"});
+el("line",{x1:X0+12,x2:X0+42,y1:Y(1.065),y2:Y(1.065),stroke:css("--hl"),"stroke-width":3.2});el("text",{x:X0+48,y:Y(1.065)+4,"font-size":12},"10/350 µs (T1 SPD)");
+el("line",{x1:X0+232,x2:X0+262,y1:Y(1.065),y2:Y(1.065),stroke:css("--hl2"),"stroke-width":2.2,"stroke-dasharray":"8 5"});el("text",{x:X0+268,y:Y(1.065)+4,"font-size":12},"8/20 µs (T2 SPD)");
+const I=v.I*1e3,qh=C.qh*I,wh=C.wh*I*I,qs=C.qs*I,ws=C.ws*I*I;
+status("<b>"+fmt(v.I,0)+" kA</b> csúcsáramnál · 10/350: Q ≈ <b>"+fmt(qh,qh<10?2:0)+" C</b>, W/R ≈ <b>"+fmt(wh/1e6,3)+" MJ/Ω</b> · 8/20: Q ≈ <b>"+fmt(qs,2)+" C</b>, W/R ≈ <b>"+fmt(ws/1e6,4)+" MJ/Ω</b><br>"+
+ "Homlokidő T<sub>1</sub>: "+fmt(C.h.T1,1)+" µs / "+fmt(C.s.T1,1)+" µs · félérték-idő T<sub>2</sub>: "+fmt(C.h.T2,0)+" µs / "+fmt(C.s.T2,1)+" µs. A töltés a csúcsárammal arányos, a fajlagos energia a négyzetével (kétszeres csúcsáram → négyszeres W/R).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

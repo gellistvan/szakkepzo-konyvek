@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatív és abszolút cellahivatkozás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="ac">oszlop rögzítése ($B)</label><input id="ac" type="checkbox" aria-label="oszlop rögzítése ($B)"></div>
+<div class="row"><label for="ar">sor rögzítése (B$22)</label><input id="ar" type="checkbox" aria-label="sor rögzítése (B$22)"></div>
+<div class="row"><label for="dir">másolás</label><select id="dir" aria-label="másolás"><option value="le" selected>lefelé (E3…E6)</option><option value="jobbra">jobbra (F2)</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 720 260" role="img" aria-label="Táblázatrészlet: az E2 áfaképlet lefelé vagy jobbra másolva, a $-jelek ki-be kapcsolhatók; cellánként a képlet és az eredmény"></svg>
+<p class="small">Szemléltető anyaglista (egységárak tanulási példák). Magyar beállítású táblázatkezelőben a képlet ugyanígy írandó; a $ az F4 billentyűvel is kapcsolható (programfüggő, ellenőrizendő).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const ROWS=[["NYM-J 3×2,5 mm²",50,450],["Kismegszakító B16",10,1200],["Szerelvény",15,800],["Kötődoboz",8,350],["Sorkapocs",12,250]];
+const COLS="ABCDEFG", ft=x=>Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g," ")+" Ft";
+function cellVal(c,r){ /* a munkalap tartalma: B..D a 2–6. sorban, B22 = 0,27, E2 a képlet eredménye, minden más üres = 0 */
+  if(r>=2&&r<=6){const q=ROWS[r-2];if(c==="B")return q[1];if(c==="C")return q[2];if(c==="D")return q[1]*q[2];if(c==="E")return r===2?q[1]*q[2]*0.27:0;}
+  if(c==="B"&&r===22)return 0.27;return 0;}
+const ac=v.ac?"$":"", ar=v.ar?"$":"";
+const cells=[];   /* [sor, oszlop, képlet, érték] */
+const make=(dc,dr)=>{const dcol=COLS[COLS.indexOf("D")+dc], bcol=v.ac?"B":COLS[COLS.indexOf("B")+dc], br=v.ar?22:22+dr;
+  const f="="+dcol+(2+dr)+"*"+ac+bcol+ar+br; return [f, cellVal(dcol,2+dr)*cellVal(bcol,br), bcol+br];};
+const dir=v.dir;
+const W=720, x0=10;
+const hdr=["","A Megnevezés","D Tételösszeg",dir==="le"?"E Áfa (képlet)":"E → F (képlet)","érték"];
+const cw=[40,190,120,230,110];
+let y=16;
+hdr.forEach((h,i)=>{const x=x0+cw.slice(0,i).reduce((a,b)=>a+b,0);el("rect",{x:x,y:y,width:cw[i],height:28,fill:css("--grid"),stroke:css("--line")});
+  el("text",{x:x+6,y:y+19,"font-size":13,"font-weight":"bold",fill:css("--fg")},h);});
+let bad=0;
+const lines = dir==="le" ? [0,1,2,3,4].map(i=>[2+i,ROWS[i][0],ft(ROWS[i][1]*ROWS[i][2]),...make(0,i)])
+                         : [[2,ROWS[0][0],ft(ROWS[0][1]*ROWS[0][2]),...make(0,0)],[2,"(F2: jobbra másolva)","",...make(1,0)]];
+lines.forEach((L,k)=>{y+=28;const ok=Math.abs(L[4]-(dir==="le"?ROWS[k][1]*ROWS[k][2]*0.27:(k===0?6075:0)))<0.5;
+  const want=(k===0)||(dir==="le"&&L[5]==="B22");if(!want)bad++;
+  const vals=[String(L[0]),L[1],L[2],L[3],ft(L[4])];
+  vals.forEach((t,i)=>{const x=x0+cw.slice(0,i).reduce((a,b)=>a+b,0);
+    el("rect",{x:x,y:y,width:cw[i],height:28,fill:i>=3?(want?"rgba(46,125,50,.18)":"rgba(183,28,28,.18)"):"none",stroke:css("--line")});
+    el("text",{x:x+6,y:y+19,"font-size":13,"font-family":i===3?"ui-monospace,monospace":"inherit",fill:css("--fg")},t);});});
+y+=44;
+el("text",{x:x0,y:y,"font-size":13,fill:css("--fg")},"22. sor: B22 = 27 % (áfakulcs); a B23, B24 …, C22 cellák üresek (= 0).");
+FIG.svg.setAttribute("viewBox","0 0 "+W+" "+(y+12));
+if(dir==="le") status(bad?'<span class="bad">Lefelé másolva a B22 hivatkozás elcsúszik ('+bad+' sor rossz cellára mutat, az áfa 0 Ft).</span> Rögzítsd a <b>sort</b> ($22).'
+                    :'<span class="ok">Minden sor a B22-re mutat – helyes.</span> Lefelé másolásnál a sor rögzítése ($22) a lényeg; az oszlop rögzítése itt nem számít.');
+else status("Jobbra másolva a hivatkozások oszlopa tolódik: D→E, "+(v.ac?"a $B rögzítve marad":"B→C")+(v.ar?", a sor $22-vel rögzített":"")+
+  ". Az F2-ben "+(v.ac?"a B22 marad, de a D2 helyett az E2 (maga az áfa) szorzódik – ez is rossz képlet: jobbra az áfát nem másoljuk.":"a C22 üres, ezért 0 Ft lesz."));
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

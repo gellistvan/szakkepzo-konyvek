@@ -74,6 +74,37 @@ tekercsével, és K2 reteszelő érintkezője sorba van kötve a K1
 tekercsével. Így ha K1 behúz, a K2 felé menő reteszelő érintkező bont,
 és K2 nem tud behúzni. Ha pedig K2 húz be, a K1 felé menő reteszelő
 érintkező bont.</p>
+<p>Hogy mit ér a reteszelés, azt a legjobban egy szimulációban látni,
+ahol a reteszek egyenként kiiktathatók. Az alábbi ábra a szimulátor
+forgatókönyvét mutatja: a kocsi a HÁTRA-végállásból (B2) indul ELŐRE,
+9,5 s-nál eléri a B1 ELŐRE-végálláskapcsolót, a K1 elenged; 11 s-nál az
+S2 indítja a HÁTRA irányt, és a kocsi 20 s-nál a B2-nél áll meg (0,2
+m/s, 0–2 m-es pálya).</p>
+<figure id="fig-ve114-3">
+<div class="fig-interactive"><iframe src="figures/html/ve114-3.html" title="Idődiagram 0–21 s: S1 impulzus 0 s-nál, K1 0–9,5 s, B1 9,5–11 s között működtetve, S2 impulzus 11 s-nál, K2 11–20 s, B2 0–0,5 s és 20 s után működtetve; a kocsi helyzete 0-ról 1,9 m-ig nő, majd 0,1 m-ig csökken. Alul két pillanatkép: 5 s-nál a kocsi 1,0 m-en jobbra halad, 15 s-nál 1,1 m-en balra." loading="lazy" style="width:100%;border:0;height:760px"></iframe><noscript><img src="figures/img/ve114-3.png" style="width:100.0%"
+alt="Idődiagram 0–21 s: S1 impulzus 0 s-nál, K1 0–9,5 s, B1 9,5–11 s között működtetve, S2 impulzus 11 s-nál, K2 11–20 s, B2 0–0,5 s és 20 s után működtetve; a kocsi helyzete 0-ról 1,9 m-ig nő, majd 0,1 m-ig csökken. Alul két pillanatkép: 5 s-nál a kocsi 1,0 m-en jobbra halad, 15 s-nál 1,1 m-en balra." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve114-3.png" style="width:100.0%"
+alt="Idődiagram 0–21 s: S1 impulzus 0 s-nál, K1 0–9,5 s, B1 9,5–11 s között működtetve, S2 impulzus 11 s-nál, K2 11–20 s, B2 0–0,5 s és 20 s után működtetve; a kocsi helyzete 0-ról 1,9 m-ig nő, majd 0,1 m-ig csökken. Alul két pillanatkép: 5 s-nál a kocsi 1,0 m-en jobbra halad, 15 s-nál 1,1 m-en balra." /></details></div>
+<figcaption>Reverzáló vezérlés szimulátora: a forgatókönyv idődiagramja
+és a kocsi két pillanatképe</figcaption>
+</figure>
+<p>Olvasd le az idődiagramról: a K1 és a K2 sávja sehol sem fed át, és a
+végálláskapcsoló jele (B1) pontosan ott kezdődik, ahol a K1 véget ér. A
+HTML-kiadásban a szimulátor kezelhető (S0, S1, S2 nyomva tartható; a
+reteszek és a végálláskapcsolók jelölőnégyzettel kiiktathatók; hiba is
+beépíthető). Végezd el a három kísérletet:</p>
+<ol type="1">
+<li><strong>Mindkét retesz kikapcsolva:</strong> S1 (a K1 behúz), majd
+S2 → a K2 is behúz, a két kontaktor egyszerre zár: <strong>fázis–fázis
+zárlat</strong> (a 2. példa szerint kb. 4 kA), a Q1 kiold.</li>
+<li><strong>Csak a nyomógomb-retesz bekapcsolva, „K1 főérintkezője
+hegedt” hiba:</strong> S1, majd S2 → az S2 bontója hiába bontja a K1
+tekercsét, a K1 hegedt érintkezője zárva marad, a K2 behúz → zárlat. A
+nyomógomb-retesz a hegedés ellen nem véd.</li>
+<li><strong>Mindkét retesz bekapcsolva:</strong> S1, majd S2 → a K1
+elenged, és csak utána húz a K2: közvetlen irányváltás, zárlat nélkül.
+Kapcsold be most a „K1 hegedt” hibát is: a K2 nem húz be, mert a K1
+21–22 bontója (a hegedt K1-gyel együtt) nyitva marad.</li>
+</ol>
 <p>A főáramkör kapcsolási rajza:</p>
 <figure>
 <img src="assets/ve114-diagram-2.png"
@@ -129,8 +160,77 @@ zárna, az L1 és az L3 fázis a két kontaktor főérintkezőin át közvetlen�
 <p>A K2-nél az L1 és az L3 fázist cseréljük fel, így a motor forgó
 mágneses tere az ellenkező irányba forog. A V1 ugyanaz marad, mert
 elegendő két fázist megcserélni.</p>
-<h3 data-number="32.2.3" id="definíciók-és-elvek"><span
-class="header-section-number">32.2.3</span> Definíciók és elvek</h3>
+<h3 data-number="32.2.3"
+id="teljes-kapcsolási-lap-reverzálás-kettős-reteszeléssel"><span
+class="header-section-number">32.2.3</span> Teljes kapcsolási lap:
+reverzálás kettős reteszeléssel</h3>
+<p>A fenti két rajz külön mutatta a vezérlő- és a főáramkört, vezérlőtáp
+és jelzés nélkül. A műhelyben és a dokumentációban viszont egyetlen
+tervlapon dolgozunk: a lap felső sávjában az áramutak (oszlopok) száma
+áll, minden érintkező mellett a tekercse oszlopának száma (például
+„/6”), minden tekercs alatt pedig a <strong>kereszthivatkozási
+tükör</strong>: melyik érintkezője melyik áramútban dolgozik („–”:
+tartalék). Az alábbi lap a 32.2 1. példájának 5,5 kW-os, 11 A-es
+motorját kapcsolja, és mindkét reteszelést – a nyomógombos és a mágneses
+(segédérintkezős) reteszelést – egyszerre tartalmazza.</p>
+<figure id="fig-ve114-2">
+<div class="fig-interactive"><iframe src="figures/html/ve114-2.html" title="A3-as tervlap 11 áramúttal. 1–3: X1 betáp, Q0 főkapcsoló, Q1 motorvédő kapcsoló 9–14 A (I_r = 11 A), utána K1 ELŐRE és K2 HÁTRA főérintkezői, a K2 kimenetén L1 és L3 felcserélve, K1–K2 között mechanikus retesz, X1:U1 V1 W1, W1 kábel, M1 5,5 kW. 4: F4 – T1 400/230 V – F2 vezérlőtáp, 0 V a PE-re kötve. 5: Q1 13–14, S0 STOP, K1 13–14 önfenntartás. 6: S1 záró ∥ K1 13–14, S2 bontó, K2 21–22, K1 tekercs. 7: S1 bontó, S2 záró ∥ K2 13–14 (8. áramút), K1 21–22, K2 tekercs. 9–11: K1 43–44 – H1 ELŐRE, K2 43–44 – H2 HÁTRA, Q1 97–98 – H3 ZAVAR. Tükrök a Q1, K1 és K2 alatt." loading="lazy" style="width:100%;border:0;height:820px"></iframe><noscript><img src="figures/img/ve114-2.png" style="width:100.0%"
+alt="A3-as tervlap 11 áramúttal. 1–3: X1 betáp, Q0 főkapcsoló, Q1 motorvédő kapcsoló 9–14 A (I_r = 11 A), utána K1 ELŐRE és K2 HÁTRA főérintkezői, a K2 kimenetén L1 és L3 felcserélve, K1–K2 között mechanikus retesz, X1:U1 V1 W1, W1 kábel, M1 5,5 kW. 4: F4 – T1 400/230 V – F2 vezérlőtáp, 0 V a PE-re kötve. 5: Q1 13–14, S0 STOP, K1 13–14 önfenntartás. 6: S1 záró ∥ K1 13–14, S2 bontó, K2 21–22, K1 tekercs. 7: S1 bontó, S2 záró ∥ K2 13–14 (8. áramút), K1 21–22, K2 tekercs. 9–11: K1 43–44 – H1 ELŐRE, K2 43–44 – H2 HÁTRA, Q1 97–98 – H3 ZAVAR. Tükrök a Q1, K1 és K2 alatt." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve114-2.png" style="width:100.0%"
+alt="A3-as tervlap 11 áramúttal. 1–3: X1 betáp, Q0 főkapcsoló, Q1 motorvédő kapcsoló 9–14 A (I_r = 11 A), utána K1 ELŐRE és K2 HÁTRA főérintkezői, a K2 kimenetén L1 és L3 felcserélve, K1–K2 között mechanikus retesz, X1:U1 V1 W1, W1 kábel, M1 5,5 kW. 4: F4 – T1 400/230 V – F2 vezérlőtáp, 0 V a PE-re kötve. 5: Q1 13–14, S0 STOP, K1 13–14 önfenntartás. 6: S1 záró ∥ K1 13–14, S2 bontó, K2 21–22, K1 tekercs. 7: S1 bontó, S2 záró ∥ K2 13–14 (8. áramút), K1 21–22, K2 tekercs. 9–11: K1 43–44 – H1 ELŐRE, K2 43–44 – H2 HÁTRA, Q1 97–98 – H3 ZAVAR. Tükrök a Q1, K1 és K2 alatt." /></details></div>
+<figcaption>Reverzálás teljes kapcsolási lapja: főkör, vezérlőtáp,
+kettős reteszelésű vezérlőkör és jelzések egy lapon</figcaption>
+</figure>
+<p>Kövesd végig a lapot balról jobbra. A <strong>főkörben</strong> (1–3.
+áramút) a Q0 főkapcsoló után a Q1 motorvédő kapcsoló a zárlat- és a
+túlterhelés-védelmet is adja, ezért nincs külön hőkioldó; a K1
+egyenesen, a K2 az L1↔︎L3 cserével kapcsolja a motort. A
+<strong>vezérlőtáp</strong> (4.) a Q0 után, a Q1 előtt ágazik le: F4
+primer- és F2 vezérlőköri védelem, T1 400/230 V-os transzformátor, a 0
+V-os oldal a PE-re kötve – így az első testzárlat a vezérlőkörben az
+F2-t oldja, és nem indíthat el magától egy kontaktort. A <strong>közös
+ágban</strong> (5.) a Q1 13–14 segédérintkezője (kioldott Q1-nél nincs
+vezérlés) és az S0 STOP. Az <strong>ELŐRE ágban</strong> (6.) az S1 záró
+érintkezőjével párhuzamos a K1 13–14 önfenntartás, utána következik az
+S2 bontó érintkezője (nyomógomb-retesz), majd a K2 21–22 (mágneses
+retesz) és a K1 tekercse; a <strong>HÁTRA ág</strong> (7–8.) ennek
+tükörképe. Az S1 és az S2 kettős érintkezős nyomógomb: záró és bontó
+érintkezőjüket a szaggatott vonal köti össze. Lényeges, hogy a
+nyomógomb-retesz bontója <strong>az önfenntartó ágon kívül</strong>,
+vele sorban van – ha az önfenntartó érintkező a bontót is áthidalná, a
+másik irány gombja nem tudná bontani a futó irányt. A 9–11. áramút a
+jelzés: H1 ELŐRE, H2 HÁTRA (zöld), H3 ZAVAR (sárga, a Q1 97–98
+kioldásjelző érintkezőjéről); a színek jelentését a 60204-1 adja
+(ellenőrizendő: MSZ EN 60204-1).</p>
+<p><strong>Közvetlen irányváltás STOP nélkül.</strong> Járjon a motor
+ELŐRE. A HÁTRA gomb (S2) megnyomásakor először a gomb bontó érintkezője
+nyit a 6. áramútban, ezért a K1 elenged. A K1 21–22 a 7. áramútban
+visszazár, és mivel az S2 záró érintkezője ekkorra már zárt, a K2 behúz
+és önfenntartásba megy. A két irányváltás között tehát a nyomógomb
+mechanikája és a K1 elengedési ideje adja a szünetet. Ha valaki mindkét
+gombot egyszerre nyomja, mindkét ág bont – egyik kontaktor sem húz. A
+HTML-kiadásban a lap kezelhető: próbáld ki a közvetlen irányváltást és a
+két gomb egyidejű megnyomását is.</p>
+<p><strong>Figyelem: a forgásban végzett irányváltás ellenáramú
+fékezés.</strong> A közvetlen átkapcsoláskor a még forgó motor az
+ellenkező forgómezőt kapja: a szlip közel 2, az áramlökés nagyobb az
+indítási áramnál, a tengely és a hajtott gép nagy nyomatéklökést kap, a
+kontaktorok AC-4 üzemben dolgoznak (31.1, AC-4 kategória). Ha a gép vagy
+a kontaktor ezt nem bírja (nagy tehetetlenségű gép, hajtómű, szalag), a
+nyomógomb-reteszt el kell hagyni, és az <strong>„irányváltás csak STOP
+után”</strong> változat érvényes: ekkor az S1/S2 bontó érintkezője
+kimarad, és a 32.2 elején látott vezérlési rajz szerint az ellenirány
+csak az S0 megnyomása és a motor megállása után indítható.</p>
+<p><strong>Kitérő: miért nem elég a nyomógomb-retesz?</strong> A
+nyomógomb bontója csak a tekercs áramkörét bontja. Ha a K1 főérintkezője
+összehegedt, vagy a K1 mechanikusan lassan enged el, a K2 tekercse ettől
+még feszültséget kaphat, és a két kontaktor egyszerre zárna – ez
+fázis–fázis zárlat. A K1 21–22 mágneses retesz azért jobb, mert a
+kontaktor tényleges (mechanikai) állapotát követi; a mechanikus retesz
+(▽ a főkörben) pedig a hegedés ellen is véd, mert a két kontaktor mozgó
+részét fizikailag zárja ki. A három reteszelés együtt ad teljes
+védelmet.</p>
+<h3 data-number="32.2.4" id="definíciók-és-elvek"><span
+class="header-section-number">32.2.4</span> Definíciók és elvek</h3>
 <p><strong>Definíció. Reverzáló kapcsolás.</strong> Olyan motorvezérlés,
 amely lehetővé teszi a háromfázisú aszinkronmotor forgásirányváltását
 két mágneskapcsolóval, a fázissorrend felcserélésével.</p>
@@ -189,51 +289,154 @@ beépíteni. A szükséges késleltetést a gyártói adatlap és a
 mágneskapcsoló ívoltási tulajdonságai alapján kell megválasztani;
 tipikus érték néhány tizedmásodperc <strong>(ellenőrizendő: gyártói
 adatlap)</strong>.</p>
-<h3 data-number="32.2.4"
-id="kidolgozott-példa-mágneskapcsoló-kiválasztása-és-a-zárlati-veszély"><span
-class="header-section-number">32.2.4</span> Kidolgozott példa:
-mágneskapcsoló kiválasztása és a zárlati veszély</h3>
-<p><strong>1. példa.</strong> Egy 5,5 kW-os, 400 V-os, 1400 1/min-es
-aszinkronmotort kell reverzáló kapcsolásban üzemeltetni. A motor
-adattábláján a névleges áram 11 A. Válasszunk mágneskapcsolót, és
-ellenőrizzük a bekötést.</p>
-<p><strong>Számítás.</strong> A motor névleges feszültsége
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>v</mi></msub><mo>=</mo><mn>400</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U_v = 400\,\text{V}</annotation></semantics></math>,
-névleges árama
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>n</mi></msub><mo>=</mo><mn>11</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_n = 11\,\text{A}</annotation></semantics></math>.
-Mágneskapcsolót AC-3 terhelésre választunk. A kapcsolónak nagyobbnak
-kell lennie a motor névleges áramánál, tipikusan
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>e</mi></msub><mo>≥</mo><msub><mi>I</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">I_e \ge I_n</annotation></semantics></math>.
-Ha a gyártó kínálatában van 12 A-es AC-3 készülék, ez megfelelő. A
-beállított motorvédő kapcsoló vagy hőkioldó névleges áramát
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>n</mi></msub><mo>=</mo><mn>11</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">I_n = 11\,\text{A}</annotation></semantics></math>
-köré állítjuk.</p>
-<p>A K1 főáramköri bekötése: L1→U1, L2→V1, L3→W1. A K2 bekötése: L1→W1,
-L2→V1, L3→U1. A tekercsek 230 V-os vezérlésűek, így a vezérlés L1 és N
-között működik. A reteszeléshez mindkét mágneskapcsolóra szükség van
-egy-egy bontó segédérintkezőre, például 21–22 jelölésűre.</p>
-<p><strong>2. példa: mi történik reteszelés nélkül?</strong> (Ha az
-irányváltás forgás közben történik, ellenáramú fékezéssel, AC-4
-szerinti, rendszerint nagyobb kontaktor szükséges, lásd a <a
-href="ve109.html">Kapcsolókészülékek működése, ívoltás és használati
-kategóriák</a> alfejezetet.) Tegyük fel, hogy a villamos reteszelést és
-a mechanikus reteszt is elhagyják, és a K1 és K2 tekercs egyszerre kap
-feszültséget. Az L1 és L3 fázis a két mágneskapcsoló főérintkezőjén át
-rövidre zár.</p>
-<p>Legyen egy fázisvezető impedanciája a zárlat helyéig
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Z</mi><mi>f</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>05</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">Z_f = 0{,}05\,\Omega</annotation></semantics></math>;
-a fázis–fázis hurokban két ilyen van sorban (tanulási példa; valós
-hálózatnál méréssel kell meghatározni). A várható zárlati áram:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>k</mi></msub><mo>≈</mo><mfrac><msub><mi>U</mi><mi>v</mi></msub><mrow><mn>2</mn><mspace width="0.167em"></mspace><msub><mi>Z</mi><mi>f</mi></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>400</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>2</mn><mo>×</mo><mn>0</mn><mo>,</mo><mn>05</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">
-I_k \approx \frac{U_v}{2\,Z_f} = \frac{400\,\text{V}}{2 \times 0{,}05\,\Omega} = 4\,000\,\text{A} = 4\,\text{kA}.
-</annotation></semantics></math></p>
-<p>Ez az áram bőven meghaladja a mágneskapcsoló kikapcsolási képességét.
-A motorvédő kapcsoló (vagy D16 kismegszakító) mágneses kioldója leold,
-de a mágneskapcsoló főérintkezője közben összehegedhet, és a zárlat
-ívkárosodást okoz. <strong>Tilos</strong> ezért a reteszelés
-elhagyása.</p>
-<h3 data-number="32.2.5" id="szabvány-és-gyakorlati-elvárások"><span
-class="header-section-number">32.2.5</span> Szabvány és gyakorlati
+<p>A késleltetésnek két, nagyságrendben eltérő célja lehet, ezeket ne
+keverjük össze. <strong>(a) Ívkialvás:</strong> néhány tized másodperc,
+hogy az elengedő kontaktor íve kialudjon, mielőtt a másik irány
+kontaktora zár – ezt a nyomógombos vezérlésnél a kezelő reakcióideje, a
+32.2 teljes lapján a nyomógomb-retesz és a kontaktor elengedési ideje
+adja. <strong>(b) A motor megállása:</strong> másodperces nagyságrend (a
+gép kifutási ideje), hogy az ellenirány ne a még forgó motort kapcsolja
+– ez kerüli el az ellenáramú fékezést, a nagy áramlökést és a mechanikai
+igénybevételt (AC-4 üzem, 31.1). Nagy tehetetlenségű gépnél (ventilátor,
+szalag, lendkerék) a (b) a mérvadó; ilyenkor az irányváltást egy
+elengedés-késleltetésű időrelé „mozgásban” jelzése tiltja.</p>
+<figure>
+<img src="assets/ve114-diagram-3.png"
+alt="Irányváltás csak a motor megállása után: KT1 elengedés-késleltetésű időrelé B1 vezérlőbemenettel - Alapállapot. KT1 tápja (A1–A2) az F2 után, az S0 előtt állandó; a B1 vezérlőbemenetet a K1 43–44 ∥ K2 43–44 aktiválja (bármelyik irány jár). A KT1 15–16 bontója a B1 aktiválásakor azonnal nyit, és csak a B1 megszűnése után t idővel zár vissza. A 15–16 a két START gomb közös ágában van, az önfenntartó K1 13–14 és K2 13–14 viszont közvetlenül az A pontról kap feszültséget – a futó irányt a KT1 nem bontja. A kapocsjelek gyártófüggők (ellenőrizendő: adatlap)." />
+<figcaption aria-hidden="true">Irányváltás csak a motor megállása után:
+KT1 elengedés-késleltetésű időrelé B1 vezérlőbemenettel - Alapállapot.
+KT1 tápja (A1–A2) az F2 után, az S0 előtt állandó; a B1 vezérlőbemenetet
+a K1 43–44 ∥ K2 43–44 aktiválja (bármelyik irány jár). A KT1 15–16
+bontója a B1 aktiválásakor azonnal nyit, és csak a B1 megszűnése után t
+idővel zár vissza. A 15–16 a két START gomb közös ágában van, az
+önfenntartó K1 13–14 és K2 13–14 viszont közvetlenül az A pontról kap
+feszültséget – a futó irányt a KT1 nem bontja. A kapocsjelek
+gyártófüggők (ellenőrizendő: adatlap).</figcaption>
+</figure>
+<p><strong>Jelútkövetés.</strong> (1) S1 → a KT1 15–16 (alaphelyzetben
+zárt) és az S1 át a K1 behúz, a K1 13–14 önfenntartásba megy. (2) A K1
+43–44 aktiválja a KT1 B1 vezérlőbemenetét: a 15–16 azonnal nyit – a
+START-ág innen tiltva van, de a K1 a saját önfenntartásán (az A pontról,
+a 15–16 megkerülésével) tovább jár. (3) Az S2 megnyomása most hatástalan
+(a 15–16 nyitva), az S0 STOP-pal a K1 elenged, a B1 megszűnik, a KT1
+elkezdi mérni a t időt. (4) A t letelte után a 15–16 visszazár: most
+indítható bármelyik irány. A beállítás: t ≥ a gép kifutási ideje,
+például mérve 2,4 s → t = 3 s. A KT1 tápja az S0 előtt van, hogy a STOP
+után is mérje az időt. Az időrelé helyett fordulatszám-őr
+(nullfordulat-relé) is adhatja a tiltást: az a tényleges megállást
+érzékeli, nem egy beállított időt (lásd a 32.4 fékezési
+alszakaszát).</p>
+<p><strong>Gondolkodtató feladat (C).</strong> Mi történik, ha a szerelő
+a KT1 15–16-ot nem a START-ágak közös pontjára, hanem az A pont után, az
+önfenntartó ágakat is táplálva köti be? <em>Megoldás:</em> az S1
+megnyomására a K1 behúz, a K1 43–44 azonnal aktiválja a B1-et, a 15–16
+nyit – ekkor már az önfenntartó K1 13–14 is a 15–16 után van, így az S1
+elengedésekor a K1 elenged. A motor csak addig jár, amíg a gombot
+nyomják; a „mozgásban” jelzés a saját irányát is tiltja.</p>
+<h3 data-number="32.2.5" id="irányváltás-végálláskapcsolóval"><span
+class="header-section-number">32.2.5</span> Irányváltás
+végálláskapcsolóval</h3>
+<p>A motiváció példái – tolókapu, garázskapu, szán, daru-macska,
+szállítókocsi – a mozgást nem a kezelővel, hanem a pálya végén
+elhelyezett <strong>végálláskapcsolóval</strong> állítják le, és gyakran
+automatikusan vissza is fordítják.</p>
+<p><strong>Definíció. Üzemi végálláskapcsoló.</strong> A mozgó gépelem
+által működtetett helyzetkapcsoló, amely az adott irány tekercsének
+áramkörét bontja, amikor a gép a pálya végére ér. A vezérlésben a
+kényszernyitású bontó érintkezőjét (11–12) használjuk: a működtető a
+bontást mechanikusan kikényszeríti, egy összehegedt érintkezőt is
+szétfeszít (rajzjele a Rajzjelek függelékben: bontó érintkező a
+működtetőt jelző háromszöggel és a kényszernyitás köralakú jelével).
+Érzékelőként a betűjele <strong>B</strong>: B1 az ELŐRE-, B2 a
+HÁTRA-végállás.</p>
+<p><strong>Definíció. Vészvégálláskapcsoló.</strong> Az üzemi végállás
+<em>után</em> (a pályán túl) elhelyezett második kapcsoló (B3, B4),
+amely akkor bont, ha az üzemi végálláskapcsoló meghibásodott vagy
+elállítódott. A közös ágban (vagy a főkörben) mindkét irányt bontja, és
+csak szándékos, kézi visszaállítás után indulhat újra a gép.</p>
+<figure>
+<img src="assets/ve114-diagram-4.png"
+alt="Irányváltás végálláskapcsolókkal: leállítás a végállásban - Alapállapot, a szán középen (B1, B2 nincs működtetve). B1 = ELŐRE-végállás, B2 = HÁTRA-végállás (üzemi végálláskapcsolók, kényszernyitású bontó 11–12); B3, B4 = vészvégállás (az üzemi végállás után, a közös ágban: mindkét irányt bontja, kézi visszaállítás után indítható). Az irány bontója a saját tekercsága előtt van: ELŐRE-végállásban csak a HÁTRA indítható. Szemléltető 230 V-os vezérlés; a valós vezérlőfeszültséget a tervlap adja (lásd a teljes kapcsolási lapot)." />
+<figcaption aria-hidden="true">Irányváltás végálláskapcsolókkal:
+leállítás a végállásban - Alapállapot, a szán középen (B1, B2 nincs
+működtetve). B1 = ELŐRE-végállás, B2 = HÁTRA-végállás (üzemi
+végálláskapcsolók, kényszernyitású bontó 11–12); B3, B4 = vészvégállás
+(az üzemi végállás után, a közös ágban: mindkét irányt bontja, kézi
+visszaállítás után indítható). Az irány bontója a saját tekercsága előtt
+van: ELŐRE-végállásban csak a HÁTRA indítható. Szemléltető 230 V-os
+vezérlés; a valós vezérlőfeszültséget a tervlap adja (lásd a teljes
+kapcsolási lapot).</figcaption>
+</figure>
+<p><strong>Működés.</strong> Az S1 indítja az ELŐRE irányt, a K1
+önfenntartásba megy. A szán eléri a B1-et, a B1 11–12 nyit, a K1 elenged
+– a gép megáll. Amíg a szán a végálláson áll, a B1 nyitva marad, ezért
+ELŐRE irányba újraindítani nem lehet (bármeddig nyomják az S1-et), HÁTRA
+irányba viszont igen: a B1 csak a K1 ágában van. A lényeg: <strong>a
+végálláskapcsoló bontója annak az iránynak a tekercsága előtt van,
+amelyik felé a gép a végálláshoz ér</strong> – ha a szerelő a B1-et és a
+B2-t felcseréli, a gép átfut a végálláson, és csak a vészvégállás (vagy
+a mechanikus ütköző) állítja meg.</p>
+<p><strong>Automatikus ingamozgás.</strong> Ha a gépnek a két végállás
+között magától oda-vissza kell járnia (szán, keverő, mosókocsi), a
+végálláskapcsolók második, záró érintkezője (13–14) indítja az
+ellenirányt – de nem azonnal, hanem egy <strong>fordulási
+időrelén</strong> keresztül, hogy a motor előbb megálljon (lásd a fenti
+késleltetési szabályt).</p>
+<figure>
+<img src="assets/ve114-diagram-5.png"
+alt="Automatikus ingamozgás végálláskapcsolókkal és időrelékkel - Alapállapot. K3 = ingaüzem segédrelé (S3 INGA indítja, S0 STOP bontja – feszültség-visszatérés után nem indul magától). A végálláskapcsolók második, záró érintkezője (13–14) indítja a fordulás időrelét: B1 13–14 → KT1, B2 13–14 → KT2 (meghúzás-késleltetés, 0,5–2 s, a motor kifutása szerint). KT1 15–18 az S2-vel (HÁTRA), KT2 15–18 az S1-gyel (ELŐRE) párhuzamos; a bontó végállás-érintkező (11–12) közben az addigi irányt már leállította. A vészvégállás (B3, B4) a közös ágban mindent bont." />
+<figcaption aria-hidden="true">Automatikus ingamozgás
+végálláskapcsolókkal és időrelékkel - Alapállapot. K3 = ingaüzem
+segédrelé (S3 INGA indítja, S0 STOP bontja – feszültség-visszatérés után
+nem indul magától). A végálláskapcsolók második, záró érintkezője
+(13–14) indítja a fordulás időrelét: B1 13–14 → KT1, B2 13–14 → KT2
+(meghúzás-késleltetés, 0,5–2 s, a motor kifutása szerint). KT1 15–18 az
+S2-vel (HÁTRA), KT2 15–18 az S1-gyel (ELŐRE) párhuzamos; a bontó
+végállás-érintkező (11–12) közben az addigi irányt már leállította. A
+vészvégállás (B3, B4) a közös ágban mindent bont.</figcaption>
+</figure>
+<p>A B1 13–14 a KT1-et, a B2 13–14 a KT2-t indítja; a KT1 késleltetett
+záró érintkezője (15–18) az S2-vel párhuzamosan a HÁTRA irányt, a KT2-é
+az S1-gyel párhuzamosan az ELŐRE irányt indítja. A beállított idő (0,5–2
+s) a gép kifutásától függ. A K3 „ingaüzem” segédrelé azért kell, hogy a
+gép feszültség-visszatéréskor ne induljon el magától: a K3 csak az S3
+INGA gomb megnyomása után húz be, és az S0 STOP-pal (vagy
+feszültségkimaradáskor) elenged. Amikor a szán elhagyja a végállást, a
+B1 13–14 nyit, a KT1 elenged, de a K2 a saját önfenntartásán tovább
+jár.</p>
+<p><strong>Elhelyezés és beállítás.</strong> A végálláskapcsolót úgy
+állítjuk, hogy a gép a kikapcsolás után, a <strong>kifutási
+úton</strong> belül megálljon, és még ne érje el a mechanikus ütközőt
+vagy a vészvégállást. <em>Szemléltető becslés:</em> 0,3 m/s haladási
+sebességnél és 0,5 s kifutási időnél a kifutási út legfeljebb
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>≤</mo><mi>v</mi><mo>⋅</mo><mi>t</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m/s</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">s</mtext><mo>=</mo><mn>0</mn><mo>,</mo><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext></mrow><annotation encoding="application/x-tex">s \le v \cdot t = 0{,}3\,\text{m/s} \cdot 0{,}5\,\text{s} = 0{,}15\,\text{m}</annotation></semantics></math>
+(állandó sebességet feltételezve, a biztonság javára; egyenletes
+lassulásnál ennek fele). A vészvégállást ennél távolabb, a mechanikus
+ütköző elé szereljük. A valós kifutást próbaüzemben mérni kell.</p>
+<p><strong>Megjegyzés.</strong> A végálláskapcsoló a gép helyzetét
+figyeli, nem a személyeket. Kapuknál a becsípődés elleni védelem
+(erőhatárolás, biztonsági élérzékelő, fénysorompó) a vonatkozó
+termékszabvány szerinti biztonsági funkció (ellenőrizendő: MSZ EN
+12453), ezt végálláskapcsolóval nem lehet kiváltani.</p>
+<p><strong>Feladat (B).</strong> Rajzold meg egy tolókapu vezérlését
+NYIT (S1), ZÁR (S2) és STOP (S0) gombbal, két üzemi végálláskapcsolóval
+(B1 NYIT-vég, B2 ZÁR-vég), villamos reteszeléssel. <em>Megoldás:</em> a
+fenti első rajz szerint, K1 = NYIT, K2 = ZÁR: a NYIT ágban (S1 ∥ K1
+13–14) → B1 11–12 → K2 21–22 → K1; a ZÁR ágban (S2 ∥ K2 13–14) → B2
+11–12 → K1 21–22 → K2; közös ágban Q1 13–14 és S0. A K2 főérintkezőin
+két fázis (L1 és L3) felcserélve.</p>
+<p><strong>Feladat (D, mérés).</strong> A kapu a ZÁR-végálláson áll (B2
+működtetve), a NYIT gombra nem indul. A vezérlés feszültségmentesítése
+és a feszültségmentesség ellenőrzése után ohmmérővel mérsz: B1 11–12
+között ∞ (szakadás), K2 21–22 között 0 Ω, S1 megnyomva 0 Ω. Mi a hiba?
+<em>Megoldás:</em> a B1 a NYIT irány végálláskapcsolója; a kapu nem a
+NYIT-végálláson áll, a B1-nek tehát nyugalomban zártnak kellene lennie.
+A ∞ azt jelenti, hogy a B1 beragadt/elállítódott (a működtető benyomva
+maradt) vagy az érintkezője, a vezetéke szakadt. Teendő: a B1
+működtetőjének és rögzítésének ellenőrzése, majd az érintkező mérése a
+kapcsoló kapcsain; hibás kapcsolót cserélni kell.</p>
+<h3 data-number="32.2.6" id="szabvány-és-gyakorlati-elvárások"><span
+class="header-section-number">32.2.6</span> Szabvány és gyakorlati
 elvárások</h3>
 <p><strong>Szabvány.</strong> A kisfeszültségű kapcsoló- és
 vezérlőkészülékekre vonatkozó MSZ EN 60947 sorozat, azon belül a
@@ -249,9 +452,14 @@ mechanikus retesszel együtt valósul meg.</p>
 segédérintkezővel sorba kötött ellenirányú tekercs – a(z) <a
 href="ve115.html">Csillag–delta indítás vezérlése</a> alfejezetben is
 használjuk, mert ott a csillag- és a delta-mágneskapcsoló szintén
-kizárja egymást.</p>
-<h3 data-number="32.2.6" id="valós-életbeli-alkalmazás"><span
-class="header-section-number">32.2.6</span> Valós életbeli
+kizárja egymást. A két irány felcserélt fázissorrendje az ellenáramú
+fékezés alapja is: elvét és fordulatőrös kapcsolását a <a
+href="ve097.html">Fordulatszám-változtatás, Dahlander, frekvenciaváltó
+és fékezés</a>, a fékezés kontaktoros vezérlését a <a
+href="ve116.html">Kétsebességű, sorrendi és késleltetett vezérlések</a>
+alfejezet mutatja.</p>
+<h3 data-number="32.2.7" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">32.2.7</span> Valós életbeli
 alkalmazás</h3>
 <p>Egy műhelyben portáldaru emelőmotorját reverzáló kapcsolással
 vezérelték. A villamos reteszelést beépítették, de a mechanikus reteszt
@@ -264,51 +472,6 @@ kapcsoló érintkezői hegesedtek, és a karbantartónak több napig tartott a
 javítás. A mechanikus retesz ezt megakadályozta volna. A tanulság:
 reverzáló kapcsolásnál a villamos retesz önmagában nem elegendő
 biztosíték, a mechanikus retesz fontos kiegészítő védelem.</p>
-<h3 data-number="32.2.7"
-id="gyakorlati-útmutató-reverzáló-kapcsolás-építése-tanműhelyben"><span
-class="header-section-number">32.2.7</span> Gyakorlati útmutató:
-reverzáló kapcsolás építése tanműhelyben</h3>
-<p><strong>Cél.</strong> A tanuló építse meg a reverzáló kapcsolást
-törpefeszültségű vezérléssel, és ellenőrizze a reteszelés működését.</p>
-<p><strong>Eszközök és anyagok.</strong> Két mágneskapcsoló (pl. 24 V DC
-vagy 24 V AC tekercs), motor vagy jelzőlámpa a főáramkör szimulálására,
-vezérlőfeszültség forrása, nyomógombok (S0 NC, S1 NO, S2 NO), vezetékek,
-szerelőszerszámok, multiméter.</p>
-<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
-(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
-vonatkozik; hálózati feszültségen önállóan ne végezd. Hálózati
-feszültségű (230/400 V) munkát csak jogosult, arra képesített személy
-végezhet, a hatályos előírások szerint.</p>
-<ol type="1">
-<li>Kapcsold le a tápfeszültséget.</li>
-<li>Biztosítsd visszakapcsolás ellen (lakat, figyelmeztető tábla).</li>
-<li>Ellenőrizd a feszültségmentességet kétpólusú feszültségvizsgálóval
-(nem fázisceruzával), minden vezető között és a védővezetővel
-szemben.</li>
-<li>Földelés és rövidre zárás: hálózati munkánál a szabályok szerint
-kötelező; törpefeszültségű tanpanelen az erre vonatkozó eljárást az
-oktatóval ismerd meg és kövesd.</li>
-<li>Fedd le vagy válaszd el a szomszédos feszültség alatt maradó
-részeket.</li>
-<li>A vezérlési rajz szerint kösd be a nyomógombokat, a mágneskapcsoló
-tekercseket és a reteszelő segédérintkezőket.</li>
-<li>Ellenőrizd a kapcsolást: a K1 tekercsével sorba kell kötni a K2 NC
-segédérintkezőt, és a K2 tekercsével sorba a K1 NC segédérintkezőt.</li>
-<li>Kapcsold vissza a vezérlőfeszültséget, és próbáld ki mindkét
-irányt.</li>
-<li>Próbáld ki a reteszelést: nyomd meg az S1 gombot, majd azonnal az S2
-gombot. A K1 és K2 soha nem lehet egyszerre behúzott állapotban.</li>
-<li>Mérj multiméterrel a K1 és K2 tekercs kapcsain: ha a K1 behúz, a K2
-tekercsén nem szabad megjelennie a vezérlőfeszültségnek, és
-fordítva.</li>
-<li>Ellenőrizd a mechanikus retesz működését (újra feszültségmentes,
-leválasztott állapotban): kézzel próbáld mindkét mágneskapcsolót
-egyszerre behúzni; a mechanikus retesznek ezt fizikailag meg kell
-akadályoznia.</li>
-</ol>
-<p><strong>Dokumentálás.</strong> Jegyezd fel a bekötési rajzot, a
-felhasznált készülékek típusát és a próbák eredményét. Hibás működés
-esetén a mérési eredményeket rögzítsd.</p>
 <h3 data-number="32.2.8" id="tipikus-hibák"><span
 class="header-section-number">32.2.8</span> Tipikus hibák</h3>
 <p><strong>Hiba 1: a reteszelés hiánya.</strong> A két mágneskapcsoló
@@ -330,137 +493,14 @@ rögzítve.</strong> A mechanikus retesz elhagyása vagy laza rögzítése
 esetén a villamos reteszelés meghibásodása esetén nincs tartalék
 védelem. <strong>Helyes gyakorlat:</strong> a gyártói előírás szerint
 felszerelni, és működését próbával ellenőrizni.</p>
-<h3 data-number="32.2.9" id="önellenőrzés"><span
-class="header-section-number">32.2.9</span> Önellenőrzés</h3>
-<ol type="1">
-<li>Mi a reverzáló kapcsolás lényege?</li>
-<li>Miért veszélyes, ha a két mágneskapcsoló egyszerre behúz?</li>
-<li>Hogyan valósítható meg a villamos reteszelés?</li>
-<li>Mire való a mechanikus retesz?</li>
-<li>A következő kapcsolásban hol van hiba? „A K1 tekercsével sorba
-kötöttük a K1 bontó segédérintkezőjét, a K2 tekercsével sorba a K2 bontó
-segédérintkezőjét.”</li>
-<li>Egy reverzáló kapcsolásban a motor csak az egyik irányba forog. A
-másik irány gombjának megnyomásakor a K2 mágneskapcsoló behúz, mégis
-nincs forgás. Mi a legvalószínűbb hiba?</li>
-</ol>
-<h3 data-number="32.2.10" id="feladatok"><span
-class="header-section-number">32.2.10</span> Feladatok</h3>
-<p><strong>1. feladat (A).</strong> Mutasd be a reverzáló kapcsolás
-főáramköri bekötését: mit kell a K2 mágneskapcsolónál tenni ahhoz, hogy
-a forgásirány megforduljon?</p>
-<p><strong>2. feladat (A).</strong> Sorold fel a reteszelés három
-fajtáját, és röviden jellemezd mindegyiket.</p>
-<p><strong>3. feladat (B).</strong> Rajzold le szövegesen vagy
-kapcsolási rajzban a vezérlési áramkört: S0 NC STOP, S1 NO jobbra, S2 NO
-balra, K1 és K2 tekercs, K1 és K2 önfenntartó NO érintkezők, K1 és K2
-reteszelő NC érintkezők. Jelöld a kapcsokat.</p>
-<p><strong>4. feladat (B).</strong> Egy 7,5 kW-os, 400 V-os motor
-névleges árama 14 A. Add meg, milyen AC-3 mágneskapcsolót választanál,
-és írd le a villamos reteszelés bekötését.</p>
-<p><strong>5. feladat (C).</strong> Tegyük fel, hogy egy reverzáló
-kapcsolásban a reteszelés meghibásodik, és a K1 és K2 egyszerre behúz.
-Egy fázisvezető impedanciája a zárlat helyéig
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Z</mi><mi>f</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mn>04</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">Z_f = 0{,}04\,\Omega</annotation></semantics></math>
-(a hurokban két ilyen van sorban). Számítsd ki a várható zárlati áramot.
-A kört védő motorvédő kapcsoló (vagy D16 kismegszakító) mágneses
-kioldója leold-e? Milyen káros következményekkel járhat a zárlat?</p>
-<p><strong>6. feladat (D).</strong> Egy reverzáló kapcsolásban a motor a
-„jobbra” irányban működik, a „balra” irányban azonban nem indul. A K2
-mágneskapcsoló tekercse a gomb megnyomásakor feszültséget kap, de a
-főérintkezői nem húznak be. Milyen méréssel különítenéd el, hogy a
-tekercs szakadt, a segédérintkező hibás, vagy a mechanikus retesz
-akadályozza a behúzást? Írd le a mérési sorrendet és a várható
-értékeket.</p>
-<h3 data-number="32.2.11" id="megoldások"><span
-class="header-section-number">32.2.11</span> Megoldások</h3>
-<h4 data-number="32.2.11.1" id="önellenőrzés-válaszok"><span
-class="header-section-number">32.2.11.1</span> Önellenőrzés –
-válaszok</h4>
-<ol type="1">
-<li>A reverzáló kapcsolás két mágneskapcsolóval felcseréli két fázis
-sorrendjét, így a motor forgó mágneses tere ellenkező irányba
-forog.</li>
-<li>A két mágneskapcsoló egyszerre behúzva két fázist közvetlenül
-összeköt, ami rövidzárlatot okoz.</li>
-<li>A villamos reteszelés úgy valósul meg, hogy a K1 bontó
-segédérintkezőjét a K2 tekercs áramkörébe, a K2 bontó segédérintkezőjét
-a K1 tekercs áramkörébe kötjük sorba.</li>
-<li>A mechanikus retesz fizikailag akadályozza meg, hogy mindkét
-mágneskapcsoló egyszerre behúzott állapotban legyen, így tartalék
-védelmet ad a villamos reteszelés mellé.</li>
-<li>A hiba: a reteszelő bontó érintkezőket a saját tekercsükhöz
-kötötték. Ebben az esetben a K1 bontó érintkezője a K1 tekercset
-szakítaná, a K2 bontó érintkezője a K2 tekercset. A reteszelés nem jön
-létre, mert nem akadályozza meg a másik tekercs behúzását.</li>
-<li>A legvalószínűbb hiba: a K2 egyik főérintkezője nem zár, vagy a K2
-kimenetén egy fázis nincs bekötve; ilyenkor fázishiány miatt a motor
-zúg, de nem indul. (A rossz fázisfelcserélés csak a forgásirányt
-fordítaná meg, állást nem okoz.) Ellenőrizni kell a főérintkezők
-átmeneti ellenállását és a kapcsolódást feszültségmentesítés után.</li>
-</ol>
-<h4 data-number="32.2.11.2" id="feladatok-megoldásai"><span
-class="header-section-number">32.2.11.2</span> Feladatok megoldásai</h4>
-<p><strong>1. feladat (A)</strong><br />
-A K2 mágneskapcsolónál az L1 és L3 fázist fel kell cserélni a motor
-kapcsaihoz képest. Ha K1-nél L1→U1, L2→V1, L3→W1, akkor K2-nél L1→W1,
-L2→V1, L3→U1. Ez a két fázis sorrendjét felcseréli, és a forgó mező
-megfordul.</p>
-<p><strong>2. feladat (A)</strong><br />
-A reteszelés fajtái: - <strong>Villamos reteszelés:</strong> a
-mágneskapcsolók bontó segédérintkezőivel. - <strong>Mechanikus
-retesz:</strong> a kapcsolók közé szerelt fizikai ütköző. -
-<strong>Nyomógomb-reteszelés:</strong> a nyomógombok kettős érintkezői,
-amelyek az ellenkező irány áramkörét bontják.</p>
-<p><strong>3. feladat (B)</strong><br />
-A vezérlési rajz megegyezik a szövegben bemutatott diagrammal. A
-kapocsjelölések: K1 önfenntartó NO 13–14, K2 önfenntartó NO 13–14, K1
-reteszelő NC 21–22 a K2 tekercs elé, K2 reteszelő NC 21–22 a K1 tekercs
-elé, A1–A2 a tekercs, S0 NC STOP az elején.</p>
-<p><strong>4. feladat (B)</strong><br />
-AC-3 mágneskapcsolót a motor névleges áramánál nagyobbra kell
-választani, például 16 A-es típust. A villamos reteszelés bekötése: a K1
-21–22 bontó segédérintkezőt a K2 tekercs A1 kapcsa elé, a K2 21–22 bontó
-segédérintkezőt a K1 tekercs A1 kapcsa elé kell kötni; a tekercsek A2
-kapcsa közvetlenül az N vezetőre csatlakozik (az MSZ EN 60204-1 szerinti
-elv: a kapcsolóelemek a tekercs fázisoldalán vannak; ellenőrizendő).</p>
-<p><strong>5. feladat (C)</strong><br />
-A várható zárlati áram:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>k</mi></msub><mo>=</mo><mfrac><msub><mi>U</mi><mi>v</mi></msub><mrow><mn>2</mn><mspace width="0.167em"></mspace><msub><mi>Z</mi><mi>f</mi></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>400</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>2</mn><mo>×</mo><mn>0</mn><mo>,</mo><mn>04</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mfrac><mn>400</mn><mrow><mn>0</mn><mo>,</mo><mn>08</mn></mrow></mfrac><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">
-I_k = \frac{U_v}{2\,Z_f} = \frac{400\,\text{V}}{2 \times 0{,}04\,\Omega} = \frac{400}{0{,}08} = 5\,000\,\text{A} = 5\,\text{kA}.
-</annotation></semantics></math></p>
-<p>A motorvédő kapcsoló (vagy D16 kismegszakító, mágneses kioldás
-10–20·<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>n</mi></msub><annotation encoding="application/x-tex">I_n</annotation></semantics></math>
-= 160–320 A) kiold, mert a zárlati áram jóval nagyobb ennél. B jellegű
-kismegszakító motorkörben nem alkalmas, mert az indítási áramlöket miatt
-leoldhat. A zárlat során a mágneskapcsoló főérintkezői összehegedhetnek,
-a vezetékek szigetelése megsérülhet, és tűz keletkezhet.</p>
-<p><strong>6. feladat (D)</strong><br />
-A tünet: a K2 tekercse feszültséget kap, de a főérintkezők nem húznak be
-(a K1 nincs behúzva). Mérési sorrend: 1. <strong>Feszültségmérés a K2
-tekercsén (A1–A2), a gomb megnyomásakor.</strong> Ha a kapocsfeszültség
-névleges, a vezérlőkör rendben van, a hiba a K2 tekercsében vagy
-mechanikájában keresendő; ha jóval kisebb, a hiba a tekercs előtti
-körben van (reteszelő érintkező, kötés). 2. <strong>Feszültségmentesítés
-(öt szabály), majd ellenállásmérés a K2 tekercsen (A1–A2).</strong>
-Néhány száz
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math>
-– néhány
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">\text{k}\Omega</annotation></semantics></math>
-az elvárt érték (típusfüggő, <strong>ellenőrizendő: gyártói
-adatlap</strong>); végtelen érték szakadt tekercset jelent. 3.
-<strong>Kézi behúzáspróba feszültségmentesen.</strong> Próbáld kézzel
-behúzni a K2 hídját: ha mechanikusan akad, a mechanikus retesz (vagy
-beragadt K1 híd) gátolja a behúzást; ha könnyen mozog, de feszültség
-alatt nem húz be, a mágnes vagy a tekercs hibás. 4.
-<strong>Segédérintkező ellenőrzése.</strong> Feszültségmentesen,
-folytonosságméréssel nézd meg a K1 bontó segédérintkezőjét (21–22): zárt
-állapotban 0
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math>
-körüli értéket kell mutatnia; szakadás esetén a reteszelő érintkező
-gátolja a K2 tekercsének táplálását.</p>
-<h3 data-number="32.2.12" id="rövid-összefoglaló"><span
-class="header-section-number">32.2.12</span> Rövid összefoglaló</h3>
+<blockquote>
+<p><strong>Gyakorlás:</strong> ennek az alfejezetnek a kidolgozott
+példái, gyakorlatai és megoldással ellátott feladatai az
+<em>Összefoglaló feladatgyűjtemény villanyszerelő tanulóknak</em> című
+kötet 32.2 szakaszában találhatók.</p>
+</blockquote>
+<h3 data-number="32.2.9" id="rövid-összefoglaló"><span
+class="header-section-number">32.2.9</span> Rövid összefoglaló</h3>
 <p>A reverzáló kapcsolás háromfázisú aszinkronmotor forgásirányváltását
 valósítja meg két mágneskapcsolóval. A forgásirány megfordításához a K2
 mágneskapcsolónál két fázist, például L1-et és L3-at fel kell cserélni:

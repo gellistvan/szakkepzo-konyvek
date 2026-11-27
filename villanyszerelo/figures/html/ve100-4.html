@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szinkronozás szimulátor – lámpás szinkronozás és lebegés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="df">Δf = f_gen − f_hál</label><input id="df" type="range" min="-0.5" max="0.5" step="0.05" value="0.2" aria-label="Δf = f_gen − f_hál"><output id="df_o" for="df"></output></div>
+<div class="row"><label for="r">U_gen / U_hál</label><input id="r" type="range" min="0.9" max="1.1" step="0.01" value="1.0" aria-label="U_gen / U_hál"><output id="r_o" for="r"></output></div>
+<div class="row"><label for="d0">δ (álló képhez)</label><input id="d0" type="range" min="-180" max="180" step="1" value="30" aria-label="δ (álló képhez)"><output id="d0_o" for="d0"></output></div>
+<div class="row"><label for="run">Animáció fut</label><input id="run" type="checkbox" checked aria-label="Animáció fut"></div>
+<div class="row"><label for="sw">Felcserélt V–W (fázissorrend)</label><input id="sw" type="checkbox" aria-label="Felcserélt V–W (fázissorrend)"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 380" role="img" aria-label="Lámpás sötétkapcsolású szinkronozás: a hálózati és a generátorfázorok, a három lámpa fényereje és a lámpafeszültség lebegése a frekvenciakülönbség szerint; a Kapcsolás most gomb kiírja a várható lökőáramot."></svg>
+<p class="small">Tanulási modell: U_f = 230 V, X_s = 0,5 Ω (a fejezet példája), sötétkapcsolás (mindhárom lámpa azonos fázisok között). Állítsd meg az animációt és állítsd δ-t 30°-ra: a „Kapcsolás most!” 238 A-t ír ki. Helyes kapcsolás: |δ| < 10°, |Δf| ≤ 0,1 Hz, |ΔU| ≤ 5 %. Valós gépen a lökőáramot a tranziens reaktancia is befolyásolja (ellenőrizendő: gyártói és hálózati előírás).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"df":"Hz", "r":"", "d0":"°"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const UF=230, XS=0.5, now=performance.now()/1000;
+if(!FIG.init){FIG.init=1; FIG.t0=now; FIG.d0=v.d0; FIG.msg="";
+  const b=document.createElement("button"); b.textContent="Kapcsolás most!"; b.id="kapcs"; b.style.cssText="font:inherit;padding:4px 14px;margin:4px 0";
+  b.onclick=()=>{FIG.shot=1; draw();}; document.getElementById("status").before(b);
+  setInterval(()=>{if(FIG.run) draw();},50);
+  // önteszt: δ = 30°, r = 1 → 238 A
+  const t=Math.round(2*UF*Math.sin(Math.PI/12)/XS); if(t!==238) console.error("SELFTEST error: lökőáram "+t);
+}
+FIG.run=v.run;
+if(!v.run || FIG.d0!==v.d0){FIG.t0=now; FIG.d0=v.d0;}
+let d=v.d0+360*v.df*(now-FIG.t0); d=((d+180)%360+360)%360-180;
+const r=v.r, sw=v.sw;
+function lampU(k,dd){const ph=-120*k*Math.PI/180, kg=sw?[0,2,1][k]:k, pg=(-120*kg+dd)*Math.PI/180;
+  return Math.hypot(UF*Math.cos(ph)-r*UF*Math.cos(pg), UF*Math.sin(ph)-r*UF*Math.sin(pg));}
+const U=[0,1,2].map(k=>lampU(k,d));
+// ---- bal panel: kapcsolási rajz ----
+el("text",{x:10,y:18,"font-size":13,"font-weight":"bold"},"Lámpás szinkronozás (sötétkapcsolás)");
+const ys=[60,110,160], gl=["L1","L2","L3"], gg=sw?["U1","W1","V1"]:["U1","V1","W1"];
+el("text",{x:14,y:42,"font-size":12},"hálózat");el("text",{x:250,y:42,"font-size":12},"generátor G1");
+for(let k=0;k<3;k++){const y=ys[k];
+ el("text",{x:14,y:y+4,"font-size":12},gl[k]); el("line",{x1:36,y1:y,x2:110,y2:y,stroke:css("--fg"),"stroke-width":2});
+ el("line",{x1:110,y1:y,x2:128,y2:y-12,stroke:css("--fg"),"stroke-width":2}); // nyitott kés
+ el("line",{x1:140,y1:y,x2:230,y2:y,stroke:css("--fg"),"stroke-width":2});
+ el("text",{x:236,y:y+4,"font-size":12},gg[k]);
+ // lámpa a pólus fölött
+ const lx=125, ly=y-26, b=Math.min(1,U[k]/460);
+ el("line",{x1:100,y1:y,x2:100,y2:ly,stroke:css("--fg")});el("line",{x1:150,y1:y,x2:150,y2:ly,stroke:css("--fg")});
+ el("line",{x1:100,y1:ly,x2:115,y2:ly,stroke:css("--fg")});el("line",{x1:135,y1:ly,x2:150,y2:ly,stroke:css("--fg")});
+ el("circle",{cx:lx,cy:ly,r:10,fill:"rgb(255,"+Math.round(255-60*b)+","+Math.round(255-200*b)+")","fill-opacity":0.15+0.85*b,stroke:css("--fg")});
+ el("line",{x1:lx-7,y1:ly-7,x2:lx+7,y2:ly+7,stroke:css("--fg")});el("line",{x1:lx-7,y1:ly+7,x2:lx+7,y2:ly-7,stroke:css("--fg")});
+ el("text",{x:lx+14,y:ly-6,"font-size":11},"H"+(k+1)+": "+fmt(U[k],0)+" V");
+}
+el("text",{x:110,y:188,"font-size":12},"Q (nyitva)");
+el("text",{x:14,y:215,"font-size":12},"V1: "+fmt(UF*Math.sqrt(3),0)+" V, 50,00 Hz");
+el("text",{x:180,y:215,"font-size":12},"V2: "+fmt(r*UF*Math.sqrt(3),0)+" V, "+fmt(50+v.df,2)+" Hz");
+// ---- jobb felső: szinkronoszkóp ----
+const cx=470, cy=110, R=80;
+el("text",{x:370,y:18,"font-size":13,"font-weight":"bold"},"Fázorok (hálózat: folytonos)");
+el("circle",{cx:cx,cy:cy,r:R+6,fill:"none",stroke:css("--grid")});
+for(let k=0;k<3;k++){const a=-120*k*Math.PI/180, kg=sw?[0,2,1][k]:k, b=(-120*kg+d)*Math.PI/180;
+ el("line",{x1:cx,y1:cy,x2:cx+R*Math.cos(a),y2:cy-R*Math.sin(a),stroke:css("--fg"),"stroke-width":2.5});
+ el("line",{x1:cx,y1:cy,x2:cx+R*r*0.95*Math.cos(b),y2:cy-R*r*0.95*Math.sin(b),stroke:css("--hl2"),"stroke-width":2,"stroke-dasharray":"6 3"});}
+el("text",{x:cx+R+8,y:cy+4,"font-size":12},"L1");
+// δ ív
+const da=d*Math.PI/180, rr=30; el("path",{d:"M"+(cx+rr)+","+cy+" A"+rr+","+rr+" 0 0 "+(d>0?0:1)+" "+(cx+rr*Math.cos(da))+","+(cy-rr*Math.sin(da)),fill:"none",stroke:css("--hl")});
+el("text",{x:cx-30,y:cy+R+26,"font-size":12},"δ = "+fmt(d,0)+"°");
+// ---- jobb alsó: lebegés ----
+const X0=360,Y0=360,W=250,H=110;
+el("text",{x:X0,y:Y0-H-8,"font-size":12,"font-weight":"bold"},"H1 lámpafeszültség, utolsó 10 s");
+el("line",{x1:X0,y1:Y0,x2:X0+W,y2:Y0,stroke:css("--line")});el("line",{x1:X0,y1:Y0,x2:X0,y2:Y0-H,stroke:css("--line")});
+let pts=""; for(let i=0;i<=200;i++){const tt=-10+10*i/200, dd=d+360*v.df*tt*(v.run?1:0); pts+=(X0+W*i/200)+","+(Y0-H*lampU(0,dd)/480)+" ";}
+el("polyline",{points:pts,fill:"none",stroke:css("--fg"),"stroke-width":1.8});
+el("text",{x:X0-4,y:Y0-H*460/480+4,"text-anchor":"end","font-size":10},"460");el("text",{x:X0-4,y:Y0+4,"text-anchor":"end","font-size":10},"0");
+el("text",{x:X0+W,y:Y0+14,"text-anchor":"end","font-size":10},"most");el("text",{x:X0,y:Y0+14,"font-size":10},"−10 s");
+// ---- állapot ----
+const T=Math.abs(v.df)>1e-9?1/Math.abs(v.df):Infinity, dU=U[0];
+let s="δ = <b>"+fmt(d,0)+"°</b>, ΔU (H1) = <b>"+fmt(dU,0)+" V</b>, lebegési periódus T = 1/|Δf| = <b>"+(isFinite(T)?fmt(T,1)+" s":"∞")+"</b>.";
+if(sw) s+=" <span class='bad'>Felcserélt fázissorrend: a lámpák nem egyszerre sötétülnek el, hanem körbefutnak – NEM szabad kapcsolni!</span>";
+if(FIG.shot){FIG.shot=0;
+ const ok=!sw && Math.abs(d)<10 && Math.abs(v.df)<=0.1+1e-9 && Math.abs(r-1)<=0.05+1e-9;
+ const I=Math.max(...U)/XS;
+ FIG.msg=ok?"<span class='ok'>Helyes szinkronozás: δ = "+fmt(d,0)+"°, |Δf| ≤ 0,1 Hz, a feszültségek egyeznek; a lökőáram kicsi ("+fmt(I,0)+" A).</span>"
+  :"<span class='bad'>Hibás kapcsolás! Várható lökőáram I ≈ ΔU<sub>f</sub>/X<sub>s</sub> = "+fmt(Math.max(...U),0)+" V / 0,5 Ω ≈ "+fmt(I,0)+" A"+
+   (sw?" (rossz fázissorrend)":"")+(Math.abs(v.df)>0.1+1e-9?" (|Δf| &gt; 0,1 Hz)":"")+(Math.abs(r-1)>0.05+1e-9?" (feszültségeltérés &gt; 5 %)":"")+".</span>";}
+status(s+"<br>"+FIG.msg);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

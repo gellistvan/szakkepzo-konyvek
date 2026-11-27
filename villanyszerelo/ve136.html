@@ -112,8 +112,74 @@ inkrementális jeladókban használják, mert gyorsabban reagál, mint az
 LDR, de jellemzően “van fény / nincs fény” logikai jelet ad
 erősítéssel.</p>
 <h4 data-number="37.3.3.3"
+id="optocsatoló-galvanikus-leválasztás-fénnyel"><span
+class="header-section-number">37.3.3.3</span> Optocsatoló: galvanikus
+leválasztás fénnyel</h4>
+<p><strong>Definíció.</strong> Az <strong>optocsatoló</strong> egy
+tokban elhelyezett LED és fototranzisztor: a két oldalt csak a LED fénye
+köti össze, villamosan el vannak választva egymástól (a megengedett
+szigetelési feszültséget az adatlap adja). Jellemzője az
+<strong>áramátviteli tényező</strong>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>T</mi><mi>R</mi><mo>=</mo><msub><mi>I</mi><mi>C</mi></msub><mi>/</mi><msub><mi>I</mi><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">CTR = I_C / I_F</annotation></semantics></math>,
+vagyis a fototranzisztor kollektorárama osztva a LED nyitóáramával.</p>
+<p>A villanyszerelő naponta optocsatolós bemenetre köt: a PLC digitális
+bemenete, a frekvenciaváltó digitális bemenete és a szilárdtestrelé
+(SSR) vezérlőoldala is így épül fel. Az alábbi egyszerűsített rajzon
+kövesd végig, milyen úton folyik a bemenet árama, és hol húzódik a
+leválasztási határ.</p>
+<figure>
+<img src="assets/ve136-diagram-1.png"
+alt="24 V-os PLC-bemenet optocsatolóval (egyszerűsítve) - Külső oldal: +24 V → S1 → DI0 → R1 (3,3 kΩ, áramkorlátozó) → az optocsatoló LED-je → 1M → 0 V. Belső oldal: a fototranzisztor a fény hatására vezet, a CPU bemenetét R2 felhúzó ellenállás tartja magas szinten, vezetéskor a fototranzisztor lehúzza. A két oldalt csak a fény köti össze (szaggatott leválasztási határ)." />
+<figcaption aria-hidden="true">24 V-os PLC-bemenet optocsatolóval
+(egyszerűsítve) - Külső oldal: +24 V → S1 → DI0 → R1 (3,3 kΩ,
+áramkorlátozó) → az optocsatoló LED-je → 1M → 0 V. Belső oldal: a
+fototranzisztor a fény hatására vezet, a CPU bemenetét R2 felhúzó
+ellenállás tartja magas szinten, vezetéskor a fototranzisztor lehúzza. A
+két oldalt csak a fény köti össze (szaggatott leválasztási
+határ).</figcaption>
+</figure>
+<p><strong>Számítás.</strong> A bemeneti áram 24 V-on és a kapcsolási
+küszöb közelében. A LED nyitófeszültségét 1,2 V-nak vesszük.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>F</mi></msub><mo>=</mo><mfrac><mrow><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>1</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>3</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>≈</mo><mn>6</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>I</mi><mi>F</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>1</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>3</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>≈</mo><mn>4</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I_F = \frac{24\,\text{V} - 1{,}2\,\text{V}}{3{,}3\,\text{k}\Omega} \approx 6{,}9\,\text{mA}, \qquad I_F(15\,\text{V}) = \frac{15\,\text{V} - 1{,}2\,\text{V}}{3{,}3\,\text{k}\Omega} \approx 4{,}2\,\text{mA}.</annotation></semantics></math></p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>T</mi><mi>R</mi><mo>=</mo><mn>50</mn><mspace width="0.167em"></mspace><mi>%</mi></mrow><annotation encoding="application/x-tex">CTR = 50\,\%</annotation></semantics></math>
+esetén a belső kollektoráram 24 V-on akár
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><mn>6</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>≈</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">0{,}5 \cdot 6{,}9\,\text{mA} \approx 3{,}5\,\text{mA}</annotation></semantics></math>
+– ez bőven elég ahhoz, hogy R2-n a CPU bemenete biztosan alacsony
+szintre kerüljön. Ezért van a PLC-bemenetnek néhány mA-es áramfelvétele.
+A bemeneti kártya adatlapja szerint „1” jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≥</mo><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">\ge 15\,\text{V}</annotation></semantics></math>,
+„0”
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≤</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">\le 5\,\text{V}</annotation></semantics></math>,
+a kettő között bizonytalan tartomány van <strong>(ellenőrizendő: MSZ EN
+61131-2 bemeneti típusai, a kártya adatlapja)</strong>.</p>
+<p><strong>Számítás.</strong> Kétvezetékes érzékelő szivárgóárama. Egy
+kétvezetékes érzékelő a terheléssel (itt a PLC-bemenettel) sorban van,
+és kikapcsolt állapotban is átenged egy kis áramot, például 1,5 mA-t
+(szemléltető érték; ellenőrizendő: érzékelő adatlap). A 3,3 kΩ-os
+bemeneten ez</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>⋅</mo><mn>3</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>≈</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U = 1{,}5\,\text{mA} \cdot 3{,}3\,\text{k}\Omega \approx 5\,\text{V}</annotation></semantics></math></p>
+<p>feszültséget ejt: éppen a bizonytalan tartomány határán, a bemenet
+„villoghat”. Megoldás: <strong>alapterhelő ellenállás</strong> a
+bemenettel párhuzamosan, például 2,2 kΩ. Az eredő
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>∥</mo><mn>2</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>32</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">3{,}3\,\text{k}\Omega \parallel 2{,}2\,\text{k}\Omega = 1{,}32\,\text{k}\Omega</annotation></semantics></math>,
+így
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>32</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>≈</mo><mn>2</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>≤</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">1{,}5\,\text{mA} \cdot 1{,}32\,\text{k}\Omega \approx 2{,}0\,\text{V} \le 5\,\text{V}</annotation></semantics></math>
+✓. Bekapcsolt állapotban az ellenállás teljesítménye
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>/</mi><mn>2200</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mo>≈</mo><mn>0</mn><mo>,</mo><mn>26</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext></mrow><annotation encoding="application/x-tex">P = (24\,\text{V})^2 / 2200\,\Omega \approx 0{,}26\,\text{W}</annotation></semantics></math>,
+ezért legalább 0,5 W-os ellenállás kell. Más megoldás a szivárgóáramot
+tűrő bemeneti típus vagy háromvezetékes érzékelő.</p>
+<p>Ugyanez az elv adja az SSR vezérlőoldalát (lásd <a
+href="ve137.html">Erősáramú félvezetők: tirisztor, triac, IGBT,
+MOSFET</a>) és a frekvenciaváltó digitális bemeneteit.</p>
+<p><strong>Önellenőrző kérdés.</strong> Miért nem mérhető ki a
+PLC-bemenet állapota pusztán ellenállásméréssel a DI és az 1M kapocs
+között? <em>(Válasz: a bemenetben áramkorlátozó ellenállás és LED – egy
+dióda – van, amelynek ellenállása a mérőfeszültségtől és a polaritástól
+függ; a bemenet állapotát feszültség alatt, a DI–1M feszültség mérésével
+kell ellenőrizni.)</em></p>
+<h4 data-number="37.3.3.4"
 id="varisztor-a-feszültségfüggő-ellenállás"><span
-class="header-section-number">37.3.3.3</span> Varisztor, a
+class="header-section-number">37.3.3.4</span> Varisztor, a
 feszültségfüggő ellenállás</h4>
 <p><strong>Definíció.</strong> A <strong>varisztor (VDR – Voltage
 Dependent Resistor)</strong> olyan fém-oxid (többnyire cink-oxid) alapú,
@@ -134,8 +200,160 @@ paramétereket az aktuális gyártói adatlap és a mérnöki méretezés
 rögzíti. <strong>(ellenőrizendő: az aktuális MSZ EN/HD kiadások pontos
 számai)</strong></p>
 <h3 data-number="37.3.4"
+id="ipari-kapcsoló-érzékelők-közelítéskapcsolók-és-háromvezetékes-bekötés"><span
+class="header-section-number">37.3.4</span> Ipari kapcsoló érzékelők:
+közelítéskapcsolók és háromvezetékes bekötés</h3>
+<p>Az eddigi elemek ellenállás-jellegűek voltak. A gépi vezérlések
+leggyakoribb érzékelője azonban a <strong>közelítéskapcsoló</strong>,
+amely érintés nélkül, elektronikusan kapcsol, és kapcsolt kimenettel
+közvetlenül a PLC digitális bemenetére köthető.</p>
+<p><strong>Működési elv röviden.</strong></p>
+<ul>
+<li><strong>Induktív közelítéskapcsoló:</strong> a szenzorfej
+nagyfrekvenciás mágneses mezőt kelt; ha fémtárgy kerül bele, az
+örvényáramok csillapítják a rezgőkört, és a kimenet átbillen. Jellemzője
+a névleges kapcsolási távolság,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>n</mi></msub><annotation encoding="application/x-tex">s_n</annotation></semantics></math>.
+Nem vasfémeknél a távolság kisebb (például alumíniumnál kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mi>…</mi><mn>0</mn><mo>,</mo><mn>5</mn><mo>⋅</mo><msub><mi>s</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">0{,}3 \ldots 0{,}5 \cdot s_n</annotation></semantics></math>
+– szemléltető érték, <strong>ellenőrizendő: adatlap</strong>). Kivitele
+süllyeszthető (a fej a fémbe építhető, kisebb
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>n</mi></msub><annotation encoding="application/x-tex">s_n</annotation></semantics></math>)
+vagy nem süllyeszthető (nagyobb
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>n</mi></msub><annotation encoding="application/x-tex">s_n</annotation></semantics></math>,
+körülötte szabad zóna kell).</li>
+<li><strong>Kapacitív közelítéskapcsoló:</strong> bármilyen anyagot
+érzékel (fa, műanyag, folyadék), tartályfalon át folyadékszintet
+is.</li>
+<li><strong>Optikai érzékelő:</strong> egyutas fénysorompó (külön adó és
+vevő), reflexiós (prizmás visszaverővel) és tárgyreflexiós (a tárgyról
+visszavert fényt érzékeli).</li>
+</ul>
+<p><strong>Definíció.</strong> A <strong>háromvezetékes
+érzékelőnek</strong> két tápere és egy kapcsolt kimenete van.
+<strong>PNP kimenetnél</strong> kapcsoláskor a kimenet a +24 V-ot adja
+(a terhelés, a PLC-bemenet a kimenet és a 0 V között van); <strong>NPN
+kimenetnél</strong> a kimenet a 0 V-ra húz (a terhelés a +24 V és a
+kimenet között van). A „záró/bontó” (NO/NC) itt elektronikus funkciót
+jelöl: záró kimenet tárgy jelenlétében kapcsol be. A
+<strong>kétvezetékes érzékelő</strong> a terheléssel sorban van, ezért
+kikapcsolt állapotban is folyik rajta kis szivárgóáram, bekapcsolva
+pedig maradékfeszültség esik rajta (lásd az optocsatolós
+bemenetnél).</p>
+<table>
+<thead>
+<tr>
+<th>Ér színe (rövidítés)</th>
+<th>Szerepe</th>
+<th>M12 csatlakozó érintkezője</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>barna (BN)</td>
+<td>+24 V (L+)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>kék (BU)</td>
+<td>0 V (M)</td>
+<td>3</td>
+</tr>
+<tr>
+<td>fekete (BK)</td>
+<td>kimenet (záró, NO)</td>
+<td>4</td>
+</tr>
+<tr>
+<td>fehér (WH)</td>
+<td>második/bontó kimenet</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>Az érszínek és az M12 kiosztás az IEC 60947-5-2 szerinti szokásos
+jelölés <strong>(ellenőrizendő: MSZ EN 60947-5-2, az érzékelő
+adatlapja)</strong>.</p>
+<p>Az alábbi rajzon egy PNP érzékelő és egy nyomógomb ugyanarra a
+bemeneti kártyára csatlakozik. Kövesd az áram útját: tárgy jelenlétében
+a +24 V a BK éren, a DI0 bemeneten és a belső terhelésen át az 1M közös
+ponton jut vissza a 0 V-ra.</p>
+<figure>
+<img src="assets/ve136-diagram-2.png"
+alt="Háromvezetékes PNP érzékelő és nyomógomb PLC-bemeneten - B1 PNP, záró kimenetű érzékelő: BN → L+, BU → M, BK → DI0 (X2 sorkapcsokon át). S1 nyomógomb L+ → DI1. A bemenetek belső terhelése DI → 1M, az 1M közös pont a 0 V-on (sink bemenet). PNP érzékelő → 0 V-os közös pontú (sink) bemenet; NPN érzékelőhöz a közös pont a +24 V-on (source bemenet) – a két típus nem cserélhető fel." />
+<figcaption aria-hidden="true">Háromvezetékes PNP érzékelő és nyomógomb
+PLC-bemeneten - B1 PNP, záró kimenetű érzékelő: BN → L+, BU → M, BK →
+DI0 (X2 sorkapcsokon át). S1 nyomógomb L+ → DI1. A bemenetek belső
+terhelése DI → 1M, az 1M közös pont a 0 V-on (sink bemenet). PNP
+érzékelő → 0 V-os közös pontú (sink) bemenet; NPN érzékelőhöz a közös
+pont a +24 V-on (source bemenet) – a két típus nem cserélhető
+fel.</figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Érzékelő kimenete</th>
+<th>Bemenet közös pontja (1M)</th>
+<th>Működik?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PNP</td>
+<td>0 V (sink bemenet)</td>
+<td>igen</td>
+</tr>
+<tr>
+<td>PNP</td>
+<td>+24 V (source bemenet)</td>
+<td>nem – nincs feszültségkülönbség a bemeneten</td>
+</tr>
+<tr>
+<td>NPN</td>
+<td>+24 V (source bemenet)</td>
+<td>igen</td>
+</tr>
+<tr>
+<td>NPN</td>
+<td>0 V (sink bemenet)</td>
+<td>nem – a kimenet a 0 V-ra húz, a bemenet két vége azonos potenciálon
+van</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Valós eset.</strong></p>
+<ul>
+<li><em>Tünet:</em> a szerelő egy végállás-érzékelőt cserélt; az új
+érzékelő LED-je tárgy előtt világít, de a PLC-bemenet LED-je nem.</li>
+<li><em>Mérés:</em> BN–BU között 24 V (a táp rendben); BK–BU között
+tárgy előtt is 0 V.</li>
+<li><em>Ok:</em> cserealkatrészként NPN kimenetű érzékelő került a PNP
+helyére – az NPN kimenet a 0 V-ra húz, a 0 V-os közös pontú bemenetet
+nem tudja működtetni.</li>
+<li><em>Javítás:</em> azonos típusú (PNP, záró) érzékelő beépítése.</li>
+<li><em>Tanulság:</em> cserénél a teljes típuskódot egyeztetni kell:
+PNP/NPN, NO/NC,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>n</mi></msub><annotation encoding="application/x-tex">s_n</annotation></semantics></math>,
+menetméret, süllyeszthetőség.</li>
+</ul>
+<p><strong>Szerelési tudnivalók.</strong> Az érzékelőt két anyával
+rögzítsd, és úgy állítsd be, hogy a tárgy a kapcsolási távolság kb.
+70–80 %-án belül haladjon el <strong>(ellenőrizendő: gyártói
+ajánlás)</strong>. Egymás mellé szerelt induktív érzékelők zavarhatják
+egymást – a gyártó által megadott legkisebb távolságot tartsd be. Az
+érzékelőkábelt ne vezesd motorkábellel közös kötegben.</p>
+<p>A PLC bemeneti oldaláról részletesebben a <a
+href="ve118.html">PLC-alapok és ipari vezérlés</a> alfejezet ír; a PNP
+és NPN tranzisztor kapcsoló üzeme a <a href="ve135.html">Tranzisztorok
+és kapcsoló üzem</a> alfejezetben van.</p>
+<h3 data-number="37.3.5"
 id="feszültségosztó-a-leggyakoribb-érzékelő-kapcsolás"><span
-class="header-section-number">37.3.4</span> Feszültségosztó, a
+class="header-section-number">37.3.5</span> Feszültségosztó, a
 leggyakoribb érzékelő-kapcsolás</h3>
 <p>Az NTC, PTC, Pt100 vagy LDR ellenállását nem közvetlenül mérjük a
 vezérlőben; a legtöbbször egy feszültségosztót építünk, és a kimenő
@@ -147,11 +365,12 @@ két ellenállásos osztónál:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>U</mi><mrow><mi>b</mi><mi>e</mi></mrow></msub><mo>⋅</mo><mfrac><msub><mi>R</mi><mtext mathvariant="normal">alsó</mtext></msub><mrow><msub><mi>R</mi><mtext mathvariant="normal">felső</mtext></msub><mo>+</mo><msub><mi>R</mi><mtext mathvariant="normal">alsó</mtext></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">U_{ki} = U_{be} \cdot \frac{R_{\text{alsó}}}{R_{\text{felső}} + R_{\text{alsó}}}</annotation></semantics></math></p>
 <p>Ha a felső ellenállás az érzékelő, például NTC, akkor a kimenet a
 hőmérséklet növekedésével nő; ha az alsó ellenállás NTC, akkor a
-hőmérséklet növekedésével csökken (az alábbi rajz és a gyakorlati
-útmutató példája ez utóbbi). A gyakorlatban az alábbi kapcsolásban
-bemutatott módon egy fix ellenállással párosítjuk az érzékelőt.</p>
+hőmérséklet növekedésével csökken (az alábbi rajz és a
+feladatgyűjteménybeli (37.3) gyakorlati útmutató példája ez utóbbi). A
+gyakorlatban az alábbi kapcsolásban bemutatott módon egy fix
+ellenállással párosítjuk az érzékelőt.</p>
 <figure>
-<img src="assets/ve136-diagram-1.png"
+<img src="assets/ve136-diagram-3.png"
 alt="NTC hőmérséklet-érzékelő feszültségosztó kapcsolásban - A feszültségosztó az NTC ellenállás-változását feszültségjellé alakítja. R1 a fix felső ellenállás (+5 V felől), R2 az alsó tag, az NTC termisztor. U_ki a két ellenállás közös pontja és a GND között mérhető." />
 <figcaption aria-hidden="true">NTC hőmérséklet-érzékelő feszültségosztó
 kapcsolásban - A feszültségosztó az NTC ellenállás-változását
@@ -165,40 +384,36 @@ alkalmaznak, hogy a vezeték ellenállása ne hamisítsa meg a
 hőmérsékletet: kétvezetékes osztónál a hosszú vezeték ellenállása
 hozzáadódik a Pt100-hoz, ezért az ipari csatlakoztatásnál inkább 3- vagy
 4-vezetékes mérőhíd vagy távadó használatos.</p>
-<h3 data-number="37.3.5"
-id="kidolgozott-példák-az-érzékelőosztó-kimenete"><span
-class="header-section-number">37.3.5</span> Kidolgozott példák: az
-érzékelőosztó kimenete</h3>
-<p><strong>Számítás.</strong> NTC feszültségosztó kimenő feszültségének
-meghatározása.</p>
-<p>Adott egy NTC termisztor, amelynek ellenállása 25 °C-on 10 kΩ, a fix
-ellenállás pedig 10 kΩ. A tápfeszültség 5 V. Keresett az osztó kimenő
-feszültsége 25 °C-on és 50 °C-on, ha az NTC ellenállása 50 °C-on 4
-kΩ.</p>
-<p>25 °C-on:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi><mo>,</mo><mn>25</mn></mrow></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><msub><mi>R</mi><mrow><mi>N</mi><mi>T</mi><mi>C</mi></mrow></msub><mrow><msub><mi>R</mi><mrow><mi>f</mi><mi>i</mi><mi>x</mi></mrow></msub><mo>+</mo><msub><mi>R</mi><mrow><mi>N</mi><mi>T</mi><mi>C</mi></mrow></msub></mrow></mfrac><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo>=</mo><mn>2</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{ki, 25} = 5\,\text{V} \cdot \frac{R_{NTC}}{R_{fix} + R_{NTC}} = 5\,\text{V} \cdot \frac{10\,\text{k}\Omega}{10\,\text{k}\Omega + 10\,\text{k}\Omega} = 5\,\text{V} \cdot 0{,}5 = 2{,}5\,\text{V}.</annotation></semantics></math></p>
-<p>50 °C-on:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi><mo>,</mo><mn>50</mn></mrow></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>4</mn><mn>14</mn></mfrac><mo>≈</mo><mn>1</mn><mo>,</mo><mn>43</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{ki, 50} = 5\,\text{V} \cdot \frac{4\,\text{k}\Omega}{10\,\text{k}\Omega + 4\,\text{k}\Omega} = 5\,\text{V} \cdot \frac{4}{14} \approx 1{,}43\,\text{V}.</annotation></semantics></math></p>
-<p><strong>Ellenőrzés.</strong> A kimenő feszültség a hőmérséklet
-növekedésével csökkent, ami NTC-nél helyes, mert az NTC ellenállása
-csökken. A kapott feszültség soha nem haladja meg az 5 V-ot, és sosem
-éri el a 0 V-ot, tehát a vezérlő analóg bemenetére biztonságosan
-köthető.</p>
-<p><strong>Számítás.</strong> LDR-es alkonyosztó kimenő feszültsége.</p>
-<p>Adott egy LDR, amely nappali erős fénynél 1 kΩ, sötétben pedig 100 kΩ
-ellenállású. A feszültségosztóban az LDR az alsó tag, a felső fix
-ellenállás 10 kΩ, a tápfeszültség 12 V. Keresett a kimenő feszültség
-nappal és sötétben.</p>
-<p>Nappal:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi><mo>,</mo><mi>n</mi><mi>a</mi><mi>p</mi><mi>p</mi><mi>a</mi><mi>l</mi></mrow></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>1</mn><mn>11</mn></mfrac><mo>≈</mo><mn>1</mn><mo>,</mo><mn>09</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{ki, nappal} = 12\,\text{V} \cdot \frac{1\,\text{k}\Omega}{10\,\text{k}\Omega + 1\,\text{k}\Omega} = 12\,\text{V} \cdot \frac{1}{11} \approx 1{,}09\,\text{V}.</annotation></semantics></math></p>
-<p>Sötétben:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi><mo>,</mo><mtext mathvariant="normal">sötét</mtext></mrow></msub><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>100</mn><mn>110</mn></mfrac><mo>≈</mo><mn>10</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{ki, \text{sötét}} = 12\,\text{V} \cdot \frac{100\,\text{k}\Omega}{10\,\text{k}\Omega + 100\,\text{k}\Omega} = 12\,\text{V} \cdot \frac{100}{110} \approx 10{,}9\,\text{V}.</annotation></semantics></math></p>
-<p><strong>Értelmezés.</strong> Ha egy PLC analóg bemenetét 0–10 V
-tartományra méretezték, ez a kapcsolás nem megfelelő, mert sötétben 10,9
-V, ami túlvezérelné a bemenetet. Vagy 0–20 mA-es távadót, vagy más
-ellenállásarányt, vagy feszültségkorlátozást kellene választani. Ez a
-példa jól mutatja, hogy a szerelőnek mindig ismernie kell a fogadó
-bemenet engedélyezett tartományát.</p>
+<p>Az alábbi három kis rajz a Pt100 háromféle bekötését hasonlítja
+össze. Figyeld meg, melyik vezetőér ellenállása kerül a mért
+ellenállással sorba.</p>
+<figure>
+<img src="assets/ve136-diagram-4.png"
+alt="Pt100 bekötése: (a) két-, (b) három-, (c) négyvezetékes - R_L: egy-egy vezetőér ellenállása. (a) A két R_L sorosan hozzáadódik a Pt100-hoz. (b) A harmadik ér (R_L3) a Pt100 alsó végére fut; a mérőhíd/kártya a két azonos ér ellenállását kiejti – csak azonos keresztmetszetű és hosszú erekkel. (c) Az I+/I− ereken folyik a mérőáram, az U+/U− ereken a feszültségmérő gyakorlatilag nem vesz fel áramot, így R_L nem számít." />
+<figcaption aria-hidden="true">Pt100 bekötése: (a) két-, (b) három-, (c)
+négyvezetékes - R_L: egy-egy vezetőér ellenállása. (a) A két R_L sorosan
+hozzáadódik a Pt100-hoz. (b) A harmadik ér (R_L3) a Pt100 alsó végére
+fut; a mérőhíd/kártya a két azonos ér ellenállását kiejti – csak azonos
+keresztmetszetű és hosszú erekkel. (c) Az I+/I− ereken folyik a
+mérőáram, az U+/U− ereken a feszültségmérő gyakorlatilag nem vesz fel
+áramot, így R_L nem számít.</figcaption>
+</figure>
+<p><strong>Számítás.</strong> Kétvezetékes Pt100, 2 × 20 m, 0,5 mm²
+rézvezeték
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>0178</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">mm</mtext><mn>2</mn></msup><mi>/</mi><mtext mathvariant="normal">m</mtext></mrow><annotation encoding="application/x-tex">\rho = 0{,}0178\,\Omega\,\text{mm}^2/\text{m}</annotation></semantics></math>):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>L</mi></msub><mo>=</mo><mi>ρ</mi><mo>⋅</mo><mfrac><mi>ℓ</mi><mi>A</mi></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mn>0178</mn><mo>⋅</mo><mfrac><mrow><mn>40</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">m</mtext></mrow><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><msup><mtext mathvariant="normal">mm</mtext><mn>2</mn></msup></mrow></mfrac><mo>≈</mo><mn>1</mn><mo>,</mo><mn>42</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">R_L = \rho \cdot \frac{\ell}{A} = 0{,}0178 \cdot \frac{40\,\text{m}}{0{,}5\,\text{mm}^2} \approx 1{,}42\,\Omega.</annotation></semantics></math></p>
+<p>A Pt100 érzékenysége kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>385</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi><mi>/</mi><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">0{,}385\,\Omega/{}^{\circ}\text{C}</annotation></semantics></math>,
+így a hiba
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>42</mn><mi>/</mi><mn>0</mn><mo>,</mo><mn>385</mn><mo>≈</mo><mi>+</mi><mn>3</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">1{,}42 / 0{,}385 \approx +3{,}7\,{}^{\circ}\text{C}</annotation></semantics></math>
+– a kétvezetékes bekötés <strong>mindig felfelé mér</strong>.
+Háromvezetékes bekötésnél azonos erek mellett a hiba közel 0,
+négyvezetékesnél gyakorlatilag 0.</p>
+<p><strong>Szabály.</strong> Háromvezetékes bekötésnél mindhárom ér
+azonos keresztmetszetű és hosszúságú, folytonos (nem toldott) kábelben
+fusson; az árnyékolást egy végen kösd be (lásd <a
+href="ve128.html">Légtechnikai, vízgépészeti és hőtechnikai
+elosztók</a>).</p>
 <h3 data-number="37.3.6"
 id="a-varisztor-méretezése-és-biztonsági-szerepe"><span
 class="header-section-number">37.3.6</span> A varisztor méretezése és
@@ -228,9 +443,65 @@ az <a href="ve137.html">Erősáramú félvezetők: tirisztor, triac, IGBT,
 MOSFET</a> alfejezetben fogjuk látni: az erősáramú félvezető eszközök
 kiválasztásához mindig hozzátartozik az őket védő varisztor és NTC
 kiválasztása is.</p>
-<h3 data-number="37.3.7"
+<h3 data-number="37.3.7" id="termisztoros-motorvédelem-bekötése"><span
+class="header-section-number">37.3.7</span> Termisztoros motorvédelem
+bekötése</h3>
+<p>A motor tekercseibe gyárilag beépített PTC-k önmagukban nem
+kapcsolnak le semmit: egy <strong>termisztoros motorvédő relé</strong>
+figyeli az ellenállásukat, és a relé kimeneti érintkezője bontja a
+mágneskapcsoló vezérlőkörét. Az alábbi rajz bal oldala a PTC-láncot,
+jobb oldala a direktindítás vezérlőkörét mutatja (a <a
+href="ve113.html">Direktindítás, önfenntartás és kezelőszervek</a>
+alfejezet mintájára). Kövesd végig, hány érintkezőnek kell zárva lennie
+ahhoz, hogy K1 meghúzzon.</p>
+<figure>
+<img src="assets/ve136-diagram-5.png"
+alt="Termisztoros motorvédelem: PTC-lánc, F4 relé és a vezérlőkör - Bal oldalt az M1 motor kapocsdobozában a tekercsenként egy PTC (R1–R3) sorba kötve, kivezetések T1, T2; kéteres vezeték a F4 termisztoros relé T1/T2 kapcsára. F4 tápja A1–A2. Vezérlőkör: L → F2 → F1 95–96 (hőkioldó) → F4 11–12 (bontó) → S0 STOP → S1 START ∥ K1 13–14 → K1 A1–A2 → N; H2 „termisztoros hiba” jelzőlámpa az F4 11–14 záró érintkezőjén. A F4 kimeneti kapocsjele gyártófüggő (11–12/14 vagy 95–96/98)." />
+<figcaption aria-hidden="true">Termisztoros motorvédelem: PTC-lánc, F4
+relé és a vezérlőkör - Bal oldalt az M1 motor kapocsdobozában a
+tekercsenként egy PTC (R1–R3) sorba kötve, kivezetések T1, T2; kéteres
+vezeték a F4 termisztoros relé T1/T2 kapcsára. F4 tápja A1–A2.
+Vezérlőkör: L → F2 → F1 95–96 (hőkioldó) → F4 11–12 (bontó) → S0 STOP →
+S1 START ∥ K1 13–14 → K1 A1–A2 → N; H2 „termisztoros hiba” jelzőlámpa az
+F4 11–14 záró érintkezőjén. A F4 kimeneti kapocsjele gyártófüggő
+(11–12/14 vagy 95–96/98).</figcaption>
+</figure>
+<p><strong>Működés.</strong> Hidegen a PTC-k ellenállása motoronként
+jellemzően néhány száz Ω (a háromtagú lánc kb. 100–750 Ω). A névleges
+működési hőmérsékleten az ellenállás meredeken nő; a relé kb. 3,6 kΩ
+felett old, és csak kb. 1,5 kΩ alatt engedi a visszakapcsolást. Sok relé
+a lánc zárlatát (pl. &lt; 20 Ω) is hibának veszi <strong>(ellenőrizendő:
+MSZ EN 60947-8, a relé adatlapja)</strong>. Oldáskor az F4 11–12 bontó
+érintkezője megszakítja K1 tekercsáramát, a 11–14 záró érintkező pedig
+bekapcsolja a H2 „termisztoros hiba” lámpát. <strong>Nyugtázás:</strong>
+kézi (reset gomb) vagy automatikus; motorvezérlésnél a kézi nyugtázás a
+helyes, mert megakadályozza a lehűlés utáni váratlan újraindulást.</p>
+<p><strong>Tilos.</strong> A PTC-láncot szigetelésvizsgálóval vagy 2,5
+V-nál nagyobb mérőfeszültségű műszerrel mérni – a termisztorok
+károsodhatnak. A motor szigetelésmérése előtt a T1–T2 vezetéket a
+relétől le kell kötni, és a láncot a tekercsekkel együtt (T1–T2
+összekötve) kell a test felé mérni <strong>(ellenőrizendő: motor- és
+relégyártói utasítás)</strong>. A lánc ellenőrző mérése kis
+mérőfeszültségű ellenállásmérővel, hidegen történik; az eredménynek a
+gyártói tartományba kell esnie.</p>
+<p><strong>Számítás.</strong> Mérési eset.</p>
+<ul>
+<li>Hidegen mért láncellenállás: 310 Ω (3 × ≈ 100 Ω) → rendben.</li>
+<li>Üzem közben a relé old; lehűlés közben mérve 4,8 kΩ → a motor még
+meleg, vagy egy PTC/vezeték szakadt.</li>
+<li>Teljes lehűlés után újra mérünk: ha a nagy érték megmarad, szakadt
+vezeték vagy kötés van a kapocsdobozban (ezt kell keresni), ha visszaáll
+néhány száz Ω-ra, a motor valóban túlmelegedett – az okot (túlterhelés,
+szennyezett hűtés, gyakori indítás) kell megszüntetni.</li>
+</ul>
+<p>A termisztoros védelem a hőkioldót <strong>nem helyettesíti</strong>,
+hanem kiegészíti (lásd a Tipikus hibák 1. pontját). Frekvenciaváltós
+hajtásnál a PTC-lánc a váltó PTC-bemenetére kerül – lásd <a
+href="ve127.html">Motorvédelmek, lágyindítók és frekvenciaváltók az
+elosztóban</a>.</p>
+<h3 data-number="37.3.8"
 id="valós-életbeli-alkalmazás-túlmelegedés-védelem-frekvenciaváltóban"><span
-class="header-section-number">37.3.7</span> Valós életbeli alkalmazás:
+class="header-section-number">37.3.8</span> Valós életbeli alkalmazás:
 túlmelegedés-védelem frekvenciaváltóban</h3>
 <p>Egy ipari frekvenciaváltó (VFD) egy 4 kW-os szellőzőmotort hajt.
 Nyári kánikulában a szekrény belső hőmérséklete megnövekszik. A VFD
@@ -248,51 +519,6 @@ túlfeszültség tönkreteszi az IGBT-t; ha az NTC tönkremegy, a
 bekapcsolási áram veri szét a diódákat. A karbantartó villanyszerelő
 ezért nem elégszik meg azzal, hogy a VFD “hibát jelez”: a belső
 érzékelőket is ellenőrzi.</p>
-<h3 data-number="37.3.8"
-id="gyakorlati-útmutató-érzékelő-bekötése-egy-plc-analóg-bemenetére"><span
-class="header-section-number">37.3.8</span> Gyakorlati útmutató:
-érzékelő bekötése egy PLC analóg bemenetére</h3>
-<p><strong>Cél:</strong> NTC hőmérséklet-érzékelő feszültségosztóval
-történő bekötése, mérése és ellenőrzése.</p>
-<p><strong>Eszközök és anyagok:</strong> - NTC termisztor (pl. 10 kΩ, 25
-°C) - 10 kΩ fémréteg fix ellenállás - 5 V stabilizált tápegység -
-multiméter, breadboard, PLC vagy mikrokontroller analóg bemenet -
-hőmérő, hőforrás (pl. kézmelegítő, kontrolláltan felmelegített víz)</p>
-<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi,
-törpefeszültségű környezetre vonatkozik. A gyakorlatban azonban
-varisztoros, 230 V-os túlfeszültség-védelmet hálózati feszültségű
-munkavégzés keretében, feszültségmentesített állapotban kell beszerelni
-és bekötni; hálózati feszültségen önállóan ne végezz.</p>
-<p><strong>Az öt biztonsági szabály alkalmazása (230 V-os
-szerelésnél):</strong> 1. Hálózat lekapcsolása. 2. Visszakapcsolás
-elleni biztosítás. 3. Feszültségmentesség ellenőrzése a munkahelyen,
-minden pólus között (L–N, L–PE, N–PE), kétpólusú feszültségvizsgálóval
-(nem fázisceruzával, nem beépített kijelzővel), amelyet használat előtt
-és után ismert feszültségen kipróbálsz. 4. Földelés és rövidre zárás, ha
-szükséges. 5. Szomszédos, feszültség alatt álló részek lefedése.</p>
-<p><strong>Számozott lépések:</strong> 1. Építsd meg a fenti kapcsolási
-rajz szerinti feszültségosztót. 2. Helyezd el az NTC-t a mérendő
-közegben (pl. víz), és tedd mellé a referencia hőmérőt. 3. Kapcsold rá
-az 5 V-ot. 4. Mérd meg a kimenő feszültséget voltmérővel, miközben a
-hőmérsékletet fokozatosan változtatod. 5. Számítsd vissza az NTC
-ellenállását a mért feszültségből:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mrow><mi>N</mi><mi>T</mi><mi>C</mi></mrow></msub><mo>=</mo><msub><mi>R</mi><mrow><mi>f</mi><mi>i</mi><mi>x</mi></mrow></msub><mo>⋅</mo><mfrac><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mrow><msub><mi>U</mi><mi>t</mi></msub><mo>−</mo><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">R_{NTC} = R_{fix} \cdot \frac{U_{ki}}{U_t - U_{ki}}</annotation></semantics></math></p>
-<ol start="6" type="1">
-<li>Hasonlítsd össze a visszaszámolt ellenállást a gyártói
-NTC-táblázattal. Az eltérés ne legyen nagyobb, mint a gyártói
-tűrés.</li>
-<li>Dokumentáld a mért feszültségeket és hőmérsékleteket.</li>
-</ol>
-<p><strong>Ellenőrzési pontok:</strong> 25 °C-on (ha 10 kΩ-os NTC és 10
-kΩ fix ellenállás van) a kimenet 2,5 V legyen. Melegítéskor a feszültség
-csökkenjen.</p>
-<p><strong>Tipikus hibák:</strong> - Az NTC-t és a fix ellenállást
-felcserélik; a kimeneti feszültség jellege megfordul. - Elfelejtik a fix
-ellenállást, és az NTC-t közvetlenül a tápegységre kötik: a kapcsain
-mindig a teljes tápfeszültség mérhető, a jel nem függ a hőmérséklettől
-(nincs osztó), és a megnőtt áram az NTC-t önmelegíti, ami a mérést is
-meghamisítja. - Hosszú vezetéken 2-vezetékes Pt100-at használnak: a
-vezeték ellenállása megemelkedik, és téves hőmérsékletet mérnek.</p>
 <h3 data-number="37.3.9"
 id="varisztor-bekötése-túlfeszültség-védelemre"><span
 class="header-section-number">37.3.9</span> Varisztor bekötése
@@ -301,7 +527,7 @@ túlfeszültség-védelemre</h3>
 nulla (N), illetve a fázis és a védővezető (PE) közé kötik. Az alábbi
 rajz a legegyszerűbb, egyfázisú hálózati elrendezést mutatja.</p>
 <figure>
-<img src="assets/ve136-diagram-2.png"
+<img src="assets/ve136-diagram-6.png"
 alt="Varisztor bekötése túlfeszültség-védelemre - A varisztor (RV1) a védendő eszközzel (E1) párhuzamosan, a fázis (L) és a nullavezető (N) közé kerül, saját F1 előtét-biztosítóval (a beépített hőleválasztó a varisztortokban van). Túlfeszültség hatására vezetni kezd, levezeti a túlfeszültség áramát, és korlátozza a kapocsfeszültséget; ha a varisztor zárlatossá válik, F1 választja le, a védendő eszköz táplálása megmarad. A hálózati oldali alkalmazás szakképzett szerelőt igényel." />
 <figcaption aria-hidden="true">Varisztor bekötése
 túlfeszültség-védelemre - A varisztor (RV1) a védendő eszközzel (E1)
@@ -342,124 +568,115 @@ kívül hagyása.</strong> A példában szereplő LDR-es osztó sötétben 10,9
 V-ot ad, ami egy 0–10 V-os PLC-bemenetet tönkretehet. A szerelő megméri
 a kimenő feszültséget, de nem számol azzal, hogy a fényerő szélsőséges
 értékeinél az osztó túlvezérelheti a bemenetet.</p>
-<h3 data-number="37.3.11" id="önellenőrzés"><span
-class="header-section-number">37.3.11</span> Önellenőrzés</h3>
-<p><strong>1. Igaz-e, hogy a Pt100 ellenállása 100 °C-on kisebb, mint 0
-°C-on? Indokold!</strong></p>
-<p><strong>2. Miért szükséges feszültségosztó egy NTC és egy PLC analóg
-bemenete közé?</strong></p>
-<p><strong>3. Egy varisztor egy 230 V-os hálózati áramkörben
-párhuzamosan van kötve a fogyasztóval. Legalább mekkora legyen a
-varisztor megengedett feszültsége?</strong></p>
-<p><strong>4. Mi a különbség az LDR és a fototranzisztor
-között?</strong></p>
-<p><strong>5. Miért veszélyes túl alacsony feszültségű varisztort
-építeni hálózati körbe?</strong></p>
-<h3 data-number="37.3.12" id="feladatok"><span
-class="header-section-number">37.3.12</span> Feladatok</h3>
-<p><strong>1. feladat (A).</strong> Írd le, mi a különbség az NTC és a
-PTC hőmérséklet-ellenállás jelleggörbéje között.</p>
-<p><strong>2. feladat (A).</strong> Nevezz meg két alkalmazást, ahol
-NTC-t használnak, és két alkalmazást, ahol PTC-t.</p>
-<p><strong>3. feladat (B).</strong> Egy NTC ellenállása 25 °C-on 47 kΩ,
-a fix ellenállás 100 kΩ, a tápfeszültség 24 V. Számold ki a kimenő
-feszültséget 25 °C-on, majd 80 °C-on, ha az NTC ellenállása 80 °C-on 5
-kΩ.</p>
-<p><strong>4. feladat (B).</strong> Egy LDR-es alkonykapcsolóban a fix
-felső ellenállás 22 kΩ, a tápfeszültség 5 V. Az LDR alsó ellenállása
-nappal 2 kΩ, sötétben 500 kΩ. Mekkora a kimenő feszültség nappal és
-sötétben? Értelmezd a két értéket.</p>
-<p><strong>5. feladat (C).</strong> Egy ipari hűtőszekrényben Pt100
-érzékelőt kétvezetékesen,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">1\,\text{mA}</annotation></semantics></math>
-mérőárammal táplálunk;
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><msup><mspace width="0.167em"></mspace><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">0\,^{\circ}\text{C}</annotation></semantics></math>-on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mV</mtext></mrow><annotation encoding="application/x-tex">100\,\text{mV}</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><msup><mspace width="0.167em"></mspace><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">100\,^{\circ}\text{C}</annotation></semantics></math>-on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>138</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mV</mtext></mrow><annotation encoding="application/x-tex">138{,}5\,\text{mV}</annotation></semantics></math>
-jelenik meg. A PLC analóg bemenete
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>…</mi><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0\ldots10\,\text{V}</annotation></semantics></math>.
-Miért nem köthető közvetlenül? Mit javasolsz?</p>
-<p><strong>6. feladat (D).</strong> Egy laborban megmérsz egy
-feszültségosztót: NTC alsó ellenállás, 10 kΩ fix felső, 5 V táp. Mért
-feszültség 2,3 V. Számítsd ki az NTC pillanatnyi ellenállását, és
-becsüld meg a hőmérsékletet, ha tudod, hogy az NTC 25 °C-on 10 kΩ és 60
-°C-on 2 kΩ. Ellenőrizd a számítást, és írd le, hogyan ellenőriznéd a
-gyakorlatban.</p>
-<h3 data-number="37.3.13" id="megoldások"><span
-class="header-section-number">37.3.13</span> Megoldások</h3>
-<p><strong>Önellenőrzés – válaszok:</strong> 1. Hamis: a fémek
-ellenállása hővel nő, tehát a Pt100 a 0 °C-os 100 Ω-ról növekszik; 100
-°C-on jellemzően 138,5 Ω körül van. 2. A PLC analóg bemenete
-feszültséget mér, nem ellenállást; a feszültségosztó az érzékelő
-ellenállását feszültséggé alakítja. 3.
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mi>c</mi></msub><annotation encoding="application/x-tex">U_c</annotation></semantics></math>
-(effektív)
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≥</mo><mn>253</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">\ge 253\,\text{V}</annotation></semantics></math>,
-jellemzően
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>275</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">275\,\text{V}</annotation></semantics></math>
-AC; az
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">1\,\text{mA}</annotation></semantics></math>-es
-egyenáramú varisztorfeszültség a kb.
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>358</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">358\,\text{V}</annotation></semantics></math>-os
-csúcsérték fölött, jellemzően
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>420</mn><mi>…</mi><mn>470</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">420\ldots470\,\text{V}</annotation></semantics></math>
-(ellenőrizendő: gyártói adatlap). 4. LDR folytonos, lassú;
-fototranzisztor gyors, logikai. 5. Mert a varisztor a normál hálózati
-feszültségen is vezetni kezd, tartós áramot vesz fel, felmelegszik, és
-végül tönkremegy vagy tüzet okozhat.</p>
-<p><strong>1. feladat megoldása.</strong> Az NTC ellenállása a
-hőmérséklet növekedésével csökken; a PTC ellenállása egy
-küszöbhőmérsékletig alig változik, majd hirtelen meredeken megnő.</p>
-<p><strong>2. feladat megoldása.</strong> NTC: hőmérsékletmérés;
-bekapcsolási áramlökések korlátozása tápegységekben vagy
-frekvenciaváltókban. PTC: motorvédelmi leoldás; önregeneráló
-túláram-biztosíték.</p>
-<p><strong>3. feladat megoldása.</strong></p>
-<p>25 °C-on:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>47</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>47</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>47</mn><mn>147</mn></mfrac><mo>≈</mo><mn>7</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{ki} = 24\,\text{V} \cdot \frac{47\,\text{k}\Omega}{100\,\text{k}\Omega + 47\,\text{k}\Omega} = 24\,\text{V} \cdot \frac{47}{147} \approx 7{,}7\,\text{V}.</annotation></semantics></math></p>
-<p>80 °C-on:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>5</mn><mn>105</mn></mfrac><mo>≈</mo><mn>1</mn><mo>,</mo><mn>14</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{ki} = 24\,\text{V} \cdot \frac{5\,\text{k}\Omega}{100\,\text{k}\Omega + 5\,\text{k}\Omega} = 24\,\text{V} \cdot \frac{5}{105} \approx 1{,}14\,\text{V}.</annotation></semantics></math></p>
-<p>Ellenőrzés: a feszültség csökken, ami NTC-nél helyes.</p>
-<p><strong>4. feladat megoldása.</strong></p>
-<p>Nappal:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>22</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>2</mn><mn>24</mn></mfrac><mo>≈</mo><mn>0</mn><mo>,</mo><mn>42</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{ki} = 5\,\text{V} \cdot \frac{2\,\text{k}\Omega}{22\,\text{k}\Omega + 2\,\text{k}\Omega} = 5\,\text{V} \cdot \frac{2}{24} \approx 0{,}42\,\text{V}.</annotation></semantics></math></p>
-<p>Sötétben:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mrow><mn>500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><mrow><mn>22</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>+</mo><mn>500</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>⋅</mo><mfrac><mn>500</mn><mn>522</mn></mfrac><mo>≈</mo><mn>4</mn><mo>,</mo><mn>79</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">U_{ki} = 5\,\text{V} \cdot \frac{500\,\text{k}\Omega}{22\,\text{k}\Omega + 500\,\text{k}\Omega} = 5\,\text{V} \cdot \frac{500}{522} \approx 4{,}79\,\text{V}.</annotation></semantics></math></p>
-<p>Nappal alacsony, sötétben magas feszültség jelenik meg; ez invertált
-jel, amit a PLC programjában figyelembe kell venni. A 0–5 V tartomány
-itt biztonságos, mert a maximum elvileg 5 V.</p>
-<p><strong>5. feladat megoldása.</strong> A jelváltozás
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>138</mn><mo>,</mo><mn>5</mn><mo>−</mo><mn>100</mn><mo>=</mo><mn>38</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mV</mtext></mrow><annotation encoding="application/x-tex">138{,}5 - 100 = 38{,}5\,\text{mV}</annotation></semantics></math>,
-ami a
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">10\,\text{V}</annotation></semantics></math>-os
-bemeneti tartomány
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>38</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mV</mtext><mi>/</mi><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>≈</mo><mn>0</mn><mo>,</mo><mn>4</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">38{,}5\,\text{mV}/10\,\text{V} \approx 0{,}4\%</annotation></semantics></math>-a:
-a PLC felbontása ehhez használhatatlanul durva, és a kétvezetékes
-bekötésnél a vezeték ellenállása is hibát ad. Javaslat: Pt100 mérőtávadó
-(3- vagy 4-vezetékes bekötéssel, kimenet
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mi>…</mi><mn>20</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">4\ldots20\,\text{mA}</annotation></semantics></math>
-vagy
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mi>…</mi><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">0\ldots10\,\text{V}</annotation></semantics></math>),
-a skálázást a PLC-ben végezzük <strong>(ellenőrizendő: távadó és
-bemeneti kártya adatlapja)</strong>.</p>
-<p><strong>6. feladat megoldása.</strong></p>
-<p>Képlet:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mrow><mi>N</mi><mi>T</mi><mi>C</mi></mrow></msub><mo>=</mo><msub><mi>R</mi><mrow><mi>f</mi><mi>i</mi><mi>x</mi></mrow></msub><mo>⋅</mo><mfrac><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mrow><msub><mi>U</mi><mi>t</mi></msub><mo>−</mo><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub></mrow></mfrac><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>⋅</mo><mfrac><mrow><mn>2</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>2</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow></mfrac><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mo>⋅</mo><mfrac><mrow><mn>2</mn><mo>,</mo><mn>3</mn></mrow><mrow><mn>2</mn><mo>,</mo><mn>7</mn></mrow></mfrac><mo>≈</mo><mn>8</mn><mo>,</mo><mn>52</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">R_{NTC} = R_{fix} \cdot \frac{U_{ki}}{U_t - U_{ki}} = 10\,\text{k}\Omega \cdot \frac{2{,}3\,\text{V}}{5\,\text{V} - 2{,}3\,\text{V}} = 10\,\text{k}\Omega \cdot \frac{2{,}3}{2{,}7} \approx 8{,}52\,\text{k}\Omega.</annotation></semantics></math></p>
-<p>Mivel az NTC ellenállása melegedéskor csökken, a 25 °C-on mért 10
-kΩ-nál kisebb 8,52 kΩ a 25 °C-osnál valamivel <strong>magasabb</strong>
-hőmérsékletet jelent. A két adott pontból B-paraméteres közelítéssel:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mrow><mi>ln</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>10</mn><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>298</mn><mo>,</mo><mn>15</mn><mo>−</mo><mn>1</mn><mi>/</mi><mn>333</mn><mo>,</mo><mn>15</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>4570</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">K</mtext></mrow><annotation encoding="application/x-tex">B = \ln(10/2)/(1/298{,}15 - 1/333{,}15) \approx 4570\,\text{K}</annotation></semantics></math>,
-majd
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi>T</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>298</mn><mo>,</mo><mn>15</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">K</mtext><mo>+</mo><mrow><mi>ln</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>8</mn><mo>,</mo><mn>52</mn><mi>/</mi><mn>10</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>4570</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">K</mtext></mrow><annotation encoding="application/x-tex">1/T = 1/298{,}15\,\text{K} + \ln(8{,}52/10)/4570\,\text{K}</annotation></semantics></math>,
-ebből
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>≈</mo><mn>301</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">K</mtext><mo>≈</mo><mn>28</mn><mspace width="0.167em"></mspace><msup><mrow></mrow><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">T \approx 301\,\text{K} \approx 28\,{}^{\circ}\text{C}</annotation></semantics></math>
-(pontosabban a gyártói R–T táblázatból; a lényeg: 25 °C fölött, kb.
-27–29 °C). A gyakorlatban kalibráció: a mérőpontot ismert hőmérsékleten
-(pl. jég-víz 0 °C, forrásban lévő víz 100 °C) megmérjük, és a mért
-feszültséget a hőmérséklethez rendeljük.</p>
-<h3 data-number="37.3.14" id="rövid-összefoglaló"><span
-class="header-section-number">37.3.14</span> Rövid összefoglaló</h3>
+<h4 data-number="37.3.10.1"
+id="érzékelő-hibakeresés-mért-értékekből"><span
+class="header-section-number">37.3.10.1</span> Érzékelő-hibakeresés mért
+értékekből</h4>
+<p>Feszültségmentes mérés előtt az öt biztonsági szabály; feszültség
+alatt csak törpefeszültségű jelkörön mérj, a műszert előtte és utána
+ismert forráson ellenőrizve. (FA: feszültség alatt, törpefeszültségen;
+FM: feszültségmentesen.)</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Érzékelő, kapcsolás</th>
+<th>Tünet vagy mért érték</th>
+<th>Valószínű ok</th>
+<th>Ellenőrző mérés</th>
+<th>Javítás</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NTC alul az 5 V-os osztóban</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mo>≈</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">U_{ki} \approx 5</annotation></semantics></math>
+V, PLC: „nagyon hideg”</td>
+<td>szakadt NTC vagy ér</td>
+<td>FM: ellenállás a sorkapcson és az érzékelőnél (OL)</td>
+<td>vezeték vagy érzékelő cseréje</td>
+</tr>
+<tr>
+<td>NTC alul az 5 V-os osztóban</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mrow><mi>k</mi><mi>i</mi></mrow></msub><mo>≈</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">U_{ki} \approx 0</annotation></semantics></math>
+V, PLC: „nagyon meleg”</td>
+<td>zárlatos NTC vagy vezeték</td>
+<td>FM: ellenállás lekötött érzékelővel</td>
+<td>zárlat megszüntetése</td>
+</tr>
+<tr>
+<td>Pt100, kétvezetékes</td>
+<td>állandóan néhány fokkal többet mutat</td>
+<td>vezetékellenállás</td>
+<td>FM: az erek ellenállása (lásd 9. feladat)</td>
+<td>3 vagy 4 vezetékes bekötés</td>
+</tr>
+<tr>
+<td>Pt100 bemeneti kártya</td>
+<td>„túlcsordulás” (pl. 850 °C)</td>
+<td>szakadt érzékelő vagy ér</td>
+<td>FM: 100 Ω körüli értéket vársz, OL hibás</td>
+<td>kötés vagy érzékelő</td>
+</tr>
+<tr>
+<td>LDR-osztó (LDR alul)</td>
+<td>állandóan „sötét”</td>
+<td>szakadt vagy letakart LDR</td>
+<td>FM: ellenállás fényben és takarva</td>
+<td>tisztítás, csere</td>
+</tr>
+<tr>
+<td>Közelítéskapcsoló</td>
+<td>az érzékelő LED jelez, a PLC nem</td>
+<td>NPN/PNP csere vagy hiányzó 1M kötés</td>
+<td>FA: BK–BU és DI–1M feszültség (lásd <a
+href="ve136.html">közelítéskapcsolók</a>)</td>
+<td>megfelelő típus, közös pont bekötése</td>
+</tr>
+<tr>
+<td>Közelítéskapcsoló</td>
+<td>a LED sem világít</td>
+<td>nincs táp</td>
+<td>FA: BN–BU kb. 24 V?</td>
+<td>táp, biztosító, vezeték</td>
+</tr>
+<tr>
+<td>4–20 mA-es távadó</td>
+<td>0 mA</td>
+<td>szakadt hurok, nincs táp</td>
+<td>FA: hurokáram, a távadó kapocsfeszültsége</td>
+<td>kötés, táp</td>
+</tr>
+<tr>
+<td>4–20 mA-es távadó</td>
+<td>3,6 mA alatt vagy 21 mA felett</td>
+<td>a távadó hibajelzése (ellenőrizendő: NAMUR NE 43, adatlap)</td>
+<td>távadó diagnosztika, érzékelőbemenet</td>
+<td>érzékelő, távadó javítása</td>
+</tr>
+<tr>
+<td>Varisztoros túlfeszültség-védő</td>
+<td>a jelzőablak piros</td>
+<td>elhasználódott betét</td>
+<td>szemle</td>
+<td>betét cseréje feszültségmentesen</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Gyakorlás:</strong> ennek az alfejezetnek a kidolgozott
+példái, gyakorlatai és megoldással ellátott feladatai az
+<em>Összefoglaló feladatgyűjtemény villanyszerelő tanulóknak</em> című
+kötet 37.3 szakaszában találhatók.</p>
+</blockquote>
+<h3 data-number="37.3.11" id="rövid-összefoglaló"><span
+class="header-section-number">37.3.11</span> Rövid összefoglaló</h3>
 <p>A hő-, fény- és feszültségfüggő elemek a félvezető-elektronika
 „érzékszervei”. Az NTC ellenállása a melegedéssel csökken, ezért
 hőmérsékletmérésre és bekapcsolási áramlökés korlátozására való; a PTC

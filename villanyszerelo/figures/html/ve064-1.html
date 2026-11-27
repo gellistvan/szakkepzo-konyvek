@@ -25,15 +25,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 330" role="img" aria-label="Sematikus kioldási sáv az áramszorzó függvényében B, C és D jellegnél, mozgatható üzemi ponttal"></svg>
 <p class="small">Sematikus sáv (szaggatott: legkorábbi, folytonos: legkésőbbi kioldás) az MSZ EN 60898-1 jellemző pontjaiból: 1,13·In – 1 h-n belül nem old ki, 1,45·In – 1 h-n belül kiold, 2,55·In – 1…60 s, a mágneses sáv alsó határán t &gt; 0,1 s, felső határán t &lt; 0,1 s. A biztos gyors lekapcsoláshoz Ia = 5/10/20·In (B/C/D). Nem gyártói görbe; tervezéshez a készülék adatlapja szükséges (ellenőrizendő: MSZ EN 60898-1).</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"c":"", "m":"×", "In":"A"};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const MAG={"B": [3, 5], "C": [5, 10], "D": [10, 20]}, names=["B","C","D"], sel=names[v.c-1], TF=0.005, TM=10000;
 function ll(m,x0,y0,x1,y1){const k=(Math.log10(y1)-Math.log10(y0))/(Math.log10(x1)-Math.log10(x0));return Math.pow(10,Math.log10(y0)+k*(Math.log10(m)-Math.log10(x0)));}
@@ -66,7 +70,7 @@ else txt+='<b class="ok">biztos azonnali kioldás</b> (t &lt; 0,1 s), mert I ≥
 status(txt);
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

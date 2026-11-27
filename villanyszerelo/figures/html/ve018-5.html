@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A mágneses tér iránya – jobbkéz-szabály</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="rev">Áramirány megfordítása</label><input id="rev" type="checkbox" aria-label="Áramirány megfordítása"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 300" role="img" aria-label="Egyenes vezető metszete koncentrikus erővonalakkal és egy tekercs metszete belső és visszazáródó erővonalakkal; az áram iránya megfordítható, az erővonalak iránya és a tekercs északi és déli pólusa ezzel együtt változik"></svg>
+<p class="small">Szemléltetés (5.3). ⊙ = az áram a rajz síkjából felénk, ⊗ = tőlünk el. Az áram megfordításával a tér iránya és a tekercs pólusai felcserélődnek; a tér nagysága nem változik.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const s = v.rev ? -1 : 1;                       // +1: vezető ⊙, tekercs felül ⊙
+const line = css("--line"), hl = css("--hl"), hl2 = css("--hl2");
+function head(x, y, dx, dy, col) {             // nyílhegy (x,y) csúccsal, (dx,dy) irányba
+  const L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, a = 10, b = 5;
+  el("polygon", {points: [x, y, x - a*ux + b*uy, y - a*uy - b*ux, x - a*ux - b*uy, y - a*uy + b*ux].join(" "), fill: col});
+}
+function sym(x, y, r, cur) {
+  el("circle", {cx: x, cy: y, r: r, fill: css("--bg"), stroke: line, "stroke-width": 2});
+  if (cur > 0) el("circle", {cx: x, cy: y, r: r * 0.25, fill: line});
+  else { const d = r * 0.62; el("line", {x1: x-d, y1: y-d, x2: x+d, y2: y+d, stroke: line, "stroke-width": 2}); el("line", {x1: x-d, y1: y+d, x2: x+d, y2: y-d, stroke: line, "stroke-width": 2}); }
+}
+// --- egyenes vezető (SVG: y lefelé nő; ⊙ → a képernyőn az óramutatóval ellentétes)
+const X0 = 130, Y0 = 145;
+[40, 70, 100].forEach((R, k) => {
+  el("circle", {cx: X0, cy: Y0, r: R, fill: "none", stroke: hl2, "stroke-width": 1.8});
+  [0, 180].forEach(a0 => {
+    const t = (a0 + 30 + 40 * k) * Math.PI / 180, px = X0 + R * Math.cos(t), py = Y0 - R * Math.sin(t);
+    head(px, py, -s * Math.sin(t), -s * Math.cos(t), hl2);
+  });
+});
+sym(X0, Y0, 16, s);
+el("text", {x: X0, y: 268, "text-anchor": "middle", "font-size": 14}, s > 0 ? "⊙ áram felénk: a tér az" : "⊗ áram tőlünk: a tér az");
+el("text", {x: X0, y: 286, "text-anchor": "middle", "font-size": 14}, s > 0 ? "óramutatóval ellentétes" : "óramutató járásával egyező");
+// --- tekercs metszete
+const CX = 430, CY = 145, top = s, bot = -s;
+for (let k = 0; k < 6; k++) { const x = CX - 100 + k * 40; sym(x, CY - 50, 12, top); sym(x, CY + 50, 12, bot); }
+[-24, -8, 8, 24].forEach(dy => {
+  const xa = CX - 115 * s, xb = CX + 115 * s;
+  el("line", {x1: xa, y1: CY + dy, x2: xb - 8 * s, y2: CY + dy, stroke: hl, "stroke-width": 2});
+  head(xb, CY + dy, s, 0, hl);
+});
+[70, 95].forEach(h => {                        // visszazáródó erővonalak a meneteken kívül (felül és alul)
+  el("path", {d: "M " + (CX + 135) + " " + (CY - 20) + " A 135 " + h + " 0 0 0 " + (CX - 135) + " " + (CY - 20),
+              fill: "none", stroke: hl, "stroke-width": 1.5, "stroke-dasharray": "6 4"});
+  el("path", {d: "M " + (CX + 135) + " " + (CY + 20) + " A 135 " + h + " 0 0 1 " + (CX - 135) + " " + (CY + 20),
+              fill: "none", stroke: hl, "stroke-width": 1.5, "stroke-dasharray": "6 4"});
+  head(CX - 6 * s, CY - 20 - h, -s, 0, hl); head(CX - 6 * s, CY + 20 + h, -s, 0, hl);
+});
+el("text", {x: CX + 148, y: CY + 7, "font-size": 20, "font-weight": "bold", "text-anchor": "start"}, s > 0 ? "É" : "D");
+el("text", {x: CX - 148, y: CY + 7, "font-size": 20, "font-weight": "bold", "text-anchor": "end"}, s > 0 ? "D" : "É");
+el("text", {x: CX, y: 290, "text-anchor": "middle", "font-size": 14}, "tekercs: belül a tér " + (s > 0 ? "balról jobbra" : "jobbról balra") + " mutat");
+status("Jobbkéz-szabály: a hüvelykujj az áram irányába mutat, a behajlított ujjak a tér irányát adják. Tekercsnél fordítva: az ujjak a menetek áramirányában, a hüvelykujj az <b>északi (É) pólus</b> felé mutat – most " + (s > 0 ? "jobbra" : "balra") + ".");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

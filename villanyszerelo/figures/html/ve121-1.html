@@ -27,15 +27,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 255" role="img" aria-label="Méretező kalkulátor: transzformátor teljesítménye, kábelhossz, keresztmetszet, motoráram és kismegszakító típusa alapján zárlati áram és indítási feszültségesés"></svg>
 <p class="small">Tanulási példa (ellenőrizendő): a fejezet képletei – Ztr = uk/100·U²/Sn (uk = 4 %), κ = 56, c = 1,0 (Ik3, egyvezetős ellenállás); a gyors kioldást az Ik1,min = 0,95·230 V/√((Rtr + 2·1,2·Rvez)² + Xtr²) dönti el (azonos keresztmetszetű PE), mágneses szorzók B 5 / C 10 / D 20 ·In (felső határ), 10 % indítási határ, 6 kA megszakítóképesség. Túlterhelési (Iz) ellenőrzés nincs benne; tervezéshez nem használható.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"Sn":"kVA", "l":"m", "ai":"", "Im":"A", "ty":""};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const AS=[1.5,2.5,4,6,10,16,25,35], A=AS[v.ai-1], TY=["B","C","D"][v.ty-1], KM=[5,10,20][v.ty-1];
 const STD=[6,10,13,16,20,25,32,40,50,63,80,100], UV=400, K=56, C=1.0;
@@ -56,7 +60,7 @@ status((okM?'<span class="ok">A mágneses kioldáshoz elég a zárlati áram.</s
   (okU?'':'<span class="bad">Az indítási feszültségesés meghaladja a 10 %-ot. </span>')+(okB?'':'<span class="bad">Nagyobb megszakítóképességű készülék kell (a 6 kA tanulási érték). </span>'));
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

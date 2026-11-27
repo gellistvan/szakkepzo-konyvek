@@ -27,15 +27,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 300" role="img" aria-label="SPD bekötése: a két bekötővezeték induktív feszültsége hozzáadódik az SPD védelmi szintjéhez; V-bekötésnél ez elmarad."></svg>
 <p class="small">Közelítés: L' ≈ 1 µH/m, a hossz a két bekötővezeték (a₁ + a₂) együtt; a 10 kA/µs a fejezet példájának értéke (ellenőrizendő). Az U_w értékek tanulási példák (ellenőrizendő: MSZ HD 60364-4-44, -5-534 és a gyártói adatlap).</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"l":"m", "di":"kA/µs", "up":"kV", "uw":"", "vb":""};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const Uw=[1.5,2.5,4][v.uw-1], l=v.vb>0?0:v.l, ul=1e-6*l*v.di*1e9/1000, uh=v.up+ul, ok=uh<=Uw;
 const top=Math.max(8,Math.ceil((uh+1)/4)*4), Y=u=>270-u/top*240;
@@ -63,7 +67,7 @@ el("line",{x1:220,x2:220,y1:60,y2:130,stroke:css("--line"),"stroke-width":2});el
 status("U<sub>vezeték</sub> = L'·l·di/dt = 1 µH/m · "+fmt(l,2)+" m · "+fmt(v.di,1)+" kA/µs = <b>"+fmt(ul,2)+" kV</b> · U<sub>hatásos</sub> = U<sub>p</sub> + U<sub>vezeték</sub> = <b>"+fmt(uh,2)+" kV</b> → "+(ok?'<span class="ok">≤ U_w: a készülék védett</span>':'<span class="bad">&gt; U_w: a védelem nem elég</span>'));
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

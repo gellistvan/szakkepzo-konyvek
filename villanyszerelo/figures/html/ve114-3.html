@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reverzáló vezérlés – szimulátor</title>
+<style>
+:root{--bg:#fff;--fg:#111;--mut:#666;--on:#c62828;--ok:#2e7d32;--line:#222;--box:#f4f4f4;--acc:#1565c0}
+@media (prefers-color-scheme: dark){:root{--bg:#16181c;--fg:#e8e8e8;--mut:#9aa;--on:#ff6e6e;--ok:#7bd88f;--line:#ddd;--box:#23262c;--acc:#82b1ff}}
+body{background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,sans-serif;margin:8px}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
+button{font:inherit;padding:5px 10px;border:1px solid var(--line);background:var(--box);color:var(--fg);border-radius:4px;cursor:pointer}
+button[aria-pressed=true]{background:var(--acc);color:#fff}
+label{white-space:nowrap}
+svg{width:100%;height:auto;display:block}
+#msg{min-height:1.6em;font-weight:600}
+#msg.f{color:var(--on)}
+.small{font-size:12px;color:var(--mut)}
+</style></head><body>
+<div class="bar" role="group" aria-label="Nyomógombok (nyomva tartható)">
+<button id="bS0" type="button">S0 STOP</button><button id="bS1" type="button">S1 ELŐRE</button><button id="bS2" type="button">S2 HÁTRA</button>
+<button id="scen" type="button">Forgatókönyv lejátszása</button><button id="rst" type="button">Alaphelyzet (Q1 vissza)</button></div>
+<div class="bar" role="group" aria-label="Reteszek és üzemmód">
+<label><input type="checkbox" id="mag" checked> mágneses retesz (K1/K2 21–22)</label>
+<label><input type="checkbox" id="pb" checked> nyomógomb-retesz</label>
+<label><input type="checkbox" id="lim" checked> végálláskapcsolók</label>
+<label><input type="checkbox" id="inga"> automatikus ingamozgás</label></div>
+<div class="bar" role="group" aria-label="Hibabeépítés">
+<label><input type="checkbox" id="weld"> hiba: K1 főérintkezője hegedt</label>
+<label><input type="checkbox" id="stuck"> hiba: K1 21–22 beragadt zárva</label></div>
+<div id="msg" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 760 600" role="img" aria-label="Bal oldalon a vezérlőkör két ága, jobb oldalon a kocsi a pályán, alul az idődiagram"></svg>
+<p class="small">A rajz a 32.2 teljes kapcsolási lapjának (ve114-2) egyszerűsített vezérlőköre. Piros: feszültség alatt / behúzva. A nyomógombok egérrel, érintéssel vagy Enter/szóköz nyomva tartásával működnek. A zárlati áram a 32.2 2. példájából: I<sub>k</sub> ≈ 4 kA.</p>
+<script>
+const DATA={"checks": [{"cfg": {}, "scen": "base", "t": 5.0, "K1": true, "K2": false, "x": 1.0, "fault": false}, {"cfg": {}, "scen": "base", "t": 10.0, "K1": false, "K2": false, "x": 1.9, "fault": false}, {"cfg": {}, "scen": "base", "t": 12.0, "K1": false, "K2": true, "x": 1.7, "fault": false}, {"cfg": {}, "scen": "base", "t": 20.5, "K1": false, "K2": false, "x": 0.1, "fault": false}, {"cfg": {"mag": false, "pb": false}, "scen": "x1", "t": 3.0, "K1": false, "K2": false, "x": 0.4, "fault": true}, {"cfg": {"mag": false, "pb": true, "weld": true}, "scen": "x1", "t": 3.0, "K1": false, "K2": false, "x": 0.4, "fault": true}, {"cfg": {}, "scen": "x1", "t": 3.0, "K1": false, "K2": true, "x": 0.2, "fault": false}]};
+const DT=0.05,V=0.2,XB1=1.9,XB2=0.1,XMAX=2.0;
+function Sim(c){c=c||{};this.mag=c.mag!==false;this.pb=c.pb!==false;this.lim=c.lim!==false;this.inga=!!c.inga;this.weld=!!c.weld;this.stuck=!!c.stuck;
+ this.x=c.x0||0;this.K1=false;this.K2=false;this.t=0;this.kt1=0;this.kt2=0;this.fault=false;this.S0=this.S1=this.S2=false;}
+Sim.prototype.b1=function(){return this.lim&&this.x>=XB1-1e-9;};
+Sim.prototype.b2=function(){return this.lim&&this.x<=XB2+1e-9;};
+Sim.prototype.ev=function(){if(this.fault)return;const s=this;
+ for(let i=0;i<6;i++){const k1n=s.stuck?true:!s.K1,k2n=!s.K2,ok=!s.S0;
+  const c1=ok&&(s.S1||s.K1||(s.inga&&s.kt2>=1))&&(s.pb?!s.S2:true)&&(s.mag?k2n:true)&&!s.b1();
+  const c2=ok&&(s.S2||s.K2||(s.inga&&s.kt1>=1))&&(s.pb?!s.S1:true)&&(s.mag?k1n:true)&&!s.b2();
+  const n1=c1||(s.weld&&s.K1),n2=c2;if(n1===s.K1&&n2===s.K2)break;s.K1=n1;s.K2=n2;}
+ if(s.K1&&s.K2){s.fault=true;s.K1=s.K2=false;}};
+Sim.prototype.step=function(){const s=this;s.ev();if(!s.fault)s.x=Math.min(XMAX,Math.max(0,s.x+(s.K1?V:0)*DT-(s.K2?V:0)*DT));
+ s.kt1=(s.inga&&s.b1())?s.kt1+DT:0;s.kt2=(s.inga&&s.b2())?s.kt2+DT:0;s.t=Math.round((s.t+DT)*1e6)/1e6;s.ev();};
+const SC={base:[[0,"S1",true],[0.3,"S1",false],[11,"S2",true],[11.3,"S2",false]],x1:[[0,"S1",true],[0.3,"S1",false],[2,"S2",true],[2.3,"S2",false]]};
+function runTo(sim,sc,tEnd){const ev=sc.slice();while(sim.t<=tEnd+1e-9){while(ev.length&&ev[0][0]<=sim.t+1e-9){const e=ev.shift();sim[e[1]]=e[2];}
+ if(Math.abs(sim.t-tEnd)<1e-9)break;sim.step();}return sim;}
+if(location.search.indexOf("selftest=1")>=0){let bad=0;DATA.checks.forEach(c=>{const s=runTo(new Sim(c.cfg),SC[c.scen],c.t);
+ const got={K1:s.K1,K2:s.K2,x:Math.round(s.x*100)/100,fault:s.fault};
+ ["K1","K2","fault"].forEach(k=>{if(got[k]!==c[k]){bad++;console.error("selftest eltérés",JSON.stringify(c),k,got[k]);}});
+ if(Math.abs(got.x-c.x)>0.051){bad++;console.error("selftest x eltérés",JSON.stringify(c),got.x);}});
+ console.log(bad?"selftest HIBA "+bad:"selftest OK "+DATA.checks.length+" pont");}
+// ---- interaktív rész
+const cfgIds=["mag","pb","lim","inga","weld","stuck"];let sim,hist,scen=null;
+function cfg(){const c={};cfgIds.forEach(i=>c[i]=document.getElementById(i).checked);return c;}
+function reset(keepX){const x=sim?sim.x:0;sim=new Sim(cfg());if(keepX)sim.x=x;hist=[];scen=null;}
+reset(false);
+cfgIds.forEach(i=>document.getElementById(i).addEventListener("change",()=>{const c=cfg();for(const k in c)sim[k]=c[k];}));
+function hold(id,key){const b=document.getElementById(id),on=()=>{sim[key]=true;b.setAttribute("aria-pressed","true");},off=()=>{sim[key]=false;b.setAttribute("aria-pressed","false");};
+ b.addEventListener("pointerdown",e=>{e.preventDefault();on();});["pointerup","pointerleave","pointercancel"].forEach(t=>b.addEventListener(t,off));
+ b.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();on();}});b.addEventListener("keyup",e=>{if(e.key===" "||e.key==="Enter")off();});}
+hold("bS0","S0");hold("bS1","S1");hold("bS2","S2");
+document.getElementById("rst").onclick=()=>reset(true);
+document.getElementById("scen").onclick=()=>{reset(false);sim.x=0;scen={t0:0,ev:SC.base.slice()};};
+const NS="http://www.w3.org/2000/svg",svg=document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!==undefined)e.textContent=txt;svg.appendChild(e);return e;}
+function cont(x,y,lab,closed,live,nc){const c=live?css("--on"):css("--line");el("line",{x1:x,y1:y,x2:x,y2:y+8,stroke:c,"stroke-width":2});
+ el("line",{x1:x,y1:y+30,x2:x,y2:y+38,stroke:c,"stroke-width":2});
+ if(closed)el("line",{x1:x,y1:y+8,x2:x,y2:y+30,stroke:c,"stroke-width":3});else el("line",{x1:x,y1:y+8,x2:x+12,y2:y+28,stroke:css("--line"),"stroke-width":2});
+ el("text",{x:x+15,y:y+16,fill:css("--fg"),"font-size":11},lab);if(nc)el("text",{x:x+15,y:y+30,fill:css("--mut"),"font-size":10},nc);}
+function coil(x,y,lab,on){el("rect",{x:x-9,y:y,width:18,height:26,fill:on?css("--on"):"none",stroke:css("--line"),"stroke-width":2});el("text",{x:x+14,y:y+17,fill:css("--fg"),"font-size":12,"font-weight":"bold"},lab);}
+function draw(){svg.innerHTML="";const s=sim,c=cfg(),F=css("--fg"),L=css("--line"),R=css("--on");
+ const ok=!s.S0&&!s.fault;
+ // vezérlőkör (egyszerűsítve): közös ág + két irányág
+ el("text",{x:10,y:16,fill:F,"font-size":12,"font-weight":"bold"},"Vezérlőkör (egyszerűsítve)");
+ cont(40,24,"S0 STOP",!s.S0,!s.fault,"bontó");
+ el("line",{x1:40,y1:62,x2:40,y2:70,stroke:ok?R:L,"stroke-width":2});el("line",{x1:40,y1:70,x2:200,y2:70,stroke:ok?R:L,"stroke-width":2});
+ const br=[{x:40,on:s.K1,S:s.S1,So:s.S2,Kn:!s.K2,B:s.b1(),lab:["S1 ∥ K1 13–14","S2 bontó","K2 21–22","B1 11–12","K1"]},
+           {x:200,on:s.K2,S:s.S2,So:s.S1,Kn:(c.stuck?true:!s.K1),B:s.b2(),lab:["S2 ∥ K2 13–14","S1 bontó","K1 21–22","B2 11–12","K2"]}];
+ br.forEach(b=>{let live=ok,y=74;const st=[b.S||b.on||(c.inga&&(b.x===40?s.kt2>=1:s.kt1>=1)),c.pb?!b.So:true,c.mag?b.Kn:true,c.lim?!b.B:true];
+  const lab2=[null,c.pb?null:"(kiiktatva)",c.mag?null:"(kiiktatva)",c.lim?null:"(kiiktatva)"];
+  st.forEach((z,i)=>{cont(b.x,y,b.lab[i],z,live,lab2[i]);live=live&&z;y+=44;});coil(b.x,y+2,b.lab[4],b.on);});
+ // pálya és kocsi
+ const X0=360,X1=740,sx=v=>X0+(X1-X0)*v/XMAX;
+ el("text",{x:X0,y:16,fill:F,"font-size":12,"font-weight":"bold"},"Kocsi a pályán (0–2 m)");
+ el("line",{x1:X0,y1:150,x2:X1,y2:150,stroke:L,"stroke-width":3});
+ [[XB2,"B2",s.b2()],[XB1,"B1",s.b1()]].forEach(q=>{el("rect",{x:sx(q[0])-6,y:112,width:12,height:24,fill:q[2]&&c.lim?R:"none",stroke:L,"stroke-width":1.5});
+  el("text",{x:sx(q[0]),y:172,fill:F,"font-size":11,"text-anchor":"middle"},q[1]+(c.lim?"":" (ki)"));});
+ el("rect",{x:sx(s.x)-26,y:118,width:52,height:28,fill:css("--box"),stroke:L,"stroke-width":2,rx:3});
+ if(s.K1||s.K2){const d=s.K1?1:-1;el("path",{d:"M"+(sx(s.x)+d*30)+",104 l"+d*26+",0 m"+(-d*8)+",-6 l"+d*8+",6 l"+(-d*8)+",6",stroke:R,"stroke-width":2.5,fill:"none"});}
+ el("text",{x:X0,y:200,fill:F,"font-size":12},"x = "+s.x.toFixed(2).replace(".",",")+" m   motor: "+(s.K1?"ELŐRE":s.K2?"HÁTRA":"áll"));
+ const m=document.getElementById("msg");
+ if(s.fault){m.className="f";m.textContent="FÁZISZÁRLAT: a K1 és a K2 egyszerre zárt – az L1 és az L3 közvetlenül összekapcsolódott, I_k ≈ 4 kA (32.2, 2. példa), a Q1 kiold. Nyomd meg az „Alaphelyzet” gombot.";}
+ else{m.className="";m.textContent=s.K1?"K1 ELŐRE behúzva":s.K2?"K2 HÁTRA behúzva":"Mindkét kontaktor elengedve";}
+ // idődiagram
+ const T0=Math.max(0,s.t-20),TY=318,rows=[["S1",1],["S2",2],["K1",3],["K2",4],["B1",5],["B2",6],["irány",7]];
+ el("text",{x:10,y:TY-10,fill:F,"font-size":12,"font-weight":"bold"},"Idődiagram (utolsó 20 s)");
+ rows.forEach((r,i)=>{const y=TY+i*36;el("text",{x:10,y:y+20,fill:F,"font-size":11},r[0]);
+  let d="";hist.forEach((h,j)=>{if(h[0]<T0)return;const xx=70+(h[0]-T0)*(680/20);let v=h[r[1]];
+   const yy=r[1]===7?(y+14-v*12):(y+28-(v?22:0));d+=(d?"L":"M")+xx.toFixed(1)+","+yy.toFixed(1);});
+  el("line",{x1:70,y1:y+28,x2:750,y2:y+28,stroke:css("--mut"),"stroke-width":0.5});
+  if(d)el("path",{d:d,stroke:r[1]>=3&&r[1]<=4?R:L,"stroke-width":2,fill:"none"});});}
+let last=performance.now();
+function tick(now){let n=Math.min(20,Math.floor((now-last)/(DT*1000)));if(n>0)last+=n*DT*1000;
+ for(let i=0;i<n;i++){if(scen){while(scen.ev.length&&scen.ev[0][0]<=sim.t+1e-9){const e=scen.ev.shift();sim[e[1]]=e[2];}if(!scen.ev.length&&sim.t>21)scen=null;}
+  hist.push([sim.t,sim.S1?1:0,sim.S2?1:0,sim.K1?1:0,sim.K2?1:0,sim.b1()?1:0,sim.b2()?1:0,sim.K1?1:sim.K2?-1:0]);if(hist.length>800)hist.shift();sim.step();}
+ draw();requestAnimationFrame(tick);}
+draw();requestAnimationFrame(tick);
+</script><script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body></html>

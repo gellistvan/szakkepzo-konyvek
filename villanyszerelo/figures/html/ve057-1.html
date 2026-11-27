@@ -59,7 +59,7 @@ function dev(kind,a,b,o){o=o||{};
   const cx=(A[0]+B[0])/2,cy=(A[1]+B[1])/2,h=30,g=mk("g",{transform:"translate("+cx+","+cy+") rotate("+ang+")"});
   const line=css("--line"),cur=css("--cur"),sw=2.2;
   const seg=(x1,y1,x2,y2,c,w,extra)=>mk("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:c||line,"stroke-width":w||sw,"stroke-linecap":"round"},extra||{}),g);
-  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res")?true:!!o.closed;
+  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res"||kind==="fuse")?true:!!o.closed;
   // áram alatti halo (a kivezetések és a záródott test)
   if(o.l1)seg(-L/2,0,-h,0,cur,6.5,{opacity:.9});
   if(o.l2)seg(h,0,L/2,0,cur,6.5,{opacity:.9});
@@ -74,7 +74,8 @@ function dev(kind,a,b,o){o=o||{};
     if(kind==="pbno"||kind==="pbnc"){const d=o.pressed?9:0;                // nyomógomb-működtető (T-alak)
       seg(0,-8+d,0,-30+d,line,1.8,{"stroke-dasharray":"4 3"});seg(-9,-30+d,9,-30+d,line,3);}
     if(kind==="sw"){seg(0,-12,0,-26,line,1.8,{"stroke-dasharray":"4 3"});seg(-8,-26,8,-26,line,3);}
-    if(kind==="mcb"){seg(-6,-6,6,-18,line,2);seg(6,-6,-6,-18,line,2);}   // kismegszakító: kézi működtetés jele
+    if(kind==="mcb"){const dy=o.closed?12:0;                              // kismegszakító: a túláramkioldó X-e a késsel együtt mozog
+      seg(-6,-6+dy,6,-18+dy,line,2);seg(6,-6+dy,-6,-18+dy,line,2);}
     if(o.delay==="on"||o.delay==="off"){seg(0,-10,0,-28,line,1.8);       // késleltetett érintkező (időrelé): ejtőernyő-ív
       mk("path",{d:"M -9 -28 A 9 9 0 0 "+(o.delay==="on"?1:0)+" 9 -28",fill:"none",stroke:line,"stroke-width":2},g);}
   }else if(kind==="coil"){
@@ -83,6 +84,10 @@ function dev(kind,a,b,o){o=o||{};
   }else if(kind==="thermal"){
     mk("rect",{x:-h,y:-17,width:2*h,height:34,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);
     mk("polyline",{points:"-14,0 -7,-9 0,9 7,-9 14,0",fill:"none",stroke:line,"stroke-width":2},g);
+  }else if(kind==="res"){                                                  // ellenállás (IEC téglalap)
+    mk("rect",{x:-h,y:-9,width:2*h,height:18,fill:o.body?css("--coil"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+  }else if(kind==="fuse"){                                                 // olvadóbiztosító: téglalap, középvonal
+    mk("rect",{x:-h,y:-10,width:2*h,height:20,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);seg(-h,0,h,0,line,2);
   }else if(kind==="lamp"){
     mk("circle",{cx:0,cy:0,r:17,fill:o.body?css("--lamp"):css("--bg"),stroke:line,"stroke-width":2.2},g);
     seg(-12,-12,12,12,line,2);seg(-12,12,12,-12,line,2);
@@ -133,7 +138,7 @@ function render(){initSvg("v",-1.3,-3.4,13.2,8);
    dev("sw",[1.5,1],[3.5,1],{closed:on,l1:cur,l2:cur,body:cur,label:"S1",sub:on?"zárt":"nyitott",aria:"S1 kapcsoló a nullában (hibás)",onclick:()=>{st.on=!st.on;render();}});
  }
  // a "feszültség alatt" állapot jelölése hibásnál: a lámpa foglalata kikapcsolt állapotban is L potenciálon
- dev("lamp",[6,4],[6,2],{l1:cur,l2:cur,body:lampLit,label:"H1",sub:"lámpa"});
+ dev("lamp",[6,4],[6,2],{l1:cur,l2:cur,body:lampLit,label:"E1",sub:"lámpa"});
  // lámpatest (szaggatott), PE
  const a=P(4.9,5.7),b=P(7.8,0.3);mk("rect",{x:a[0],y:a[1],width:b[0]-a[0],height:b[1]-a[1],fill:"none",stroke:css("--line"),"stroke-width":1.6,"stroke-dasharray":"7 5"});
  text(6,5.95,"lámpatest",{size:11.5});
@@ -142,7 +147,7 @@ function render(){initSvg("v",-1.3,-3.4,13.2,8);
  text(-0.2,6.6,"barna / fekete",{size:11,anchor:"start",fill:css("--muted")});text(-0.2,2.4,"világoskék",{size:11,anchor:"start",fill:css("--muted")});text(-0.2,-2.3,"zöld-sárga",{size:11,anchor:"start",fill:css("--muted")});
  if(f&&!on)text(7.5,5.2,"⚠ foglalat feszültség alatt",{size:12,anchor:"start",bold:true,fill:css("--bad")});
  const s=document.getElementById("st");
- if(!f)s.innerHTML="S1 a <b>fázisvezetőben</b>: "+(on?'<span class="ok">zárt, a lámpa világít</span> – az áram L → S1 → H1 → N útvonalon folyik.':'nyitott: a lámpa nem világít, és a lámpa foglalata is feszültségmentes.');
+ if(!f)s.innerHTML="S1 a <b>fázisvezetőben</b>: "+(on?'<span class="ok">zárt, a lámpa világít</span> – az áram L → S1 → E1 → N útvonalon folyik.':'nyitott: a lámpa nem világít, és a lámpa foglalata is feszültségmentes.');
  else s.innerHTML="HIBÁS kapcsolás: S1 a <b>nullavezetőben</b>: "+(on?"zárt, a lámpa világít, de a szabály szerint ez nem megengedett.":'<span class="bad">nyitott: a lámpa nem világít, de a foglalat és a lámpatest vezetékei kikapcsolva is fázispotenciálon vannak (érintésveszély).</span>');}
 document.getElementById("bs").addEventListener("click",()=>{st.on=!st.on;render();});
 document.getElementById("bf").addEventListener("click",e=>{st.fault=!st.fault;e.target.setAttribute("aria-pressed",st.fault);render();});

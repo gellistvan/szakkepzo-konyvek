@@ -25,15 +25,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 300" role="img" aria-label="A kapocsfeszültség, az áram és a terhelés teljesítménye a terhelő ellenállás függvényében, a maximális teljesítmény jelölésével"></svg>
 <p class="small">Szemléltetés (4.5): E, Rb tanulási példa értékek (alap: a fejezet 9 V / 2 Ω elemes példája); valós akkumulátor belső ellenállása és zárlati árama gyártói adatlapból ellenőrizendő. Számolt görbék, nem mérések.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"E":"V", "Rb":"Ω", "Rt":"Ω"};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const I=v.E/(v.Rb+v.Rt), Uk=v.E-I*v.Rb, Pt=I*I*v.Rt, Pb=I*I*v.Rb, Pm=v.E*v.E/(4*v.Rb), Ik=v.E/v.Rb, eta=v.Rt/(v.Rb+v.Rt);
 const x0=60,x1=530,y0=250,y1=44,xm=Math.max(30,3*v.Rb), X=r=>x0+(x1-x0)*Math.min(r,xm)/xm;
@@ -53,7 +57,7 @@ el("circle",{cx:X(v.Rt),cy:Yp(Pt),r:6,fill:css("--hl2"),stroke:css("--line")});e
 status("I = <b>"+fmt(I,3)+" A</b>, U<sub>k</sub> = <b>"+fmt(Uk)+" V</b>, P<sub>t</sub> = <b>"+fmt(Pt)+" W</b>, belső veszteség P<sub>b</sub> = "+fmt(Pb)+" W, η = "+fmt(eta*100,1)+" %. P<sub>max</sub> = E²/(4R<sub>b</sub>) = <b>"+fmt(Pm)+" W</b> (R<sub>t</sub> = R<sub>b</sub>-nél, η = 50 %); zárlati áram I<sub>k</sub> = E/R<sub>b</sub> = "+fmt(Ik,1)+" A.");
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

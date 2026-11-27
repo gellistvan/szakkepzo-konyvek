@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panaszkezelési döntési fa</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Panaszkezelési döntési fa lépésenként: veszély, saját munka, vállalási idő, termékhiba, ügyfél okozta ágak, dokumentálás, visszajelzés"></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">A döntési fa tanulási segédlet; a jótállási és fogyasztóvédelmi határidők a hatályos jogszabályok szerint ellenőrizendők.</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "Panasz érkezett: „a beszerelt aljzat túlmelegszik” (5. feladat). Először rögzítsd írásban (dátum, tünet).", "node": "S", "edges": []}, {"msg": "Veszélyre utal? Melegedés → IGEN.", "node": "Q1", "edges": ["S-Q1"]}, {"msg": "Telefonon: a dugaszt húzza ki, a kör kismegszakítóját kapcsolja le, ne használja a szemléig. Soron kívül kiszállsz; a javítás előtt öt szabály.", "node": "A1", "edges": ["Q1-A1"]}, {"msg": "Helyszíni szemle a megrendelő jelenlétében, mérés (pl. szigetelés, kötések, hőkamera).", "node": "A2", "edges": ["A1-A2"]}, {"msg": "A hiba a saját munkám? A szemle laza kapcsot talál az általad szerelt aljzatban → IGEN.", "node": "Q2", "edges": ["A2-Q2"]}, {"msg": "Vállalási (jótállási) időn belül? → IGEN.", "node": "Q3", "edges": ["Q2-Q3"]}, {"msg": "Ingyenes javítás, új mérés, javítási jegyzőkönyv.", "node": "A3", "edges": ["Q3-A3"]}, {"msg": "Dokumentálás: panaszlap, mérési jegyzőkönyv, lezárás az ügyfél aláírásával.", "node": "D", "edges": ["A3-D"]}, {"msg": "Visszajelzés kérése – a túlmelegedő aljzat esete lezárva. A következő lépések a többi ágat mutatják.", "node": "V", "edges": ["D-V"]}, {"msg": "Ha a vállalási idő lejárt: ajánlatot adsz, de mérlegeld a méltányosságot (saját hiba!).", "node": "A4", "edges": ["Q3-A4"]}, {"msg": "Ha nem a saját munkád hibája: termékhiba-e (pl. hibás aljzat)?", "node": "Q4", "edges": ["Q2-Q4"]}, {"msg": "Termékhiba: gyártói garancia – csere, közreműködés; a munkadíj a vállalásod szerint.", "node": "A5", "edges": ["Q4-A5"]}, {"msg": "Nem termékhiba: az ügyfél vagy idegen (más szerelő) okozta?", "node": "Q5", "edges": ["Q4-Q5"]}, {"msg": "Igen: a mérési eredménnyel bizonyítod, és fizetős javítási ajánlatot adsz.", "node": "A6", "edges": ["Q5-A6"]}, {"msg": "Nem tisztázható: további vizsgálat (pl. hálózati ok, szolgáltató). Minden ág a dokumentálással zárul.", "node": "A7", "edges": ["Q5-A7"]}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+
+const D = {"nodes": {"S": {"x": 6.7, "y": 14.0, "sh": "s", "t": "Panasz érkezett", "w": 2.6, "h": 0.75}, "Q1": {"x": 6.7, "y": 12.55, "sh": "q", "t": "Veszélyre utal?\n(melegedés, égett szag,\náramütés)", "w": 3.7, "h": 1.5}, "A1": {"x": 11.6, "y": 12.55, "sh": "a", "t": "Kör lekapcsoltatása telefonon,\nsoron kívüli kiszállás,\nöt szabály", "w": 3.6, "h": 1.05}, "A2": {"x": 6.7, "y": 11.0, "sh": "a", "t": "Helyszíni szemle + mérés", "w": 3.3, "h": 0.7}, "Q2": {"x": 6.7, "y": 9.65, "sh": "q", "t": "A hiba a saját\nmunkám?", "w": 2.9, "h": 1.25}, "Q3": {"x": 2.6, "y": 8.1, "sh": "q", "t": "Vállalási időn\nbelül?", "w": 2.9, "h": 1.25}, "Q4": {"x": 9.4, "y": 8.1, "sh": "q", "t": "Termékhiba?", "w": 2.9, "h": 1.25}, "A3": {"x": 1.35, "y": 6.3, "sh": "a", "t": "Ingyenes javítás +\njavítási jegyzőkönyv", "w": 2.55, "h": 1.05}, "A4": {"x": 4.05, "y": 6.3, "sh": "a", "t": "Ajánlat, de\nméltányosság\nmérlegelése", "w": 2.3, "h": 1.05}, "A5": {"x": 6.85, "y": 6.3, "sh": "a", "t": "Gyártói garancia:\ncsere, közreműködés,\nmunkadíj a vállalás\nszerint", "w": 2.75, "h": 1.3}, "Q5": {"x": 11.0, "y": 6.3, "sh": "q", "t": "Ügyfél vagy\nidegen okozta?", "w": 2.9, "h": 1.25}, "A6": {"x": 9.6, "y": 4.45, "sh": "a", "t": "Mérési bizonyíték +\nfizetős ajánlat", "w": 2.5, "h": 1.05}, "A7": {"x": 12.3, "y": 4.45, "sh": "a", "t": "Ok tisztázatlan:\ntovábbi vizsgálat\n(pl. hálózat)", "w": 2.5, "h": 1.05}, "D": {"x": 6.7, "y": 2.75, "sh": "a", "t": "Dokumentálás: panaszlap, mérési jegyzőkönyv, lezárás az ügyfél aláírásával", "w": 11.8, "h": 0.7}, "V": {"x": 6.7, "y": 1.45, "sh": "e", "t": "Visszajelzés kérése", "w": 2.95, "h": 0.75}}, "edges": [{"id": "S-Q1", "lab": "", "p": [[6.7, 13.625], [6.7, 13.3]]}, {"id": "Q1-A1", "lab": "igen", "p": [[8.55, 12.55], [9.799999999999999, 12.55]]}, {"id": "Q1-A2", "lab": "nem", "p": [[6.7, 11.8], [6.7, 11.35]]}, {"id": "A1-A2", "lab": "", "p": [[11.6, 12.025], [11.6, 11.0], [8.35, 11.0]]}, {"id": "A2-Q2", "lab": "", "p": [[6.7, 10.65], [6.7, 10.275]]}, {"id": "Q2-Q3", "lab": "igen", "p": [[5.25, 9.65], [2.6, 9.65], [2.6, 8.725]]}, {"id": "Q2-Q4", "lab": "nem", "p": [[8.15, 9.65], [9.4, 9.65], [9.4, 8.725]]}, {"id": "Q3-A3", "lab": "igen", "p": [[1.1500000000000001, 8.1], [1.35, 8.1], [1.35, 6.825]]}, {"id": "Q3-A4", "lab": "nem", "p": [[4.05, 8.1], [4.05, 8.1], [4.05, 6.825]]}, {"id": "Q4-A5", "lab": "igen", "p": [[7.95, 8.1], [6.85, 8.1], [6.85, 6.95]]}, {"id": "Q4-Q5", "lab": "nem", "p": [[10.85, 8.1], [11.0, 8.1], [11.0, 6.925]]}, {"id": "Q5-A6", "lab": "igen", "p": [[9.55, 6.3], [9.6, 6.3], [9.6, 4.9750000000000005]]}, {"id": "Q5-A7", "lab": "nem", "p": [[12.45, 6.3], [12.3, 6.3], [12.3, 4.9750000000000005]]}, {"id": "A3-D", "lab": "", "p": [[1.35, 5.7749999999999995], [1.35, 3.1]]}, {"id": "A4-D", "lab": "", "p": [[4.05, 5.7749999999999995], [4.05, 3.1]]}, {"id": "A5-D", "lab": "", "p": [[6.85, 5.6499999999999995], [6.85, 3.1]]}, {"id": "A6-D", "lab": "", "p": [[9.6, 3.9250000000000003], [9.6, 3.1]]}, {"id": "A7-D", "lab": "", "p": [[12.3, 3.9250000000000003], [12.3, 3.1]]}, {"id": "D-V", "lab": "", "p": [[6.7, 2.4], [6.7, 1.825]]}]};
+const SC = 46, X = x => (x + 0.1) * SC, Y = y => (14.6 - y) * SC;
+function render(s) {
+  svg.setAttribute("viewBox", "0 0 640 640");
+  svg.innerHTML = "";
+  const fg = css("--fg"), hl = css("--hl"), mu = css("--muted");
+  const visited = new Set(), vedges = new Set();
+  for (let i = 0; i <= k; i++) { visited.add(STEPS[i].node); STEPS[i].edges.forEach(e => vedges.add(e)); }
+  D.edges.forEach(e => {
+    const on = vedges.has(e.id);
+    el("polyline", {points: e.p.map(q => X(q[0]) + "," + Y(q[1])).join(" "), fill: "none", stroke: on ? hl : mu,
+      "stroke-width": on ? 3 : 1.2, "marker-end": "url(#ah)"});
+    if (e.lab) { const a = e.p[0], b = e.p[1], hz = Math.abs(a[1] - b[1]) < 1e-6;
+      el("text", {x: hz ? (X(a[0]) + X(b[0])) / 2 : X(a[0]) + 5, y: hz ? Y(a[1]) - 4 : (Y(a[1]) + Y(b[1])) / 2, fill: fg,
+        "font-size": 11, "font-style": "italic", "text-anchor": hz ? "middle" : "start"}, e.lab); }
+  });
+  const defs = el("defs", {}); const m = document.createElementNS(NS, "marker");
+  [["id","ah"],["viewBox","0 0 10 10"],["refX","9"],["refY","5"],["markerWidth","7"],["markerHeight","7"],["orient","auto"]].forEach(([k,v]) => m.setAttribute(k, v));
+  const pa = document.createElementNS(NS, "path"); pa.setAttribute("d", "M0,0 L10,5 L0,10 z"); pa.setAttribute("fill", fg); m.appendChild(pa); defs.appendChild(m);
+  for (const key in D.nodes) {
+    const n = D.nodes[key], cx = X(n.x), cy = Y(n.y), w = n.w * SC, h = n.h * SC, now = STEPS[k].node === key, seen = visited.has(key);
+    const st = {fill: now ? css("--cellhl") : css("--bg"), stroke: now ? hl : fg, "stroke-width": now ? 3 : (seen ? 1.8 : 1)};
+    if (n.sh === "q") el("polygon", Object.assign({points: `${cx - w / 2},${cy} ${cx},${cy - h / 2} ${cx + w / 2},${cy} ${cx},${cy + h / 2}`}, st));
+    else { el("rect", Object.assign({x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 8}, st));
+      if (n.sh === "e") el("rect", {x: cx - w / 2 + 4, y: cy - h / 2 + 4, width: w - 8, height: h - 8, rx: 6, fill: "none", stroke: fg}); }
+    const L = n.t.split("\n");
+    L.forEach((t, i) => el("text", {x: cx, y: cy + (i - (L.length - 1) / 2) * 12 + 4, "text-anchor": "middle", "font-size": 10.5,
+      fill: seen ? fg : mu, "font-weight": n.sh === "s" || n.sh === "e" ? "bold" : "normal"}, t));
+  }
+}
+
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.textContent = s.msg || "";
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 1600);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

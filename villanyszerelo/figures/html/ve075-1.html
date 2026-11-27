@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hálózati rendszerek: a hibaáram útja</title>
+<title>Hálózati rendszerek: a hibaáram útja és a védelem</title>
 <style>:root{--fg:#111;--bg:#fff;--muted:#555;--line:#000;--cur:#d32f2f;--ok:#2e7d32;--bad:#b71c1c;--box:#f3f3f3;
 --coil:#ffe0b2;--lamp:#ffd54f;--btn:#e8eefc;--btnb:#1f4e79;--grid:#d9d9d9;--brown:#8d5524;--blue:#4fb3ee;--ge1:#2e9d3a;--ge2:#f2d600}
 @media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--line:#e6e6e6;--cur:#ff8a80;--ok:#81c784;--bad:#ef9a9a;--box:#2a2a2a;
@@ -23,12 +23,17 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 code,.mono{font-family:ui-monospace,Consolas,monospace}</style>
 </head>
 <body>
-<div class="bar"><button data-k="0" aria-pressed="true">TN-C</button><button data-k="1">TN-C-S</button>
-<button data-k="2">TT</button><button data-k="3">IT</button>
-<button id="bf" aria-pressed="true">testzárlat</button><button id="bp" aria-pressed="false">PEN-szakadás a szétválasztás előtt (TN-C-S)</button></div>
-<div id="st" aria-live="polite"></div>
-<svg id="v" role="img" aria-label="Négy hálózati rendszer kapcsolása, a testzárlati áram útja kiemelve: TN-ben fémes hurok a PE/PEN-en, TT-ben a két földelőn és a talajon át, IT-ben a szórt kapacitásokon át."></svg>
-<p class="small">Egyfázisú elvi szemléltetés (IT-ben az L2, L3 a szórt kapacitás visszaútjához). Vonalak: PEN vastag, PE pont-vonal; a piros szaggatott vonal a hibaáram útja. A számok tanulási értékek (ellenőrizendő: MSZ HD 60364-4-41).</p>
+<div class="bar" role="group" aria-label="Hálózati rendszer"><span>Rendszer:</span>
+<button data-k="0">TN-C</button><button data-k="1">TN-S</button><button data-k="2" aria-pressed="true">TN-C-S</button>
+<button data-k="3">TT</button><button data-k="4">IT</button></div>
+<div class="bar" role="group" aria-label="Lépés"><button id="prev" aria-label="Előző lépés">◀</button>
+<button data-s="1">1 ép</button><button data-s="2">2 testzárlat</button><button data-s="3">3 hibaáram</button>
+<button data-s="4">4 érintés</button><button data-s="5">5 védelem</button><button id="next" aria-label="Következő lépés">▶</button>
+<button id="bp" aria-pressed="false">PEN-szakadás a szétválasztás előtt</button></div>
+<div id="st" aria-live="polite" style="min-height:4.6em"></div>
+<svg id="v" role="img" aria-label="Egy hálózati rendszer elvi rajza: transzformátor, F1 kismegszakító, (Q2 FI), fogyasztó fém teste, a testet érintő ember és az érintési feszültség mérője; a kiválasztott lépés szerint kiemelt áramúttal."></svg>
+<p id="info" class="small"></p>
+<p class="small">Egyfázisú elvi szemléltetés; a ◀/▶ gombokkal vagy a nyílbillentyűkkel léptethető. Mintaadatok: Z<sub>e</sub> = 0,35 Ω (ebből PEN 0,15 Ω), R<sub>1</sub> = R<sub>2</sub> = 0,175 Ω (25 m, 2,5 mm², hidegen), R<sub>A</sub> = 30 Ω, R<sub>B</sub> = 2 Ω, R<sub>iso</sub> = 100 kΩ. Tanulási értékek (ellenőrizendő: MSZ HD 60364-4-41).</p>
 <script>
 
 const NS="http://www.w3.org/2000/svg";
@@ -60,7 +65,7 @@ function dev(kind,a,b,o){o=o||{};
   const cx=(A[0]+B[0])/2,cy=(A[1]+B[1])/2,h=30,g=mk("g",{transform:"translate("+cx+","+cy+") rotate("+ang+")"});
   const line=css("--line"),cur=css("--cur"),sw=2.2;
   const seg=(x1,y1,x2,y2,c,w,extra)=>mk("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:c||line,"stroke-width":w||sw,"stroke-linecap":"round"},extra||{}),g);
-  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res")?true:!!o.closed;
+  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res"||kind==="fuse")?true:!!o.closed;
   // áram alatti halo (a kivezetések és a záródott test)
   if(o.l1)seg(-L/2,0,-h,0,cur,6.5,{opacity:.9});
   if(o.l2)seg(h,0,L/2,0,cur,6.5,{opacity:.9});
@@ -75,7 +80,8 @@ function dev(kind,a,b,o){o=o||{};
     if(kind==="pbno"||kind==="pbnc"){const d=o.pressed?9:0;                // nyomógomb-működtető (T-alak)
       seg(0,-8+d,0,-30+d,line,1.8,{"stroke-dasharray":"4 3"});seg(-9,-30+d,9,-30+d,line,3);}
     if(kind==="sw"){seg(0,-12,0,-26,line,1.8,{"stroke-dasharray":"4 3"});seg(-8,-26,8,-26,line,3);}
-    if(kind==="mcb"){seg(-6,-6,6,-18,line,2);seg(6,-6,-6,-18,line,2);}   // kismegszakító: kézi működtetés jele
+    if(kind==="mcb"){const dy=o.closed?12:0;                              // kismegszakító: a túláramkioldó X-e a késsel együtt mozog
+      seg(-6,-6+dy,6,-18+dy,line,2);seg(6,-6+dy,-6,-18+dy,line,2);}
     if(o.delay==="on"||o.delay==="off"){seg(0,-10,0,-28,line,1.8);       // késleltetett érintkező (időrelé): ejtőernyő-ív
       mk("path",{d:"M -9 -28 A 9 9 0 0 "+(o.delay==="on"?1:0)+" 9 -28",fill:"none",stroke:line,"stroke-width":2},g);}
   }else if(kind==="coil"){
@@ -84,6 +90,10 @@ function dev(kind,a,b,o){o=o||{};
   }else if(kind==="thermal"){
     mk("rect",{x:-h,y:-17,width:2*h,height:34,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);
     mk("polyline",{points:"-14,0 -7,-9 0,9 7,-9 14,0",fill:"none",stroke:line,"stroke-width":2},g);
+  }else if(kind==="res"){                                                  // ellenállás (IEC téglalap)
+    mk("rect",{x:-h,y:-9,width:2*h,height:18,fill:o.body?css("--coil"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+  }else if(kind==="fuse"){                                                 // olvadóbiztosító: téglalap, középvonal
+    mk("rect",{x:-h,y:-10,width:2*h,height:20,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);seg(-h,0,h,0,line,2);
   }else if(kind==="lamp"){
     mk("circle",{cx:0,cy:0,r:17,fill:o.body?css("--lamp"):css("--bg"),stroke:line,"stroke-width":2.2},g);
     seg(-12,-12,12,12,line,2);seg(-12,12,12,-12,line,2);
@@ -116,43 +126,85 @@ function hold(el,down,up){let on=false;const d=e=>{if(!on){on=true;down();}},u=e
 function pulse(down,up,ms){down();setTimeout(up,ms||600);}
 
 
-const SYS=[{"name": "TN-C", "lines": [[[[1.3, 6.2], [8.0, 6.2], [8.0, 3.6]], "L"], [[[1.3, 5.0], [2.2, 5.0], [2.2, 1.0]], "PEN"], [[[2.2, 5.0], [10.3, 5.0], [10.3, 2.8], [9.6, 2.8]], "PEN"], [[[9.0, 5.0], [9.0, 3.6]], "PEN"]], "grounds": [[2.2, 1.0, "R_B"]], "caps": [], "texts": [[1.45, 6.45, "L1", "left"], [4.5, 5.25, "PEN", "center"]], "path": [[1.3, 6.2], [8.0, 6.2], [8.0, 3.2], [8.0, 2.8], [10.3, 2.8], [10.3, 5.0], [1.3, 5.0]], "info": "TN-C: fémes hurok a PEN-en át; kis hurokimpedancia, száz A nagyságrendű hibaáram → a túláramvédelem gyorsan old."}, {"name": "TN-C-S", "lines": [[[[1.3, 6.2], [8.0, 6.2], [8.0, 3.6]], "L"], [[[1.3, 5.0], [2.2, 5.0], [2.2, 1.0]], "PEN"], [[[2.2, 5.0], [5.0, 5.0]], "PEN"], [[[5.0, 5.0], [9.0, 5.0], [9.0, 3.6]], "N"], [[[5.0, 5.0], [5.0, 4.4], [10.3, 4.4], [10.3, 2.8], [9.6, 2.8]], "PE"], [[[5.8, 4.4], [5.8, 1.0]], "PE"]], "grounds": [[2.2, 1.0, "R_B"], [5.8, 1.0, "ism."]], "caps": [], "texts": [[1.45, 6.45, "L1", "left"], [3.6, 5.25, "PEN", "center"], [7.0, 5.25, "N", "center"], [6.6, 4.1000000000000005, "PE", "center"]], "path": [[1.3, 6.2], [8.0, 6.2], [8.0, 3.2], [8.0, 2.8], [10.3, 2.8], [10.3, 4.4], [5.0, 4.4], [5.0, 5.0], [1.3, 5.0]], "info": "TN-C-S: a hibaáram a PE-n, majd a PEN-en tér vissza; fémes hurok, száz A nagyságrend → a túláramvédelem old."}, {"name": "TT", "lines": [[[[1.3, 6.2], [8.0, 6.2], [8.0, 3.6]], "L"], [[[1.3, 5.0], [2.2, 5.0], [2.2, 1.0]], "N"], [[[2.2, 5.0], [9.0, 5.0], [9.0, 3.6]], "N"], [[[9.6, 2.8], [10.3, 2.8], [10.3, 1.0]], "PE"]], "grounds": [[2.2, 1.0, "R_B"], [10.3, 1.0, "R_A"]], "caps": [], "texts": [[1.45, 6.45, "L1", "left"], [5.5, 5.25, "N", "center"]], "path": [[1.3, 6.2], [8.0, 6.2], [8.0, 3.2], [8.0, 2.8], [10.3, 2.8], [10.3, 0.5], [2.2, 0.5], [2.2, 5.0], [1.3, 5.0]], "info": "TT: a hibaáram a két földelőn (R_A, R_B) és a talajon át folyik; néhány A → FI kell (R_A ≤ 50 V / 0,3 A = 166,7 Ω)."}, {"name": "IT", "lines": [[[[1.3, 6.2], [8.0, 6.2], [8.0, 3.6]], "L"], [[[1.3, 6.8], [5.5, 6.8], [5.5, 1.0]], "L"], [[[9.6, 2.8], [10.3, 2.8], [10.3, 1.0]], "PE"]], "grounds": [[10.3, 1.0, "R_A"], [5.5, 1.0, ""]], "caps": [[5.5, 3.9]], "texts": [[1.45, 6.45, "L1", "left"], [1.45, 7.05, "L2, L3", "left"], [5.95, 3.9, "szórt C", "left"], [1.4000000000000001, 3.9, "csillagpont\nszigetelt", "left"]], "path": [[1.3, 6.2], [8.0, 6.2], [8.0, 3.2], [8.0, 2.8], [10.3, 2.8], [10.3, 0.5], [5.5, 0.5], [5.5, 6.8], [1.3, 6.8]], "info": "IT: az első hibánál a hurok csak a szórt kapacitáson/szigetelésen át záródik: mA nagyságrend (230 V / 100 kΩ = 2,3 mA) → nem old ki, a szigetelésfigyelő jelez."}];
-const st={k:0,fault:true,pen:false};
-function render(){const s=SYS[st.k];initSvg("v",0,-0.6,11.2,7.6,52);
- const pen=st.pen&&s.name==="TN-C-S";
- mk("rect",{x:P(0.2,0)[0],y:P(0,s.name==="IT"?7.2:6.6)[1],width:1.1*U,height:(s.name==="IT"?2.6:2.0)*U,fill:"none",stroke:css("--line"),"stroke-width":2});
- text(0.75,5.6,"T",{size:16});
- const b=[7.0,2.0,2.6,1.6];
- mk("rect",{x:P(b[0],0)[0],y:P(0,b[1]+b[3])[1],width:b[2]*U,height:b[3]*U,fill:pen?css("--cur"):css("--box"),"fill-opacity":pen?0.35:1,stroke:css("--line"),"stroke-width":2.4});
- text(8.3,2.3,"fogyasztó teste",{size:12});
- mk("rect",{x:P(8.3,0)[0],y:P(0,3.35)[1],width:0.6*U,height:0.3*U,fill:css("--bg"),stroke:css("--line"),"stroke-width":1.5});
- wire([[8,3.6],[8,3.2],[8.3,3.2]]);wire([[8.9,3.2],[9,3.2],[9,3.6]]);text(8.3,1.6,"testzárlat:",{size:12});text(8.3,1.25,"L a testen (nyíl)",{size:12});
- const SW={L:2.4,N:2,PEN:4.2,PE:2.2};
- s.lines.forEach(l=>{const pts=l[0].map(q=>P(q[0],q[1]).join(",")).join(" ");
-   mk("polyline",{points:pts,fill:"none",stroke:css("--line"),"stroke-width":SW[l[1]],"stroke-dasharray":l[1]==="PE"?"10 4 2 4":"none","stroke-linejoin":"round"});});
- if(pen){const q=P(3.6,5.0);mk("rect",{x:q[0]-10,y:q[1]-9,width:20,height:18,fill:css("--bg")});text(3.6,5.0,"✕",{size:18,fill:css("--bad")});}
- s.grounds.forEach(g=>{[0.35,0.22,0.1].forEach((w,i)=>{const a=P(g[0]-w,g[1]-0.12*i),c=P(g[0]+w,g[1]-0.12*i);mk("line",{x1:a[0],y1:a[1],x2:c[0],y2:c[1],stroke:css("--line"),"stroke-width":2.2});});
-   if(g[2])text(g[0]+0.3,g[1]+0.3,g[2],{size:13,anchor:"start"});});
- s.caps.forEach(c=>{const a=P(c[0]-0.3,c[1]+0.12),d=P(c[0]+0.3,c[1]-0.12),m1=P(c[0],c[1]+0.12),m2=P(c[0],c[1]-0.12);
-   mk("rect",{x:a[0],y:a[1],width:d[0]-a[0],height:d[1]-a[1],fill:css("--bg")});
-   mk("line",{x1:a[0],y1:a[1],x2:d[0],y2:a[1],stroke:css("--line"),"stroke-width":2.6});mk("line",{x1:a[0],y1:d[1],x2:d[0],y2:d[1],stroke:css("--line"),"stroke-width":2.6});});
- s.texts.forEach(t=>{t[2].split("\n").forEach((ln,i)=>text(t[0],t[1]-i*0.32,ln,{size:12,anchor:t[3]==="left"?"start":t[3]==="center"?"middle":"end"}));});
- const g1=P(0,0.25),g2=P(11.2,0.25);mk("line",{x1:g1[0],y1:g1[1],x2:g2[0],y2:g2[1],stroke:css("--muted")});text(10.9,0.0,"talaj",{size:12,anchor:"end",fill:css("--muted")});
+const SYS=[{"name": "TN-C", "parts": [["trafo", {"x": 0.2, "y": 4.9, "w": 1.4, "h": 2.4}], ["mcb", {"x1": 4.4, "x2": 5.6, "y": 6.6, "label": "F1", "sub": "B16", "below": false}], ["text", {"x": 1.75, "y": 6.8999999999999995, "s": "L1", "al": "left"}], ["res", {"x": 9.0, "y1": 3.3, "y2": 4.1}], ["dot", {"x": 10.0, "y": 5.8}], ["text", {"x": 3.1, "y": 6.1, "s": "PEN", "al": "center"}], ["dot", {"x": 2.2, "y": 5.8}], ["ground", {"x": 2.2, "y": 1.1, "label": "R_B", "side": "left"}], ["body", {"x": 8.6, "y": 2.4, "w": 2.8, "h": 2.0}], ["fault", {"pts": [[9.0, 3.75], [8.85, 3.6], [8.95, 3.45], [8.6, 3.3]]}], ["person", {"x": 7.35, "y": 0.8, "hand": [8.6, 3.0]}], ["meter", {"x": 9.0, "y": 1.6, "top": 2.4, "bot": 0.8}]], "wires": [[[[1.6, 6.6], [4.4, 6.6]], "L"], [[[5.6, 6.6], [9.0, 6.6], [9.0, 4.4]], "L"], [[[9.0, 4.4], [9.0, 4.05]], "L"], [[[9.0, 3.3], [9.0, 3.05], [10.6, 3.05], [10.6, 4.4]], "PEN"], [[[1.6, 5.8], [10.6, 5.8], [10.6, 4.4]], "PEN"], [[[10.0, 5.8], [10.0, 4.4]], "PEN"], [[[2.2, 5.8], [2.2, 1.1]], "E"]], "fpath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.75], [8.6, 3.3], [8.6, 4.4], [10.0, 4.4], [10.0, 5.8], [1.6, 5.8]], "npath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.05], [10.6, 3.05], [10.6, 5.8], [1.6, 5.8]], "info": ["Z_s = 0,35 + 0,175 + 0,175 = 0,70 Ω → I_k ≈ 329 A", "329 A > I_a = 80 A (B16) → F1 old (< 0,1 s)", "U_t ≈ 57,5 V (fő EPH-hoz), ≈ 107 V (távoli földhöz)"], "steps": ["<b>1. Ép állapot.</b> Az üzemi áram L1-en a fogyasztóhoz folyik, és a PEN-en tér vissza. A test feszültségmentes, a védővezetőn nem folyik áram (a TN-C-ben a test a PEN-re kötött, így a PEN feszültségesése a testen is megjelenik).", "<b>2. Testzárlat.</b> A fűtőelem L1 felőli vezetéke a fém házhoz ér (villám jel): a test a fázisvezető potenciáljára kerül, és a hibaáram a test védővezetőjén át keres utat.", "<b>3. A hibaáram útja</b> fémes: L1 → F1 → a test → a PEN-en vissza a transzformátor csillagpontjához. Z<sub>s</sub> = Z<sub>e</sub> + R<sub>1</sub> + R<sub>2</sub> = 0,35 + 0,175 + 0,175 = 0,70 Ω, I<sub>k</sub> = 230 V / 0,70 Ω ≈ <b>329 A</b>.", "<b>4. Az ember megérinti a testet.</b> A test és a fő EPH-hoz kötött padló/cső között U<sub>t</sub> ≈ I<sub>k</sub>·R<sub>2</sub> = 329 A · 0,175 Ω ≈ <b>57,5 V</b>; a távoli földhöz képest ≈ 329 A · (0,175 + 0,15) Ω ≈ 107 V. Ez a lekapcsolásig veszélyes, ezért kell a gyors lekapcsolás.", "<b>5. A védelem működik.</b> Az 329 A-es hibaáram több mint négyszerese a B16 kismegszakító 80 A-es azonnali kioldási áramának, ezért <b>F1 mágneses kioldója</b> 0,1 s-on belül lekapcsol. FI-relé itt nem alkalmazható: a PEN-en folyó üzemi áram miatt a FI nem tudná szétválasztani az üzemi és a hibaáramot."], "trip": {"F1": "old"}, "q2": false, "num": {"Z_s": "0,70", "I_k": "329", "U_t_eph": "57,5", "U_t_tav": "107", "I_f": "7,1", "U_t_tt": "213", "I_d": "2,3", "U_t_it": "0,07"}}, {"name": "TN-S", "parts": [["trafo", {"x": 0.2, "y": 4.9, "w": 1.4, "h": 2.4}], ["mcb", {"x1": 4.4, "x2": 5.6, "y": 6.6, "label": "F1", "sub": "B16", "below": false}], ["text", {"x": 1.75, "y": 6.8999999999999995, "s": "L1", "al": "left"}], ["res", {"x": 9.0, "y1": 3.3, "y2": 4.1}], ["dot", {"x": 2.2, "y": 5.0}], ["text", {"x": 3.1, "y": 6.1, "s": "N", "al": "center"}], ["text", {"x": 3.1, "y": 4.68, "s": "PE", "al": "center"}], ["dot", {"x": 2.2, "y": 5.8}], ["ground", {"x": 2.2, "y": 1.1, "label": "R_B", "side": "left"}], ["body", {"x": 8.6, "y": 2.4, "w": 2.8, "h": 2.0}], ["fault", {"pts": [[9.0, 3.75], [8.85, 3.6], [8.95, 3.45], [8.6, 3.3]]}], ["person", {"x": 7.35, "y": 0.8, "hand": [8.6, 3.0]}], ["meter", {"x": 9.0, "y": 1.6, "top": 2.4, "bot": 0.8}]], "wires": [[[[1.6, 6.6], [4.4, 6.6]], "L"], [[[5.6, 6.6], [9.0, 6.6], [9.0, 4.4]], "L"], [[[9.0, 4.4], [9.0, 4.05]], "L"], [[[9.0, 3.3], [9.0, 3.05], [10.6, 3.05], [10.6, 4.4]], "N"], [[[1.6, 5.8], [10.6, 5.8], [10.6, 4.4]], "N"], [[[2.2, 5.0], [10.0, 5.0], [10.0, 4.4]], "PE"], [[[2.2, 5.8], [2.2, 1.1]], "E"]], "fpath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.75], [8.6, 3.3], [8.6, 4.4], [10.0, 4.4], [10.0, 5.0], [2.2, 5.0], [2.2, 5.8], [1.6, 5.8]], "npath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.05], [10.6, 3.05], [10.6, 5.8], [1.6, 5.8]], "info": ["Z_s = 0,35 + 0,175 + 0,175 = 0,70 Ω → I_k ≈ 329 A", "329 A > I_a = 80 A (B16) → F1 old (< 0,1 s)", "U_t ≈ 57,5 V (fő EPH-hoz), ≈ 107 V (távoli földhöz)"], "steps": ["<b>1. Ép állapot.</b> Az üzemi áram L1-en a fogyasztóhoz folyik, és az N-en tér vissza. A test feszültségmentes, a védővezetőn nem folyik áram.", "<b>2. Testzárlat.</b> A fűtőelem L1 felőli vezetéke a fém házhoz ér (villám jel): a test a fázisvezető potenciáljára kerül, és a hibaáram a test védővezetőjén át keres utat.", "<b>3. A hibaáram útja</b> fémes: L1 → F1 → a test → a PE-n vissza a transzformátor csillagpontjához. Z<sub>s</sub> = Z<sub>e</sub> + R<sub>1</sub> + R<sub>2</sub> = 0,35 + 0,175 + 0,175 = 0,70 Ω, I<sub>k</sub> = 230 V / 0,70 Ω ≈ <b>329 A</b>.", "<b>4. Az ember megérinti a testet.</b> A test és a fő EPH-hoz kötött padló/cső között U<sub>t</sub> ≈ I<sub>k</sub>·R<sub>2</sub> = 329 A · 0,175 Ω ≈ <b>57,5 V</b>; a távoli földhöz képest ≈ 329 A · (0,175 + 0,15) Ω ≈ 107 V. Ez a lekapcsolásig veszélyes, ezért kell a gyors lekapcsolás.", "<b>5. A védelem működik.</b> Az 329 A-es hibaáram több mint négyszerese a B16 kismegszakító 80 A-es azonnali kioldási áramának, ezért <b>F1 mágneses kioldója</b> 0,1 s-on belül lekapcsol."], "trip": {"F1": "old"}, "q2": false, "num": {"Z_s": "0,70", "I_k": "329", "U_t_eph": "57,5", "U_t_tav": "107", "I_f": "7,1", "U_t_tt": "213", "I_d": "2,3", "U_t_it": "0,07"}}, {"name": "TN-C-S", "parts": [["trafo", {"x": 0.2, "y": 4.9, "w": 1.4, "h": 2.4}], ["mcb", {"x1": 4.4, "x2": 5.6, "y": 6.6, "label": "F1", "sub": "B16", "below": false}], ["rcd", {"x1": 6.5, "x2": 7.7, "yL": 6.6, "yN": 5.8, "label": "Q2 (FI)", "sub": "30 mA"}], ["text", {"x": 1.75, "y": 6.8999999999999995, "s": "L1", "al": "left"}], ["res", {"x": 9.0, "y1": 3.3, "y2": 4.1}], ["ground", {"x": 4.0, "y": 1.1, "label": "ism.\nföldelés", "side": "right"}], ["dot", {"x": 4.0, "y": 5.8}], ["dot", {"x": 4.0, "y": 5.0}], ["text", {"x": 3.05, "y": 6.1, "s": "PEN", "al": "center"}], ["text", {"x": 8.35, "y": 6.1, "s": "N", "al": "center"}], ["text", {"x": 5.4, "y": 4.68, "s": "PE", "al": "center"}], ["dot", {"x": 2.2, "y": 5.8}], ["ground", {"x": 2.2, "y": 1.1, "label": "R_B", "side": "left"}], ["body", {"x": 8.6, "y": 2.4, "w": 2.8, "h": 2.0}], ["fault", {"pts": [[9.0, 3.75], [8.85, 3.6], [8.95, 3.45], [8.6, 3.3]]}], ["person", {"x": 7.35, "y": 0.8, "hand": [8.6, 3.0]}], ["meter", {"x": 9.0, "y": 1.6, "top": 2.4, "bot": 0.8}]], "wires": [[[[1.6, 6.6], [4.4, 6.6]], "L"], [[[5.6, 6.6], [6.5, 6.6]], "L"], [[[7.7, 6.6], [9.0, 6.6], [9.0, 4.4]], "L"], [[[9.0, 4.4], [9.0, 4.05]], "L"], [[[9.0, 3.3], [9.0, 3.05], [10.6, 3.05], [10.6, 4.4]], "N"], [[[1.6, 5.8], [4.0, 5.8]], "PEN"], [[[4.0, 5.8], [6.5, 5.8]], "N"], [[[7.7, 5.8], [10.6, 5.8], [10.6, 4.4]], "N"], [[[4.0, 5.8], [4.0, 5.0], [10.0, 5.0], [10.0, 4.4]], "PE"], [[[4.0, 5.0], [4.0, 1.1]], "E"], [[[2.2, 5.8], [2.2, 1.1]], "E"]], "fpath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.75], [8.6, 3.3], [8.6, 4.4], [10.0, 4.4], [10.0, 5.0], [4.0, 5.0], [4.0, 5.8], [1.6, 5.8]], "npath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.05], [10.6, 3.05], [10.6, 5.8], [1.6, 5.8]], "info": ["Z_s = 0,35 + 0,175 + 0,175 = 0,70 Ω → I_k ≈ 329 A", "329 A > I_a = 80 A (B16) → F1 old (< 0,1 s), Q2 is old", "U_t ≈ 57,5 V (fő EPH-hoz), ≈ 107 V (távoli földhöz)"], "steps": ["<b>1. Ép állapot.</b> Az üzemi áram L1-en a fogyasztóhoz folyik, és az N-en, majd a PEN-en tér vissza. A test feszültségmentes, a védővezetőn nem folyik áram.", "<b>2. Testzárlat.</b> A fűtőelem L1 felőli vezetéke a fém házhoz ér (villám jel): a test a fázisvezető potenciáljára kerül, és a hibaáram a test védővezetőjén át keres utat.", "<b>3. A hibaáram útja</b> fémes: L1 → F1 → a test → a PE-n, majd a PEN-en vissza a transzformátor csillagpontjához. Z<sub>s</sub> = Z<sub>e</sub> + R<sub>1</sub> + R<sub>2</sub> = 0,35 + 0,175 + 0,175 = 0,70 Ω, I<sub>k</sub> = 230 V / 0,70 Ω ≈ <b>329 A</b>.", "<b>4. Az ember megérinti a testet.</b> A test és a fő EPH-hoz kötött padló/cső között U<sub>t</sub> ≈ I<sub>k</sub>·R<sub>2</sub> = 329 A · 0,175 Ω ≈ <b>57,5 V</b>; a távoli földhöz képest ≈ 329 A · (0,175 + 0,15) Ω ≈ 107 V. Ez a lekapcsolásig veszélyes, ezért kell a gyors lekapcsolás.", "<b>5. A védelem működik.</b> Az 329 A-es hibaáram több mint négyszerese a B16 kismegszakító 80 A-es azonnali kioldási áramának, ezért <b>F1 mágneses kioldója</b> 0,1 s-on belül lekapcsol. A hibaáram a PE-n tér vissza, tehát a Q2 FI-relé is érzékeli és kiold – amelyik gyorsabb, az bontja a kört."], "trip": {"F1": "old", "Q2": "old"}, "q2": true, "num": {"Z_s": "0,70", "I_k": "329", "U_t_eph": "57,5", "U_t_tav": "107", "I_f": "7,1", "U_t_tt": "213", "I_d": "2,3", "U_t_it": "0,07"}}, {"name": "TT", "parts": [["trafo", {"x": 0.2, "y": 4.9, "w": 1.4, "h": 2.4}], ["mcb", {"x1": 4.4, "x2": 5.6, "y": 6.6, "label": "F1", "sub": "B16", "below": false}], ["rcd", {"x1": 6.5, "x2": 7.7, "yL": 6.6, "yN": 5.8, "label": "Q2 (FI)", "sub": "30 mA"}], ["text", {"x": 1.75, "y": 6.8999999999999995, "s": "L1", "al": "left"}], ["res", {"x": 9.0, "y1": 3.3, "y2": 4.1}], ["text", {"x": 3.1, "y": 6.1, "s": "N", "al": "center"}], ["dot", {"x": 2.2, "y": 5.8}], ["ground", {"x": 2.2, "y": 1.1, "label": "R_B", "side": "left"}], ["ground", {"x": 12.2, "y": 1.1, "label": "R_A", "side": "left"}], ["body", {"x": 8.6, "y": 2.4, "w": 2.8, "h": 2.0}], ["fault", {"pts": [[9.0, 3.75], [8.85, 3.6], [8.95, 3.45], [8.6, 3.3]]}], ["person", {"x": 7.35, "y": 0.8, "hand": [8.6, 3.0]}], ["meter", {"x": 9.0, "y": 1.6, "top": 2.4, "bot": 0.8}]], "wires": [[[[1.6, 6.6], [4.4, 6.6]], "L"], [[[5.6, 6.6], [6.5, 6.6]], "L"], [[[7.7, 6.6], [9.0, 6.6], [9.0, 4.4]], "L"], [[[9.0, 4.4], [9.0, 4.05]], "L"], [[[9.0, 3.3], [9.0, 3.05], [10.6, 3.05], [10.6, 4.4]], "N"], [[[1.6, 5.8], [6.5, 5.8]], "N"], [[[7.7, 5.8], [10.6, 5.8], [10.6, 4.4]], "N"], [[[2.2, 5.8], [2.2, 1.1]], "E"], [[[11.399999999999999, 3.6], [12.2, 3.6], [12.2, 1.1]], "PE"]], "fpath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.75], [8.6, 3.3], [8.6, 4.4], [11.399999999999999, 4.4], [11.399999999999999, 3.6], [12.2, 3.6], [12.2, 0.55], [2.2, 0.55], [2.2, 5.8], [1.6, 5.8]], "npath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.05], [10.6, 3.05], [10.6, 5.8], [1.6, 5.8]], "info": ["I_f = 230 V / (30 + 2 + 0,35) Ω ≈ 7,1 A", "7,1 A ≪ 80 A: F1 NEM old; Q2 (30 mA) old", "U_t ≈ 7,1 A · 30 Ω ≈ 213 V a lekapcsolásig"], "steps": ["<b>1. Ép állapot.</b> Az üzemi áram L1-en a fogyasztóhoz folyik, és az N-en tér vissza. A test feszültségmentes, a védővezetőn nem folyik áram.", "<b>2. Testzárlat.</b> A fűtőelem L1 felőli vezetéke a fém házhoz ér (villám jel): a test a fázisvezető potenciáljára kerül, és a hibaáram a test védővezetőjén át keres utat.", "<b>3. A hibaáram útja:</b> L1 → F1 → Q2 → a test → R<sub>A</sub> → talaj → R<sub>B</sub> → csillagpont. I<sub>f</sub> = 230 V / (R<sub>A</sub> + R<sub>B</sub> + Z<sub>e</sub>) = 230 V / 32,35 Ω ≈ <b>7,1 A</b>.", "<b>4. Az ember megérinti a testet.</b> A test potenciálja a talajhoz képest U<sub>t</sub> ≈ I<sub>f</sub>·R<sub>A</sub> = 7,1 A · 30 Ω ≈ <b>213 V</b> – szinte a teljes fázisfeszültség.", "<b>5. A védelem:</b> a kismegszakító a 7,1 A-es hibát <span class=\"bad\">egyáltalán nem érzékeli</span> (80 A kellene a gyors kioldáshoz, és a 16 A-es névleges áram alatt még a hőkioldó sem működik). A <b>Q2 FI-relé</b> viszont a 30 mA-nél több mint kétszázszor nagyobb differenciaáramot érzékeli és lekapcsol (kioldási idők: 21.4, ellenőrizendő). FI nélkül a test tartósan 213 V-on maradna."], "trip": {"F1": "nem", "Q2": "old"}, "q2": true, "num": {"Z_s": "0,70", "I_k": "329", "U_t_eph": "57,5", "U_t_tav": "107", "I_f": "7,1", "U_t_tt": "213", "I_d": "2,3", "U_t_it": "0,07"}}, {"name": "IT", "parts": [["trafo", {"x": 0.2, "y": 4.9, "w": 1.4, "h": 3.0}], ["mcb", {"x1": 4.4, "x2": 5.6, "y": 6.6, "label": "F1", "sub": "B16", "below": true}], ["text", {"x": 1.75, "y": 6.8999999999999995, "s": "L1", "al": "left"}], ["res", {"x": 9.0, "y1": 3.3, "y2": 4.1}], ["ground", {"x": 12.2, "y": 1.1, "label": "R_A", "side": "left"}], ["text", {"x": 1.75, "y": 7.6, "s": "L2 (L3)", "al": "left"}], ["dot", {"x": 6.4, "y": 7.3}], ["res", {"x": 6.4, "y1": 2.55, "y2": 3.75, "label": "R_iso ∥ C", "lab_side": "left"}], ["ground", {"x": 6.4, "y": 1.1, "label": "", "side": "left"}], ["imd", {"x": 2.2, "y1": 2.9, "y2": 4.3}], ["ground", {"x": 2.2, "y": 1.1, "label": "", "side": "left"}], ["text", {"x": 2.45, "y": 5.35, "s": "csillagpont\nnem földelt", "al": "left", "small": true}], ["body", {"x": 8.6, "y": 2.4, "w": 2.8, "h": 2.0}], ["fault", {"pts": [[9.0, 3.75], [8.85, 3.6], [8.95, 3.45], [8.6, 3.3]]}], ["person", {"x": 7.35, "y": 0.8, "hand": [8.6, 3.0]}], ["meter", {"x": 9.0, "y": 1.6, "top": 2.4, "bot": 0.8}]], "wires": [[[[1.6, 6.6], [4.4, 6.6]], "L"], [[[5.6, 6.6], [9.0, 6.6], [9.0, 4.4]], "L"], [[[9.0, 4.4], [9.0, 4.05]], "L"], [[[9.0, 3.3], [9.0, 3.05], [10.6, 3.05], [10.6, 4.4]], "L"], [[[11.399999999999999, 3.6], [12.2, 3.6], [12.2, 1.1]], "PE"], [[[1.6, 7.3], [10.6, 7.3], [10.6, 4.4]], "L"], [[[6.4, 7.3], [6.4, 3.75]], "L"], [[[6.4, 2.55], [6.4, 1.1]], "E"], [[[1.6, 5.8], [2.2, 5.8], [2.2, 4.3]], "E"], [[[2.2, 2.9], [2.2, 1.1]], "E"]], "fpath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.75], [8.6, 3.3], [8.6, 4.4], [11.399999999999999, 4.4], [11.399999999999999, 3.6], [12.2, 3.6], [12.2, 0.55], [6.4, 0.55], [6.4, 7.3], [1.6, 7.3]], "npath": [[1.6, 6.6], [9.0, 6.6], [9.0, 3.05], [10.6, 3.05], [10.6, 7.3], [1.6, 7.3]], "info": ["I_d = 230 V / 100 kΩ = 2,3 mA", "nincs lekapcsolás; a szigetelésfigyelő jelez", "U_t ≈ 2,3 mA · 30 Ω ≈ 0,07 V"], "steps": ["<b>1. Ép állapot.</b> Az üzemi áram L1-en a fogyasztóhoz folyik, és a másik fázisvezetőn tér vissza. A test feszültségmentes, a védővezetőn nem folyik áram.", "<b>2. Testzárlat.</b> A fűtőelem L1 felőli vezetéke a fém házhoz ér (villám jel): a test a fázisvezető potenciáljára kerül, és a hibaáram a test védővezetőjén át keres utat.", "<b>3. A hibaáram útja:</b> L1 → a test → R<sub>A</sub> → talaj → a többi fázis szigetelése és szórt kapacitása (R<sub>iso</sub> ∥ C) → L2, L3. Fémes hurok nincs: I<sub>d</sub> = 230 V / 100 kΩ = <b>2,3 mA</b>.", "<b>4. Az ember megérinti a testet.</b> U<sub>t</sub> ≈ I<sub>d</sub>·R<sub>A</sub> = 2,3 mA · 30 Ω ≈ <b>0,07 V</b> – ártalmatlan. (Kiterjedt hálózatban a szórt kapacitás miatt az áram nagyobb lehet.)", "<b>5. A védelem:</b> az első hibánál <b>nincs lekapcsolás</b> – ez az IT rendszer célja; a <b>szigetelésfigyelő</b> jelez (sárga lámpa), a hibát mielőbb meg kell keresni. A második, másik fázison fellépő hiba már fémes zárlat lenne, akkor a túláramvédelemnek kell lekapcsolnia."], "trip": {"F1": "nem", "IMD": "jelez"}, "q2": false, "num": {"Z_s": "0,70", "I_k": "329", "U_t_eph": "57,5", "U_t_tav": "107", "I_f": "7,1", "U_t_tt": "213", "I_d": "2,3", "U_t_it": "0,07"}}];
+const st={k:2,step:1,pen:false};
+const SW={L:2.6,N:2,PEN:5,PE:2.6,E:2};
+function pl(pts,o){return mk("polyline",Object.assign({points:pts.map(q=>P(q[0],q[1]).join(",")).join(" "),fill:"none","stroke-linejoin":"round","stroke-linecap":"round"},o));}
+function ln(x1,y1,x2,y2,o){const a=P(x1,y1),b=P(x2,y2);return mk("line",Object.assign({x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:css("--line"),"stroke-width":2.4},o||{}));}
+function rect(x,y,w,h,o){const a=P(x,y+h);return mk("rect",Object.assign({x:a[0],y:a[1],width:w*U,height:h*U,fill:css("--bg"),stroke:css("--line"),"stroke-width":2.2},o||{}));}
+function circ(x,y,r,o){const a=P(x,y);return mk("circle",Object.assign({cx:a[0],cy:a[1],r:r*U,fill:css("--bg"),stroke:css("--line"),"stroke-width":2.2},o||{}));}
+function tag(x,y,s,cls){const q=P(x,y);const w=s.length*7.6+16;
+  mk("rect",{x:q[0]-w/2,y:q[1]-13,width:w,height:26,rx:5,fill:cls==="ok"?css("--ok"):cls==="warn"?"#f9a825":css("--bad")});
+  mk("text",{x:q[0],y:q[1],"text-anchor":"middle","dominant-baseline":"central","font-size":13,"font-weight":"bold",fill:cls==="warn"?"#111":css("--bg")},S,s);}
+function sub(s){return s.replace(/_\{?([A-Za-zΔ]+)\}?/g,"$1");}
+function draw(){
+ const s=SYS[st.k],stp=st.step,pen=st.pen&&s.name==="TN-C-S";
+ initSvg("v",-0.2,-0.2,13.0,8.5,56);
+ const fault=stp>=2&&!pen, tripped=stp===5&&s.name!=="IT"&&!pen;
+ // áramút kiemelése
+ if(pen){pl([[1.6,6.6],[9,6.6],[9,3.05],[10.6,3.05],[10.6,5.8],[4,5.8],[4,5],[10,5],[10,4.4]],{stroke:css("--cur"),"stroke-width":9,opacity:.45});}
+ else if(stp===1){pl(s.npath,{stroke:css("--ok"),"stroke-width":9,opacity:.4});}
+ else if(stp>=3&&!tripped){pl(s.fpath,{stroke:css("--cur"),"stroke-width":9,opacity:.45});}
+ // a fogyasztó teste a vezetékek alá
+ s.parts.filter(pp=>pp[0]==="body").forEach(pp=>{const d=pp[1];rect(d.x,d.y,d.w,d.h,{fill:((fault&&!tripped)||pen)?css("--cur"):css("--box"),"fill-opacity":((fault&&!tripped)||pen)?0.28:1,"stroke-width":3});});
+ // vezetékek
+ s.wires.forEach(w=>pl(w[0],{stroke:css("--line"),"stroke-width":SW[w[1]],"stroke-dasharray":w[1]==="PE"?"12 5 3 5":"none"}));
+ if(pen){const q=P(3.0,5.8);mk("rect",{x:q[0]-13,y:q[1]-13,width:26,height:26,fill:css("--bg")});text(3.0,5.8,"✕",{size:22,fill:css("--bad"),bold:true});}
+ s.parts.forEach(pp=>{const k=pp[0],d=pp[1];
+  if(k==="trafo"){rect(d.x,d.y,d.w,d.h);const cx=d.x+d.w/2;circ(cx,d.y+d.h-0.75,0.42,{fill:"none"});circ(cx,d.y+d.h-1.3,0.42,{fill:"none"});text(cx,d.y+0.35,"T",{size:16,bold:true});}
+  else if(k==="mcb"||k==="rcd"){const ys=k==="mcb"?[d.y]:[d.yL,d.yN];const open=stp===5&&((k==="mcb"&&s.trip.F1==="old")||(k==="rcd"&&s.trip.Q2==="old"));
+    ys.forEach(y=>{const a=d.x1+0.3,b=d.x2-0.3;rect(d.x1+0.02,y-0.06,d.x2-d.x1-0.04,0.12,{stroke:"none"});ln(d.x1,y,a,y);ln(b,y,d.x2,y);
+      if(open)ln(a,y,b-0.05,y+0.5,{stroke:css("--bad"),"stroke-width":3});else ln(a,y,b,y+0.12);
+      if(k==="mcb"){ln(b-0.1,y-0.1,b+0.1,y+0.1);ln(b-0.1,y+0.1,b+0.1,y-0.1);}});
+    if(k==="rcd"){rect(d.x1-0.05,d.yN-0.35,d.x2-d.x1+0.1,d.yL-d.yN+0.9,{fill:"none","stroke-dasharray":"6 3","stroke-width":1.6});text(d.x2-0.3,d.yN-0.18,"IΔ",{size:11});}
+    const y0=k==="mcb"?d.y:d.yL;if(d.below){text((d.x1+d.x2)/2,y0-0.55,d.label+" "+d.sub,{bold:true,size:15});}else{text((d.x1+d.x2)/2,y0+1.25,d.label,{bold:true,size:15});text((d.x1+d.x2)/2,y0+0.8,d.sub,{size:13});}
+    if(stp===5){const t=k==="mcb"?s.trip.F1:s.trip.Q2;if(t)tag((d.x1+d.x2)/2,d.below?y0-1.15:y0+1.75,t==="old"?"OLD":"NEM OLD",t==="old"?"ok":"bad");}}
+  else if(k==="res"){rect(d.x-0.17,d.y1,0.34,d.y2-d.y1,{fill:(stp===1||pen)&&!d.label?css("--coil"):css("--bg")});if(d.label)text(d.x-0.3,(d.y1+d.y2)/2,"Riso ∥ C",{anchor:"end",size:14});}
+  else if(k==="imd"){const on=stp===5;rect(d.x-0.4,d.y1,0.8,d.y2-d.y1,{fill:on?"#f9d835":css("--bg")});text(d.x,(d.y1+d.y2)/2,"R<",{size:14,fill:on?"#111":css("--fg")});
+    text(d.x-0.5,(d.y1+d.y2)/2+0.25,"szigetelés-",{anchor:"end",size:12});text(d.x-0.5,(d.y1+d.y2)/2-0.15,"figyelő",{anchor:"end",size:12});
+    if(on)tag(d.x+0.3,d.y2+0.5,"JELEZ","warn");}
+  else if(k==="ground"){[0.38,0.25,0.12].forEach((w,i)=>ln(d.x-w,d.y-0.13*i,d.x+w,d.y-0.13*i));
+    if(d.label){const lab=d.label==="R_A"?"RA = 30 Ω":d.label==="R_B"?"RB = 2 Ω":d.label;
+      if(d.label==="R_A"){text(d.x-0.45,d.y+0.05,lab,{anchor:"end",size:13});return;}
+      if(d.label.indexOf("\n")>=0){d.label.split("\n").forEach((t,i)=>text(d.x+0.5,d.y+0.2-i*0.36,t,{anchor:"start",size:12}));return;}
+      text(d.side==="left"?d.x-0.5:d.x+0.5,d.y+0.05,lab,{anchor:d.side==="left"?"end":"start",size:d.side==="left"?14:12});}}
+  else if(k==="dot"){const q=P(d.x,d.y);mk("circle",{cx:q[0],cy:q[1],r:5,fill:css("--line")});}
+  else if(k==="text"){d.s.split("\n").forEach((t,i)=>text(d.x,d.y-i*0.36,t,{anchor:d.al==="left"?"start":d.al==="center"?"middle":"end",size:d.small?12:14}));}
+  else if(k==="body"){
+    text(9.95,d.y+0.3,"fém test",{size:12});}
+  else if(k==="fault"){if(fault){pl(d.pts,{stroke:css("--bad"),"stroke-width":3});}}
+  else if(k==="person"){const on=(stp>=4&&!tripped)||pen;const c=on?css("--bad"):css("--line"),o={stroke:c,"stroke-width":3};
+    if(stp>=4||pen){circ(d.x,d.y+3.05,0.3,{fill:"none",stroke:c,"stroke-width":3});ln(d.x,d.y+2.75,d.x,d.y+1.35,o);ln(d.x-0.45,d.y,d.x,d.y+1.35,o);ln(d.x,d.y+1.35,d.x+0.45,d.y,o);
+      pl([[d.x,d.y+2.5],[d.x+0.55,d.y+2.25],d.hand],o);ln(d.x,d.y+2.5,d.x-0.5,d.y+1.8,o);}
+    else{circ(d.x,d.y+3.05,0.3,{fill:"none",stroke:css("--muted"),"stroke-width":2,"stroke-dasharray":"3 3"});ln(d.x,d.y+2.75,d.x,d.y+1.35,{stroke:css("--muted"),"stroke-dasharray":"3 3"});
+      ln(d.x-0.45,d.y,d.x,d.y+1.35,{stroke:css("--muted"),"stroke-dasharray":"3 3"});ln(d.x,d.y+1.35,d.x+0.45,d.y,{stroke:css("--muted"),"stroke-dasharray":"3 3"});}}
+  else if(k==="meter"){ln(d.x,d.top,d.x,d.y+0.36,{"stroke-dasharray":"5 4","stroke-width":1.6});ln(d.x,d.y-0.36,d.x,d.bot,{"stroke-dasharray":"5 4","stroke-width":1.6});
+    circ(d.x,d.y,0.36);text(d.x,d.y,"V",{size:14});
+    let v="Ut";if(pen)v="Ut ≈ U(N')";else if(tripped)v="Ut = 0 (lekapcsolva)";else if(stp>=4)v="Ut ≈ "+({"TN-C":SYS[0].ut,"TN-S":SYS[0].ut,"TN-C-S":SYS[0].ut,"TT":SYS[3].ut,"IT":SYS[4].ut})[s.name];else if(stp===1)v="Ut = 0";
+    text(d.x+0.5,d.y,v,{anchor:"start",size:13,bold:stp>=4});}
+ });
+ const g1=P(-0.1,0.8),g2=P(12.9,0.8);mk("line",{x1:g1[0],y1:g1[1],x2:g2[0],y2:g2[1],stroke:css("--muted"),"stroke-width":1.5});
+ text(-0.1,0.55,"talaj / padló",{anchor:"start",size:12,fill:css("--muted")});
  let msg;
- if(pen){const pp=[[1.3,6.2],[8,6.2],[8,3.2],[9,3.2],[9,5],[5,5],[5,4.4],[10.3,4.4],[10.3,2.8],[9.6,2.8]];
-   mk("polyline",{points:pp.map(q=>P(q[0],q[1]).join(",")).join(" "),fill:"none",stroke:css("--cur"),"stroke-width":5,"stroke-dasharray":"10 6",opacity:.9});
-   msg='<span class="bad">PEN-szakadás a szétválasztás előtt:</span> a fogyasztó üzemi árama nem tud visszafolyni; az L-potenciál a terhelésen és az N–PE áthidaláson át a PE-re, így a <b>fogyasztó testére</b> kerül (a többi fogyasztó testére is). A FI ezt <b>nem érzékeli</b>, mert nincs differenciaáram. Védelem: ép PEN, ismételt földelés, rendszeres felülvizsgálat.';}
- else if(st.fault){mk("polyline",{points:s.path.map(q=>P(q[0],q[1]).join(",")).join(" "),fill:"none",stroke:css("--cur"),"stroke-width":5,"stroke-dasharray":"10 6",opacity:.9});
-   msg="<b>Testzárlat.</b> "+s.info;}
- else msg="Ép állapot: a testen nincs feszültség. Kapcsold be a testzárlatot a hibaáram útjához.";
- const z=P(8.0,3.2),z2=P(8.0,2.8);mk("line",{x1:z[0],y1:z[1],x2:z2[0],y2:z2[1],stroke:st.fault&&!pen?css("--cur"):css("--muted"),"stroke-width":3});
+ if(pen)msg='<span class="bad">PEN-szakadás a szétválasztás előtt:</span> az üzemi áram nem tud a transzformátorhoz visszafolyni. Az L-potenciál a terhelésen, az N-sínen és az N–PE áthidaláson át a PE-re, így a <b>fogyasztó testére</b> (és minden más PE-re kötött testre) kerül – ha csak egy fázis terhelt, ismételt földelés nélkül közel 230 V-ra. A FI ezt <b>nem érzékeli</b>, mert a védett körben nincs differenciaáram. Számpélda: „Mi történik PEN-szakadáskor?” szakasz. Védelem: ép PEN, ismételt földelés, fő EPH.';
+ else msg=s.steps[stp-1];
  document.getElementById("st").innerHTML=msg;
+ document.getElementById("info").textContent=s.name+": "+s.info.map(sub).join(" · ");
  document.querySelectorAll("button[data-k]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.k===st.k));
- document.getElementById("bp").disabled=s.name!=="TN-C-S";}
-document.querySelectorAll("button[data-k]").forEach(b=>b.addEventListener("click",()=>{st.k=+b.dataset.k;st.pen=false;document.getElementById("bp").setAttribute("aria-pressed",false);render();}));
-document.getElementById("bf").addEventListener("click",e=>{st.fault=!st.fault;e.target.setAttribute("aria-pressed",st.fault);render();});
-document.getElementById("bp").addEventListener("click",e=>{st.pen=!st.pen;e.target.setAttribute("aria-pressed",st.pen);render();});
-render();
+ document.querySelectorAll("button[data-s]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===stp&&!pen));
+ const bp=document.getElementById("bp");bp.disabled=s.name!=="TN-C-S";bp.setAttribute("aria-pressed",pen);
+ document.getElementById("prev").disabled=stp<=1;document.getElementById("next").disabled=stp>=5;}
+function render(){draw();}
+SYS[0].ut=SYS[0].num.U_t_eph+" V";SYS[3].ut=SYS[3].num.U_t_tt+" V";SYS[4].ut=SYS[4].num.U_t_it+" V";
+document.querySelectorAll("button[data-k]").forEach(b=>b.addEventListener("click",()=>{st.k=+b.dataset.k;st.pen=false;draw();}));
+document.querySelectorAll("button[data-s]").forEach(b=>b.addEventListener("click",()=>{st.step=+b.dataset.s;st.pen=false;draw();}));
+document.getElementById("prev").addEventListener("click",()=>{if(st.step>1){st.step--;st.pen=false;draw();}});
+document.getElementById("next").addEventListener("click",()=>{if(st.step<5){st.step++;st.pen=false;draw();}});
+document.getElementById("bp").addEventListener("click",()=>{st.pen=!st.pen;draw();});
+document.addEventListener("keydown",e=>{if(e.target.tagName==="BUTTON"&&(e.key===" "||e.key==="Enter"))return;
+ if(e.key==="ArrowRight"&&st.step<5){st.step++;st.pen=false;draw();}else if(e.key==="ArrowLeft"&&st.step>1){st.step--;st.pen=false;draw();}});
+(function(){const q=new URLSearchParams(location.search);if(q.has("k"))st.k=Math.max(0,Math.min(4,+q.get("k")));if(q.has("step"))st.step=Math.max(1,Math.min(5,+q.get("step")));if(q.get("pen")==="1")st.pen=true;})();
+draw();
 
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(typeof render==="function")render();});
 </script>

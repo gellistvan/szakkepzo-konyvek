@@ -24,7 +24,7 @@ code,.mono{font-family:ui-monospace,Consolas,monospace}</style>
 </head>
 <body>
 <div class="bar"><button id="b1">S1 előre</button><button id="b2">S2 hátra</button><button id="b0">S0 STOP</button>
-<button id="bb">Mindkét start egyszerre</button><button id="bt" aria-pressed="false">F3 túlterhelés-kioldás</button></div>
+<button id="bb">Mindkét start egyszerre</button><button id="bt" aria-pressed="false">F1 túlterhelés-kioldás</button></div>
 <div id="st" aria-live="polite"></div>
 <svg id="v" role="img" aria-label="Reverzáló motorvezérlés vezérlőköre kölcsönös villamos reteszeléssel"></svg>
 <p class="small">A gombok nyomva tartásig (a rajzon kattintva 0,6 s-ig) működnek; a piros jelölés a feszültség alatti, áramot vivő ág. Mindkét start egyszerre: a villamos reteszelés miatt csak az egyik mágneskapcsoló húz be (a szimulátorban az elsőként kiértékelt K1); a valóságban ezt a mechanikus reteszelés is biztosítja. Szemléltető, tanulási rajz; a kapocsjelölések a fejezet szerintiek.</p>
@@ -59,7 +59,7 @@ function dev(kind,a,b,o){o=o||{};
   const cx=(A[0]+B[0])/2,cy=(A[1]+B[1])/2,h=30,g=mk("g",{transform:"translate("+cx+","+cy+") rotate("+ang+")"});
   const line=css("--line"),cur=css("--cur"),sw=2.2;
   const seg=(x1,y1,x2,y2,c,w,extra)=>mk("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:c||line,"stroke-width":w||sw,"stroke-linecap":"round"},extra||{}),g);
-  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res")?true:!!o.closed;
+  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res"||kind==="fuse")?true:!!o.closed;
   // áram alatti halo (a kivezetések és a záródott test)
   if(o.l1)seg(-L/2,0,-h,0,cur,6.5,{opacity:.9});
   if(o.l2)seg(h,0,L/2,0,cur,6.5,{opacity:.9});
@@ -74,7 +74,8 @@ function dev(kind,a,b,o){o=o||{};
     if(kind==="pbno"||kind==="pbnc"){const d=o.pressed?9:0;                // nyomógomb-működtető (T-alak)
       seg(0,-8+d,0,-30+d,line,1.8,{"stroke-dasharray":"4 3"});seg(-9,-30+d,9,-30+d,line,3);}
     if(kind==="sw"){seg(0,-12,0,-26,line,1.8,{"stroke-dasharray":"4 3"});seg(-8,-26,8,-26,line,3);}
-    if(kind==="mcb"){seg(-6,-6,6,-18,line,2);seg(6,-6,-6,-18,line,2);}   // kismegszakító: kézi működtetés jele
+    if(kind==="mcb"){const dy=o.closed?12:0;                              // kismegszakító: a túláramkioldó X-e a késsel együtt mozog
+      seg(-6,-6+dy,6,-18+dy,line,2);seg(6,-6+dy,-6,-18+dy,line,2);}
     if(o.delay==="on"||o.delay==="off"){seg(0,-10,0,-28,line,1.8);       // késleltetett érintkező (időrelé): ejtőernyő-ív
       mk("path",{d:"M -9 -28 A 9 9 0 0 "+(o.delay==="on"?1:0)+" 9 -28",fill:"none",stroke:line,"stroke-width":2},g);}
   }else if(kind==="coil"){
@@ -83,6 +84,10 @@ function dev(kind,a,b,o){o=o||{};
   }else if(kind==="thermal"){
     mk("rect",{x:-h,y:-17,width:2*h,height:34,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);
     mk("polyline",{points:"-14,0 -7,-9 0,9 7,-9 14,0",fill:"none",stroke:line,"stroke-width":2},g);
+  }else if(kind==="res"){                                                  // ellenállás (IEC téglalap)
+    mk("rect",{x:-h,y:-9,width:2*h,height:18,fill:o.body?css("--coil"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+  }else if(kind==="fuse"){                                                 // olvadóbiztosító: téglalap, középvonal
+    mk("rect",{x:-h,y:-10,width:2*h,height:20,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);seg(-h,0,h,0,line,2);
   }else if(kind==="lamp"){
     mk("circle",{cx:0,cy:0,r:17,fill:o.body?css("--lamp"):css("--bg"),stroke:line,"stroke-width":2.2},g);
     seg(-12,-12,12,12,line,2);seg(-12,12,12,-12,line,2);
@@ -115,8 +120,8 @@ function hold(el,down,up){let on=false;const d=e=>{if(!on){on=true;down();}},u=e
 function pulse(down,up,ms){down();setTimeout(up,ms||600);}
 
 
-const PARTS=[{"id": "F2", "k": "fuse", "a": [0.6, 8], "b": [2.4, 8], "na": "L", "nb": "n1", "c": null, "lab": "F2", "sub": "2 A"}, {"id": "F3", "k": "nc", "a": [3, 8], "b": [4.8, 8], "na": "n1", "nb": "n2", "c": "F3", "lab": "F3", "sub": "95-96"}, {"id": "S0", "k": "pbnc", "a": [5.4, 8], "b": [7.2, 8], "na": "n2", "nb": "X", "c": "S0", "lab": "S0", "sub": "STOP"}, {"id": "S1", "k": "pbno", "a": [8.4, 8], "b": [10.2, 8], "na": "X", "nb": "a1", "c": "S1", "lab": "S1", "sub": "ELŐRE"}, {"id": "K1h", "k": "no", "a": [8.4, 6.5], "b": [10.2, 6.5], "na": "X", "nb": "a1", "c": "K1", "lab": "K1 13-14", "sub": ""}, {"id": "K2r", "k": "nc", "a": [10.8, 8], "b": [12.6, 8], "na": "a1", "nb": "a2", "c": "K2", "lab": "K2", "sub": "21-22"}, {"id": "K1", "k": "coil", "a": [13.2, 8], "b": [15, 8], "na": "a2", "nb": "N", "c": null, "lab": "K1", "sub": "A1-A2"}, {"id": "S2", "k": "pbno", "a": [8.4, 4], "b": [10.2, 4], "na": "X", "nb": "b1", "c": "S2", "lab": "S2", "sub": "HÁTRA"}, {"id": "K2h", "k": "no", "a": [8.4, 2.5], "b": [10.2, 2.5], "na": "X", "nb": "b1", "c": "K2", "lab": "K2 13-14", "sub": ""}, {"id": "K1r", "k": "nc", "a": [10.8, 4], "b": [12.6, 4], "na": "b1", "nb": "b2", "c": "K1", "lab": "K1", "sub": "21-22"}, {"id": "K2", "k": "coil", "a": [13.2, 4], "b": [15, 4], "na": "b2", "nb": "N", "c": null, "lab": "K2", "sub": "A1-A2"}], WIRES=[{"p": [[0, 8], [0.6, 8]], "n": "L"}, {"p": [[2.4, 8], [3, 8]], "n": "n1"}, {"p": [[4.8, 8], [5.4, 8]], "n": "n2"}, {"p": [[7.2, 8], [8.4, 8]], "n": "X"}, {"p": [[8.4, 8], [8.4, 6.5]], "n": "X"}, {"p": [[7.8, 8], [7.8, 4], [8.4, 4]], "n": "X"}, {"p": [[8.4, 4], [8.4, 2.5]], "n": "X"}, {"p": [[10.2, 8], [10.2, 6.5]], "n": "a1"}, {"p": [[10.2, 8], [10.8, 8]], "n": "a1"}, {"p": [[12.6, 8], [13.2, 8]], "n": "a2"}, {"p": [[15, 8], [16.4, 8]], "n": "N"}, {"p": [[10.2, 4], [10.2, 2.5]], "n": "b1"}, {"p": [[10.2, 4], [10.8, 4]], "n": "b1"}, {"p": [[12.6, 4], [13.2, 4]], "n": "b2"}, {"p": [[15, 4], [16.4, 4]], "n": "N"}], DOTS=[[7.8, 8], [8.4, 8], [10.2, 8], [8.4, 4], [10.2, 4], [16.4, 8], [16.4, 4]], COILS=["K1","K2"];
-const act={S0:false,S1:false,S2:false,F3:false}, relay={K1:false,K2:false};
+const PARTS=[{"id": "F2", "k": "fuse", "a": [0.6, 8], "b": [2.4, 8], "na": "L", "nb": "n1", "c": null, "lab": "F2", "sub": "2 A"}, {"id": "F1", "k": "nc", "a": [3, 8], "b": [4.8, 8], "na": "n1", "nb": "n2", "c": "F1", "lab": "F1", "sub": "95-96"}, {"id": "S0", "k": "pbnc", "a": [5.4, 8], "b": [7.2, 8], "na": "n2", "nb": "X", "c": "S0", "lab": "S0", "sub": "STOP"}, {"id": "S1", "k": "pbno", "a": [8.4, 8], "b": [10.2, 8], "na": "X", "nb": "a1", "c": "S1", "lab": "S1", "sub": "ELŐRE"}, {"id": "K1h", "k": "no", "a": [8.4, 6.5], "b": [10.2, 6.5], "na": "X", "nb": "a1", "c": "K1", "lab": "K1 13-14", "sub": ""}, {"id": "K2r", "k": "nc", "a": [10.8, 8], "b": [12.6, 8], "na": "a1", "nb": "a2", "c": "K2", "lab": "K2", "sub": "21-22"}, {"id": "K1", "k": "coil", "a": [13.2, 8], "b": [15, 8], "na": "a2", "nb": "N", "c": null, "lab": "K1", "sub": "A1-A2"}, {"id": "S2", "k": "pbno", "a": [8.4, 4], "b": [10.2, 4], "na": "X", "nb": "b1", "c": "S2", "lab": "S2", "sub": "HÁTRA"}, {"id": "K2h", "k": "no", "a": [8.4, 2.5], "b": [10.2, 2.5], "na": "X", "nb": "b1", "c": "K2", "lab": "K2 13-14", "sub": ""}, {"id": "K1r", "k": "nc", "a": [10.8, 4], "b": [12.6, 4], "na": "b1", "nb": "b2", "c": "K1", "lab": "K1", "sub": "21-22"}, {"id": "K2", "k": "coil", "a": [13.2, 4], "b": [15, 4], "na": "b2", "nb": "N", "c": null, "lab": "K2", "sub": "A1-A2"}], WIRES=[{"p": [[0, 8], [0.6, 8]], "n": "L"}, {"p": [[2.4, 8], [3, 8]], "n": "n1"}, {"p": [[4.8, 8], [5.4, 8]], "n": "n2"}, {"p": [[7.2, 8], [8.4, 8]], "n": "X"}, {"p": [[8.4, 8], [8.4, 6.5]], "n": "X"}, {"p": [[7.8, 8], [7.8, 4], [8.4, 4]], "n": "X"}, {"p": [[8.4, 4], [8.4, 2.5]], "n": "X"}, {"p": [[10.2, 8], [10.2, 6.5]], "n": "a1"}, {"p": [[10.2, 8], [10.8, 8]], "n": "a1"}, {"p": [[12.6, 8], [13.2, 8]], "n": "a2"}, {"p": [[15, 8], [16.4, 8]], "n": "N"}, {"p": [[10.2, 4], [10.2, 2.5]], "n": "b1"}, {"p": [[10.2, 4], [10.8, 4]], "n": "b1"}, {"p": [[12.6, 4], [13.2, 4]], "n": "b2"}, {"p": [[15, 4], [16.4, 4]], "n": "N"}], DOTS=[[7.8, 8], [8.4, 8], [10.2, 8], [8.4, 4], [10.2, 4], [16.4, 8], [16.4, 4]], COILS=["K1","K2"];
+const act={S0:false,S1:false,S2:false,F1:false}, relay={K1:false,K2:false};
 function closed(p){if(p.k==="fuse")return true;if(p.k==="coil")return false;
  const on=(p.c in relay)?relay[p.c]:act[p.c];return (p.k==="nc"||p.k==="pbnc")?!on:on;}
 function live(){const s=new Set(["L"]);let ch=true;while(ch){ch=false;PARTS.forEach(p=>{if(closed(p)&&(s.has(p.na)!==s.has(p.nb))){s.add(p.na);s.add(p.nb);ch=true;}});}return s;}
@@ -136,13 +141,13 @@ function render(){solve();const s=live(),anyK=COILS.some(c=>relay[c]);initSvg("v
  const dir=relay.K1?"előre (K1)":relay.K2?"hátra (K2)":"áll";
  text(2.2,1.9,"M1: "+dir,{bold:true,size:13});
  document.getElementById("st").innerHTML="K1: <b>"+(relay.K1?'<span class="ok">behúzva</span>':"elengedve")+"</b> · K2: <b>"+(relay.K2?'<span class="ok">behúzva</span>':"elengedve")+"</b> · motor: <b>"+dir+"</b>."+
-  (act.F3?' <span class="bad">F3 kioldott: a 95-96 bont, mindkét kör megszakad.</span>':"")+
+  (act.F1?' <span class="bad">F1 kioldott: a 95-96 bont, mindkét kör megszakad.</span>':"")+
   (relay.K1&&act.S2?" Az S2 hiába van nyomva: a K1 21-22 bontója reteszeli a K2 ágát.":"")+(relay.K2&&act.S1?" Az S1 hiába van nyomva: a K2 21-22 bontója reteszeli a K1 ágát.":"");}
 hold(document.getElementById("b0"),()=>{act.S0=true;render();},()=>{act.S0=false;render();});
 hold(document.getElementById("b1"),()=>{act.S1=true;render();},()=>{act.S1=false;render();});
 hold(document.getElementById("b2"),()=>{act.S2=true;render();},()=>{act.S2=false;render();});
 document.getElementById("bb").addEventListener("click",()=>pulse(()=>{act.S1=true;act.S2=true;render();},()=>{act.S1=false;act.S2=false;render();},800));
-document.getElementById("bt").addEventListener("click",e=>{act.F3=!act.F3;e.target.setAttribute("aria-pressed",act.F3);render();});
+document.getElementById("bt").addEventListener("click",e=>{act.F1=!act.F1;e.target.setAttribute("aria-pressed",act.F1);render();});
 render();
 
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(typeof render==="function")render();});

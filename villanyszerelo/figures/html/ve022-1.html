@@ -25,15 +25,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 300" role="img" aria-label="A soros RLC-kör impedanciájának nagysága a frekvencia függvényében, a rezonanciafrekvencia jelölésével"></svg>
 <p class="small">Szemléltetés (6.3): |Z| = √(R² + (ωL − 1/ωC)²). Alap: R = 100 Ω, L = 100 mH, C = 10 µF → f₀ = 159,2 Hz (a fejezet pontjai). Számolt görbe; a valódi tekercs és kondenzátor veszteségei nincsenek modellezve.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"R":"Ω", "L":"mH", "C":"µF"};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const L=v.L/1000, C=v.C*1e-6, f0=1/(2*Math.PI*Math.sqrt(L*C)), Zf=f=>{const w=2*Math.PI*f;return Math.hypot(v.R,w*L-1/(w*C));};
 const fmax=Math.max(400,Math.ceil(2.5*f0/50)*50), Zmax=Math.max(400,4*v.R), x0=60,x1=530,y0=250,y1=28,X=f=>x0+(x1-x0)*(f-20)/(fmax-20),Y=z=>y0-(y0-y1)*Math.min(z,Zmax)/Zmax;
@@ -49,7 +53,7 @@ el("circle",{cx:X(f0),cy:Y(v.R),r:6,fill:css("--hl2"),stroke:css("--line")});el(
 status("f<sub>0</sub> = 1/(2π√(LC)) = <b>"+fmt(f0,1)+" Hz</b>; rezonanciánál |Z| = R = <b>"+fmt(v.R,0)+" Ω</b>. 50 Hz-en X<sub>L</sub> = "+fmt(2*Math.PI*50*L)+" Ω, X<sub>C</sub> = "+fmt(1/(2*Math.PI*50*C))+" Ω, |Z| = "+fmt(Zf(50),1)+" Ω.");
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

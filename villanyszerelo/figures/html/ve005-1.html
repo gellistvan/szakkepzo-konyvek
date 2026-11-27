@@ -1,0 +1,45 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Áram–idő zónák</title><style>
+:root{--fg:#111;--bg:#fff;--muted:#555;--line:#000;--z1:#ffffff;--z2:#eef3f8;--z3:#dfe8f1;--z4:#f3d9d6;--fi:#c55a11;--hl:#d32f2f}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--line:#ddd;--z1:#1b1b1b;--z2:#22303d;--z3:#2b3f52;--z4:#4a2a28;--fi:#f0a060;--hl:#ff8a80}}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+svg{width:100%;height:auto;display:block}svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+#st{min-height:3.2em}.small{font-size:12px;color:var(--muted)}</style></head><body>
+<div id="st" aria-live="polite">Mutass az egérrel (vagy koppints) az áram–idő síkra: kiírja a pont zónáját és a várható hatást.</div>
+<svg id="v" viewBox="0 0 640 440" role="img" aria-label="Log-log áram–idő ábra az AC-1…AC-4 zónákkal, az a, b, c1, c2, c3 görbékkel és a 30 mA-es FI pontjaival"></svg>
+<p class="small">c1: közelítő pontok; a, b, c2, c3: sematikus görbék (ellenőrizendő: IEC 60479-1). FI: MSZ EN 61008-1 szerinti legnagyobb kioldási idők (ellenőrizendő). Tanulási szemléltetés, nem méretezési adat.</p>
+<script>
+const D={"A": 0.5, "B": [[200, 10], [30, 100], [12, 400], [10, 1000], [10, 10000]], "C1": [[500, 10], [400, 100], [50, 1000], [40, 5000], [40, 10000]], "C2": [[800, 10], [640, 100], [80, 1000], [64, 5000], [64, 10000]], "C3": [[1250, 10], [1000, 100], [125, 1000], [100, 5000], [100, 10000]], "RCD": [[30, 300], [60, 150], [150, 40]], "Z": {"AC-1": "áramérzet lehetséges, nincs káros élettani hatás", "AC-2": "izomösszehúzódás, fájdalom; még nincs káros élettani hatás, fibrilláció nem várható", "AC-3": "izomgörcs, légzési nehézség, a szívműködés visszafordítható zavarai; kamrafibrilláció általában még nem várható", "AC-4": "kamrafibrilláció lehetséges, valószínűsége az árammal és az idővel nő (c2: kb. 5 %, c3: kb. 50 %); súlyos égés, szív- és légzésleállás"}},NS="http://www.w3.org/2000/svg",S=document.getElementById("v");
+const L=60,R=620,T=15,Bt=390,lx0=Math.log10(0.1),lx1=Math.log10(10000),ly0=1,ly1=4;
+const X=i=>L+(Math.log10(i)-lx0)/(lx1-lx0)*(R-L),Y=t=>Bt-(Math.log10(t)-ly0)/(ly1-ly0)*(Bt-T);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function mk(t,a,tx){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(tx!==undefined)e.textContent=tx;S.appendChild(e);return e;}
+function cur(p,t){p=p.slice().sort((a,b)=>a[1]-b[1]);const lt=Math.log(t);if(lt<=Math.log(p[0][1]))return p[0][0];
+ for(let k=1;k<p.length;k++){const a=Math.log(p[k-1][1]),b=Math.log(p[k][1]);if(lt<=b){const f=(lt-a)/(b-a);return Math.exp(Math.log(p[k-1][0])+f*(Math.log(p[k][0])-Math.log(p[k-1][0])));}}return p[p.length-1][0];}
+function zone(i,t){if(i<D.A)return"AC-1";if(i<cur(D.B,t))return"AC-2";if(i<cur(D.C1,t))return"AC-3";return"AC-4";}
+let mark=null;
+function draw(){S.innerHTML="";const ts=[];for(let k=0;k<=60;k++)ts.push(Math.pow(10,1+3*k/60));
+ const poly=(f,g,c)=>{const a=ts.map(t=>X(f(t))+","+Y(t)),b=ts.slice().reverse().map(t=>X(g(t))+","+Y(t));mk("polygon",{points:a.concat(b).join(" "),fill:css(c)});};
+ poly(t=>0.1,t=>D.A,"--z1");poly(t=>D.A,t=>cur(D.B,t),"--z2");poly(t=>cur(D.B,t),t=>cur(D.C1,t),"--z3");poly(t=>cur(D.C1,t),t=>10000,"--z4");
+ [0.1,1,10,100,1000,10000].forEach(i=>{mk("line",{x1:X(i),y1:T,x2:X(i),y2:Bt,stroke:css("--muted"),"stroke-width":.4,"stroke-dasharray":"2 3"});mk("text",{x:X(i),y:Bt+16,"text-anchor":"middle","font-size":12},String(i).replace(".",","));});
+ [10,100,1000,10000].forEach(t=>{mk("line",{x1:L,y1:Y(t),x2:R,y2:Y(t),stroke:css("--muted"),"stroke-width":.4,"stroke-dasharray":"2 3"});mk("text",{x:L-6,y:Y(t)+4,"text-anchor":"end","font-size":12},String(t));});
+ mk("rect",{x:L,y:T,width:R-L,height:Bt-T,fill:"none",stroke:css("--line")});
+ mk("text",{x:(L+R)/2,y:Bt+34,"text-anchor":"middle","font-size":12},"testáram (mA, log)");
+ const t2=mk("text",{x:14,y:(T+Bt)/2,"text-anchor":"middle","font-size":12,transform:"rotate(-90 14 "+(T+Bt)/2+")"},"időtartam (ms, log)");
+ const pl=(p,dash,w,lab)=>{const q=p.slice().sort((a,b)=>a[1]-b[1]);mk("polyline",{points:q.map(r=>X(r[0])+","+Y(r[1])).join(" "),fill:"none",stroke:css("--line"),"stroke-width":w,"stroke-dasharray":dash});
+  const top=q[q.length-1];mk("text",{x:X(top[0])+4,y:T+14,"font-size":12,"font-weight":"bold"},lab);};
+ mk("line",{x1:X(D.A),y1:T,x2:X(D.A),y2:Bt,stroke:css("--line"),"stroke-width":1.6});mk("text",{x:X(D.A)+4,y:T+14,"font-size":12,"font-weight":"bold"},"a");
+ pl(D.B,"6 4",1.5,"b");pl(D.C1,"none",2.2,"c1");pl(D.C2,"2 3",1.5,"c2");pl(D.C3,"8 3 2 3",1.5,"c3");
+ [["AC-1",0.2,60],["AC-2",2,60],["AC-3",20,2500],["AC-4",1500,60]].forEach(z=>mk("text",{x:X(z[1]),y:Y(z[2]),"text-anchor":"middle","font-size":14,"font-weight":"bold"},z[0]));
+ mk("polyline",{points:D.RCD.map(r=>X(r[0])+","+Y(r[1])).join(" "),fill:"none",stroke:css("--fi"),"stroke-width":1.6,"stroke-dasharray":"5 3"});
+ D.RCD.forEach(r=>mk("rect",{x:X(r[0])-4,y:Y(r[1])-4,width:8,height:8,fill:css("--fi"),stroke:css("--line")}));
+ if(mark){mk("circle",{cx:X(mark[0]),cy:Y(mark[1]),r:6,fill:"none",stroke:css("--hl"),"stroke-width":2.5});}
+ const hit=mk("rect",{x:L,y:T,width:R-L,height:Bt-T,fill:"transparent",tabindex:0});
+ const on=e=>{const b=S.getBoundingClientRect(),sx=640/b.width,px=(e.clientX-b.left)*sx,py=(e.clientY-b.top)*sx;
+  if(px<L||px>R||py<T||py>Bt)return;const i=Math.pow(10,lx0+(px-L)/(R-L)*(lx1-lx0)),t=Math.pow(10,ly0+(Bt-py)/(Bt-T)*(ly1-ly0));mark=[i,t];
+  const z=zone(i,t);document.getElementById("st").innerHTML="<b>"+(i<10?i.toFixed(2):i.toFixed(0)).replace(".",",")+" mA, "+t.toFixed(0)+" ms → "+z+"</b>: "+D.Z[z]+".";draw();};
+ hit.addEventListener("mousemove",on);hit.addEventListener("click",on);}
+draw();
+if(zone(30,1000)!=="AC-3"||zone(100,1000)!=="AC-4")console.error("zónateszt hiba");
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+</script><script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body></html>

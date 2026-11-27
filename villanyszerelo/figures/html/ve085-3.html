@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Az ellenőrzés sorrendje döntési pontokkal</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#555;--btn:#e8eefc;--btnb:#1f4e79;--hl:#d32f2f}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--btn:#26324a;--btnb:#8fb8e8;--hl:#ff6e6e}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 8px}
+button{font:inherit;padding:5px 12px;border:1.5px solid var(--btnb);background:var(--btn);color:var(--fg);border-radius:6px;cursor:pointer}
+button[aria-pressed=true]{background:var(--btnb);color:var(--bg)}
+button:focus-visible{outline:3px solid var(--btnb);outline-offset:2px}
+label.chk{display:inline-flex;gap:5px;align-items:center;cursor:pointer;margin-right:8px}
+.card{background:#fff;border-radius:8px;padding:6px;color:#111}
+.card svg{width:100%;height:auto;display:block;max-height:78vh}
+#status{margin:6px 0;min-height:2.6em}
+.parts{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.parts button{font-size:12.5px;padding:3px 8px}
+.small{font-size:12px;color:var(--muted)}
+svg .hl path,svg .hl line,svg .hl polyline,svg .hl ellipse,svg .hl circle,svg .hl rect{stroke:#d32f2f!important;stroke-width:2.6px!important}
+svg .hl text{fill:#d32f2f!important;font-weight:bold}
+svg .hl{filter:drop-shadow(0 0 2px rgba(211,47,47,.7))}
+svg .off{display:none}
+.pulse{animation:pl 1.2s ease-in-out infinite}
+@keyframes pl{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}</style>
+</head>
+<body>
+
+<div class="bar" id="frames" aria-label="Képkockák"></div>
+
+
+<div id="status" aria-live="polite"></div>
+<div class="card" aria-label="Folyamatábra két oszlopban. Bal oszlop, kikapcsolt állapot: 1 dokumentáció, 2 öt szabály, 3 szemrevételezés, döntés életveszélyes hiba? (igen: nem helyezhető feszültség alá, javítás, vissza a 3-ra), 4 PE- és EPH-folytonosság, döntés R_PE megfelel? (nem: javítás, ismétlés), 5 fogyasztók leválasztása, 6 szigetelési ellenállás, döntés R_iso ≥ határérték? (nem: hibahely-keresés felezéssel), 7 polaritás, 8 földelési ellenállás, feszültség alá helyezés. Vastag szaggatott határ után jobb oszlop, üzemi mérések, szürke háttérrel: 9 hurokimpedancia, döntés TN vagy TT (TN: Z_s ≤ Z_s,max, TT: R_A·I_Δn ≤ 50 V), 10 FI-mérés, döntés FI megfelel?, 11 feszültség, fázissorrend, forgásirány, 12 működési próbák, 13 jegyzőkönyv.">
+<svg id="fig" role="img" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 541.722821 660.672" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-27T21:16:03.252943</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.7+dfsg1, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 660.672 
+L 541.722821 660.672 
+L 541.722821 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 308.901736 653.380981 
+L 523.244377 653.380981 
+L 523.244377 5.76 
+L 308.901736 5.76 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #f2f2f2"/>
+   </g>
+   <g id="s1-1">
+    <path d="M 43.423064 67.613162 
+L 170.191426 67.613162 
+Q 174.784483 67.613162 174.784483 63.020106 
+L 174.784483 40.361026 
+Q 174.784483 35.76797 170.191426 35.76797 
+L 43.423064 35.76797 
+Q 38.830008 35.76797 38.830008 40.361026 
+L 38.830008 63.020106 
+Q 38.830008 67.613162 43.423064 67.613162 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s2-1">
+    <path d="M 43.423064 110.481691 
+L 170.191426 110.481691 
+Q 174.784483 110.481691 174.784483 105.888634 
+L 174.784483 83.229555 
+Q 174.784483 78.636498 170.191426 78.636498 
+L 43.423064 78.636498 
+Q 38.830008 78.636498 38.830008 83.229555 
+L 38.830008 105.888634 
+Q 38.830008 110.481691 43.423064 110.481691 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s3-1">
+    <path d="M 43.423064 153.350219 
+L 170.191426 153.350219 
+Q 174.784483 153.350219 174.784483 148.757162 
+L 174.784483 126.098083 
+Q 174.784483 121.505026 170.191426 121.505026 
+L 43.423064 121.505026 
+Q 38.830008 121.505026 38.830008 126.098083 
+L 38.830008 148.757162 
+Q 38.830008 153.350219 43.423064 153.350219 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d1-1">
+    <path d="M 51.690566 183.358189 
+L 106.807245 160.392906 
+L 161.923925 183.358189 
+L 106.807245 206.323472 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d1-3">
+    <path d="M 187.338838 199.280785 
+L 289.610898 199.280785 
+Q 294.203955 199.280785 294.203955 194.687728 
+L 294.203955 172.028649 
+Q 294.203955 167.435592 289.610898 167.435592 
+L 187.338838 167.435592 
+Q 182.745781 167.435592 182.745781 172.028649 
+L 182.745781 194.687728 
+Q 182.745781 199.280785 187.338838 199.280785 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s4-1">
+    <path d="M 43.423064 245.211351 
+L 170.191426 245.211351 
+Q 174.784483 245.211351 174.784483 240.618294 
+L 174.784483 217.959215 
+Q 174.784483 213.366158 170.191426 213.366158 
+L 43.423064 213.366158 
+Q 38.830008 213.366158 38.830008 217.959215 
+L 38.830008 240.618294 
+Q 38.830008 245.211351 43.423064 245.211351 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d2-1">
+    <path d="M 51.690566 275.219321 
+L 106.807245 252.254038 
+L 161.923925 275.219321 
+L 106.807245 298.184604 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d2-3">
+    <path d="M 187.338838 291.141917 
+L 289.610898 291.141917 
+Q 294.203955 291.141917 294.203955 286.54886 
+L 294.203955 263.889781 
+Q 294.203955 259.296725 289.610898 259.296725 
+L 187.338838 259.296725 
+Q 182.745781 259.296725 182.745781 263.889781 
+L 182.745781 286.54886 
+Q 182.745781 291.141917 187.338838 291.141917 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s5-1">
+    <path d="M 43.423064 337.072483 
+L 170.191426 337.072483 
+Q 174.784483 337.072483 174.784483 332.479426 
+L 174.784483 309.820347 
+Q 174.784483 305.227291 170.191426 305.227291 
+L 43.423064 305.227291 
+Q 38.830008 305.227291 38.830008 309.820347 
+L 38.830008 332.479426 
+Q 38.830008 337.072483 43.423064 337.072483 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s6-1">
+    <path d="M 43.423064 376.878974 
+L 170.191426 376.878974 
+Q 174.784483 376.878974 174.784483 372.285917 
+L 174.784483 349.626838 
+Q 174.784483 345.033781 170.191426 345.033781 
+L 43.423064 345.033781 
+Q 38.830008 345.033781 38.830008 349.626838 
+L 38.830008 372.285917 
+Q 38.830008 376.878974 43.423064 376.878974 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d3-1">
+    <path d="M 51.690566 406.886943 
+L 106.807245 383.92166 
+L 161.923925 406.886943 
+L 106.807245 429.852226 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d3-3">
+    <path d="M 187.338838 422.80954 
+L 289.610898 422.80954 
+Q 294.203955 422.80954 294.203955 418.216483 
+L 294.203955 395.557404 
+Q 294.203955 390.964347 289.610898 390.964347 
+L 187.338838 390.964347 
+Q 182.745781 390.964347 182.745781 395.557404 
+L 182.745781 418.216483 
+Q 182.745781 422.80954 187.338838 422.80954 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s7-1">
+    <path d="M 43.423064 468.740106 
+L 170.191426 468.740106 
+Q 174.784483 468.740106 174.784483 464.147049 
+L 174.784483 441.48797 
+Q 174.784483 436.894913 170.191426 436.894913 
+L 43.423064 436.894913 
+Q 38.830008 436.894913 38.830008 441.48797 
+L 38.830008 464.147049 
+Q 38.830008 468.740106 43.423064 468.740106 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s8-1">
+    <path d="M 43.423064 508.546596 
+L 170.191426 508.546596 
+Q 174.784483 508.546596 174.784483 503.95354 
+L 174.784483 481.29446 
+Q 174.784483 476.701404 170.191426 476.701404 
+L 43.423064 476.701404 
+Q 38.830008 476.701404 38.830008 481.29446 
+L 38.830008 503.95354 
+Q 38.830008 508.546596 43.423064 508.546596 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="hatar-1">
+    <path d="M 301.246642 648.787925 
+L 301.246642 11.884075 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke-dasharray: 19.2,9.6; stroke-dashoffset: 0; stroke: #000000; stroke-width: 3.2"/>
+   </g>
+   <g id="hatar-2">
+    <path d="M 43.423064 551.415125 
+L 170.191426 551.415125 
+Q 174.784483 551.415125 174.784483 546.822068 
+L 174.784483 530.287064 
+Q 174.784483 525.694008 170.191426 525.694008 
+L 43.423064 525.694008 
+Q 38.830008 525.694008 38.830008 530.287064 
+L 38.830008 546.822068 
+Q 38.830008 551.415125 43.423064 551.415125 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s9-1">
+    <path d="M 346.5648 67.613162 
+L 479.457238 67.613162 
+Q 484.050294 67.613162 484.050294 63.020106 
+L 484.050294 40.361026 
+Q 484.050294 35.76797 479.457238 35.76797 
+L 346.5648 35.76797 
+Q 341.971743 35.76797 341.971743 40.361026 
+L 341.971743 63.020106 
+Q 341.971743 67.613162 346.5648 67.613162 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #c4c4c4; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d4-1">
+    <path d="M 360.956377 103.745208 
+L 413.011019 85.372981 
+L 465.06566 103.745208 
+L 413.011019 122.117434 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d4-3">
+    <path d="M 326.661555 165.59837 
+L 395.2512 165.59837 
+Q 399.844257 165.59837 399.844257 161.005313 
+L 399.844257 138.346234 
+Q 399.844257 133.753177 395.2512 133.753177 
+L 326.661555 133.753177 
+Q 322.068498 133.753177 322.068498 138.346234 
+L 322.068498 161.005313 
+Q 322.068498 165.59837 326.661555 165.59837 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d4-5">
+    <path d="M 439.956951 165.59837 
+L 508.546596 165.59837 
+Q 513.139653 165.59837 513.139653 161.005313 
+L 513.139653 138.346234 
+Q 513.139653 133.753177 508.546596 133.753177 
+L 439.956951 133.753177 
+Q 435.363894 133.753177 435.363894 138.346234 
+L 435.363894 161.005313 
+Q 435.363894 165.59837 439.956951 165.59837 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s10-1">
+    <path d="M 346.5648 223.777087 
+L 479.457238 223.777087 
+Q 484.050294 223.777087 484.050294 219.18403 
+L 484.050294 196.524951 
+Q 484.050294 191.931894 479.457238 191.931894 
+L 346.5648 191.931894 
+Q 341.971743 191.931894 341.971743 196.524951 
+L 341.971743 219.18403 
+Q 341.971743 223.777087 346.5648 223.777087 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #c4c4c4; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="d5-1">
+    <path d="M 360.956377 259.909132 
+L 413.011019 241.536906 
+L 465.06566 259.909132 
+L 413.011019 278.281358 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #ffffff; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s11-1">
+    <path d="M 346.5648 324.824332 
+L 479.457238 324.824332 
+Q 484.050294 324.824332 484.050294 320.231275 
+L 484.050294 297.572196 
+Q 484.050294 292.97914 479.457238 292.97914 
+L 346.5648 292.97914 
+Q 341.971743 292.97914 341.971743 297.572196 
+L 341.971743 320.231275 
+Q 341.971743 324.824332 346.5648 324.824332 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #c4c4c4; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s12-1">
+    <path d="M 346.5648 370.754898 
+L 479.457238 370.754898 
+Q 484.050294 370.754898 484.050294 366.161842 
+L 484.050294 343.502762 
+Q 484.050294 338.909706 479.457238 338.909706 
+L 346.5648 338.909706 
+Q 341.971743 338.909706 341.971743 343.502762 
+L 341.971743 366.161842 
+Q 341.971743 370.754898 346.5648 370.754898 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #c4c4c4; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s13-1">
+    <path d="M 346.5648 416.685464 
+L 479.457238 416.685464 
+Q 484.050294 416.685464 484.050294 412.092408 
+L 484.050294 389.433328 
+Q 484.050294 384.840272 479.457238 384.840272 
+L 346.5648 384.840272 
+Q 341.971743 384.840272 341.971743 389.433328 
+L 341.971743 412.092408 
+Q 341.971743 416.685464 346.5648 416.685464 
+z
+" clip-path="url(#pe604c192a3)" style="fill: #c4c4c4; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="s1-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(68.878558 49.248569)">1  Dokumentáció,</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(56.947402 58.878688)">áramkörök azonosítása</text>
+   </g>
+   <g id="s2-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(77.297823 92.569807)">2  Öt szabály,</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(61.182902 102.612726)">feszültségmentesség</text>
+   </g>
+   <g id="s3-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(64.694792 134.985626)">3  Szemrevételezés</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(74.809198 144.615745)">(ellenőrzőlista)</text>
+   </g>
+   <g id="d1-2">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(77.622242 181.637466)">Életveszélyes</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(95.247126 191.261856)">hiba?</text>
+   </g>
+   <g id="d1-4">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(183.211106 180.883265)">nem helyezhető fesz. alá:</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(224.35307 190.920209)">javítás</text>
+   </g>
+   <g id="s4-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(49.360589 226.899164)">4  PE- és EPH-folytonosság</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(54.139636 236.529283)">(R_PE, ≥ 200 mA) – 24.2</text>
+   </g>
+   <g id="d2-2">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(96.365804 272.539731)">R_PE</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(85.778653 282.403167)">megfelel?</text>
+   </g>
+   <g id="d2-4">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(204.151064 272.950674)">javítás, ismételt</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(225.091693 282.575064)">mérés</text>
+   </g>
+   <g id="s5-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(65.809433 318.87989)">5  Fogyasztók, SPD</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(80.264152 328.510009)">leválasztása</text>
+   </g>
+   <g id="s6-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(56.50262 358.68638)">6  Szigetelési ellenállás</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(68.798605 368.316499)">(500 V DC) – 24.2</text>
+   </g>
+   <g id="d3-2">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(90.643491 404.326877)">R_iso ≥</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(81.952586 414.190312)">határérték?</text>
+   </g>
+   <g id="d3-4">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(202.202443 404.41202)">hibahely-keresés</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(186.123295 414.448964)">felezéssel (24.4), javítás</text>
+   </g>
+   <g id="s7-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(82.917386 450.169113)">7  Polaritás</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(46.855167 460.212031)">(kapcsoló a fázisban) – 24.2</text>
+   </g>
+   <g id="s8-2">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(46.451015 489.977179)">8  Földelési ellenállás – 24.2</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(42.532956 500.014123)">(TT: kötelező, TN: tájékoztató)</text>
+   </g>
+   <g id="hatar-3">
+    <text style="font-weight: 700; font-size: 8.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="106.807245" y="540.927629" transform="rotate(-0 106.807245 540.927629)">FESZÜLTSÉG ALÁ HELYEZÉS</text>
+   </g>
+   <g id="s9-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(368.381722 49.248569)">9  Hurokimpedancia,</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(372.591019 58.878688)">zárlati áram – 24.3</text>
+   </g>
+   <g id="d4-2">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: middle" x="413.011019" y="106.116858" transform="rotate(-0 413.011019 106.116858)">TN vagy TT?</text>
+   </g>
+   <g id="d4-4">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(340.005004 146.876662)">TN: Z_s ≤</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(340.615375 156.740097)">Z_s,max?</text>
+   </g>
+   <g id="d4-6">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(448.216661 146.996184)">TT: R_A·I_Δn</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(457.229874 156.859619)">≤ 50 V?</text>
+   </g>
+   <g id="s10-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(363.421941 205.4649)">10  FI-mérés (I_Δn, t_a,</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(380.183878 215.334206)">0°/180°) – 24.3</text>
+   </g>
+   <g id="d5-2">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: middle" x="413.011019" y="262.280783" transform="rotate(-0 413.011019 262.280783)">FI megfelel?</text>
+   </g>
+   <g id="s11-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(351.930191 306.425339)">11  Feszültség, fázissorrend,</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(374.243831 316.468258)">forgásirány – 24.3</text>
+   </g>
+   <g id="s12-2">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(346.281145 352.357378)">12  Működési próbák (FI próba-</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(355.691871 362.394323)">gomb, kapcsolások) – 24.1</text>
+   </g>
+   <g id="s13-2">
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(376.581956 398.492871)">13  Jegyzőkönyv,</text>
+    <text style="font-size: 8.6px; font-family: 'DejaVu Sans'" transform="translate(377.808128 408.12299)">minősítés – 24.4</text>
+   </g>
+   <g id="patch_3">
+    <path d="M 106.807245 67.000755 
+Q 106.807245 73.12483 106.807245 78.019068 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 74.419068 
+L 106.807245 78.019068 
+L 105.007245 74.419068 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 106.807245 109.869283 
+Q 106.807245 115.993358 106.807245 120.887597 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 117.287597 
+L 106.807245 120.887597 
+L 105.007245 117.287597 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 106.807245 152.737811 
+Q 106.807245 156.565358 106.807245 159.163068 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 155.563068 
+L 106.807245 159.163068 
+L 105.007245 155.563068 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 161.923925 183.358189 
+Q 172.641057 183.358189 182.128351 183.358189 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 178.528351 181.558189 
+L 182.128351 183.358189 
+L 178.528351 185.158189 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 106.807245 206.323472 
+Q 106.807245 210.151019 106.807245 212.748729 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 209.148729 
+L 106.807245 212.748729 
+L 105.007245 209.148729 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 106.807245 244.598943 
+Q 106.807245 248.426491 106.807245 251.0242 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 247.4242 
+L 106.807245 251.0242 
+L 105.007245 247.4242 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 161.923925 275.219321 
+Q 172.641057 275.219321 182.128351 275.219321 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 178.528351 273.419321 
+L 182.128351 275.219321 
+L 178.528351 277.019321 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 106.807245 298.184604 
+Q 106.807245 302.012151 106.807245 304.609861 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 301.009861 
+L 106.807245 304.609861 
+L 105.007245 301.009861 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 106.807245 336.460075 
+Q 106.807245 341.053132 106.807245 344.416351 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 340.816351 
+L 106.807245 344.416351 
+L 105.007245 340.816351 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 106.807245 376.266566 
+Q 106.807245 380.094113 106.807245 382.691823 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 379.091823 
+L 106.807245 382.691823 
+L 105.007245 379.091823 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 161.923925 406.886943 
+Q 172.641057 406.886943 182.128351 406.886943 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 178.528351 405.086943 
+L 182.128351 406.886943 
+L 178.528351 408.686943 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_14">
+    <path d="M 106.807245 429.852226 
+Q 106.807245 433.679774 106.807245 436.277483 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 432.677483 
+L 106.807245 436.277483 
+L 105.007245 432.677483 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_15">
+    <path d="M 106.807245 468.127698 
+Q 106.807245 472.720755 106.807245 476.083974 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 472.483974 
+L 106.807245 476.083974 
+L 105.007245 472.483974 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 106.807245 507.934189 
+Q 106.807245 517.120302 106.807245 525.076578 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 108.607245 521.476578 
+L 106.807245 525.076578 
+L 105.007245 521.476578 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_17">
+    <path d="M 413.011019 67.000755 
+Q 413.011019 76.186868 413.011019 84.143144 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 414.811019 80.543144 
+L 413.011019 84.143144 
+L 411.211019 80.543144 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_18">
+    <path d="M 413.011019 223.164679 
+Q 413.011019 232.350792 413.011019 240.307068 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 414.811019 236.707068 
+L 413.011019 240.307068 
+L 411.211019 236.707068 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_19">
+    <path d="M 413.011019 278.281358 
+Q 413.011019 285.936453 413.011019 292.36171 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 414.811019 288.76171 
+L 413.011019 292.36171 
+L 411.211019 288.76171 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_20">
+    <path d="M 413.011019 324.211925 
+Q 413.011019 331.867019 413.011019 338.292276 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 414.811019 334.692276 
+L 413.011019 338.292276 
+L 411.211019 334.692276 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="patch_21">
+    <path d="M 413.011019 370.142491 
+Q 413.011019 377.797585 413.011019 384.222842 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+    <path d="M 414.811019 380.622842 
+L 413.011019 384.222842 
+L 411.211019 380.622842 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.1; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_1">
+    <path d="M 238.474868 169.579019 
+L 238.474868 137.427623 
+L 174.172075 137.427623 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="patch_22">
+    <path d="M 238.474868 137.427623 
+Q 206.323472 137.427623 175.290109 137.427623 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 178.890109 139.227623 
+L 175.290109 137.427623 
+L 178.890109 135.627623 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 238.474868 261.440151 
+L 238.474868 229.288755 
+L 174.172075 229.288755 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="patch_23">
+    <path d="M 238.474868 229.288755 
+Q 206.323472 229.288755 175.290109 229.288755 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 178.890109 231.088755 
+L 175.290109 229.288755 
+L 178.890109 227.488755 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 238.474868 393.107774 
+L 238.474868 360.956377 
+L 174.172075 360.956377 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="patch_24">
+    <path d="M 238.474868 360.956377 
+Q 206.323472 360.956377 175.290109 360.956377 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 178.890109 362.756377 
+L 175.290109 360.956377 
+L 178.890109 359.156377 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_4">
+    <path d="M 174.172075 538.554566 
+L 316.55683 538.554566 
+L 316.55683 51.690566 
+L 342.584151 51.690566 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="patch_25">
+    <path d="M 316.55683 51.690566 
+Q 329.570491 51.690566 341.24251 51.690566 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 337.64251 49.890566 
+L 341.24251 51.690566 
+L 337.64251 53.490566 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_5">
+    <path d="M 360.956377 103.745208 
+L 360.956377 103.745208 
+L 360.956377 134.365585 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="patch_26">
+    <path d="M 360.956377 103.745208 
+Q 360.956377 119.055396 360.956377 133.247551 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 362.756377 129.647551 
+L 360.956377 133.247551 
+L 359.156377 129.647551 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_6">
+    <path d="M 465.06566 103.745208 
+L 474.251774 103.745208 
+L 474.251774 134.365585 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="patch_27">
+    <path d="M 474.251774 103.745208 
+Q 474.251774 119.055396 474.251774 133.247551 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 476.051774 129.647551 
+L 474.251774 133.247551 
+L 472.451774 129.647551 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_7">
+    <path d="M 360.956377 164.985962 
+L 360.956377 183.358189 
+L 413.011019 183.358189 
+L 413.011019 192.544302 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="patch_28">
+    <path d="M 413.011019 183.358189 
+Q 413.011019 187.951245 413.011019 191.426268 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 414.811019 187.826268 
+L 413.011019 191.426268 
+L 411.211019 187.826268 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_8">
+    <path d="M 474.251774 164.985962 
+L 474.251774 183.358189 
+L 413.011019 183.358189 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="patch_29">
+    <path d="M 474.251774 183.358189 
+Q 443.631396 183.358189 414.129053 183.358189 
+" clip-path="url(#pe604c192a3)" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 417.729053 185.158189 
+L 414.129053 183.358189 
+L 417.729053 181.558189 
+z
+" clip-path="url(#pe604c192a3)" style="stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: middle" x="106.807245" y="22.077795" transform="rotate(-0 106.807245 22.077795)">KIKAPCSOLT ÁLLAPOT</text>
+   </g>
+   <g id="text_2">
+    <text style="font-weight: 700; font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: middle" x="172.641057" y="175.897745" transform="rotate(-0 172.641057 175.897745)">igen</text>
+   </g>
+   <g id="text_3">
+    <text style="font-weight: 700; font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: start" x="111.400302" y="212.52267" transform="rotate(-0 111.400302 212.52267)">nem</text>
+   </g>
+   <g id="text_4">
+    <text style="font-weight: 700; font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: middle" x="172.641057" y="267.792451" transform="rotate(-0 172.641057 267.792451)">nem</text>
+   </g>
+   <g id="text_5">
+    <text style="font-weight: 700; font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: start" x="111.400302" y="304.350228" transform="rotate(-0 111.400302 304.350228)">igen</text>
+   </g>
+   <g id="text_6">
+    <text style="font-weight: 700; font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: middle" x="172.641057" y="399.460073" transform="rotate(-0 172.641057 399.460073)">nem</text>
+   </g>
+   <g id="text_7">
+    <text style="font-weight: 700; font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: start" x="111.400302" y="436.017851" transform="rotate(-0 111.400302 436.017851)">igen</text>
+   </g>
+   <g id="text_8">
+    <text style="font-weight: 700; font-size: 9.2px; font-family: 'DejaVu Sans'; text-anchor: middle" x="413.011019" y="22.077795" transform="rotate(-0 413.011019 22.077795)">ÜZEMI MÉRÉSEK</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: end" x="295.122566" y="632.787349" transform="rotate(-0 295.122566 632.787349)">← kikapcsolt</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: start" x="307.370717" y="632.787349" transform="rotate(-0 307.370717 632.787349)">üzemi →</text>
+   </g>
+   <g id="text_11">
+    <text style="font-weight: 700; font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: middle" x="426.790189" y="191.820341" transform="rotate(-0 426.790189 191.820341)">igen</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(468.127698 274.309795)">nem → FI csere,</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(468.127698 283.934185)">ismétlés</text>
+   </g>
+   <g id="text_13">
+    <text style="font-weight: 700; font-size: 8.594884px; font-family: 'DejaVu Sans'; text-anchor: start" x="417.604075" y="288.27453" transform="rotate(-0 417.604075 288.27453)">igen</text>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(346.216683 436.599049)">Fehér doboz: kikapcsolt állapot</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(355.591821 446.635994)">Szürke doboz: üzemi lépés</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(346.132077 456.260384)">Rombusz: döntés – „nem” után</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(374.005689 466.297328)">nincs továbblépés</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(351.418602 476.334273)">TN/TT-feltétel nem teljesül →</text>
+    <text style="font-size: 8.594884px; font-family: 'DejaVu Sans'" transform="translate(363.93826 486.371217)">javítás, ismételt mérés</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pe604c192a3">
+   <rect x="5.76" y="5.76" width="520.546415" height="649.152"/>
+  </clipPath>
+ </defs>
+</svg>
+
+</div>
+
+<p class="small">A lépések a 24.1–24.4 alfejezetek sorrendjét követik. A határértékek tanulási értékek (ellenőrizendő: MSZ HD 60364-6, MSZ HD 60364-4-41).</p>
+<script>
+const PARTS=[], LAYERS=[],
+FRAMES=[{"k": "s1", "c": "1 Dokumentáció, áramkörök azonosítása. Mivel: kapcsolási rajz, áramkörlista, címkék. Elfogadás: minden áramkör azonosítva, a rajz egyezik a valósággal. (24.1)", "b": "1", "hide": ""}, {"k": "s1,s2", "c": "2 Öt szabály, feszültségmentesség. Mivel: kétpólusú feszültségvizsgáló, próba–mérés–próba. Elfogadás: minden pólus között feszültségmentes. (24.1)", "b": "2", "hide": ""}, {"k": "s1,s2,s3", "c": "3 Szemrevételezés. Mivel: ellenőrzőlista, lámpa. Elfogadás: nincs hiányzó/sérült elem, jelölés rendben. (24.1)", "b": "3", "hide": ""}, {"k": "s1,s2,s3,d1", "c": "Döntés: életveszélyes hiba (pl. hiányzó PE, feszültség alatti rész)? Igen → a berendezés NEM helyezhető feszültség alá; javítás, majd a szemrevételezés megismétlése.", "b": "◇", "hide": ""}, {"k": "s1,s2,s3,d1,s4", "c": "4 Védővezető- és EPH-folytonosság. Mivel: kis ellenállásmérő, ≥ 200 mA mérőáram. Elfogadás: R_PE a számított érték közelében (ellenőrizendő: MSZ HD 60364-6). (24.2)", "b": "4", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2", "c": "Döntés: R_PE megfelel? Nem → kötés javítása, ismételt mérés; addig nincs továbblépés.", "b": "◇", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5", "c": "5 Fogyasztók, SPD, elektronika leválasztása – a szigetelésmérés DC feszültsége tönkreteheti őket, és meghamisítja az eredményt. (24.2)", "b": "5", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6", "c": "6 Szigetelési ellenállás L–N, L–PE, N–PE. Mivel: szigetelésmérő, 500 V DC. Elfogadás: ≥ 1 MΩ (≤ 500 V-os kör), SELV/PELV: 250 V DC, ≥ 0,5 MΩ (ellenőrizendő: MSZ HD 60364-6). (24.2)", "b": "6", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3", "c": "Döntés: R_iso ≥ határérték? Nem → hibahely-keresés felezéssel (24.4), javítás, ismételt mérés.", "b": "◇", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7", "c": "7 Polaritás. Mivel: ellenállásmérő / folytonosság-vizsgáló. Elfogadás: az egypólusú kapcsolók és védelmek a fázisvezetőben. (24.2)", "b": "7", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8", "c": "8 Földelési ellenállás. Mivel: földelésmérő (3/4 pólus, lakatfogó). TT: kötelező (R_A·I_Δn ≤ 50 V), TN: tájékoztató. (24.2)", "b": "8", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8,hatar", "c": "FESZÜLTSÉG ALÁ HELYEZÉS – csak ha minden kikapcsolt állapotú lépés megfelelt. Innen üzemi mérések következnek.", "b": "⚡", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8,hatar,s9", "c": "9 Hurokimpedancia, zárlati áram. Mivel: installációs vizsgáló. (24.3)", "b": "9", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8,hatar,s9,d4", "c": "Döntés TN/TT szerint: TN: Z_s ≤ Z_s,max = U0/I_a; TT: R_A·I_Δn ≤ 50 V (ellenőrizendő: MSZ HD 60364-4-41). Nem → javítás, ismételt mérés.", "b": "◇", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8,hatar,s9,d4,s10", "c": "10 FI-mérés: kioldóáram, kioldási idő (I_Δn-nél általános típusnál ≤ 300 ms – ellenőrizendő), 0°/180° fázishelyzet. Mivel: installációs vizsgáló. (24.3)", "b": "10", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8,hatar,s9,d4,s10,d5", "c": "Döntés: FI megfelel? Nem → FI csere vagy hibaelhárítás, ismételt mérés.", "b": "◇", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8,hatar,s9,d4,s10,d5,s11", "c": "11 Feszültség, fázissorrend, forgásirány. Mivel: multiméter, fázissorrend-mérő. Elfogadás: jobbos fázissorrend, helyes forgásirány. (24.3)", "b": "11", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8,hatar,s9,d4,s10,d5,s11,s12", "c": "12 Működési próbák: FI próbagomb, kapcsolások, vezérlések, jelzések. Elfogadás: minden az előírt módon működik. (24.1)", "b": "12", "hide": ""}, {"k": "s1,s2,s3,d1,s4,d2,s5,s6,d3,s7,s8,hatar,s9,d4,s10,d5,s11,s12,s13", "c": "13 Jegyzőkönyv, minősítés: mért értékek, határértékek, döntés (megfelel / nem felel meg), aláírás. (24.4)", "b": "13", "hide": ""}], HIDE=[], STEPPER=true,
+ZOOM=false, SHOWALL=true, START=0, DELAY=1600,
+ALLMSG="Mutasson egy részre vagy a lenti gombokra a kiemeléshez.";
+
+
+const SVG=document.getElementById("fig"), ST=document.getElementById("status");
+const VB0=SVG.getAttribute("viewBox");
+const q=k=>Array.from(SVG.querySelectorAll('[id^="'+k+'-"]')).concat(Array.from(SVG.querySelectorAll('[id="'+k+'"]')));
+function status(h){ST.innerHTML=h;}
+/* --- kiemelhető részek --- */
+let cur=null;
+function hl(k,on){q(k).forEach(e=>e.classList.toggle("hl",on));}
+function pick(p){if(cur)hl(cur.k,false);cur=p;if(p){hl(p.k,true);status("<b>"+(p.n?p.n+" – ":"")+p.name+"</b>"+(p.d?": "+p.d:""));}
+  document.querySelectorAll(".parts button").forEach(b=>b.setAttribute("aria-pressed",p&&b.dataset.k===p.k?"true":"false"));}
+if(PARTS.length){const box=document.getElementById("parts");
+  PARTS.forEach(p=>{const b=document.createElement("button");b.type="button";b.dataset.k=p.k;b.textContent=(p.n?p.n+" ":"")+p.name;
+    b.addEventListener("mouseenter",()=>pick(p));b.addEventListener("focus",()=>pick(p));b.addEventListener("click",()=>pick(p));box.appendChild(b);
+    q(p.k).forEach(e=>{e.style.cursor="pointer";e.addEventListener("mouseenter",()=>pick(p));e.addEventListener("click",()=>pick(p));});});}
+/* --- rétegek --- */
+LAYERS.forEach(L=>{const c=document.getElementById("ly_"+L.k);const f=()=>{L.k.split(",").forEach(k=>q(k).forEach(e=>e.classList.toggle("off",!c.checked)));};
+  c.addEventListener("change",f);f();});
+/* --- képkockák / nézetek --- */
+let fi=-1,timer=null;
+function zoomTo(k){const g=q(k);if(!g.length)return;let b=null;
+  g.forEach(e=>{const r=e.getBBox();if(!b)b={x:r.x,y:r.y,x2:r.x+r.width,y2:r.y+r.height};else{b.x=Math.min(b.x,r.x);b.y=Math.min(b.y,r.y);b.x2=Math.max(b.x2,r.x+r.width);b.y2=Math.max(b.y2,r.y+r.height);}});
+  const p=6;SVG.setAttribute("viewBox",(b.x-p)+" "+(b.y-p)+" "+(b.x2-b.x+2*p)+" "+(b.y2-b.y+2*p));}
+function show(i){if(!FRAMES.length)return;fi=(i+FRAMES.length)%FRAMES.length;
+  FRAMES.forEach((F,j)=>F.k.split(",").forEach(k=>q(k).forEach(e=>e.classList.toggle("off",j!==fi))));
+  (FRAMES[fi].hide||"").split(",").filter(Boolean).forEach(k=>q(k).forEach(e=>e.classList.add("off")));
+  HIDE.forEach(k=>q(k).forEach(e=>e.classList.add("off")));
+  if(ZOOM)zoomTo(FRAMES[fi].k.split(",")[0]);
+  status("<b>"+(fi+1)+"/"+FRAMES.length+"</b> – "+FRAMES[fi].c);
+  document.querySelectorAll(".fr").forEach((b,j)=>b.setAttribute("aria-pressed",j===fi?"true":"false"));
+  if(typeof onFrame==="function")onFrame(fi);}
+function all(){stop();fi=-1;FRAMES.forEach(F=>F.k.split(",").forEach(k=>q(k).forEach(e=>e.classList.remove("off"))));
+  HIDE.forEach(k=>q(k).forEach(e=>e.classList.remove("off")));SVG.setAttribute("viewBox",VB0);status(ALLMSG);
+  document.querySelectorAll(".fr").forEach(b=>b.setAttribute("aria-pressed","false"));if(typeof onFrame==="function")onFrame(-1);}
+function stop(){if(timer){clearInterval(timer);timer=null;const b=document.getElementById("play");if(b)b.textContent="▶ lejátszás";}}
+if(FRAMES.length){const bar=document.getElementById("frames");
+  const mkb=(t,f,id)=>{const b=document.createElement("button");b.type="button";b.textContent=t;if(id)b.id=id;b.addEventListener("click",f);bar.appendChild(b);return b;};
+  if(STEPPER){mkb("⏮",()=>{stop();show(0);});mkb("◀",()=>{stop();show(fi<0?0:fi-1);});mkb("▶",()=>{stop();show(fi+1);});
+    mkb("▶ lejátszás",()=>{if(timer){stop();return;}document.getElementById("play").textContent="⏸ megállítás";if(fi<0)show(0);
+      timer=setInterval(()=>{if(fi>=FRAMES.length-1){stop();return;}show(fi+1);},DELAY);},"play");}
+  FRAMES.forEach((F,j)=>{const b=mkb(F.b||String(j+1),()=>{stop();show(j);});b.className="fr";});
+  if(SHOWALL)mkb("Teljes ábra",all);
+  document.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;if(e.key==="ArrowRight"){stop();show(fi+1);}if(e.key==="ArrowLeft"){stop();show(fi<0?0:fi-1);}});
+  if(START>=0)show(START);else all();}
+else status(ALLMSG);
+
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

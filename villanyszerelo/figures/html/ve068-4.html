@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pont-módszer: megvilágítás egy pontban</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="n">Lámpaszám</label><input id="n" type="range" min="1" max="4" step="1" value="2" aria-label="Lámpaszám"><output id="n_o" for="n"></output></div>
+<div class="row"><label for="s">Osztás</label><input id="s" type="range" min="1" max="5" step="0.1" value="2" aria-label="Osztás"><output id="s_o" for="s"></output></div>
+<div class="row"><label for="h">hm (munkasík feletti)</label><input id="h" type="range" min="1.5" max="6" step="0.05" value="2.05" aria-label="hm (munkasík feletti)"><output id="h_o" for="h"></output></div>
+<div class="row"><label for="phi">Fényáram Φ</label><input id="phi" type="range" min="1000" max="12000" step="100" value="4000" aria-label="Fényáram Φ"><output id="phi_o" for="phi"></output></div>
+<div class="row"><label for="tip">Lámpatest</label><select id="tip" aria-label="Lámpatest"><option value="1" selected>Lambert-panel (cos θ)</option><option value="4">mélysugárzó (cos⁴ θ)</option></select></div>
+<div class="row"><label for="px">P helye (a sávban)</label><input id="px" type="range" min="-1" max="1" step="0.01" value="0" aria-label="P helye (a sávban)"><output id="px_o" for="px"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 370" role="img" aria-label="Oldalnézet két-négy lámpatesttel és egy mozgatható P ponttal, alatta a munkasík menti E(x) megvilágítási görbe az egyes lámpák hozzájárulásával és az összeggel."></svg>
+<p class="small">Közvetlen összetevő: E = Σ I(θ)·cos³θ / h², I(θ) = I0·cos^m θ, I0 = Φ·(m+1)/(2π); a falakról visszavert fényt és a karbantartási tényezőt nem tartalmazza. Szemléltető lámpatest-modellek; a valódi fényeloszlást az adatlap adja.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"n":"db", "s":"m", "h":"m", "phi":"lm", "px":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const m=+v.tip,I0=v.phi*(m+1)/(2*Math.PI),xs=[];for(let k=0;k<v.n;k++)xs.push((k-(v.n-1)/2)*v.s);
+const half=(v.n-1)/2*v.s+3,px=v.px*half;
+const el1=(x,xl)=>{const th=Math.atan2(Math.abs(x-xl),v.h);return I0*Math.pow(Math.cos(th),m+3)/(v.h*v.h);};
+const E=x=>xs.reduce((a,xl)=>a+el1(x,xl),0);
+const L=50,R=545,X=x=>L+(x+half)/(2*half)*(R-L);
+// oldalnézet
+const yS=v2=>20+ (6.2-v2)/6.4*120, yW=yS(0);
+el("line",{x1:L,x2:R,y1:yW,y2:yW,stroke:css("--fg"),"stroke-width":3});
+xs.forEach((xl,k)=>{el("rect",{x:X(xl)-12,y:yS(v.h)-5,width:24,height:6,fill:css("--fg")});
+ el("line",{x1:X(xl),y1:yS(v.h),x2:X(px),y2:yW,stroke:css("--hl2"),"stroke-dasharray":"5 4"});
+ const th=Math.atan2(Math.abs(px-xl),v.h)*180/Math.PI;el("text",{x:X(xl),y:yS(v.h)-9,"text-anchor":"middle","font-size":11},"E"+(k+1)+" θ="+fmt(th,0)+"°");});
+el("circle",{cx:X(px),cy:yW,r:5,fill:css("--hl2")});el("text",{x:X(px)+7,y:yW+14,"font-size":12},"P");
+el("text",{x:L,y:yW+14,"font-size":11},"munkasík");el("text",{x:R,y:yS(v.h)+16,"font-size":11,"text-anchor":"end"},"hm = "+fmt(v.h,2)+" m");
+// E(x) görbe
+const N=300,pts=[];let mx=0;for(let k=0;k<=N;k++){const x=-half+2*half*k/N,e=E(x);pts.push([x,e]);mx=Math.max(mx,e);}
+const top=170,bot=330,Ym=e=>bot-e/(mx*1.1)*(bot-top);
+for(let q=0;q<=4;q++){const e=mx*1.1*q/4;el("line",{x1:L,x2:R,y1:Ym(e),y2:Ym(e),stroke:css("--grid")});el("text",{x:L-4,y:Ym(e)+4,"text-anchor":"end","font-size":10},fmt(e,0));}
+for(let x=Math.ceil(-half);x<=half;x++){el("text",{x:X(x),y:bot+14,"text-anchor":"middle","font-size":10},String(x).replace("-","−"));}
+xs.forEach(xl=>{let d="";for(let k=0;k<=N;k++){const x=-half+2*half*k/N;d+=(k?"L":"M")+X(x).toFixed(1)+" "+Ym(el1(x,xl)).toFixed(1);}el("path",{d:d,fill:"none",stroke:css("--muted"),"stroke-width":1,"stroke-dasharray":"4 3"});});
+el("path",{d:pts.map((p,k)=>(k?"L":"M")+X(p[0]).toFixed(1)+" "+Ym(p[1]).toFixed(1)).join(""),fill:"none",stroke:css("--hl"),"stroke-width":2.6});
+el("circle",{cx:X(px),cy:Ym(E(px)),r:5,fill:css("--hl2")});
+el("text",{x:(L+R)/2,y:bot+30,"text-anchor":"middle","font-size":11},"x (m); E (lx) – vékony: egyes lámpák, vastag: összeg");
+// statisztika a lámpák alatti szakaszon
+const a0=v.n>1?xs[0]:-v.s/2,a1=v.n>1?xs[xs.length-1]:v.s/2;let mn=1e9,mxx=0,sm=0,c=0;for(let k=0;k<=200;k++){const e=E(a0+(a1-a0)*k/200);mn=Math.min(mn,e);mxx=Math.max(mxx,e);sm+=e;c++;}
+status("I<sub>0</sub> = "+fmt(I0,0)+" cd; <b>E(P) = "+fmt(E(px),1)+" lx</b> (x = "+fmt(px,2)+" m)<br>A lámpák alatti szakaszon: E<sub>max</sub> = "+fmt(mxx,0)+" lx, E<sub>min</sub> = "+fmt(mn,0)+" lx, E<sub>átl</sub> = "+fmt(sm/c,0)+" lx, U<sub>0</sub> = E<sub>min</sub>/E<sub>átl</sub> = "+fmt(mn/(sm/c),2)+" (csak közvetlen fény)");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

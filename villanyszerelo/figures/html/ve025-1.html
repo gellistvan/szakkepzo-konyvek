@@ -25,15 +25,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Csillag vagy delta kapcsolású három azonos ellenállás: fázisfeszültség, fázisáram, vonali áram és teljesítmény a vonali feszültségből és az ellenállásból"></svg>
 <p class="small">Ohmos fázisterhelés (cosφ = 1), szimmetrikus hálózat. 400 V és 100 Ω mellett: csillag 230,9 V, 2,31 A, 1,6 kW; delta 400 V, 4 A, 6,93 A, 4,8 kW. Szemléltető számítás.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"Uv":"V", "R":"Ω", "c":""};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const S3=Math.sqrt(3), Y=v.c==0;
 const Uf=Y?v.Uv/S3:v.Uv, If=Uf/v.R, Iv=Y?If:S3*If, P=3*Uf*Uf/v.R;
@@ -64,7 +68,7 @@ status("<b>"+(Y?"Csillag":"Delta")+"</b>: Uf = "+fmt(Uf,1)+" V, If = "+fmt(If)+"
  "A másik kapcsolásban ugyanez a terhelés "+fmt(Pother/1000)+" kW lenne ("+(Y?"delta: háromszoros":"csillag: harmadannyi")+").");
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

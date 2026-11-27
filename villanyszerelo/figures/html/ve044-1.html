@@ -31,7 +31,7 @@ code,.mono{font-family:ui-monospace,Consolas,monospace}</style>
 <label class="chk"><input type="checkbox" id="mm"> méretarány-mérő</label></div>
 <div id="st" aria-live="polite"></div><div id="ms" class="small" aria-live="polite"></div>
 <svg id="v" role="img" aria-label="Lakás villamos alaprajza 1:50 méretarányban, lámpák, kapcsolók, aljzatok és a lakáselosztó jelével, áramkörönként jelölt nyomvonalakkal"></svg>
-<div class="small">Lakáselosztó egyvonalas rajza (Q1 C32 → FI 30 mA → kismegszakítók):</div><ul id="ol"><li data-c="Q2" tabindex="0"><b>Q2</b> B10 – Világítás (NYM-J 3×1,5)</li><li data-c="Q3" tabindex="0"><b>Q3</b> B16 – Aljzatok: nappali, háló (NYM-J 3×2,5)</li><li data-c="Q4" tabindex="0"><b>Q4</b> B16 – Konyhai aljzatok (NYM-J 3×2,5)</li><li data-c="Q5" tabindex="0"><b>Q5</b> B16 – Hűtőgép (NYM-J 3×2,5)</li><li data-c="Q6" tabindex="0"><b>Q6</b> B16 – Mosógép (fürdő) (NYM-J 3×2,5)</li></ul>
+<div class="small">Lakáselosztó egyvonalas rajza (Q1 C32 → Q2 FI 30 mA → F1–F5 kismegszakítók):</div><ul id="ol"><li data-c="F1" tabindex="0"><b>F1</b> B10 – Világítás (NYM-J 3×1,5)</li><li data-c="F2" tabindex="0"><b>F2</b> B16 – Aljzatok: nappali, háló (NYM-J 3×2,5)</li><li data-c="F3" tabindex="0"><b>F3</b> B16 – Konyhai aljzatok (NYM-J 3×2,5)</li><li data-c="F4" tabindex="0"><b>F4</b> B16 – Hűtőgép (NYM-J 3×2,5)</li><li data-c="F5" tabindex="0"><b>F5</b> B16 – Mosógép (fürdő) (NYM-J 3×2,5)</li></ul>
 <p class="small">Hasznos alapterület ≈ 52,2 m² (falakkal ≈ 54 m²). Szemléltető terv egyszerűsített jelekkel; a valódi terven a terv jelkulcsa mérvadó (ellenőrizendő: MSZ EN 60617-11). Az áramkörök a fejezet áramkörlistáját követik.</p>
 <script>
 
@@ -64,7 +64,7 @@ function dev(kind,a,b,o){o=o||{};
   const cx=(A[0]+B[0])/2,cy=(A[1]+B[1])/2,h=30,g=mk("g",{transform:"translate("+cx+","+cy+") rotate("+ang+")"});
   const line=css("--line"),cur=css("--cur"),sw=2.2;
   const seg=(x1,y1,x2,y2,c,w,extra)=>mk("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:c||line,"stroke-width":w||sw,"stroke-linecap":"round"},extra||{}),g);
-  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res")?true:!!o.closed;
+  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res"||kind==="fuse")?true:!!o.closed;
   // áram alatti halo (a kivezetések és a záródott test)
   if(o.l1)seg(-L/2,0,-h,0,cur,6.5,{opacity:.9});
   if(o.l2)seg(h,0,L/2,0,cur,6.5,{opacity:.9});
@@ -79,7 +79,8 @@ function dev(kind,a,b,o){o=o||{};
     if(kind==="pbno"||kind==="pbnc"){const d=o.pressed?9:0;                // nyomógomb-működtető (T-alak)
       seg(0,-8+d,0,-30+d,line,1.8,{"stroke-dasharray":"4 3"});seg(-9,-30+d,9,-30+d,line,3);}
     if(kind==="sw"){seg(0,-12,0,-26,line,1.8,{"stroke-dasharray":"4 3"});seg(-8,-26,8,-26,line,3);}
-    if(kind==="mcb"){seg(-6,-6,6,-18,line,2);seg(6,-6,-6,-18,line,2);}   // kismegszakító: kézi működtetés jele
+    if(kind==="mcb"){const dy=o.closed?12:0;                              // kismegszakító: a túláramkioldó X-e a késsel együtt mozog
+      seg(-6,-6+dy,6,-18+dy,line,2);seg(6,-6+dy,-6,-18+dy,line,2);}
     if(o.delay==="on"||o.delay==="off"){seg(0,-10,0,-28,line,1.8);       // késleltetett érintkező (időrelé): ejtőernyő-ív
       mk("path",{d:"M -9 -28 A 9 9 0 0 "+(o.delay==="on"?1:0)+" 9 -28",fill:"none",stroke:line,"stroke-width":2},g);}
   }else if(kind==="coil"){
@@ -88,6 +89,10 @@ function dev(kind,a,b,o){o=o||{};
   }else if(kind==="thermal"){
     mk("rect",{x:-h,y:-17,width:2*h,height:34,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);
     mk("polyline",{points:"-14,0 -7,-9 0,9 7,-9 14,0",fill:"none",stroke:line,"stroke-width":2},g);
+  }else if(kind==="res"){                                                  // ellenállás (IEC téglalap)
+    mk("rect",{x:-h,y:-9,width:2*h,height:18,fill:o.body?css("--coil"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+  }else if(kind==="fuse"){                                                 // olvadóbiztosító: téglalap, középvonal
+    mk("rect",{x:-h,y:-10,width:2*h,height:20,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);seg(-h,0,h,0,line,2);
   }else if(kind==="lamp"){
     mk("circle",{cx:0,cy:0,r:17,fill:o.body?css("--lamp"):css("--bg"),stroke:line,"stroke-width":2.2},g);
     seg(-12,-12,12,12,line,2);seg(-12,12,12,-12,line,2);
@@ -120,7 +125,7 @@ function hold(el,down,up){let on=false;const d=e=>{if(!on){on=true;down();}},u=e
 function pulse(down,up,ms){down();setTimeout(up,ms||600);}
 
 
-const D={"rooms": [["nappali", 0, 0, 5.2, 4.6, 23.92], ["konyha", 5.2, 0, 9.0, 2.9, 11.02], ["háló", 0, 4.6, 3.2, 7.0, 7.68], ["előtér", 3.2, 4.6, 5.2, 7.0, 4.8], ["fürdő", 5.2, 4.6, 7.2, 7.0, 4.8]], "doors": [[[3.75, 7.0], [4.65, 7.0], "h", 0.9], [[3.2, 5.199999999999999], [3.2, 6.0], "v", 0.8], [[5.2, 5.225], [5.2, 5.975], "v", 0.75], [[3.75, 4.6], [4.65, 4.6], "h", 0.9], [[5.2, 1.1500000000000001], [5.2, 2.0500000000000003], "v", 0.9]], "windows": [[2.6, 0.0, "h", 1.8], [1.6, 7.0, "h", 1.2], [7.1, 0.0, "h", 1.2], [6.2, 7.0, "h", 0.6]], "le": [3.2, 6.2, 0.35, 0.7], "lamps": [[2.6, 2.3], [7.1, 1.45], [1.6, 5.8], [4.2, 5.8], [6.2, 5.8]], "switches": [["soros", 4.55, 4.35], ["egy", 5.5, 2.35], ["egy", 2.95, 6.3], ["valto", 4.85, 6.7], ["valto", 3.55, 4.9], ["egy", 4.95, 5.0]], "sockets": [[2.6, 6.75, "Q3"], [0.25, 5.4, "Q3"], [0.25, 3.5, "Q3"], [0.25, 1.2, "Q3"], [4.3, 0.25, "Q3"], [6.0, 0.25, "Q4"], [8.0, 0.25, "Q4"], [8.75, 2.0, "Q5"], [6.95, 5.75, "Q6"]], "circuits": {"Q2": {"name": "Világítás", "prot": "B10", "cable": "NYM-J 3×1,5", "dash": "", "paths": [[[3.55, 6.8], [4.2, 6.8], [4.2, 5.8]], [[4.2, 5.8], [4.2, 2.3], [2.6, 2.3]], [[4.2, 2.3], [4.2, 1.45], [7.1, 1.45]], [[4.2, 5.8], [1.6, 5.8]], [[4.2, 5.8], [6.2, 5.8]]], "lab": [2.7, 5.95]}, "Q3": {"name": "Aljzatok: nappali, háló", "prot": "B16", "cable": "NYM-J 3×2,5", "dash": "10 5", "paths": [[[3.2, 6.75], [2.6, 6.75], [0.25, 6.75], [0.25, 0.25], [4.3, 0.25]]], "lab": [0.4, 6.45]}, "Q4": {"name": "Konyhai aljzatok", "prot": "B16", "cable": "NYM-J 3×2,5", "dash": "12 4 2 4", "paths": [[[3.55, 6.35], [3.8, 6.35], [3.8, 4.75], [5.05, 4.75], [5.05, 0.25], [8.0, 0.25]]], "lab": [5.4, 0.95]}, "Q5": {"name": "Hűtőgép", "prot": "B16", "cable": "NYM-J 3×2,5", "dash": "2 4", "paths": [[[3.55, 6.25], [3.65, 6.25], [3.65, 4.45], [4.8, 4.45], [4.8, 2.7], [8.75, 2.7], [8.75, 2.0]]], "lab": [6.1, 2.45]}, "Q6": {"name": "Mosógép (fürdő)", "prot": "B16", "cable": "NYM-J 3×2,5", "dash": "10 3 2 3 2 3", "paths": [[[3.55, 6.62], [6.95, 6.62], [6.95, 5.75]]], "lab": [5.35, 6.8]}}};let sel=null,meas=[],mode=false;
+const D={"rooms": [["nappali", 0, 0, 5.2, 4.6, 23.92], ["konyha", 5.2, 0, 9.0, 2.9, 11.02], ["háló", 0, 4.6, 3.2, 7.0, 7.68], ["előtér", 3.2, 4.6, 5.2, 7.0, 4.8], ["fürdő", 5.2, 4.6, 7.2, 7.0, 4.8]], "doors": [[[3.75, 7.0], [4.65, 7.0], "h", 0.9], [[3.2, 5.199999999999999], [3.2, 6.0], "v", 0.8], [[5.2, 5.225], [5.2, 5.975], "v", 0.75], [[3.75, 4.6], [4.65, 4.6], "h", 0.9], [[5.2, 1.1500000000000001], [5.2, 2.0500000000000003], "v", 0.9]], "windows": [[2.6, 0.0, "h", 1.8], [1.6, 7.0, "h", 1.2], [7.1, 0.0, "h", 1.2], [6.2, 7.0, "h", 0.6]], "le": [3.2, 6.2, 0.35, 0.7], "lamps": [[2.6, 2.3], [7.1, 1.45], [1.6, 5.8], [4.2, 5.8], [6.2, 5.8]], "switches": [["soros", 4.55, 4.35], ["egy", 5.5, 2.35], ["egy", 2.95, 6.3], ["valto", 4.85, 6.7], ["valto", 3.55, 4.9], ["egy", 4.95, 5.0]], "sockets": [[2.6, 6.75, "F2"], [0.25, 5.4, "F2"], [0.25, 3.5, "F2"], [0.25, 1.2, "F2"], [4.3, 0.25, "F2"], [6.0, 0.25, "F3"], [8.0, 0.25, "F3"], [8.75, 2.0, "F4"], [6.95, 5.75, "F5"]], "circuits": {"F1": {"name": "Világítás", "prot": "B10", "cable": "NYM-J 3×1,5", "dash": "", "paths": [[[3.55, 6.8], [4.2, 6.8], [4.2, 5.8]], [[4.2, 5.8], [4.2, 2.3], [2.6, 2.3]], [[4.2, 2.3], [4.2, 1.45], [7.1, 1.45]], [[4.2, 5.8], [1.6, 5.8]], [[4.2, 5.8], [6.2, 5.8]]], "lab": [2.7, 5.95]}, "F2": {"name": "Aljzatok: nappali, háló", "prot": "B16", "cable": "NYM-J 3×2,5", "dash": "10 5", "paths": [[[3.2, 6.75], [2.6, 6.75], [0.25, 6.75], [0.25, 0.25], [4.3, 0.25]]], "lab": [0.4, 6.45]}, "F3": {"name": "Konyhai aljzatok", "prot": "B16", "cable": "NYM-J 3×2,5", "dash": "12 4 2 4", "paths": [[[3.55, 6.35], [3.8, 6.35], [3.8, 4.75], [5.05, 4.75], [5.05, 0.25], [8.0, 0.25]]], "lab": [5.4, 0.95]}, "F4": {"name": "Hűtőgép", "prot": "B16", "cable": "NYM-J 3×2,5", "dash": "2 4", "paths": [[[3.55, 6.25], [3.65, 6.25], [3.65, 4.45], [4.8, 4.45], [4.8, 2.7], [8.75, 2.7], [8.75, 2.0]]], "lab": [6.1, 2.45]}, "F5": {"name": "Mosógép (fürdő)", "prot": "B16", "cable": "NYM-J 3×2,5", "dash": "10 3 2 3 2 3", "paths": [[[3.55, 6.62], [6.95, 6.62], [6.95, 5.75]]], "lab": [5.35, 6.8]}}};let sel=null,meas=[],mode=false;
 const lay={arch:true,light:true,sock:true,route:true};
 function halo(t){t.setAttribute("paint-order","stroke");t.setAttribute("stroke",css("--bg"));t.setAttribute("stroke-width","5");}
 function render(){initSvg("v",-0.4,-0.8,9.5,7.4,62);const L=css("--line");
@@ -146,11 +151,14 @@ function render(){initSvg("v",-0.4,-0.8,9.5,7.4,62);const L=css("--line");
    seg([p[0]-0.15,p[1]-0.15],[p[0]+0.15,p[1]+0.15],{"stroke-width":2},g.light);seg([p[0]-0.15,p[1]+0.15],[p[0]+0.15,p[1]-0.15],{"stroke-width":2},g.light);});
  D.switches.forEach(s=>{const x=s[1],y=s[2],q=P(x,y);mk("circle",{cx:q[0],cy:q[1],r:5,fill:css("--bg"),stroke:L,"stroke-width":2},g.light);
    const k=0.33;seg([x+0.06,y+0.06],[x+k,y+k],{"stroke-width":2},g.light);seg([x+k,y+k],[x+k+0.07,y+k-0.07],{"stroke-width":2},g.light);
-   if(s[0]==="soros")seg([x+k*0.7,y+k*0.7],[x+k*0.7+0.07,y+k*0.7-0.07],{"stroke-width":2},g.light);
+   if(s[0]==="soros"){/* csillárkapcsoló: két, 45° ± 25°-os működtetővonal, mindkettő végén egy vonás (nem kétpólusú jel) */
+     g.light.lastChild.remove();g.light.lastChild.remove();
+     [20,70].forEach(a=>{const r=a*Math.PI/180,c=Math.cos(r),s2=Math.sin(r),ex=x+0.35*c,ey=y+0.35*s2,o=(a<45?1:-1);
+       seg([x+0.08*c,y+0.08*s2],[ex,ey],{"stroke-width":2},g.light);seg([ex,ey],[ex+o*0.09*s2,ey-o*0.09*c],{"stroke-width":2},g.light);});}
    if(s[0]==="valto"){seg([x-0.06,y-0.06],[x-k,y-k],{"stroke-width":2},g.light);seg([x-k,y-k],[x-k-0.07,y-k+0.07],{"stroke-width":2},g.light);}});
  D.sockets.forEach(s=>{const x=s[0],y=s[1],q=P(x,y),r=10,on=sel===s[2];
    mk("path",{d:"M"+(q[0]-r)+","+q[1]+" A"+r+","+r+" 0 0 1 "+(q[0]+r)+","+q[1]+" Z",fill:on?css("--lamp"):css("--bg"),stroke:L,"stroke-width":2},g.sock);
-   seg([x,y+0.16],[x,y+0.28],{"stroke-width":2},g.sock);if(s[2]==="Q6"){const t=text(x-0.05,y-0.25,"IP44",{size:11});g.sock.appendChild(t);}});
+   seg([x,y+0.16],[x,y+0.28],{"stroke-width":2},g.sock);if(s[2]==="F5"){const t=text(x-0.05,y-0.25,"IP44",{size:11});g.sock.appendChild(t);}});
  // méretarány-mérő
  meas.forEach(p=>{const q=P(p[0],p[1]);mk("circle",{cx:q[0],cy:q[1],r:5,fill:css("--cur")});});
  if(meas.length===2){seg(meas[0],meas[1],{stroke:css("--cur"),"stroke-width":2.4,"stroke-dasharray":"6 3"});}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Transzformátor üresjárási feszültsége</title>
+<title>Vezérlőtranszformátor-próbapad</title>
 <style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
 @media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
 *{box-sizing:border-box}
@@ -18,41 +18,64 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 .small{font-size:12px;color:var(--muted)}</style>
 </head>
 <body>
-<div class="row"><label for="U1">Primer feszültség U1</label><input id="U1" type="range" min="0" max="260" step="1" value="230" aria-label="Primer feszültség U1"><output id="U1_o" for="U1"></output></div>
-<div class="row"><label for="U2n">Szekunder névleges U2n (230 V primerre)</label><input id="U2n" type="range" min="6" max="110" step="1" value="24" aria-label="Szekunder névleges U2n (230 V primerre)"><output id="U2n_o" for="U2n"></output></div>
-<div class="row"><label for="P">Szekunder teljesítmény P2 (a példához)</label><input id="P" type="range" min="10" max="500" step="1" value="96" aria-label="Szekunder teljesítmény P2 (a példához)"><output id="P_o" for="P"></output></div>
-<div class="row"><label for="cf">cosφ2</label><input id="cf" type="range" min="0.3" max="1" step="0.05" value="0.85" aria-label="cosφ2"><output id="cf_o" for="cf"></output></div>
+<div class="row"><label for="Uh">Hálózati feszültség</label><select id="Uh" aria-label="Hálózati feszültség"><option value="230" selected>230 V (L–N)</option><option value="400">400 V (L1–L2)</option></select></div>
+<div class="row"><label for="Uk">Bekötött primer kapocspár</label><select id="Uk" aria-label="Bekötött primer kapocspár"><option value="230" selected>0–230 V</option><option value="400">0–400 V</option></select></div>
+<div class="row"><label for="U2n">Névleges szekunder feszültség</label><select id="U2n" aria-label="Névleges szekunder feszültség"><option value="12">12 V</option><option value="24" selected>24 V</option><option value="230">230 V</option></select></div>
+<div class="row"><label for="b">Terhelés β</label><input id="b" type="range" min="0" max="120" step="1" value="100" aria-label="Terhelés β"><output id="b_o" for="b"></output></div>
+<div class="row"><label for="cf">cos φ2</label><select id="cf" aria-label="cos φ2"><option value="1">1</option><option value="0.8" selected>0,8</option></select></div>
+<div class="row"><label for="jel">Terhelés jellege</label><select id="jel" aria-label="Terhelés jellege"><option value="ind" selected>induktív</option><option value="kap">kapacitív</option></select></div>
 <div id="status" aria-live="polite"></div>
-<svg id="v" viewBox="0 0 560 270" role="img" aria-label="A szekunder üresjárási feszültség a primer feszültség egyenesen arányos függvénye az áttételtől függően, valamint az áram- és teljesítményviszonyok"></svg>
-<p class="small">Ideális közelítés (U1/U2 ≈ N1/N2 = a); a valóságos transzformátor üresjárási feszültsége kissé eltérhet, tervezéshez a gyártói adat szükséges (ellenőrizendő). Alapeset: 230/24 V, 96 W, cosφ2 = 0,85 → I2 = 4,71 A, I1 = 0,492 A, S = 113 VA.</p>
+<svg id="v" viewBox="0 0 560 280" role="img" aria-label="0–230–400 V-os primer kapocsléc a bekötött hálózati vezetékekkel; oszlopok az üresjárási és a terhelt szekunder feszültséggel, értékelés: megfelelő, alacsony vagy túlfeszültség"></svg>
+<p class="small">A 25.1 rövidzárási példájának 100 VA-es transzformátora: u<sub>k</sub> = 7,61 %, u<sub>R</sub> = 6,2 %, u<sub>X</sub> = 4,41 % (rögzítve). Közelítő feszültségváltozás-képlet; a 0,85 · U<sub>2n</sub> behúzási határ tanulási érték (ellenőrizendő: kontaktor adatlapja). Gyakorlatban a primer kapocsléc bekötését mindig a hálózati feszültség mérése után, a gyártói kapocsrajz szerint végezd.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
-const UN={"U1":"V", "U2n":"V", "P":"W", "cf":""};
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"b":"% Sn"};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
-const a=230/v.U2n, U20=v.U1/a, I2=v.P/(v.U2n*v.cf), I1=I2/a, Sva=v.U2n*I2;
-const L=60,R=540,T=15,B=220, X=u=>L+u/270*(R-L), ym=Math.ceil(Math.max(30,v.U2n*1.2)/20)*20, Y=u=>B-u/ym*(B-T);
-el("line",{x1:L,x2:R,y1:B,y2:B,stroke:css("--line")});el("line",{x1:L,x2:L,y1:T,y2:B,stroke:css("--line")});
-[0,50,100,150,200,250].forEach(u=>{el("text",{x:X(u),y:B+16,"text-anchor":"middle","font-size":12},u);el("line",{x1:X(u),x2:X(u),y1:T,y2:B,stroke:css("--grid")});});
-[0,0.25,0.5,0.75,1].forEach(f=>{const y=f*ym;el("text",{x:L-6,y:Y(y)+4,"text-anchor":"end","font-size":12},fmt(y,0));el("line",{x1:L,x2:R,y1:Y(y),y2:Y(y),stroke:css("--grid")});});
-el("line",{x1:X(0),y1:Y(0),x2:X(260),y2:Y(260/a),stroke:css("--hl"),"stroke-width":3});
-el("line",{x1:X(230),x2:X(230),y1:T,y2:B,stroke:css("--muted"),"stroke-dasharray":"4 4"});
-el("line",{x1:X(v.U1),x2:X(v.U1),y1:Y(U20),y2:B,stroke:css("--hl2"),"stroke-dasharray":"5 3"});
-el("line",{x1:L,x2:X(v.U1),y1:Y(U20),y2:Y(U20),stroke:css("--hl2"),"stroke-dasharray":"5 3"});
-el("circle",{cx:X(v.U1),cy:Y(U20),r:7,fill:css("--hl2")});
-el("text",{x:(L+R)/2,y:B+36,"text-anchor":"middle","font-size":13},"primer feszültség U1 (V)");
-el("text",{x:14,y:(T+B)/2,"font-size":13,transform:"rotate(-90 14 "+((T+B)/2)+")","text-anchor":"middle"},"U20 (V)");
-status("Áttétel <b>a = 230/"+v.U2n+" = "+fmt(a)+"</b>; U1 = "+v.U1+" V esetén az üresjárási szekunder feszültség <b>U20 = U1/a = "+fmt(U20)+" V</b>. "+
- "Terheléssel (névleges U2n, P2 = "+v.P+" W, cosφ2 = "+fmt(v.cf)+"): I2 = "+fmt(I2)+" A, I1 ≈ I2/a = "+fmt(I1,3)+" A, S = "+fmt(Sva,0)+" VA (U1·I1 = "+fmt(230*I1,0)+" VA).");
+const UR=6.2, UX=4.41, U2n=v.U2n, U20=U2n*v.Uh/v.Uk, cos=v.cf, sin=Math.sqrt(1-cos*cos)*(v.jel==="kap"?-1:1);
+const eps=UR*cos+UX*sin, b=v.b/100, U2=U20*(1-b*eps/100);
+// kapocsléc
+const y0=40, xs={0:90,230:170,400:250};
+el("text",{x:40,y:24,"font-size":13,"font-weight":"bold"},"Primer kapocsléc");
+[0,230,400].forEach(k=>{el("circle",{cx:xs[k],cy:y0+40,r:9,fill:css("--bg"),stroke:css("--line"),"stroke-width":2});
+  el("text",{x:xs[k],y:y0+70,"text-anchor":"middle","font-size":13},k===0?"0":k+" V");});
+el("text",{x:20,y:y0+5,"font-size":12},"hálózat "+v.Uh+" V:");
+el("line",{x1:xs[0],y1:y0+31,x2:xs[0],y2:y0+10,stroke:css("--hl"),"stroke-width":3});
+el("line",{x1:xs[v.Uk],y1:y0+31,x2:xs[v.Uk],y2:y0+10,stroke:css("--hl"),"stroke-width":3});
+el("line",{x1:xs[0],y1:y0+10,x2:xs[v.Uk],y2:y0+10,stroke:css("--hl"),"stroke-width":1,"stroke-dasharray":"3 3"});
+el("text",{x:xs[0]-6,y:y0+24,"text-anchor":"end","font-size":12},v.Uh===400?"L2":"N");
+el("text",{x:xs[v.Uk]+14,y:y0+24,"font-size":12},"L1");
+el("text",{x:330,y:24,"font-size":13,"font-weight":"bold"},"Szekunder 0–"+U2n+" V");
+// oszlopok
+const B=250,T=110,Ym=Math.max(1.9*U2n,U20*1.15), Y=u=>B-u/Ym*(B-T);
+el("line",{x1:320,x2:540,y1:B,y2:B,stroke:css("--line")});
+el("rect",{x:350,y:Y(U20),width:60,height:B-Y(U20),fill:"none",stroke:css("--line"),"stroke-width":2});
+el("rect",{x:440,y:Y(U2),width:60,height:B-Y(U2),fill:css("--hl2"),"fill-opacity":0.35,stroke:css("--line"),"stroke-width":2});
+el("text",{x:380,y:Y(U20)-6,"text-anchor":"middle","font-size":13},fmt(U20,1)+" V");
+el("text",{x:470,y:Y(U2)-6,"text-anchor":"middle","font-size":13},fmt(U2,1)+" V");
+el("text",{x:380,y:B+18,"text-anchor":"middle","font-size":12},"üresjárás");
+el("text",{x:470,y:B+18,"text-anchor":"middle","font-size":12},"terhelve");
+el("line",{x1:330,x2:530,y1:Y(U2n),y2:Y(U2n),stroke:css("--muted"),"stroke-dasharray":"6 4"});
+el("text",{x:328,y:Y(U2n)+4,"text-anchor":"end","font-size":11},"U2n");
+let ert, cl;
+if(U20>1.1*U2n){ert="TÚLFESZÜLTSÉG – TILOS: 400 V a 230 V-os kapcsokon (×"+fmt(U20/U2n,2)+"); a vasmag telítődik, a szekunder fogyasztók és a trafó károsodnak.";cl="bad";}
+else if(U2<0.85*U2n){ert="ALACSONY: U2 < 0,85 · U2n = "+fmt(0.85*U2n,1)+" V – a "+U2n+" V-os kontaktortekercs nem húz be biztosan (ellenőrizendő: tekercs-adatlap).";cl="bad";}
+else {ert="Megfelelő: U2 a névleges közelében.";cl="ok";}
+status("U20 = U2n · U<sub>hál</sub> / U<sub>kapocs</sub> = "+U2n+" · "+v.Uh+" / "+v.Uk+" = <b>"+fmt(U20,1)+" V</b>; terhelve (β = "+fmt(b,2)+", cos φ2 = "+fmt(cos,2)+
+ (v.jel==="kap"?" kapacitív":" induktív")+"): ε ≈ u<sub>R</sub>·cos φ + u<sub>X</sub>·sin φ = "+fmt(eps,2)+" %, <b>U2 ≈ "+fmt(U2,1)+" V</b>. <span class='"+cl+"'>"+ert+"</span>");
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

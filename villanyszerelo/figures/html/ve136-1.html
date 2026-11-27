@@ -23,15 +23,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 330" role="img" aria-label="NTC csökkenő, PTC ugrásszerűen növekvő, Pt100 enyhén lineárisan növekvő ellenállása a hőmérséklet függvényében"></svg>
 <p class="small">NTC: R = 10 kΩ·exp(B(1/T − 1/298,15 K)), B = 3500 K (a fejezet példája: 50 °C-on kb. 4 kΩ). PTC: 130 °C névleges működési hőmérsékletű motorvédő termisztor szemléltető jelleggörbéje (ellenőrizendő a gyártói adatlappal). Pt100: R = 100 Ω·(1 + A·t + B·t²), A = 3,9083·10⁻³, B = −5,775·10⁻⁷. Számított, nem mért görbék.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"T":"°C"};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const ntc=t=>10000*Math.exp(3500*(1/(t+273.15)-1/298.15));
 const ptc=t=>100+1e4/(1+Math.exp(-(t-133)/2));
@@ -49,7 +53,7 @@ const u=r=>5*r/(10000+r), rs=(r)=>r>=1000?fmt(r/1000,2)+" kΩ":fmt(r,1)+" Ω";
 status("T = "+v.T+" °C: <b>NTC</b> "+rs(ntc(v.T))+" (U<sub>ki</sub> = "+fmt(u(ntc(v.T)),2)+" V), <b>PTC</b> "+rs(ptc(v.T))+" (U<sub>ki</sub> = "+fmt(u(ptc(v.T)),2)+" V), <b>Pt100</b> "+rs(pt(v.T))+" (U<sub>ki</sub> = "+fmt(u(pt(v.T)),3)+" V).<br>Osztó: 5 V, felül 10 kΩ fix ellenállás, alul az érzékelő.");
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

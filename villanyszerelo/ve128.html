@@ -44,20 +44,39 @@ továbbvinni bonyolultabb rendszerekre.</p>
 id="szemléletes-kép-egy-gépészeti-elosztó-blokkvázlata"><span
 class="header-section-number">35.2.2</span> Szemléletes kép: egy
 gépészeti elosztó blokkvázlata</h3>
-<p>Mielőtt a részletekbe mennénk, nézzük meg, milyen főbb egységekre
-oszlik egy tipikus gépészeti elosztó.</p>
+<p>Mielőtt a részletekbe mennénk, nézzük meg egy tipikus gépészeti
+elosztó egyvonalas rajzát: milyen leágazások indulnak a gyűjtősínről, és
+mi védi őket.</p>
 <figure>
 <img src="assets/ve128-diagram-1.png"
-alt="Gépészeti elosztó blokkvázlata - Egy kisebb ipari épület lég- és vízgépészeti elosztójának rétegződése. Az erősáramú hajtásokat a vezérlés és a tűzvédelmi rendszer felülírja." />
-<figcaption aria-hidden="true">Gépészeti elosztó blokkvázlata - Egy
-kisebb ipari épület lég- és vízgépészeti elosztójának rétegződése. Az
-erősáramú hajtásokat a vezérlés és a tűzvédelmi rendszer
-felülírja.</figcaption>
+alt="Gépészeti elosztó egyvonalas rajza - Betáplálás (X0, 3/N/PE 400 V) → Q0 4P főkapcsoló → gyűjtősín L1 L2 L3 N PE. A gyűjtősínről: F0 túlfeszültség-levezető (SPD 2. típus) a PE felé; A0 hálózatfigyelő relé (fázishiány, fázissorrend), jelzése szaggatott vonallal a vezérlőre. Leágazások: (1) Q1 → U1 frekvenciaváltó → M1 befúvó ventilátor árnyékolt kábellel (szaggatott); (2) Q2 → A2 lágyindító → M2 keringtető szivattyú; (3) Q3 motorvédő → K3 kontaktor → M3 hidrofor szivattyú (direkt indítás); (4) F4 → T4 24 V DC tápegység → A1 PLC/HVAC-vezérlő; (5) F5 → T5 24 V AC a zsalumozgatóknak és a fagyvédőnek. A tűzjelző központ potenciálmentes kontaktusa szaggatott jelvonallal a vezérlőre (és a 35.2 reteszlánca szerint huzalozottan a kontaktorágakba). Vonások: vezetőszám." />
+<figcaption aria-hidden="true">Gépészeti elosztó egyvonalas rajza -
+Betáplálás (X0, 3/N/PE 400 V) → Q0 4P főkapcsoló → gyűjtősín L1 L2 L3 N
+PE. A gyűjtősínről: F0 túlfeszültség-levezető (SPD 2. típus) a PE felé;
+A0 hálózatfigyelő relé (fázishiány, fázissorrend), jelzése szaggatott
+vonallal a vezérlőre. Leágazások: (1) Q1 → U1 frekvenciaváltó → M1
+befúvó ventilátor árnyékolt kábellel (szaggatott); (2) Q2 → A2
+lágyindító → M2 keringtető szivattyú; (3) Q3 motorvédő → K3 kontaktor →
+M3 hidrofor szivattyú (direkt indítás); (4) F4 → T4 24 V DC tápegység →
+A1 PLC/HVAC-vezérlő; (5) F5 → T5 24 V AC a zsalumozgatóknak és a
+fagyvédőnek. A tűzjelző központ potenciálmentes kontaktusa szaggatott
+jelvonallal a vezérlőre (és a 35.2 reteszlánca szerint huzalozottan a
+kontaktorágakba). Vonások: vezetőszám.</figcaption>
 </figure>
-<p><strong>Ábraértelmezés.</strong> A fő betáplálásról indulnak a
-motoros hajtások. A vezérlési szint felülírja a hajtásokat: a PLC vagy a
-biztonsági relé letilthat egy kontaktort, ha a tűzgátló csappantyú nem
-nyitott ki, vagy ha a hőmérséklet túl alacsony.</p>
+<p><strong>Ábraértelmezés.</strong> Olvasd végig a rajzot balról jobbra:
+a betáplálás a Q0 négypólusú főkapcsolón át a gyűjtősínre jut; ide
+csatlakozik az F0 túlfeszültség-levezető és az A0 hálózatfigyelő relé,
+amely fázishiánynál vagy rossz fázissorrendnél letiltja a hajtásokat.
+Minden fogyasztó saját védelmet kap: a ventilátor (M1)
+frekvenciaváltóval, árnyékolt motorkábellel, a keringtető szivattyú (M2)
+lágyindítóval, a hidrofor (M3) motorvédő kapcsolóval és kontaktorral
+indul; a vezérlés (A1) saját F4 védelmű 24 V DC tápot, a zsalumozgatók
+és a fagyvédő F5 védelmű 24 V AC tápot kapnak. A rajzból közvetlenül
+kiolvasható az anyaglista (Q0, F0, A0, Q1–Q3, U1, A2, K3, F4/F5, T4/T5)
+és a bekötési sorrend. A vezérlési szint felülírja a hajtásokat: a PLC
+vagy a huzalozott retesz letilthat egy kontaktort, ha a tűzjelző jelez,
+a tűzgátló csappantyú nem nyitott ki, vagy ha a hőmérséklet túl alacsony
+(lásd lent a légkezelő reteszláncát).</p>
 <h3 data-number="35.2.3" id="ventilátor--és-szivattyúvezérlések"><span
 class="header-section-number">35.2.3</span> Ventilátor- és
 szivattyúvezérlések</h3>
@@ -142,6 +161,138 @@ szárazonfutás-védő (NC; vízhiánykor nyit) → K1 tekercs A1-A2 → N. H1
 üzemjelző a K1 23-24 záróérintkezőn át. A főáramkör: L1, L2, L3 → Q1 →
 K1 főérintkezők → F2 → M1, PE a motortestre.</figcaption>
 </figure>
+<h4 data-number="35.2.3.3"
+id="szintvezérelt-szivattyú-a-gépészeti-elosztóban"><span
+class="header-section-number">35.2.3.3</span> Szintvezérelt szivattyú a
+gépészeti elosztóban</h4>
+<p>Az úszókapcsolós, KÉZI–0–AUTO választókapcsolós ürítőszivattyú teljes
+fő- és vezérlőköri lapját (Q1, Q2, K1, F2, S3 KÉZI–0–AUTO, S0, S1, B1
+alsó és B2 felső úszó, B3 szárazonfutás-védő, H1 ÜZEM, H2 ZAVAR, H3
+AUTO) a <a href="ve116.html">Kétsebességű, sorrendi és késleltetett
+vezérlések</a> alfejezet (32.4) szivattyú-tervlapja mutatja (a lapon a
+szivattyúmotor jele M3). A két úszókapcsolós vezérlés logikai levezetése
+esettanulmányként: <a href="ve140.html">Logikai kapuk, számrendszerek és
+a relé helyett logika</a>. A gépészeti elosztóban ebből a leágazás és a
+kezelőszervek látszanak:</p>
+<figure>
+<img src="assets/ve128-diagram-3.png"
+alt="Szivattyú-leágazás a gépészeti elosztóban (egyvonalas részlet) - Egyvonalas rajz (egy vonal = három fázis). Az elosztósínről a Q2 motorvédő kapcsoló, a K1 mágneskapcsoló és az X1 sorkapocs után a W1 kábel viszi az áramot az M3 szivattyúmotorhoz. A szintérzékelők (B1, B2, B3) a W2 vezérlőkábelen az X2 vezérlő-sorkapocsra érkeznek (szaggatott: vezérlőkör). A teljes fő- és vezérlőkört a 32.4 lapja mutatja." />
+<figcaption aria-hidden="true">Szivattyú-leágazás a gépészeti elosztóban
+(egyvonalas részlet) - Egyvonalas rajz (egy vonal = három fázis). Az
+elosztósínről a Q2 motorvédő kapcsoló, a K1 mágneskapcsoló és az X1
+sorkapocs után a W1 kábel viszi az áramot az M3 szivattyúmotorhoz. A
+szintérzékelők (B1, B2, B3) a W2 vezérlőkábelen az X2
+vezérlő-sorkapocsra érkeznek (szaggatott: vezérlőkör). A teljes fő- és
+vezérlőkört a 32.4 lapja mutatja.</figcaption>
+</figure>
+<ul>
+<li><strong>Elosztóajtó:</strong> az S3 választókapcsoló (KÉZI–0–AUTO),
+az S0 STOP és az S1 START (csak KÉZI üzemben hat), valamint a H1 ÜZEM,
+H2 ZAVAR és H3 AUTO jelzőlámpa. A szárazonfutás-védelem (B3) a K1
+tekercsága elején van, ezért KÉZI üzemben is hat.</li>
+<li><strong>Jelek a BMS (épületfelügyelet) felé:</strong>
+potenciálmentes érintkezőkön – „üzem” a K1 egy szabad záró
+segédérintkezőjén (pl. 43–44), „hiba” a Q2 hibajelző érintkezőjén
+(97–98) vagy egy, a H2 ággal párhuzamos segédrelén. A BMS-bemenet saját
+tápját a mi érintkezőnk csak kapcsolja, a két áramkört nem kötjük
+össze.</li>
+<li><strong>Kábelezés:</strong> a motorkábel (W1) az X1-re, az úszók és
+a szintrelé kábele (W2) az X2 vezérlő-sorkapocsra érkezik; a két kábelt
+külön nyomvonalon vezetjük.</li>
+</ul>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Szárazonfutás-védelem</th>
+<th>Működési elv</th>
+<th>Mikor válaszd?</th>
+<th>Korlát</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>minimumúszó (B3)</td>
+<td>a vízszint az úszó alá süllyed → bontó nyit</td>
+<td>akna, tartály, szennyezett víz is</td>
+<td>mechanikus, elakadhat; rendszeresen próbálni kell</td>
+</tr>
+<tr>
+<td>elektródás szintrelé</td>
+<td>a víz vezetőképességét érzékeli két elektróda között</td>
+<td>tiszta, vezető víz, kút, tartály</td>
+<td>olaj, desztillált víz, lerakódás mellett téved</td>
+</tr>
+<tr>
+<td>áramfigyelő (cos φ / áram) relé</td>
+<td>a szárazon futó szivattyú áramfelvétele leesik</td>
+<td>mélykúti szivattyú, ahol nincs hely érzékelőnek</td>
+<td>beállítást igényel a tényleges üzemi áramhoz (ellenőrizendő: gyártói
+adat)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ellenőrzés átadáskor</strong> (feszültségmentes bekötés után,
+a jogosult visszakapcsolását követően): (1) KÉZI állásban START/STOP, a
+forgásirány; (2) AUTO állásban az úszók kézi emelésével a bekapcsolási
+(B2 felső) és kikapcsolási (B1 alsó) szint, a hiszterézis; (3) a B3
+működtetése KÉZI és AUTO állásban is leállít, és a H2 világít; (4) a Q2
+TEST gombjával a hibajelzés és a BMS-hibajel; (5) a Q2 beállítása a
+motor adattábláján szereplő névleges áramra.</p>
+<h4 data-number="35.2.3.4"
+id="ikerszivattyú-váltakozó-üzem-és-tartalék"><span
+class="header-section-number">35.2.3.4</span> Ikerszivattyú: váltakozó
+üzem és tartalék</h4>
+<p>Fűtési keringtető- és aknaszivattyú-rendszerekben gyakran két azonos
+szivattyú van beépítve: egy üzemi és egy tartalék. A vezérlés
+<strong>váltakozó üzemben</strong> járatja őket: minden indításkor a
+másik szivattyú indul, így a kopás egyenletes, és a tartalék sem
+„rozsdásodik be” állás közben. Ha a kiválasztott szivattyú motorvédője
+kiold, a vezérlés <strong>automatikusan a másikat</strong> indítja
+(hibaátkapcsolás), és jelzi, hogy a rendszer tartalékban üzemel. Az
+alábbi relés megvalósításban kövesd végig, mi történik, ha a K3 M1-et
+választja, de a Q1 kioldott!</p>
+<figure>
+<img src="assets/ve128-diagram-4.png"
+alt="Ikerszivattyú váltakozó üzeme és hibaátkapcsolása – vezérlőkör - Alapállapot. Igény (B1, pl. nyomás- vagy hőmérséklet-igény) → K3 impulzusrelé: minden indításkor átvált (egyszerűsítve; a rövid vezérlőimpulzust a vezérlő adja). K3 váltóérintkező: bontó ág → K1 (M1), záró ág → K2 (M2). Hibaátkapcsolás: Q2 97-98 (Q2 kioldva → zár) párhuzamos a K3 bontó ágával, Q1 97-98 a záró ágával. Engedély: Q1 13-14, Q2 13-14 (bekapcsolt, nem kioldott motorvédőnél zárt). Kölcsönös retesz: K2 21-22 a K1 ágában, K1 21-22 a K2 ágában. H1/H2 üzemjelző (M1, M2), H3 „hiba, tartalék üzemben” a kioldásjelző második segédérintkezőin. Kapocsszámok gyártófüggők (ellenőrizendő). Főkör egyvonalasan: Q1–K1–M1, Q2–K2–M2." />
+<figcaption aria-hidden="true">Ikerszivattyú váltakozó üzeme és
+hibaátkapcsolása – vezérlőkör - Alapállapot. Igény (B1, pl. nyomás- vagy
+hőmérséklet-igény) → K3 impulzusrelé: minden indításkor átvált
+(egyszerűsítve; a rövid vezérlőimpulzust a vezérlő adja). K3
+váltóérintkező: bontó ág → K1 (M1), záró ág → K2 (M2). Hibaátkapcsolás:
+Q2 97-98 (Q2 kioldva → zár) párhuzamos a K3 bontó ágával, Q1 97-98 a
+záró ágával. Engedély: Q1 13-14, Q2 13-14 (bekapcsolt, nem kioldott
+motorvédőnél zárt). Kölcsönös retesz: K2 21-22 a K1 ágában, K1 21-22 a
+K2 ágában. H1/H2 üzemjelző (M1, M2), H3 „hiba, tartalék üzemben” a
+kioldásjelző második segédérintkezőin. Kapocsszámok gyártófüggők
+(ellenőrizendő). Főkör egyvonalasan: Q1–K1–M1, Q2–K2–M2.</figcaption>
+</figure>
+<p><strong>Hogyan működik?</strong> Ha az igény (B1) megjelenik, a K3
+átvált, és a választott ágban – ha a hozzá tartozó motorvédő be van
+kapcsolva (13–14 zárt) és a másik kontaktor nem húzott be (21–22 zárt) –
+a kontaktor behúz. Ha a választott szivattyú motorvédője kioldott, a
+saját 13–14 érintkezője bont, a 97–98 pedig a <strong>másik</strong> ág
+engedélyét adja meg a K3 helyzetétől függetlenül: a tartalék indul, és a
+H3 világít. A kölcsönös retesz (K1/K2 21–22) biztosítja, hogy a két
+szivattyú egyszerre ne járjon, ha a hidraulika így kívánja (párhuzamos
+csúcsüzemnél ezt a retesz helyett a vezérlő oldja meg). PLC-s
+megvalósításnál ugyanez a logika programban fut, de a motorvédők
+jelzései ugyanígy bemenetek.</p>
+<p><strong>Feladat (C).</strong> Üzem közben az M1 Q1 motorvédője kiold.
+Mit jelez a tábla, melyik szivattyú jár, és mi a teendő?</p>
+<p><em>Megoldás.</em> A Q1 13–14 bont, a K1 elenged, a H1 kialszik; a Q1
+97–98 zár, ezért a K2 ága kap engedélyt (a K1 21–22 már zárt), a K2
+behúz, az M2 jár, a H2 és a H3 („hiba, tartalék üzemben”) világít.
+Teendő: a rendszer üzemel, de tartalék nélkül – a hibát mielőbb ki kell
+vizsgálni (feszültségmentesítés után a motor szigetelése,
+tekercsellenállása, a szivattyú szorulása, a Q1 beállítása az adattábla
+szerint), és csak az ok megszüntetése után szabad a Q1-et
+visszakapcsolni.</p>
 <h3 data-number="35.2.4"
 id="fűtési-és-hűtési-szabályozás-érzékelők-és-szelepek"><span
 class="header-section-number">35.2.4</span> Fűtési és hűtési
@@ -151,8 +302,94 @@ szabályozással, de a modern rendszereknél PLC vagy dedikált HVAC vezérlő
 dolgozik. A szerelő feladata az <strong>érzékelők</strong> és a
 <strong>beavatkozók</strong> (szelepmozgatók) bekötése és a jelzéslánc
 ellenőrzése.</p>
-<h4 data-number="35.2.4.1" id="érzékelők-szenzorok"><span
-class="header-section-number">35.2.4.1</span> Érzékelők (Szenzorok)</h4>
+<h4 data-number="35.2.4.1"
+id="kétpontos-szabályozás-nyomáskapcsoló-és-termosztát"><span
+class="header-section-number">35.2.4.1</span> Kétpontos szabályozás:
+nyomáskapcsoló és termosztát</h4>
+<p>A legegyszerűbb és leggyakoribb szabályozás a
+<strong>kétpontos</strong> (be–ki) szabályozás: egy érzékelő érintkezője
+közvetlenül a kontaktor tekercsét kapcsolja. Az érzékelőnek két
+kapcsolási pontja van: a <strong>bekapcsolási</strong> és a
+<strong>kikapcsolási pont</strong>; a kettő különbsége a
+<strong>kapcsolási különbség (hiszterézis)</strong>. Hiszterézis nélkül
+az érintkező az alapjel körül másodpercenként „rezegne”, a kontaktor és
+a motor (vagy fűtőelem) gyorsan tönkremenne.</p>
+<p><strong>Nyomáskapcsolós (hidrofor) szivattyú.</strong> A hidrofor
+tartály nyomását a B1 nyomáskapcsoló figyeli: a bontóérintkezője zárt,
+amíg a nyomás a kikapcsolási pont alatt van, és a kikapcsolási nyomáson
+nyit; a nyomás csökkenésekor a bekapcsolási ponton újra zár. Szemléltető
+értékek: bekapcsolás 2,5 bar, kikapcsolás 4 bar (a valós értéket a
+gépész adja meg). Az alábbi rajzon a vezérlőkör (bal) és a főkör
+egyvonalasan (jobb) látható; a DOL-vezérlés részleteit (önfenntartás,
+szárazonfutás-védelem, üzemjelzés) a fenti, „Szivattyúk indítása és
+védelme” alatti rajz, a motorvédelmet a <a
+href="ve127.html">Motorvédelmek, lágyindítók és frekvenciaváltók az
+elosztóban</a> alfejezet mutatja.</p>
+<figure>
+<img src="assets/ve128-diagram-5.png"
+alt="Hidrofor szivattyú kétpontos (nyomáskapcsolós) vezérlése - Vezérlőkör alapállapotban (nyomás alatti tartály, S2 „0” állásban): L → F1 vezérlőköri biztosító → Q1 13-14 (a motorvédő segédérintkezője: bekapcsolt, nem kioldott Q1-nél zárt) → S2 KÉZI–0–AUTO választó. AUTO állásban: B1 nyomáskapcsoló (bontó; a kikapcsolási nyomáson nyit) → K1 A1-A2 → N. KÉZI állásban B1 nélkül (csak felügyelet mellett, szárazonfutás-veszély!). Főkör egyvonalasan: L1 L2 L3 → Q1 motorvédő → K1 főérintkezők → M1. Egyszerűsített rajz: a szárazonfutás-védelem és az üzemjelző a fenti DOL-rajz szerint kiegészítendő." />
+<figcaption aria-hidden="true">Hidrofor szivattyú kétpontos
+(nyomáskapcsolós) vezérlése - Vezérlőkör alapállapotban (nyomás alatti
+tartály, S2 „0” állásban): L → F1 vezérlőköri biztosító → Q1 13-14 (a
+motorvédő segédérintkezője: bekapcsolt, nem kioldott Q1-nél zárt) → S2
+KÉZI–0–AUTO választó. AUTO állásban: B1 nyomáskapcsoló (bontó; a
+kikapcsolási nyomáson nyit) → K1 A1-A2 → N. KÉZI állásban B1 nélkül
+(csak felügyelet mellett, szárazonfutás-veszély!). Főkör egyvonalasan:
+L1 L2 L3 → Q1 motorvédő → K1 főérintkezők → M1. Egyszerűsített rajz: a
+szárazonfutás-védelem és az üzemjelző a fenti DOL-rajz szerint
+kiegészítendő.</figcaption>
+</figure>
+<p><strong>Termosztátos fűtés biztonsági hőkorlátozóval.</strong> Egy
+elektromos fűtőregiszter vagy villamos kazán háromfázisú, csillagba
+kötött E1 fűtőellenállását a K2 kontaktor kapcsolja. A tekercs ágában
+két, egymástól független bontóérintkező van sorban: a <strong>B2
+termosztát</strong> a szabályozó (melegedéskor a kikapcsolási ponton
+nyit, hűléskor magától visszazár), a <strong>B3 biztonsági hőkorlátozó
+(STB)</strong> a védelem: csak akkor nyit, ha a termosztát vagy a
+kontaktor hibája miatt a hőmérséklet a megengedett határ fölé szalad, és
+<strong>nem áll vissza magától</strong> – a hiba okát meg kell keresni,
+és kézzel kell visszaállítani.</p>
+<figure>
+<img src="assets/ve128-diagram-6.png"
+alt="Fűtőkontaktor termosztáttal és biztonsági hőkorlátozóval (STB) - Vezérlőkör alapállapotban: L → F2 → B2 termosztát (bontó; a kikapcsolási ponton nyit) → B3 STB biztonsági hőkorlátozó (bontó, kézi visszaállítású) → K2 A1-A2 → N; H1 „fűtés” jelzőlámpa a tekerccsel párhuzamosan. Főkör: L1 L2 L3 → F3 3P védelem → K2 főérintkezők → E1 három fűtőellenállás csillagban (N nélkül). A B2 szabályoz, a B3 a szabályozótól függetlenül véd." />
+<figcaption aria-hidden="true">Fűtőkontaktor termosztáttal és biztonsági
+hőkorlátozóval (STB) - Vezérlőkör alapállapotban: L → F2 → B2 termosztát
+(bontó; a kikapcsolási ponton nyit) → B3 STB biztonsági hőkorlátozó
+(bontó, kézi visszaállítású) → K2 A1-A2 → N; H1 „fűtés” jelzőlámpa a
+tekerccsel párhuzamosan. Főkör: L1 L2 L3 → F3 3P védelem → K2
+főérintkezők → E1 három fűtőellenállás csillagban (N nélkül). A B2
+szabályoz, a B3 a szabályozótól függetlenül véd.</figcaption>
+</figure>
+<p>A szabályozás időbeli lefutását az alábbi idődiagram mutatja (alapjel
+20 °C, hiszterézis 1 K): a fűtés 19,5 °C-on bekapcsol, 20,5 °C-on
+kikapcsol, a hőmérséklet a két pont között „fűrészfogban” ingadozik.</p>
+<figure id="fig-ve128-2">
+<img src="figures/img/ve128-2.png" style="width:100.0%"
+alt="Felül a helyiség-hőmérséklet 18,6 °C-ról emelkedik, majd fűrészfog alakban ingadozik a szaggatott vonallal jelölt 19,5 °C-os bekapcsolási és 20,5 °C-os kikapcsolási pont között, pontozott vonal az alapjel 20 °C; a két pont között nyíl: hiszterézis 1 K. Alul a K2 kontaktor állapota: 1 (be), amíg a hőmérséklet emelkedik, 0 (ki), amíg csökken." />
+<figcaption>Kétpontos hőmérséklet-szabályozás idődiagramja: ϑ(t) a 19,5
+°C-os bekapcsolási és a 20,5 °C-os kikapcsolási pont között, alatta a K2
+fűtőkontaktor állapota</figcaption>
+</figure>
+<p>Olvasd le az ábráról: mennyi ideig fűt a K2 egy ciklusban, és mennyi
+ideig áll? (Szemléltető modell: felfűtés 0,25 K/min, hűlés 0,4 K/min → 4
+min fűtés, 2,5 min szünet, 6,5 min-es ciklus.) A
+<strong>hiszterézis</strong> tehát a kapcsolási gyakoriságot állítja be:
+kisebb hiszterézis pontosabb hőmérsékletet, de több kapcsolást (nagyobb
+kontaktorkopást, motoros szivattyúnál több indítást) jelent; a
+hidrofornál a túl kicsi be–ki nyomáskülönbség (vagy a tartály elvesztett
+előnyomása) óránként sok indítást, a motor melegedését okozza.</p>
+<p><strong>Feladat (B).</strong> A termosztát hiszterézisét 1 K-ről 0,5
+K-re csökkentjük, a hőveszteség és a fűtőteljesítmény változatlan. Mi
+történik a kapcsolások számával?</p>
+<p><em>Megoldás.</em> Azonos felfűtési és hűlési sebességnél a ciklusidő
+a hiszterézissel arányos
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext mathvariant="normal">ciklus</mtext></msub><mo>=</mo><mi mathvariant="normal">Δ</mi><mi>ϑ</mi><mi>/</mi><msub><mi>v</mi><mtext mathvariant="normal">fel</mtext></msub><mo>+</mo><mi mathvariant="normal">Δ</mi><mi>ϑ</mi><mi>/</mi><msub><mi>v</mi><mtext mathvariant="normal">le</mtext></msub></mrow><annotation encoding="application/x-tex">t_\text{ciklus} = \Delta\vartheta/v_\text{fel} + \Delta\vartheta/v_\text{le}</annotation></semantics></math>;
+1 K-nél 6,5 min, 0,5 K-nél 3,25 min), ezért a kapcsolási szám
+<strong>kb. kétszeresére nő</strong> (a szkript 600 perces
+szimulációjában 91 helyett 181 bekapcsolás). A hőmérséklet ingadozása
+viszont feleakkora lesz.</p>
+<h4 data-number="35.2.4.2" id="érzékelők-szenzorok"><span
+class="header-section-number">35.2.4.2</span> Érzékelők (Szenzorok)</h4>
 <p>A víz- és levegőhőmérséklet mérésére a leggyakoribb típusok:</p>
 <ol type="1">
 <li><strong>Ellenállás-hőmérők (Pt100, Pt1000, NTC):</strong> A Pt100 0
@@ -169,9 +406,10 @@ hogy a szakadás (0 mA) jól megkülönböztethető a 0 ponttól (4 mA).</li>
 árnyékolást csak az egyik oldalon, általában a vezérlőszekrényben kösd a
 PE-re vagy a jel-földre. Az érzékelők kábelét soha ne vezesd a
 motorokhoz menő, nagy zavartartalmú kábelekkel közös csatornában vagy
-kötegben.</p>
-<h4 data-number="35.2.4.2" id="beavatkozók-szelepmozgatók"><span
-class="header-section-number">35.2.4.2</span> Beavatkozók:
+kötegben. A kétvezetékes távadó 4–20 mA-es áramhurkának rajza és mérése:
+<a href="ve139.html">Erősítők, műveleti erősítő és szűrők</a>.</p>
+<h4 data-number="35.2.4.3" id="beavatkozók-szelepmozgatók"><span
+class="header-section-number">35.2.4.3</span> Beavatkozók:
 szelepmozgatók</h4>
 <p>A fűtési és hűtési körökben a hőcserélőkön, fűtőregisztereken,
 hűtőgerendákon átáramló víz mennyiségét <strong>motoros
@@ -188,26 +426,122 @@ elektronika a 0–10 V-os jel arányában állítja a szelep pozícióját, és 
 visszajelzést (pl. 2–10 V) is ez az egység adja. Pontosabb, jobban
 diagnosztizálható.</li>
 </ol>
-<p><strong>Számítási példa (érzékelő bekötés):</strong> Egy Pt100
-hőmérséklet-érzékelőt 50 m hosszú, 0,5 mm² keresztmetszetű réz
-vezetékkel kötünk be. A réz fajlagos ellenállása
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>0175</mn><mspace width="0.278em"></mspace><mi mathvariant="normal">Ω</mi><mo>⋅</mo><msup><mtext mathvariant="normal">mm</mtext><mn>2</mn></msup><mi>/</mi><mtext mathvariant="normal">m</mtext></mrow><annotation encoding="application/x-tex">\rho = 0{,}0175 \; \Omega \cdot \text{mm}^2/\text{m}</annotation></semantics></math>.
-Mekkora a vezeték ellenállása 2-vezetékes bekötés esetén?
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mfrac><mrow><mi>ρ</mi><mo>⋅</mo><mi>l</mi></mrow><mi>A</mi></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>0175</mn><mspace width="0.278em"></mspace><mi mathvariant="normal">Ω</mi><mo>⋅</mo><msup><mtext mathvariant="normal">mm</mtext><mn>2</mn></msup><mi>/</mi><mtext mathvariant="normal">m</mtext><mo>⋅</mo><mn>2</mn><mo>⋅</mo><mn>50</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> m</mtext></mrow></mrow><mrow><mn>0</mn><mo>,</mo><mn>5</mn><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> mm</mtext></mrow><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex"> R = \frac{\rho \cdot l}{A} = \frac{0{,}0175 \; \Omega \cdot \text{mm}^2/\text{m} \cdot 2 \cdot 50 \text{ m}}{0{,}5 \text{ mm}^2} </annotation></semantics></math>
-A vezeték teljes hossza oda-vissza
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>l</mi><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>50</mn><mo>=</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">l = 2 \cdot 50 = 100</annotation></semantics></math>
-m.
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mfrac><mrow><mn>0</mn><mo>,</mo><mn>0175</mn><mo>⋅</mo><mn>100</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn><mo>,</mo><mn>75</mn></mrow><mrow><mn>0</mn><mo>,</mo><mn>5</mn></mrow></mfrac><mo>=</mo><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.278em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex"> R = \frac{0{,}0175 \cdot 100}{0{,}5} = \frac{1{,}75}{0{,}5} = 3{,}5 \; \Omega </annotation></semantics></math>
-A Pt100-as érzékelő ellenállása 0 °C-on 100
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math>,
-100 °C-on 138,5
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math>.
-A
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>5</mn><mspace width="0.278em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">3{,}5 \; \Omega</annotation></semantics></math>
-hiba 0 °C-on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>5</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Ohm</mtext></mrow><mo>×</mo><mn>2</mn><mo>,</mo><mn>6</mn><msup><mspace width="0.278em"></mspace><mo>∘</mo></msup><mtext mathvariant="normal">C/Ohm</mtext><mo>=</mo><mn>9</mn><mo>,</mo><mn>1</mn><msup><mspace width="0.278em"></mspace><mo>∘</mo></msup><mtext mathvariant="normal">C</mtext></mrow><annotation encoding="application/x-tex">3{,}5 \text{ Ohm} \times 2{,}6 \; ^{\circ}\text{C/Ohm} = 9{,}1 \; ^{\circ}\text{C}</annotation></semantics></math>
-hibát okoz. Ezért 2-vezetékes módon a Pt100-at <strong>nem</strong>
-kötjük be, csak 3- vagy 4-vezetékesen.</p>
+<p><strong>Bekötési rajzok.</strong> Az alábbi rajz a két szeleptípus és
+a 3 vezetékes Pt100 bekötését mutatja egymás mellett. Hasonlítsd össze a
+kapcsok számát és szerepét!</p>
+<figure>
+<img src="assets/ve128-diagram-7.png"
+alt="(a) hárompontos szelepmozgató · (b) 0–10 V-os szelepmozgató · (c) 3 vezetékes Pt100 - (a) Y1 hárompontos mozgató: 1 = közös (⊥), 2 = nyit, 3 = zár; a DO1 (K21) és DO2 (K22) relé záróérintkezője a másik relé bontóérintkezőjén át kapcsol, így a „nyit” és „zár” kapocs egyszerre nem kaphat feszültséget (retesz). (b) Y2 0–10 V-os mozgató: 1 = 24 V~, 2 = ⊥ (közös a szabályozóval), 3 = Y vezérlőjel a szabályozó AO kimenetéről, 5 = U visszajelzés 2–10 V az AI bemenetre. (c) Pt100 3 vezetékkel: R_v1, R_v2, R_v3 a kábelerek ellenállása. A kapocsszámok gyártófüggők (ellenőrizendő: gyártói adatlap)." />
+<figcaption aria-hidden="true">(a) hárompontos szelepmozgató · (b) 0–10
+V-os szelepmozgató · (c) 3 vezetékes Pt100 - (a) Y1 hárompontos mozgató:
+1 = közös (⊥), 2 = nyit, 3 = zár; a DO1 (K21) és DO2 (K22) relé
+záróérintkezője a másik relé bontóérintkezőjén át kapcsol, így a „nyit”
+és „zár” kapocs egyszerre nem kaphat feszültséget (retesz). (b) Y2 0–10
+V-os mozgató: 1 = 24 V~, 2 = ⊥ (közös a szabályozóval), 3 = Y vezérlőjel
+a szabályozó AO kimenetéről, 5 = U visszajelzés 2–10 V az AI bemenetre.
+(c) Pt100 3 vezetékkel: R_v1, R_v2, R_v3 a kábelerek ellenállása. A
+kapocsszámok gyártófüggők (ellenőrizendő: gyártói adatlap).</figcaption>
+</figure>
+<p>A rajzon a 3 vezetékes Pt100 lényege látszik: a mérőbemenet az 1–2
+hurokban az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>T</mi></msub><mo>+</mo><msub><mi>R</mi><mrow><mi>v</mi><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>R</mi><mrow><mi>v</mi><mn>2</mn></mrow></msub></mrow><annotation encoding="application/x-tex">R_T + R_{v1} + R_{v2}</annotation></semantics></math>,
+a 2–3 hurokban az
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mrow><mi>v</mi><mn>2</mn></mrow></msub><mo>+</mo><msub><mi>R</mi><mrow><mi>v</mi><mn>3</mn></mrow></msub></mrow><annotation encoding="application/x-tex">R_{v2} + R_{v3}</annotation></semantics></math>
+ellenállást méri, és a kettő különbségét veszi – ha a három ér egyforma
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mrow><mi>v</mi><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>R</mi><mrow><mi>v</mi><mn>2</mn></mrow></msub><mo>=</mo><msub><mi>R</mi><mrow><mi>v</mi><mn>3</mn></mrow></msub></mrow><annotation encoding="application/x-tex">R_{v1} = R_{v2} = R_{v3}</annotation></semantics></math>),
+a vezetékellenállás kiesik, így a feladatgyűjteménybeli (35.2) példa 3,5
+Ω-os (≈ 9 °C-os) hibája közel nullára csökken. (A 4 vezetékes kötés az
+érellenállások egyenlőségét sem igényli.) Kérdés: miért nem szabad a 3
+vezetékes kötésnél az egyik eret toldással, más keresztmetszettel
+pótolni?</p>
+<h4 data-number="35.2.4.4" id="egy-légkezelő-reteszlánca"><span
+class="header-section-number">35.2.4.4</span> Egy légkezelő
+reteszlánca</h4>
+<p>A motivációban említett összefüggést („a szellőztető ventilátor nem
+indulhat el, ha a fagyvédő termosztát hibát jelez”) most egy egyszerű
+légkezelőn bontjuk ki. Először a működési sorrendet nézd meg:</p>
+<figure>
+<img src="assets/ve128-diagram-8.png"
+alt="Légkezelő indítási sorrendje - Indításkor a külső levegő zsalu (Y1, rugóvisszatérítéses mozgató, 24 V) nyit; a ventilátor csak a zsalu „nyitva” végállásjelzése (S11) után indul; a B5 légáram-/nyomáskülönbség-kapcsolónak 15 s-on belül vissza kell jeleznie, különben „légáramhiba” (H2). Leálláskor fordított sorrendben: a fűtésszabályozás le, a ventilátor le, a zsalu zár." />
+<figcaption aria-hidden="true">Légkezelő indítási sorrendje - Indításkor
+a külső levegő zsalu (Y1, rugóvisszatérítéses mozgató, 24 V) nyit; a
+ventilátor csak a zsalu „nyitva” végállásjelzése (S11) után indul; a B5
+légáram-/nyomáskülönbség-kapcsolónak 15 s-on belül vissza kell jeleznie,
+különben „légáramhiba” (H2). Leálláskor fordított sorrendben: a
+fűtésszabályozás le, a ventilátor le, a zsalu zár.</figcaption>
+</figure>
+<p>A sorrend relés megvalósítása az alábbi 24 V AC-os vezérlőkör. Kövesd
+végig: mi történik, ha a B4 fagyvédő vagy a K20 tűzjelző relé bont?</p>
+<figure>
+<img src="assets/ve128-diagram-9.png"
+alt="Légkezelő reteszlánca – relés vezérlőkör (24 V AC) - K10 „rendszer üzem” segédrelé: S0 STOP (bontó), S1 START (záró), öntartás K10 13-14. A K10 23-24 után sorosan a biztonsági reteszek: B4 fagyvédő termosztát (bontó, fagyveszélykor nyit) és K20 tűzjelző-relé (bontó, a tűzjelző központ potenciálmentes kontaktusa vezérli). Utánuk két ág: Y1 zsalumozgató (rugóvisszatérítéses: feszültség nélkül zár) és a K1 ventilátor-kontaktor (vagy a FV RUN-bemenete) S11 zsalu-végállás (záró, „nyitva”-nál zár) és F2 95-96 hőkioldó után. K11 bekapcsolás-késleltetett időrelé (15 s) a K1 13-14-en át; ha 15 s után a B5 légáramkapcsoló (bontó: légáram nélkül zárt) még zárt, H2 „légáramhiba” világít. Elvi rajz." />
+<figcaption aria-hidden="true">Légkezelő reteszlánca – relés vezérlőkör
+(24 V AC) - K10 „rendszer üzem” segédrelé: S0 STOP (bontó), S1 START
+(záró), öntartás K10 13-14. A K10 23-24 után sorosan a biztonsági
+reteszek: B4 fagyvédő termosztát (bontó, fagyveszélykor nyit) és K20
+tűzjelző-relé (bontó, a tűzjelző központ potenciálmentes kontaktusa
+vezérli). Utánuk két ág: Y1 zsalumozgató (rugóvisszatérítéses:
+feszültség nélkül zár) és a K1 ventilátor-kontaktor (vagy a FV
+RUN-bemenete) S11 zsalu-végállás (záró, „nyitva”-nál zár) és F2 95-96
+hőkioldó után. K11 bekapcsolás-késleltetett időrelé (15 s) a K1 13-14-en
+át; ha 15 s után a B5 légáramkapcsoló (bontó: légáram nélkül zárt) még
+zárt, H2 „légáramhiba” világít. Elvi rajz.</figcaption>
+</figure>
+<p>A fagyvédelem és a tűzjel tehát <strong>huzalozottan</strong> bont: a
+K10 23-24 utáni B4 vagy K20 megszakítja a zsalumozgató és a
+ventilátor-kontaktor ágát is, függetlenül attól, mit „gondol” a vezérlő.
+A fűtőszelep 100 %-os nyitását és a szivattyú járatását fagyvédelemkor a
+B4 második (váltó) érintkezője vagy a vezérlő végzi; valós rendszerben a
+sorrendet PLC/HVAC-vezérlő adja, de a biztonsági reteszek huzalozottan
+is bontanak <strong>(ellenőrizendő: tervezői előírás)</strong>.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Esemény</th>
+<th>Külső levegő zsalu (Y1)</th>
+<th>Befúvó ventilátor (M1)</th>
+<th>Fűtőszelep</th>
+<th>Fűtési szivattyú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Normál indítás</td>
+<td>nyit</td>
+<td>indul a „nyitva” végállás (S11) után</td>
+<td>szabályoz (B5 visszajelzés után)</td>
+<td>jár</td>
+</tr>
+<tr>
+<td>Fagyveszély (B4 bont)</td>
+<td>zár (rugó)</td>
+<td>leáll</td>
+<td>100 % nyit</td>
+<td>jár</td>
+</tr>
+<tr>
+<td>Tűzjel (K20 bont)</td>
+<td>zár (rugó)</td>
+<td>leáll</td>
+<td>a tűzvédelmi terv szerint (jellemzően szabályozás le)</td>
+<td>a tűzvédelmi terv szerint</td>
+</tr>
+<tr>
+<td>Áramszünet</td>
+<td>zár (rugó)</td>
+<td>leáll</td>
+<td>a mozgató biztonsági helyzetébe áll (típusfüggő)</td>
+<td>áll</td>
+</tr>
+</tbody>
+</table>
 <h3 data-number="35.2.5" id="tűzgátló-és-füstelvezető-vezérlése"><span
 class="header-section-number">35.2.5</span> Tűzgátló és füstelvezető
 vezérlése</h3>
@@ -263,6 +597,37 @@ A tűzjelző központ jelére a füstelvezető ventilátornak be kell indulnia,
 korlátozhatja, mert a téves kioldás tűz alatt a funkció kiesését
 jelentené; az áramkör kialakítását a tűzvédelmi terv határozza meg.
 <strong>(ellenőrizendő: MSZ HD 60364-5-56, tűzvédelmi terv)</strong></p>
+<p><strong>Kényszerindítás kapcsolásban.</strong> Ha a füstelvezető
+ventilátort egy közönséges DOL-kör mintájára kötnéd be, a hőkioldó 95–96
+bontóérintkezője tűz alatt is leállíthatná a motort – éppen akkor,
+amikor a legnagyobb szükség van rá. Az alábbi elvi rajz azt mutatja,
+hogyan kerüli meg a tűzjel ága a STOP gombot és a hőkioldót. Keresd meg
+a rajzon, hová kötötték a hőkioldó 97–98 záróérintkezőjét!</p>
+<figure>
+<img src="assets/ve128-diagram-10.png"
+alt="Füstelvezető ventilátor kényszerindítása – elvi vezérlőkör - Elvi példa; a tényleges kialakítást a tűzvédelmi terv írja elő (ellenőrizendő: OTSZ, TvMI, MSZ HD 60364-5-56). Normál ág: S0 STOP (bontó) → S1 START (záró) ∥ K1 13-14 öntartás → F2 95-96 hőkioldó (bontó) → K1 A1-A2. Tűz ág: K20 tűzjelző-relé záróérintkezője (vagy a központ potenciálmentes kontaktusa) közvetlenül a K1 tekercsére, így megkerüli az S0-t és az F2 95-96-ot. F2 97-98 → H2 „túlterhelés”: tűz alatt csak jelez. Főkör egyvonalasan: Q1 zárlatvédelem (megmarad, szelektíven méretezve) → K1 → F2 hőkioldó → M1, funkciótartó kábellel." />
+<figcaption aria-hidden="true">Füstelvezető ventilátor kényszerindítása
+– elvi vezérlőkör - Elvi példa; a tényleges kialakítást a tűzvédelmi
+terv írja elő (ellenőrizendő: OTSZ, TvMI, MSZ HD 60364-5-56). Normál ág:
+S0 STOP (bontó) → S1 START (záró) ∥ K1 13-14 öntartás → F2 95-96
+hőkioldó (bontó) → K1 A1-A2. Tűz ág: K20 tűzjelző-relé záróérintkezője
+(vagy a központ potenciálmentes kontaktusa) közvetlenül a K1 tekercsére,
+így megkerüli az S0-t és az F2 95-96-ot. F2 97-98 → H2 „túlterhelés”:
+tűz alatt csak jelez. Főkör egyvonalasan: Q1 zárlatvédelem (megmarad,
+szelektíven méretezve) → K1 → F2 hőkioldó → M1, funkciótartó
+kábellel.</figcaption>
+</figure>
+<p>A rajzból ez olvasható ki: tűzjelkor a K20 zár, és a K1 tekercse az
+S0 és a 95–96 megkerülésével kap feszültséget; a hőkioldó ilyenkor csak
+a 97–98-on át a H2 lámpát gyújtja. Ez azért fogadható el, mert tűz
+esetén a füstmentes menekülőút és a beavatkozás fontosabb, mint a motor
+élettartama: a motort „feláldozzuk”, de a <strong>zárlatvédelem (Q1)
+megmarad</strong>, mert zárlatnál a motor már úgysem működik, és a kábel
+tüzet okozhatna. A kézi STOP tűz alatt nem állítja le a ventilátort; a
+tűzoltók által kezelt tűzoltói kapcsoló vagy kezelőtábla kivétel lehet
+<strong>(ellenőrizendő: tűzvédelmi terv, TvMI)</strong>. A tápkábel
+funkciótartó, a FI-relé alkalmazását pedig a fenti figyelmeztetés
+szerint a tűzvédelmi terv dönti el.</p>
 <h3 data-number="35.2.6" id="gépészvillamos-határfelület"><span
 class="header-section-number">35.2.6</span> Gépész–villamos
 határfelület</h3>
@@ -362,131 +727,14 @@ hiszi, hogy a csappantyú zárva van, de a füst akadálytalanul terjed.
 <em>Helyes gyakorlat:</em> Az állásjelző kontaktusokat mindig sorba kell
 kötni a szellőztető vezérlésében és a tűzjelzőben.</p></li>
 </ol>
-<h3 data-number="35.2.10" id="önellenőrzés"><span
-class="header-section-number">35.2.10</span> Önellenőrzés</h3>
-<ol type="1">
-<li><strong>Igaz vagy hamis?</strong> A ventilátor teljesítményfelvétele
-a fordulatszámmal arányos.</li>
-<li>Miért használunk lágyindítót a nagyobb szivattyúknál?</li>
-<li><strong>Gyors számolás:</strong> Egy 15 kW-os ventilátor
-fordulatszámát 10%-kal csökkented. Körülbelül mekkora lesz az új
-teljesítményfelvétel?</li>
-<li>Mi a különbség a hárompontos és a 0–10 V-os szelep között a bekötés
-szempontjából?</li>
-<li>Mi a gond a 2-vezetékes Pt100 bekötéssel?</li>
-<li>Miért veszélyes az FI-relé használata a füstelvezető ventilátor
-áramkörében tűz esetén?</li>
-</ol>
-<h3 data-number="35.2.11" id="megoldások-önellenőrzés-válaszok"><span
-class="header-section-number">35.2.11</span> Megoldások (Önellenőrzés –
-válaszok)</h3>
-<ol type="1">
-<li><strong>Hamis.</strong> A teljesítményfelvétel a fordulatszám
-<strong>köbével</strong> arányos.</li>
-<li>A lágyindító fokozatosan gyorsítja fel a motort, elkerülve a
-vízlökést (nyomáslökést) a csőhálózatban; leálláskor a szabályozott
-lassú leállítás (soft stop) védi meg a rendszert a vízütéstől. A lökés
-tönkretenné a tömítéseket, csőbilincseket és szelepeket.</li>
-<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mn>2</mn></msub><mo>=</mo><msub><mi>P</mi><mn>1</mn></msub><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>n</mi><mn>2</mn></msub><mi>/</mi><msub><mi>n</mi><mn>1</mn></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>3</mn></msup><mo>=</mo><mn>15</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> kW</mtext></mrow><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>9</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>3</mn></msup><mo>=</mo><mn>15</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>729</mn><mo>=</mo><mn>10</mn><mo>,</mo><mn>9</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> kW</mtext></mrow></mrow><annotation encoding="application/x-tex">P_2 = P_1 \cdot (n_2/n_1)^3 = 15 \text{ kW} \cdot (0{,}9)^3 = 15 \cdot 0{,}729 = 10{,}9 \text{ kW}</annotation></semantics></math>.
-A teljesítmény ~27%-kal csökken.</li>
-<li>A hárompontos szelephez két digitális kimenetre (nyit, zár) van
-szükség, a 0–10 V-oshoz egy analóg kimenetre és egy visszajelző analóg
-bemenetre.</li>
-<li>A vezeték ellenállása összeadódik az érzékelőével, ami 3,5 ohm
-esetén már közel 9 °C hibát okozhat.</li>
-<li>Az FI-relé egy szigetelési hiba esetén leoldhatná a tápellátást, ami
-tűz alatt a füstelvezető leállásához vezetne. Ezért az áramkör védelmét
-úgy kell kialakítani, hogy a tűz alatt ne oldjon le tévesen.</li>
-</ol>
-<h3 data-number="35.2.12" id="feladatok"><span
-class="header-section-number">35.2.12</span> Feladatok</h3>
-<p><strong>1. feladat (A)</strong> Sorold fel a gépészeti elosztó négy
-fő rétegét (blokkvázlat alapján), és mindegyikhez nevezz meg egy tipikus
-elemet.</p>
-<p><strong>2. feladat (A)</strong> Egy szivattyú motorvédő kapcsolóját
-be kell állítani. A motor névleges árama 10 A. A szivattyú üzem közben
-mért árama 11 A. Mire állítod a motorvédő kapcsolót, és mit
-vizsgálsz?</p>
-<p><strong>3. feladat (B)</strong> Egy fűtési rendszerben egy 0–10 V-os
-szabályozó kimenetet használunk. A szelep 0 V-on zárva, 10 V-on teljesen
-nyitva van. A vezérlő 3,5 V-ot ad ki. A szelep útja 20 mm. Mekkora a
-szelep becsült nyitási pozíciója mm-ben?</p>
-<p><strong>4. feladat (B)</strong> Rajzold le (vagy írd le) egy
-szivattyú DOL (közvetlen) indítású vezérlésének kapcsolási rajzát
-önfenntartással, START/STOP nyomógombbal és hőkioldóval.</p>
-<p><strong>5. feladat (C)</strong> Egy légkezelő berendezésben a befúvó
-ventilátor 11 kW-os, névleges árama 21 A. A tervező frekvenciaváltót ír
-elő. Indokold meg, miért kell a frekvenciaváltó kimenetére külön
-fojtótekercset vagy szűrőt tenni, ha a motor kábele 80 m hosszú.</p>
-<p><strong>6. feladat (D)</strong> Egy hőcserélő fagyvédő termosztátja
-hibát jelez. A villanyszerelő megméri a termosztát kapcsait: a kapocsra
-kötött jel 0 V, a földhöz képest nem zárlatos. A PLC bemeneti kártyáján
-a LED nem világít. Ellenőrzés után kiderül, hogy a gépész a termosztátot
-a cső külső felületére szerelte, de a kábelt a szivattyú 400 V-os
-tápvezetékével közös csőben vezették. Hogyan lokalizálod a hibát, és mit
-javasolsz a megoldásra?</p>
-<h3 data-number="35.2.13" id="megoldások-feladatok"><span
-class="header-section-number">35.2.13</span> Megoldások (Feladatok)</h3>
-<p><strong>1. feladat megoldása</strong> A blokkvázlat rétegei: 1.
-<strong>Fő betáplálás:</strong> Főkapcsoló, hálózati figyelő relé,
-túlfeszültség-levezető. 2. <strong>Hajtások:</strong> Ventilátor
-frekvenciaváltó, szivattyú lágyindító, direkt motorvédelem. 3.
-<strong>Vezérlés és szabályozás:</strong> PLC/HVAC vezérlő, 24 V DC
-tápegység, relék, reteszek. 4. <strong>Biztonsági/tűzvédelmi
-rendszer:</strong> tűzgátló csappantyúk, füstelvezető ventilátor,
-fagyvédő termosztát.</p>
-<p><strong>2. feladat megoldása</strong> A motorvédő kapcsolót a motor
-adattáblai névleges áramára, 10 A-re kell állítani (a beállítási
-tartomány ellenőrzése után). A 11 A tartós üzemi áram a névleges fölött
-van: a túlterhelés okát kell keresni (a szivattyú munkapontja,
-szelepállás, eltömődött szűrő, mechanikai ellenállás, a motor
-alulméretezése), nem a védelmet feljebb állítani.</p>
-<p><strong>3. feladat megoldása</strong> A 0–10 V-os jel 0–20 mm mozgást
-vezérel. A 3,5 V a tartomány 35%-a
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>,</mo><mn>5</mn><mi>/</mi><mn>10</mn><mo>=</mo><mn>0</mn><mo>,</mo><mn>35</mn></mrow><annotation encoding="application/x-tex">3{,}5/10 = 0{,}35</annotation></semantics></math>).
-Tehát a nyitás:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> mm</mtext></mrow><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>35</mn><mo>=</mo><mn>7</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> mm</mtext></mrow></mrow><annotation encoding="application/x-tex">20 \text{ mm} \cdot 0{,}35 = 7 \text{ mm}</annotation></semantics></math>.</p>
-<p><strong>4. feladat megoldása</strong> A DOL kapcsolás leírása: -
-Főáramkör: L1, L2, L3 -&gt; Q1 (motorvédő vagy kismegszakító) -&gt; K1
-főérintkezői (1–2, 3–4, 5–6) -&gt; F2 hőkioldó -&gt; M1 (U1, V1, W1), PE
-a motortestre. - Vezérlőkör (230 V AC): L -&gt; F1 vezérlőköri biztosító
--&gt; F2 95–96 (NC) -&gt; S0 STOP (NC, 11–12) -&gt; S1 START (NO, 13–14)
--&gt; K1 tekercs A1–A2 -&gt; N. - A K1 13–14 önfenntartó érintkezője az
-S1 START-tal párhuzamos. - START: a K1 behúz, az önfenntartó érintkező
-zár, a motor elindul. STOP vagy a hőkioldó működése: a tekercs elejt, az
-önfenntartás megszűnik, a motor leáll.</p>
-<p><strong>5. feladat megoldása</strong> 80 m hosszú motorkábelnél a
-frekvenciaváltó kimenő feszültsége nagy frekvenciájú (2–16 kHz). A
-hosszú kábel kapacitása jelentős, a kábel visszaveri a jeleket. A gyors
-PWM-élek a kábelen visszaverődnek, és a motor kapcsain a közbenső köri
-feszültség közel kétszeresét elérő (gyártói adat szerint akár nagyobb)
-csúcsok léphetnek fel, amelyek a tekercsszigetelést károsítják; a kábel
-nagy kapacitásának töltőárama pedig a váltót terheli, és túláramhibát
-okozhat. A kimeneti fojtó vagy dU/dt szűrő ezt a feszültségcsúcsot
-korlátozza, így a motor és a frekvenciaváltó élettartama megnő.</p>
-<p><strong>6. feladat megoldása</strong> A hiba lokalizálása: Biztonsági
-korlát: a mérést csak jogosult személy, a műszer mérési kategóriájának
-megfelelően és az öt biztonsági szabály szerint végezze; a vezeték
-vizsgálatát feszültségmentesen kell végezni.</p>
-<ol type="1">
-<li>Mérd a 24 V-ot a PLC bemeneténél és a termosztát kapcsainál: ha a
-termosztát bemenetén van 24 V, a kimenetén nincs, a termosztát bont (a
-fagyvédő termosztát jellemzően NC, hibát/alacsony hőmérsékletet
-bontással jelez) – ellenőrizd a hőmérsékletet és a beállítást. A
-termosztátot a cső külső felületére szerelték, így az a víz, nem a
-levegő hőmérsékletét érzékeli, ezért a rossz elhelyezés is okozhatja a
-bontást.</li>
-<li>Ha a termosztát zár, de a PLC-n nincs jel: feszültségmentesítés után
-mérd a kábel érfolytonosságát és szigetelését (szakaszolással).</li>
-<li>A közös csőben vezetett kábel zavart (téves jeleket) okozhat, de
-szakadást mechanikai sérülés okoz; indukált feszültség a vezetéket nem
-szakítja el. Javítás: a termosztát a gyártói előírás szerinti helyre
-(fagyvédőnél jellemzően a hőcserélő levegő oldalára, kapillárissal), a
-kábel árnyékolt, sodrott érpárú, az erősáramú vezetéktől elválasztva,
-mechanikailag védve.</li>
-</ol>
-<h3 data-number="35.2.14" id="rövid-összefoglaló"><span
-class="header-section-number">35.2.14</span> Rövid összefoglaló</h3>
+<blockquote>
+<p><strong>Gyakorlás:</strong> ennek az alfejezetnek a kidolgozott
+példái, gyakorlatai és megoldással ellátott feladatai az
+<em>Összefoglaló feladatgyűjtemény villanyszerelő tanulóknak</em> című
+kötet 35.2 szakaszában találhatók.</p>
+</blockquote>
+<h3 data-number="35.2.10" id="rövid-összefoglaló"><span
+class="header-section-number">35.2.10</span> Rövid összefoglaló</h3>
 <p>A gépészeti elosztó a ventilátorok, szivattyúk, fűtési és hűtési
 körök villamos háttere. A ventilátoroknál a frekvenciaváltó az
 energiahatékonyság miatt kulcsfontosságú, a teljesítmény a fordulatszám
@@ -504,8 +752,8 @@ reteszelési logika és a gépész-villamos interfész az alapja a <a
 href="ve129.html">Felvonó- és állandó üzemű fogyasztók elosztói</a>
 alfejezetben tárgyalt bonyolultabb tokozásoknak és biztonsági
 köröknek.</p>
-<h3 data-number="35.2.15" id="források-és-ellenőrzési-hiányok"><span
-class="header-section-number">35.2.15</span> Források és ellenőrzési
+<h3 data-number="35.2.11" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">35.2.11</span> Források és ellenőrzési
 hiányok</h3>
 <p>A fejezet az MSZ EN 61439 sorozatra, az MSZ EN 60204-1 szabványra, az
 MSZ HD 60364-5-56 szabványra (biztonsági célú berendezések), az OTSZ-re

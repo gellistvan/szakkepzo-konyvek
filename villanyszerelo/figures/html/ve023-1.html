@@ -26,15 +26,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Teljesítményháromszög P, Q, S oldalakkal és a cél teljesítménytényezőhöz szükséges kondenzátor meddőteljesítménye és kapacitása"></svg>
 <p class="small">Szemléltetés (6.4): alap U = 230 V, I = 6 A, cos φ = 0,75 → P = 1035 W, Q ≈ 913 var; cos φ = 0,95-re Q_C = 572,6 var, C ≈ 34,5 µF. A kondenzátor és a védelem tényleges kiválasztása gyártói adat és előírás alapján ellenőrizendő; kis kapacitásoknál a tolóállás érzékeny.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"U":"V", "I":"A", "c1":"", "c2":""};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const f=50,Sa=v.U*v.I,P=Sa*v.c1,Q=Sa*Math.sqrt(1-v.c1*v.c1),t1=Math.tan(Math.acos(v.c1)),t2=Math.tan(Math.acos(v.c2)),QC=Math.max(0,P*(t1-t2)),C=QC/(2*Math.PI*f*v.U*v.U),Q2=Q-QC,S2=Math.hypot(P,Q2),I2=S2/v.U;
 const sc=Math.min(400/Sa,230/Math.max(Q,1)),ox=60,oy=250,X=x=>ox+x*sc,Y=y=>oy-y*sc;
@@ -48,7 +52,7 @@ if(QC>0)el("text",{x:X(P)+14,y:Y(Q2)+16,"font-size":12,fill:css("--ok")},"javít
 status("S = U·I = <b>"+fmt(Sa,0)+" VA</b>, P = S·cos φ = <b>"+fmt(P,0)+" W</b>, Q = <b>"+fmt(Q,0)+" var</b> (φ = "+fmt(Math.acos(v.c1)*180/Math.PI,1)+"°). Cél cos φ = "+fmt(v.c2)+": Q<sub>C</sub> = P(tg φ₁ − tg φ₂) = <b>"+fmt(QC,1)+" var</b>, C = Q<sub>C</sub>/(2πfU²) = <b>"+fmt(C*1e6,1)+" µF</b> (50 Hz). Az áram "+fmt(v.I,2)+" A-ről "+fmt(QC>0?I2:v.I,2)+" A-re csökken.");
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

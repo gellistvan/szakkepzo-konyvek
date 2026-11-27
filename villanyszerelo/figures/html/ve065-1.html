@@ -30,15 +30,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Kalkulátor: vezetékvédelmi feltételek és a zárlati áram a kábelhossz függvényében"></svg>
 <p class="small">Tanulási kalkulátor a 18.3.4 algoritmusához: Zs = Z_hálózat + l·2·r_ér·(melegedési szorzó), Ik = 230 V/Zs, kismegszakítónál I2 = 1,45·In, biztos gyors kioldás Ik ≥ Ia = 5/10/20·In (B/C/D). Az érellenállások (20 °C) és az Iz-értékek (réz, PVC, két terhelt ér, 30 °C) jellemző tanulási adatok – ellenőrizendő: MSZ EN 60228, MSZ HD 60364-5-52, MSZ EN 60898-1; a megszakítóképességet (Icn) külön ellenőrizd.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"ib":"A", "ni":"", "c":"", "ai":"", "mi":"", "zh":"Ω", "l":"m", "k":"×"};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const INL=[6, 10, 13, 16, 20, 25, 32, 40, 50, 63], AS=[1.5,2.5,4,6,10], RER={"1.5": 0.0121, "2.5": 0.00741, "4": 0.00461, "6": 0.00308, "10": 0.00183}, IZ={"A1": {"1.5": 14.5, "2.5": 19.5, "4": 26, "6": 34, "10": 46}, "B1": {"1.5": 17.5, "2.5": 24, "4": 32, "6": 41, "10": 57}, "C": {"1.5": 19.5, "2.5": 27, "4": 36, "6": 46, "10": 63}}, IA={"B":5,"C":10,"D":20}, MOD=["A1","B1","C"], JL=["B","C","D"];
 const In=INL[v.ni], a=AS[v.ai], mod=MOD[v.mi-1], jl=JL[v.c-1], Iz=IZ[mod][String(a)], rh=2*RER[String(a)]*v.k;
@@ -63,7 +67,7 @@ el("text",{x:(L+R)/2,y:B+36,"text-anchor":"middle","font-size":13},"kábelhossz 
 el("text",{x:14,y:(T+B)/2,"font-size":13,transform:"rotate(-90 14 "+((T+B)/2)+")","text-anchor":"middle"},"Ik (A)");
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

@@ -125,6 +125,83 @@ ellenállás, amelynek ellenállása egy bizonyos névleges hőmérséklet
 közelében hirtelen meredeken megnő. A motor hővédelme a tekercsekbe
 épített PTC-láncot figyeli, és ha a mért ellenállás átlépi a határt, a
 vezérlés letiltja a motort.</p>
+<p>Egy elosztóban a négy indítási mód leágazásai gyakran egymás mellett
+állnak. Az alábbi egyvonalas rajz közös gyűjtősínről mutatja őket, hogy
+összevethesd: melyik készülék ad zárlatvédelmet, melyik
+túlterhelés-védelmet, és hol kapcsol a kontaktor.</p>
+<figure>
+<img src="assets/ve127-diagram-2.png"
+alt="Négy motorleágazás egy elosztóban (egyvonalas) - Egyvonalas ábrázolás: a vonás (3) a három fázisvezetőt jelöli. (2) K2 hálózati, K3 delta, K4 csillag kontaktor; M2 kapcsai U1 V1 W1 / W2 U2 V2. (3) A3 lágyindító K5 bypass-szal. (4) L4 hálózati fojtó, Z4 EMC-szűrő, U4 frekvenciaváltó, W4 árnyékolt kábel (szaggatott). A PE minden leágazásban külön vezető (nincs rajzolva)." />
+<figcaption aria-hidden="true">Négy motorleágazás egy elosztóban
+(egyvonalas) - Egyvonalas ábrázolás: a vonás (3) a három fázisvezetőt
+jelöli. (2) K2 hálózati, K3 delta, K4 csillag kontaktor; M2 kapcsai U1
+V1 W1 / W2 U2 V2. (3) A3 lágyindító K5 bypass-szal. (4) L4 hálózati
+fojtó, Z4 EMC-szűrő, U4 frekvenciaváltó, W4 árnyékolt kábel
+(szaggatott). A PE minden leágazásban külön vezető (nincs
+rajzolva).</figcaption>
+</figure>
+<table>
+<caption>A négy motorleágazás védelmi rétegei</caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Leágazás</th>
+<th>Zárlatvédelem</th>
+<th>Túlterhelés-védelem</th>
+<th>Motor hővédelme</th>
+<th>Jellemző hiba</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) direkt: Q1 – K1 – M1</td>
+<td>Q1 motorvédő kapcsoló</td>
+<td>Q1 (beállított I<sub>r</sub> = I<sub>n</sub>)</td>
+<td>opcionális PTC-relé</td>
+<td>nagy indítási áramlökés, a Q1 indításkor kiold, ha a kioldási jelleg
+nem illik a motorhoz</td>
+</tr>
+<tr>
+<td>(2) csillag–delta: Q2 – K2/K3/K4 – M2</td>
+<td>Q2</td>
+<td>Q2 vagy külön hőkioldó a motor-fázisáram ágában (≈
+0,58·I<sub>n</sub>-re állítva)</td>
+<td>opcionális PTC-relé</td>
+<td>rossz delta-hidak, túl rövid átkapcsolási idő, rosszul beállított
+hőkioldó</td>
+</tr>
+<tr>
+<td>(3) lágyindítós: Q3 – A3 ∥ K5 – M3</td>
+<td>Q3 (a gyártó szerint félvezető-védő biztosító is kellhet)</td>
+<td>A3 elektronikus túlterhelés-védelme vagy külön hőkioldó</td>
+<td>PTC az A3 bemenetén</td>
+<td>K5 fázissorrend-hiba, bypass indítás közben behúz</td>
+</tr>
+<tr>
+<td>(4) frekvenciaváltós: Q4 – L4 – Z4 – U4 – W4 – M4</td>
+<td>Q4 (a gyártói ajánlás szerint)</td>
+<td>U4 elektronikus hőmodellje</td>
+<td>PTC az U4 bemenetén</td>
+<td>árnyékolás-hiba, kapcsolás a váltó kimenetén, STO-t leválasztásnak
+hinni</td>
+</tr>
+</tbody>
+</table>
+<p>Az indítási módok áram- és nyomatékoldali összehasonlítása az <a
+href="ve096.html">Indítás: közvetlen, csillag–delta, lágyindító,
+csúszógyűrűs</a>, a direkt, reverzáló és Y-Δ vezérlések megépítése a <a
+href="ve148.html">Vezérlések építése: direkt, reverzáló, Y-Δ</a>
+alfejezetben található; a választás lépéseit a <a
+href="ve096.html#ve096-dontesi-fa">Döntési fa: melyik indítási módot
+válasszam?</a> rész adja. <strong>Ellenőrző kérdés:</strong> melyik két
+leágazásban nincs a motornak saját hőkioldója, és mi veszi át a
+szerepét?</p>
 <h3 data-number="35.1.4"
 id="a-frekvenciaváltó-beépítésének-alapszabályai"><span
 class="header-section-number">35.1.4</span> A frekvenciaváltó
@@ -169,30 +246,6 @@ pedig a bemeneti teljesítménytényező. A frekvenciaváltó bemeneti áramát
 ennek felhasználásával a hálózati oldali feszültség és a fázisszám
 alapján számíthatjuk. A kimeneti áramot a motor adattáblájáról olvassuk
 le.</p>
-<p><strong>Példa.</strong> Egy 5,5 kW-os, 400 V-os háromfázisú aszinkron
-motor névleges árama az adattáblán 11,7 A. A frekvenciaváltó bemeneti
-árama hozzávetőlegesen
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mi>P</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>η</mi><mo>⋅</mo><mi>λ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S_{\text{be}}=P/(\eta\cdot \lambda)</annotation></semantics></math>,
-ahol
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>85</mn></mrow><annotation encoding="application/x-tex">\eta=0{,}85</annotation></semantics></math>
-és
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">\lambda=0{,}9</annotation></semantics></math>
-(hálózati fojtóval; fojtó nélkül 0,65–0,75 – ellenőrizendő: gyártói
-adat) esetén:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mfrac><mn>5500</mn><mrow><mn>0</mn><mo>,</mo><mn>85</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>9</mn></mrow></mfrac><mo>≈</mo><mn>7</mn><mo>,</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kVA</mtext></mrow><annotation encoding="application/x-tex">
-S_{\text{be}}=\frac{5500}{0{,}85\cdot 0{,}9}\approx 7{,}2\,\text{kVA}
-</annotation></semantics></math></p>
-<p>A bemeneti vonali áram:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">be</mtext></msub><mo>=</mo><mfrac><msub><mi>S</mi><mtext mathvariant="normal">be</mtext></msub><mrow><msqrt><mn>3</mn></msqrt><mspace width="0.167em"></mspace><msub><mi>U</mi><mi>v</mi></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>7</mn><mo>,</mo><mn>2</mn><mo>⋅</mo><msup><mn>10</mn><mn>3</mn></msup></mrow><mrow><msqrt><mn>3</mn></msqrt><mo>⋅</mo><mn>400</mn></mrow></mfrac><mo>≈</mo><mn>10</mn><mo>,</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">A</mtext></mrow><annotation encoding="application/x-tex">
-I_{\text{be}}=\frac{S_{\text{be}}}{\sqrt{3}\,U_v}=\frac{7{,}2\cdot 10^3}{\sqrt{3}\cdot 400}\approx 10{,}4\,\text{A}
-</annotation></semantics></math></p>
-<p>A kismegszakító névleges áramát (pl.
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>n</mi></msub><annotation encoding="application/x-tex">I_n</annotation></semantics></math>
-= 16 A) és a vezeték terhelhetőségét
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>z</mi></msub><mo>≥</mo><msub><mi>I</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">I_z \ge I_n</annotation></semantics></math>)
-a gyártó ajánlása szerint választjuk. A motoroldali kábel méretezésénél
-a motor névleges árama (11,7 A) és a kimeneti frekvencia/feszültség a
-mérvadó.</p>
 <h3 data-number="35.1.5"
 id="kábelezés-és-emc-a-frekvenciaváltós-környezetben"><span
 class="header-section-number">35.1.5</span> Kábelezés és EMC a
@@ -292,6 +345,84 @@ alt="Szerelőlemez: felül Q1 háromfázisú védelem, alatta balra az A1 lágyi
 zárlat keletkezik. Sok lágyindító beépített bypass-szal készül; ilyenkor
 külső K2 nem kell, a gyártói bekötési rajzot kövesd. A HTML-kiadásban a
 részekre mutatva azok szerepe olvasható.</p>
+<h4 data-number="35.1.6.1" id="ve127-bypass"><span
+class="header-section-number">35.1.6.1</span> Lágyindító
+bypass-kontaktorral: fő- és vezérlőkör</h4>
+<p>A szerelőlemez-ábra a készülékek helyét mutatja; az alábbi két
+kapcsolási rajz azt, hogyan folyik az áram. A főkörben a K2
+bypass-kontaktor főérintkezői az A1 lágyindító tirisztoraival
+párhuzamosan kapcsolódnak: fázisonként a bemeneti (1L1, 3L2, 5L3) és a
+kimeneti (2T1, 4T2, 6T3) kapocs közé.</p>
+<figure>
+<img src="assets/ve127-diagram-3.png"
+alt="Lágyindító bypass-kontaktorral – főkör (többvonalas) - A1 tirisztoros lágyindító (fázisonként ellenpárhuzamos tirisztorpár, triac-jellel), K2 bypass-kontaktor A1-gyel párhuzamosan; Q1 zárlatvédelem és leválasztás. A kapocsjelek a gyártói rajz szerint ellenőrizendők." />
+<figcaption aria-hidden="true">Lágyindító bypass-kontaktorral – főkör
+(többvonalas) - A1 tirisztoros lágyindító (fázisonként ellenpárhuzamos
+tirisztorpár, triac-jellel), K2 bypass-kontaktor A1-gyel párhuzamosan;
+Q1 zárlatvédelem és leválasztás. A kapocsjelek a gyártói rajz szerint
+ellenőrizendők.</figcaption>
+</figure>
+<p>A vezérlőkörben a K1A segédrelé tárolja az indítási parancsot, az A1
+a RUN bemenetén kapja meg, a K2 tekercsét pedig kizárólag az A1
+„felfutás kész” (TOR, 13–14) relékimenete kapcsolja; az A1 hibarelé
+bontója (95–96) a teljes vezérlést letiltja.</p>
+<figure>
+<img src="assets/ve127-diagram-4.png"
+alt="Lágyindító bypass-kontaktorral – vezérlőkör (230 V) - S1 → K1A behúz és önfenntart → A1 RUN: rámpa felfelé → TOR (13–14) zár → K2 behúz. S0 (vagy A1 hiba 95–96) → K1A ejt → RUN megszűnik → TOR nyit, K2 ejt ELŐBB → A1 lágyleállítási rámpa. A TOR-, RUN- és hibarelé-kapcsok gyártófüggők (ellenőrizendő). * gyártói ajánlás szerint." />
+<figcaption aria-hidden="true">Lágyindító bypass-kontaktorral –
+vezérlőkör (230 V) - S1 → K1A behúz és önfenntart → A1 RUN: rámpa
+felfelé → TOR (13–14) zár → K2 behúz. S0 (vagy A1 hiba 95–96) → K1A ejt
+→ RUN megszűnik → TOR nyit, K2 ejt ELŐBB → A1 lágyleállítási rámpa. A
+TOR-, RUN- és hibarelé-kapcsok gyártófüggők (ellenőrizendő). * gyártói
+ajánlás szerint.</figcaption>
+</figure>
+<table>
+<caption>A bypass-os lágyindítás négy lépése</caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Lépés</th>
+<th>Mi történik</th>
+<th>U a motoron</th>
+<th>K2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. START</td>
+<td>S1 → K1A behúz és önfenntart → A1 RUN</td>
+<td>a kezdőfeszültségről (pl. 30–50 %) a rámpa szerint nő</td>
+<td>nyitva</td>
+</tr>
+<tr>
+<td>2. Rámpa vége</td>
+<td>A1 eléri a teljes feszültséget, a TOR 13–14 zár</td>
+<td>100 %</td>
+<td>behúz</td>
+</tr>
+<tr>
+<td>3. Üzem</td>
+<td>az áram K2-n folyik, a tirisztorok árammentesek (de feszültség alatt
+vannak)</td>
+<td>100 %</td>
+<td>zárva</td>
+</tr>
+<tr>
+<td>4. STOP</td>
+<td>S0 → K1A ejt → RUN megszűnik → TOR nyit, K2 ELŐBB ejt → A1
+lágyleállítási rámpa</td>
+<td>csökken 0-ig</td>
+<td>nyitva</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ellenőrző kérdés:</strong> a rajz alapján mi történne, ha a
+K2 tekercsét a K1A 23–24 érintkezője vezérelné a TOR helyett?</p>
 <h3 data-number="35.1.7"
 id="motorvédelmi-funkciók-és-a-frekvenciaváltó"><span
 class="header-section-number">35.1.7</span> Motorvédelmi funkciók és a
@@ -322,8 +453,142 @@ hőrelé szükséges, a váltó kimenetén, PWM-re alkalmas típussal, amely a
 váltó engedélyező bemenetét bontja (a hőrelé az áramot méri, ezért a
 váltó bemeneti oldalán nem a motoráramot látná). <strong>(ellenőrizendő:
 gyártói kézikönyv)</strong></p>
-<h3 data-number="35.1.8" id="hálózati-fojtó-emc-szűrő-és-dc-fojtó"><span
-class="header-section-number">35.1.8</span> Hálózati fojtó, EMC-szűrő és
+<h4 data-number="35.1.7.1" id="a-ptc-lánc-ellenőrzése"><span
+class="header-section-number">35.1.7.1</span> A PTC-lánc
+ellenőrzése</h4>
+<p>Először az öt biztonsági szabály: lekapcsolás, visszakapcsolás elleni
+biztosítás, a feszültségmentesség ellenőrzése (váltónál a kisütési idő
+kivárása után a DC- és a motorkapcsokon is), földelés és rövidre zárás
+ha szükséges, a szomszédos feszültség alatti részek lefedése.
+Tanműhelyben vagy jogosult személy felügyeletével dolgozz.</p>
+<p>Eszköz: multiméter ellenállásmérő állásban. <strong>Tilos a
+PTC-láncot szigetelésmérővel (500 V) mérni</strong>: a termisztor csak
+néhány voltot visel el (ellenőrizendő: DIN 44081/44082, motorgyártói
+adat).</p>
+<ol type="1">
+<li>Kösd le a PTC két vezetékét a váltó vagy a PTC-relé kapcsáról
+(előtte jelöld meg őket).</li>
+<li>Hideg motoron mérd meg a lánc ellenállását. Három sorba kötött
+érzékelő jellemzően
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mo stretchy="false" form="prefix">(</mo><mn>20</mn><mi>…</mi><mn>250</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">3\times(20\ldots250)\,\Omega</annotation></semantics></math>,
+összesen 1,5 kΩ alatt (ellenőrizendő: DIN 44081/44082, motorgyártói
+adat).</li>
+<li>Szakadás (∞) vagy zárlat (kb. 0 Ω) hibás láncot vagy vezetéket
+jelent. A vezetéket a motor sorkapcsánál mérve is ellenőrizd.</li>
+<li>Kioldási próba: feszültségmentes állapotban a bemenetre a lánc
+helyett kb. 4 kΩ-os ellenállást köss (vagy hagyd nyitva a bemenetet).
+Zárt burkolattal, a motorindítás tiltása mellett a jogosult személy
+bekapcsol: a váltónak vagy a relének hibát kell jeleznie. Újabb
+feszültségmentesítés után kösd vissza a láncot; a hiba ekkor nyugtázható
+(ellenőrizendő: gyártói kézikönyv).</li>
+<li>Dokumentáld a mért értéket és a próba eredményét.</li>
+</ol>
+<p>Külső hőrelénél a beállított áram egyezzen a motor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>n</mi></msub><annotation encoding="application/x-tex">I_n</annotation></semantics></math>
+értékével (csillag–delta indításnál, a fázistekercs ágába kötött relénél
+kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>58</mn><mo>⋅</mo><msub><mi>I</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">0{,}58\cdot I_n</annotation></semantics></math>).
+A TEST gombbal a 95–96 érintkező bont, a 97–98 zár; ezt a leválasztott
+vezérlőkörben folytonosságméréssel ellenőrzöd, majd a relét
+visszaállítod (ellenőrizendő: a relé kezelési leírása).</p>
+<table>
+<caption>Egysoros jegyzőkönyv-minta (példaadat)</caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Motor</th>
+<th>PTC, hideg</th>
+<th>Kioldási próba</th>
+<th>Hőrelé beállítása</th>
+<th>Dátum, név</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1, 7,5 kW, 14,5 A</td>
+<td>420 Ω</td>
+<td>rendben (4 kΩ → hiba)</td>
+<td>14,5 A, TEST rendben</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="35.1.8"
+id="teljes-frekvenciaváltós-leágazás-főáramkör-és-vezérlőkapcsok-egy-lapon"><span
+class="header-section-number">35.1.8</span> Teljes frekvenciaváltós
+leágazás: főáramkör és vezérlőkapcsok egy lapon</h3>
+<p>A fejezet eleji egyvonalas rajz csak az erősáramú utat mutatta. Egy
+valós leágazás bekötéséhez a tervlap kell: az alábbi kétlapos
+dokumentáció 1. lapja a többvonalas főáramkört (Q1 – K1 – L11 – Z1 – U1
+– W1 – X1 – M1, PE külön vezetőként), a 2. lapja a váltó vezérlőkapcsait
+mutatja. A két lapon a készülékjelek közösek; az M1 PTC-kivezetése az 1.
+lapról a 2. lap 11. oszlopába fut.</p>
+<figure id="fig-ve127-5-1">
+<div class="fig-interactive"><iframe src="figures/html/ve127-5.html" title="A3-as tervlap, 1. lap. Bal oldalon függőlegesen: X1 betáp L1, L2, L3, PE; Q1 háromfázisú kismegszakító (C/D, gyártói ajánlás); K1 opcionális hálózati kontaktor; L11 hálózati fojtó; Z1 EMC-szűrő PE-bekötéssel; U1 frekvenciaváltó L1–L3 bemenettel, U, V, W kimenettel, oldalt R+ és R− kapocs az R2 opcionális fékellenálláshoz; W1 árnyékolt motorkábel szaggatott árnyékolással, amely mindkét végén 360°-ban a PE-gerinchez kötött; X1 motorsorkapocs U1, V1, W1; M1 háromfázisú motor PE-vel. Jobb oldalon hét megjegyzés, köztük: K1 csak a hálózati oldalon kapcsol; STO nem leválasztás." loading="lazy" style="width:100%;border:0;height:760px"></iframe><noscript><img src="figures/img/ve127-5-1.png" style="width:100.0%"
+alt="A3-as tervlap, 1. lap. Bal oldalon függőlegesen: X1 betáp L1, L2, L3, PE; Q1 háromfázisú kismegszakító (C/D, gyártói ajánlás); K1 opcionális hálózati kontaktor; L11 hálózati fojtó; Z1 EMC-szűrő PE-bekötéssel; U1 frekvenciaváltó L1–L3 bemenettel, U, V, W kimenettel, oldalt R+ és R− kapocs az R2 opcionális fékellenálláshoz; W1 árnyékolt motorkábel szaggatott árnyékolással, amely mindkét végén 360°-ban a PE-gerinchez kötött; X1 motorsorkapocs U1, V1, W1; M1 háromfázisú motor PE-vel. Jobb oldalon hét megjegyzés, köztük: K1 csak a hálózati oldalon kapcsol; STO nem leválasztás." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve127-5-1.png" style="width:100.0%"
+alt="A3-as tervlap, 1. lap. Bal oldalon függőlegesen: X1 betáp L1, L2, L3, PE; Q1 háromfázisú kismegszakító (C/D, gyártói ajánlás); K1 opcionális hálózati kontaktor; L11 hálózati fojtó; Z1 EMC-szűrő PE-bekötéssel; U1 frekvenciaváltó L1–L3 bemenettel, U, V, W kimenettel, oldalt R+ és R− kapocs az R2 opcionális fékellenálláshoz; W1 árnyékolt motorkábel szaggatott árnyékolással, amely mindkét végén 360°-ban a PE-gerinchez kötött; X1 motorsorkapocs U1, V1, W1; M1 háromfázisú motor PE-vel. Jobb oldalon hét megjegyzés, köztük: K1 csak a hálózati oldalon kapcsol; STO nem leválasztás." /></details></div>
+<figcaption>Frekvenciaváltós motorleágazás, 1. lap: főáramkör
+(tervlap)</figcaption>
+</figure>
+<figure id="fig-ve127-5-2">
+<img src="figures/img/ve127-5-2.png" style="width:100.0%"
+alt="A3-as tervlap, 2. lap. Felül a váltó saját +24 V-os sínje; róla S1 RUN kétvezetékes kapcsoló a DI1-re, S2 irányválasztó a DI2-re, S3 RESET nyomógomb a DI3-ra, S4 vészleállító két bontója (11–12, 21–22) az STO1 és STO2 bemenetre, B1 4–20 mA-es távadó az AI2-re. R1 10 kΩ-os potméter a +10 V és a GND között, csúszkája az AI1-re. AO1 kimenet a PLC felé, PTC1/PTC2 a motor termisztorához. Jobb oldalon 230 V-os kör: L1 – F2 – sín 1 – U1 RO1 bontó – H1 piros HIBA lámpa, illetve RO2 záró – H2 zöld ÜZEM lámpa – N. Alul az U1 vezérlő-sorkapocs sávja a kapocsnevekkel és a figyelmeztetéssel, hogy a kapocsnevek gyártónként eltérnek." />
+<figcaption>Frekvenciaváltós motorleágazás, 2. lap: vezérlőkapcsok
+(tervlap)</figcaption>
+</figure>
+<p>A lap olvasásakor ezekre figyelj:</p>
+<ol type="1">
+<li><strong>Két külön világ.</strong> A vezérlőkapcsok (+24 V, DI, AI,
+AO, STO, PTC) törpefeszültségű, a hálózattól galvanikusan leválasztott
+körök: 230 V-ot rájuk kötni tilos. A 230 V-os rész csak a
+relékimeneteken (RO1, RO2) van, saját F2 vezérlőbiztosítóval.</li>
+<li><strong>Indítás.</strong> Kétvezetékes vezérlésnél S1 reteszelő
+kapcsoló: zárva fut a motor (DI1 = RUN), nyitva leáll. Háromvezetékes
+változatban S0 (STOP, bontó) és S1 (START, záró) nyomógomb kerül a
+DI-kre; melyik bemenet melyik funkció (RUN, REV, fix fordulatszám,
+RESET), azt a paraméterezés dönti el (<a
+href="ve150.html">Frekvenciaváltó és lágyindító
+paraméterezése</a>).</li>
+<li><strong>Potméter háromvezetékes bekötése.</strong> Az R1 egyik vége
+a +10 V, másik vége a GND, a csúszka az AI1. Ha a két vég felcserélődik,
+a forgatás iránya megfordul: a „nulla” állásban maximális lesz a
+fordulatszám.</li>
+<li><strong>4–20 mA alapjel.</strong> Hosszú kábelen az áramjel nem
+érzékeny a vezeték ellenállására, és a 4 mA-es élő nulla miatt a
+szakadás felismerhető (&lt; 4 mA = hiba). A bemenet módját (V vagy mA)
+DIP-kapcsoló vagy paraméter állítja; a PLC analóg kimenete ugyanígy
+köthető az AI-re (<a href="ve118.html">PLC-alapok és ipari
+vezérlés</a>).</li>
+<li><strong>Hibarelé.</strong> A hibajelzés a relé bontó érintkezőjén
+(RO1 C–NC) szakadásbiztos: ha a váltó tápja kiesik vagy a relé hibás, a
+H1 akkor is jelez.</li>
+<li><strong>STO ≠ leválasztás.</strong> A biztonságos nyomatékmentesítés
+(STO) két csatornán, az S4 vészleállító két bontóján át működik: a váltó
+nem ad nyomatékot, de a DC-kör és a kapcsok feszültség alatt maradnak.
+Karbantartáshoz Q1-et kell kikapcsolni és lezárni (öt biztonsági
+szabály), és a kisütési időt kivárni. A DC-kör, a töltőáram-lökés és a
+fékellenállás a teljesítménykör rajzán követhető (<a
+href="ve137.html">Erősáramú félvezetők: tirisztor, triac, IGBT,
+MOSFET</a>); a leállítási kategóriák: <a href="ve122.html">Csatlakozási
+hely és ipari fogyasztói berendezés kialakítása</a>.</li>
+<li><strong>Árnyékolás.</strong> A motorkábel árnyékolása mindkét végén
+360°-ban a PE-hez kötött; a vezérlőkábel árnyékolását egy ponton, a
+váltó oldalán kötjük be.</li>
+<li><strong>Kapocsnevek.</strong> A rajz általános kapocsneveket
+használ; ezek gyártónként eltérnek, a bekötéshez mindig a váltó
+kézikönyve a mérvadó (ellenőrizendő: gyártói kézikönyv).</li>
+</ol>
+<p><strong>Ellenőrző kérdés:</strong> a rajz alapján miért nem elég az
+S4 vészleállítót megnyomni, mielőtt a motorsorkapocsban dolgozni
+kezdesz, és melyik készüléket kell helyette kikapcsolni és lezárni?</p>
+<h3 data-number="35.1.9" id="hálózati-fojtó-emc-szűrő-és-dc-fojtó"><span
+class="header-section-number">35.1.9</span> Hálózati fojtó, EMC-szűrő és
 DC-fojtó</h3>
 <p><strong>Definíció.</strong> A hálózati fojtó (line reactor) a
 frekvenciaváltó bemeneti oldalára kötött induktivitás, amely csökkenti a
@@ -348,15 +613,20 @@ kiválasztását a frekvenciaváltó gyártói dokumentációjában megadott
 ajánlások szerint kell elvégezni, a kívánt EMC-kategóriától és a
 motorkábel hosszától függően. A fojtók és szűrők melegedését a szekrény
 hűtésénél figyelembe kell venni.</p>
-<h3 data-number="35.1.9" id="árnyékolás-és-földelés-360-os-elv"><span
-class="header-section-number">35.1.9</span> Árnyékolás és földelés:
+<h3 data-number="35.1.10" id="árnyékolás-és-földelés-360-os-elv"><span
+class="header-section-number">35.1.10</span> Árnyékolás és földelés:
 360°-os elv</h3>
 <p><strong>Szabály.</strong> Az árnyékolt motorkábel árnyékolását
 mindkét végén földelni kell. A földelés legyen 360°-os, azaz az
 árnyékoló felület kontúrját körben érintő módon rögzítsük a földelő
 felülethez. Ennek leggyakoribb módja a fémezett kábelbevezető (cable
 gland) alkalmazása, amely a kábel kivezető nyílásánál a készülékházhoz
-csavarozva érintkezik az árnyékolással.</p>
+csavarozva érintkezik az árnyékolással. Az árnyékolt kábeltípus
+kiválasztása: <a href="ve035.html">Vezeték- és kábeltípusok,
+jelölésrendszer</a>. A jó árnyékbekötés a motor csapágyáramait is
+csökkenti; a jelenséget és a további ellenszereket (szigetelt csapágy,
+tengelyföldelés) lásd: <a href="ve105.html">Tekercselés, impregnálás,
+csapágyak és szénkefe</a>.</p>
 <p>A szekrényen belül a másik gyakori megoldás az árnyékoló (EMC-) sínre
 szorított bilincs. Az alábbi ábra ennek lépéseit mutatja. Az 1. panelen
 a bilincs helyén, a bilincs szélességében csak a külső köpenyt fejted
@@ -385,8 +655,8 @@ vonatkozó szabvány (MSZ HD 60364 sorozat) vezetékméretezési
 követelményeit <strong>(ellenőrizendő: aktuális kiadás)</strong>. A
 PE-vezető keresztmetszetét ne csökkentsük kizárólag az árnyékolás miatt;
 az árnyékolás nem helyettesíti a védővezetőt.</p>
-<h3 data-number="35.1.10" id="szabvány-és-szabályozási-háttér"><span
-class="header-section-number">35.1.10</span> Szabvány és szabályozási
+<h3 data-number="35.1.11" id="szabvány-és-szabályozási-háttér"><span
+class="header-section-number">35.1.11</span> Szabvány és szabályozási
 háttér</h3>
 <p><strong>Szabvány.</strong> A frekvenciaváltók és hajtások általános
 követelményeire az MSZ EN 61800 sorozat vonatkozik, amely a villamos
@@ -399,8 +669,8 @@ kategóriák)</strong>. Az elosztóberendezésekre az MSZ EN 61439 sorozat,
 a kapcsolókészülékekre az MSZ EN 60947 sorozat vonatkozik; a motorvédő
 kapcsolókra és kontaktorokra a gyártói adatlapok és a hatályos
 szabványok együttesen érvényesek.</p>
-<h3 data-number="35.1.11" id="valós-életbeli-alkalmazás"><span
-class="header-section-number">35.1.11</span> Valós életbeli
+<h3 data-number="35.1.12" id="valós-életbeli-alkalmazás"><span
+class="header-section-number">35.1.12</span> Valós életbeli
 alkalmazás</h3>
 <p>Egy ipari üzemben egy szellőzőventilátor motorját 4 kW-os, 400 V-os
 aszinkron motor hajtja, frekvenciaváltóval. A szerelő a váltó kimeneti
@@ -415,105 +685,6 @@ zavarai bejutottak a jelkábelekbe. A megoldás az árnyékolt motorkábel, a
 elválasztás volt. A tanulság: a frekvenciaváltós környezetben nem elég a
 készülék bekötése, a kábelezést az EMC-szempontok szerint kell
 megtervezni.</p>
-<h3 data-number="35.1.12"
-id="gyakorlati-útmutató-frekvenciaváltó-beépítése-az-elosztóba"><span
-class="header-section-number">35.1.12</span> Gyakorlati útmutató:
-frekvenciaváltó beépítése az elosztóba</h3>
-<h4 data-number="35.1.12.1" id="cél"><span
-class="header-section-number">35.1.12.1</span> Cél</h4>
-<p>Egy frekvenciaváltó beépítése a motorvezérlő elosztóba, a betáplálás,
-a bemeneti védelem, az EMC-szűrő, a motorkábel csatlakoztatása, a
-vezérlő- és PTC-kapcsok bekötése, a földelés és árnyékolás kialakítása,
-valamint az alapvető paraméterezés elvégzése.</p>
-<h4 data-number="35.1.12.2" id="eszközök-és-anyagok"><span
-class="header-section-number">35.1.12.2</span> Eszközök és anyagok</h4>
-<ul>
-<li>Frekvenciaváltó, a motor adattáblájának megfelelő méretezésben</li>
-<li>Kismegszakító vagy biztosító-szakaszoló a bemeneti védelemhez</li>
-<li>EMC-szűrő és/vagy hálózati fojtó (a gyártói ajánlás szerint)</li>
-<li>Árnyékolt motorkábel, árnyékolt vezérlőkábel, PE-sín, földelő
-bilincs, érvéghüvely, kábelsaru</li>
-<li>Csavarhúzó készlet, nyomatékkulcs, kábelkés, érvéghüvely-fogó,
-multiméter</li>
-<li>A váltó paraméterezési útmutatója, adattábla, toll és
-jegyzőkönyv</li>
-</ul>
-<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
-(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
-vonatkozik; hálózati feszültségen önállóan ne végezd.</p>
-<h4 data-number="35.1.12.3" id="biztonsági-szabályok"><span
-class="header-section-number">35.1.12.3</span> Biztonsági szabályok</h4>
-<ol type="1">
-<li>Feszültségmentesítés (lekapcsolás).</li>
-<li>Visszakapcsolás elleni biztosítás.</li>
-<li>Feszültségmentesség ellenőrzése. Frekvenciaváltónál a közbenső
-egyenáramú kör kondenzátorai a leválasztás után is percekig
-életveszélyes feszültségen maradnak (400 V-os hálózaton kb. 560–650 V
-DC): várd ki a készüléken feltüntetett kisütési időt (ellenőrizendő:
-gyártói adatlap, jellemzően 5–15 perc), majd a DC+ / DC– kapcsokon és a
-kimeneti (motor) kapcsokon is mérd meg a feszültségmentességet.</li>
-<li>Földelés és rövidre zárás (ha szükséges).</li>
-<li>Szomszédos feszültség alatti részek lefedése.</li>
-</ol>
-<h4 data-number="35.1.12.4" id="lépések"><span
-class="header-section-number">35.1.12.4</span> Lépések</h4>
-<ol type="1">
-<li><strong>Elrendezés tervezése.</strong> Az elosztószekrényben alakíts
-ki külön területet a frekvenciaváltónak, a bemeneti védelemnek és a
-szűrőnek. A váltó fölött és alatt hagyj szellőzési távolságot a gyártói
-adatlap szerint.</li>
-<li><strong>Bemeneti tápellátás bekötése.</strong> A
-kismegszakító/biztosító-szakaszoló után kösd be a hálózati fázisokat
-(L1, L2, L3) és a PE-t a váltó bemenetére. Az EMC-szűrőt közvetlenül a
-váltó bemeneti kapcsa elé szereld, a szűrő fémháza legyen csatlakoztatva
-a védőföldeléshez.</li>
-<li><strong>Motorkábel csatlakoztatása.</strong> A váltó kimeneti
-kapcsain (U, V, W) kösd be az árnyékolt motorkábel három fázisát. A
-védővezetőt a váltó PE-kapcsára és a motor PE-kapcsára is kösd be. Az
-árnyékolást 360°-os módon a váltó földelő csatlakozójához rögzítsd.</li>
-<li><strong>Vezérlőkábelek és PTC bekötése.</strong> A Start/Stop,
-irányváltó, hiba-visszaállító és analóg alapjel vezetékeket külön,
-árnyékolt kábelen kösd be. A PTC-láncot a váltó PTC-bemenetére kösd. Az
-árnyékolást a váltó oldalán földeld, a másik oldalon hagyd lebegve,
-hacsak a gyártó mást nem ír.</li>
-<li><strong>Paraméterezés.</strong> A motor adattáblája alapján állítsd
-be a motor névleges feszültségét, frekvenciáját, teljesítményét, áramát,
-fordulatszámát és a cosφ-t. Aktiváld a megfelelő túlterhelésvédelmi
-funkciót, és állítsd be a kívánt indítási/lassítási időket. A
-PTC-felügyelet aktiválása után teszteld a hővédelmi csatornát.</li>
-<li><strong>Első bekapcsolás.</strong> Az összes burkolat
-visszahelyezése és a munkaterület elhagyása után a jogosult oktató
-kapcsolja be a betáplálást. A motor indítása előtt a vezérlőpulton
-ellenőrizd a paramétereket, majd kis frekvencián indítva figyeld az
-áramfelvételt, a forgásirányt és a motorhangot.</li>
-</ol>
-<p>Az 1–4. lépés eredményét az alábbi ábra mutatja a szerelőlemezen. Az
-1 Q1 bemeneti védelem után a 2 Z1 EMC-szűrő közvetlenül a 3 U1
-frekvenciaváltó előtt áll; a váltó függőlegesen, a nagy hőleadás miatt a
-felső zónában van, és rajta a 4 kisütési figyelmeztetés. Az 5 pontozott
-zónák (a fölötte, b alatta, c oldalt) a gyártó által előírt szabad
-hűtési távolságok: ide kábelcsatorna sem kerülhet. Alul a 6 árnyékoló
-sínen a motorkábel bilinccsel csatlakozik, a 7 motorkábel és a 8
-vezérlőkábel külön nyomvonalon fut, a 9 PE-sínről a PE külön vezetőként
-jut a váltóhoz.</p>
-<figure id="fig-ve127-2">
-<div class="fig-interactive"><iframe src="figures/html/ve127-2.html" title="Szerelőlemez elölnézetben: felül DIN-sínen Q1 háromfázisú védelem és mellette Z1 EMC-szűrő, alatta függőlegesen az U1 frekvenciaváltó kisütési figyelmeztetéssel; fölötte, alatta és oldalt pontozott szabad hűtési zónák a, b, c betűvel; alul árnyékoló sín bilincsekkel, a motorkábel lefelé, a vezérlőkábel külön csatornában legalább 30 cm-re, balra PE-sín." loading="lazy" style="width:100%;border:0;height:600px"></iframe><noscript><img src="figures/img/ve127-2.png" style="width:100.0%"
-alt="Szerelőlemez elölnézetben: felül DIN-sínen Q1 háromfázisú védelem és mellette Z1 EMC-szűrő, alatta függőlegesen az U1 frekvenciaváltó kisütési figyelmeztetéssel; fölötte, alatta és oldalt pontozott szabad hűtési zónák a, b, c betűvel; alul árnyékoló sín bilincsekkel, a motorkábel lefelé, a vezérlőkábel külön csatornában legalább 30 cm-re, balra PE-sín." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve127-2.png" style="width:100.0%"
-alt="Szerelőlemez elölnézetben: felül DIN-sínen Q1 háromfázisú védelem és mellette Z1 EMC-szűrő, alatta függőlegesen az U1 frekvenciaváltó kisütési figyelmeztetéssel; fölötte, alatta és oldalt pontozott szabad hűtési zónák a, b, c betűvel; alul árnyékoló sín bilincsekkel, a motorkábel lefelé, a vezérlőkábel külön csatornában legalább 30 cm-re, balra PE-sín." /></details></div>
-<figcaption>Frekvenciaváltó beépítése a szerelőlemezre: szűrő, hűtési
-távolságok, árnyékoló sín, kábelnyomvonalak (sematikus
-rajz)</figcaption>
-</figure>
-<p>A leggyakoribb beépítési hiba, hogy a szabad hűtési távolságba
-kábelcsatornát vagy másik készüléket tesznek, illetve hogy a szűrőt
-messze, hosszú, árnyékolatlan vezetékkel kötik a váltóhoz – ilyenkor a
-szűrő hatása elvész. A HTML-kiadásban a részekre mutatva azok szerepe
-olvasható, a hűtési zónák, a vezérlőkábel és az EMC-sín rétegként ki-be
-kapcsolható.</p>
-<p><strong>Ellenőrzési pontok:</strong> A motorforgás iránya egyezik a
-technológiai iránnyal; az indítási áram nem haladja meg a megengedett
-értéket; a váltó hőmérséklet-riasztása nem lép fel; a vezérlőáramkörök
-nem mutatnak zavart; a PTC-védelem tesztje pozitív.</p>
 <h3 data-number="35.1.13" id="tipikus-hibák"><span
 class="header-section-number">35.1.13</span> Tipikus hibák</h3>
 <ol type="1">
@@ -543,120 +714,101 @@ kontaktor a direkt indítás teljes áramlökését kapcsolja. <strong>Helyes
 gyakorlat:</strong> a bypass tekercsét a lágyindító „indítás vége”
 reléje vezérelje, és csak teljes feszültségnél húzzon be.</p></li>
 </ol>
-<h3 data-number="35.1.14" id="önellenőrzés"><span
-class="header-section-number">35.1.14</span> Önellenőrzés</h3>
-<ol type="1">
-<li>Miért kell árnyékolt motorkábelt használni a frekvenciaváltó
-kimenetén?</li>
-<li>Mi a különbség a hálózati fojtó és a DC-fojtó között?</li>
-<li>Mi a célja a lágyindító bypass kapcsolásának?</li>
-<li>Hány fokos legyen az árnyékolás földelése a frekvenciaváltó
-oldalán?</li>
-<li>Milyen paramétereket kell beállítani a frekvenciaváltóban a motor
-adattáblája alapján?</li>
-<li>Miért nem szabad a frekvenciaváltó kimenetét közvetlenül fázisjavító
-kondenzátorra kötni?</li>
-</ol>
-<h3 data-number="35.1.15" id="feladatok"><span
-class="header-section-number">35.1.15</span> Feladatok</h3>
-<p><strong>1. feladat (A).</strong> Fogalmazd meg három mondatban, mi a
-különbség a frekvenciaváltóval és a lágyindítóval indított motorok
-között.</p>
-<p><strong>2. feladat (A).</strong> Sorold fel a motorvédelmi lánc
-legalább négy elemét.</p>
-<p><strong>3. feladat (B).</strong> Egy frekvenciaváltós motort kb. 60 m
-hosszú kábellel kellene bekötni. A gyártói dokumentáció szerint az adott
-EMC-kategóriában a maximális motorkábel-hossz 30 m. Mit javasolsz a
-telepítéshez?</p>
-<p><strong>4. feladat (B).</strong> Rajzold le egy lágyindító és bypass
-kontaktor kapcsolási vázlatát a betáplálás, a lágyindító, a bypass, a
-motor és a vezérlőkapcsok feltüntetésével.</p>
-<p><strong>5. feladat (C).</strong> Egy frekvenciaváltós motornál a
-váltó bemeneti oldali zárlatvédelmét 16 A-es C-karakterisztikájú
-kismegszakító biztosítja. Miért nem jó önmagában ez a megoldás a motor
-túlterhelés elleni védelmére?</p>
-<p><strong>6. feladat (D).</strong> A motorkábel árnyékolását a szerelő
-csak egyetlen rézfonattal, egy ponton kötötte a váltó PE-sínjéhez. A
-közeli hőmérséklet-érzékelő analóg bemenete zavarossá vált. Írd le a
-javítás lépéseit, és nevezd meg a helyes árnyékolási módszert.</p>
-<h3 data-number="35.1.16" id="megoldások"><span
-class="header-section-number">35.1.16</span> Megoldások</h3>
-<p><strong>Önellenőrzés – válaszok</strong></p>
-<ol type="1">
-<li>Az árnyékolt kábel csökkenti a nagyfrekvenciás zavarkibocsátást,
-védi a közeli jelvezetékeket, és a nagyfrekvenciás áramok számára
-alacsony impedanciás visszavezetést biztosít.</li>
-<li>A hálózati fojtó a váltó bemeneti oldalán, az egyenirányító előtt
-van, csökkenti a hálózati áram felharmonikus-tartalmát és védi a
-fokozatot. A DC-fojtó a közbenső egyenáramú körben van, és a DC-áram
-simítását végzi.</li>
-<li>A bypass csökkenti a lágyindító melegedését, mivel a motor a teljes
-feszültségre jutva közvetlen a hálózatra kapcsolódik, a tirisztorok
-pedig árammentesek (de feszültség alatt maradnak).</li>
-<li>360°-os, azaz teljes kerületén érintkező (körbefogó)
-csatlakozás.</li>
-<li>Névleges feszültség, frekvencia, teljesítmény, áram, fordulatszám,
-teljesítménytényező (és adott esetben pólusszám, hőmodell
-paraméterek).</li>
-<li>A frekvenciaváltó kimeneti PWM-jele a kapcsolási felharmonikusok
-miatt nagyfrekvenciás áramot hajtana a kondenzátorba, ami túláramhoz, a
-fázisjavító vagy a váltó károsodásához vezetne.</li>
-</ol>
-<p><strong>1. feladat – megoldás</strong></p>
-<p>A frekvenciaváltó a motor fordulatszámát folyamatosan, a frekvencia
-változtatásával szabályozza, és kimeneti feszültségét a frekvenciával
-arányosan (U/f) változtatja. A lágyindító a hálózati frekvencián, de a
-feszültség fokozatos növelésével indítja a motort, a névleges feszültség
-elérése után a motor közvetlenül a hálózatra kapcsolódik, vagy a
-lágyindítón át, de nem változtatja a frekvenciát. A frekvenciaváltó
-tehát folyamatos fordulatszám-szabályozásra, a lágyindító elsősorban az
-indítási áram- és nyomatéklökés csökkentésére használható.</p>
-<p><strong>2. feladat – megoldás</strong></p>
-<p>A motorvédelmi lánc legalább négy eleme: (1) rövidzárlatvédelem
-(kismegszakító/biztosító), (2) túlterhelésvédelem (belső elektronikus
-hőmodell), (3) motor hővédelme (PTC-termisztor vagy külső hőrelé), (4)
-kiegészítő védelmek (fáziskiesés, földzárlat, túlfeszültség,
-alulfeszültség, fordulatszám-korlát).</p>
-<p><strong>3. feladat – megoldás</strong></p>
-<p>A gyártói EMC-kategória szerint a 30 m maximális kábelhossz túllépése
-a motor szigetelésére veszélyes feszültségmintázatot és fokozott
-nagyfrekvenciás zavart okoz. A telepítéshez vagy rövidebb kábelt kell
-használni, vagy a váltó és a motor közé kimeneti fojtót/szűrőt kell
-beépíteni, amely növeli a megengedhető hosszt. A pontos hossz és
-szűrőtípus a váltó gyártói dokumentációjában szerepel
-<strong>(ellenőrizendő: a gyártói adatlap)</strong>.</p>
-<p><strong>4. feladat – megoldás</strong></p>
-<p>A kapcsolási vázlaton a háromfázisú betáp (L1, L2, L3) a Q1
-szakaszolóra csatlakozik. Innen a lágyindító bemenetére megy, kimenete a
-motorhoz. A bypass kontaktor a lágyindító kimeneti és bemeneti oldala
-között párhuzamosan kapcsolódik, a motor közvetlen csatlakoztatásához. A
-vezérlőkörben a Start/Stop jelek a lágyindító vezérlőkapcsaira, a bypass
-kontaktor tekercse a lágyindító „indítás vége” (teljes feszültség, angol
-katalógusokban: top of ramp / full voltage) reléjének kimenetére
-csatlakozik, reteszelve az indítási folyamattal.</p>
-<p><strong>5. feladat – megoldás</strong></p>
-<p>A 16 A-es C-karakterisztikájú kismegszakító a rövidzárlati védelmet
-biztosítja, mert a C-karakterisztika a névleges áram 5–10-szeresénél old
-le, és így a váltó bekapcsolási töltőáramánál általában nem old ki. A
-motor túlterhelése azonban a névleges áram 1,05–1,2-szeresénél, hosszabb
-időtartam alatt veszélyezteti a tekercseket, ezért az időfüggő
-túlterhelésvédelmet a motorra kell hangolni. A frekvenciaváltó belső
-hőmodelljét a motor névleges áramára kell paraméterezni, és a PTC-t is
-be kell kötni.</p>
-<p><strong>6. feladat – megoldás</strong></p>
-<p>A szerelő által használt egyetlen ponton történő földelés nem
-biztosít alacsony impedanciát a nagyfrekvenciás zavarok számára, és az
-árnyékolás nem csillapítja a kisugárzott zavart. A javítás lépései: (1)
-feszültségmentesítés és az öt biztonsági szabály betartása, (2) a
-kábelbevezető fém karmantyújának vagy a fém árnyékolóbilincsnek a
-felszerelése, (3) az árnyékoló harisnya kibontása, a 360°-os körbefogó
-érintkezés kialakítása a váltó fémházán vagy a földelő sínre csavarozott
-bilincsen, (4) a motoroldali árnyékolás hasonló rögzítése, (5)
-ellenőrzés folytonosság- és szemrevételezéssel. A helyes módszer a
-360°-os árnyékoláscsatlakozás, amely biztosítja, hogy az árnyékolás
-teljes kerületén, hézagmentesen földelt legyen.</p>
-<h3 data-number="35.1.17" id="rövid-összefoglaló"><span
-class="header-section-number">35.1.17</span> Rövid összefoglaló</h3>
+<h3 data-number="35.1.14" id="hibakeresés-a-hajtásos-elosztóban"><span
+class="header-section-number">35.1.14</span> Hibakeresés a hajtásos
+elosztóban</h3>
+<p>A táblázat az elosztó- és kábelezési oldali jelenségeket veszi sorra;
+a váltó hibakódjaihoz lásd a <a href="ve150.html">Frekvenciaváltó és
+lágyindító paraméterezése</a> alfejezetet. Minden beavatkozás előtt az
+öt biztonsági szabály, váltónál a kisütési idő kivárásával.
+<strong>Szigetelésmérést a váltó kapcsain soha ne végezz</strong>: a
+motorkábelt előbb mindkét kapocsról le kell kötni (a váltóról
+mindenképpen), és csak a lekötött kábelt, illetve motort mérd (a motor
+mérése: <a href="ve106.html">Diagnosztika: szemrevételezés, mérések,
+hibajegyzőkönyv</a>).</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Jelenség</th>
+<th>Valószínű ok</th>
+<th>Mérés, ellenőrzés</th>
+<th>Javítás</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bekapcsoláskor kiold az RCD</td>
+<td>AC vagy A típus, túl kicsi
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi mathvariant="normal">Δ</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">I_{\Delta n}</annotation></semantics></math>,
+az EMC-szűrő szivárgóárama</td>
+<td>típus ellenőrzése, szivárgóáram mérése lakatfogós
+szivárgóáram-mérővel</td>
+<td>B típus, a gyártó szerinti
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi mathvariant="normal">Δ</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">I_{\Delta n}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>Bekapcsoláskor kiold Q1</td>
+<td>a karakterisztika nem viseli a töltőáramot, vagy zárlat a
+bemeneten</td>
+<td>feszültségmentesen, a váltót lekötve szigetelésmérés a
+tápkábelen</td>
+<td>gyártó szerinti karakterisztika, zárlat javítása</td>
+</tr>
+<tr>
+<td>Az analóg jelek ugrálnak</td>
+<td>sertésfarok, közös tálca a motorkábellel</td>
+<td>szemrevételezés</td>
+<td>360°-os árnyékbekötés, elválasztás</td>
+</tr>
+<tr>
+<td>Túláram- vagy földzárlat-hiba gyorsításkor</td>
+<td>sérült motorkábel, hosszú kábel nagy kapacitása</td>
+<td>szigetelésmérés a váltóról lekötött kábelen</td>
+<td>kábelcsere vagy kimeneti fojtó, hosszabb rámpa</td>
+</tr>
+<tr>
+<td>PTC-hiba hideg motornál</td>
+<td>szakadt PTC-lánc, rossz bemenet vagy paraméter</td>
+<td>PTC-lánc ellenállása multiméterrel, hidegen jellemzően 1,5 kΩ alatt
+(ellenőrizendő)</td>
+<td>vezeték, kötés vagy motor javítása</td>
+</tr>
+<tr>
+<td>A váltó túlmelegszik</td>
+<td>elzárt hűtési távolság, eltömődött szűrő, álló ventilátor</td>
+<td>hőmérséklet, ventilátor, szemrevételezés</td>
+<td>a hűtés helyreállítása</td>
+</tr>
+<tr>
+<td>A motor fordítva forog</td>
+<td>felcserélt fázissorrend vagy irányparaméter</td>
+<td>rövid próba kis frekvencián, forgásirány</td>
+<td>U, V, W közül kettő cseréje vagy paraméter</td>
+</tr>
+<tr>
+<td>A bypass behúzásakor zárlat</td>
+<td>K2 fázissorrendje eltér A1-étől</td>
+<td>feszültségmentes folytonosságmérés fázisonként K2 és A1 kapcsai
+között</td>
+<td>átkötés a <a href="ve127.html#ve127-bypass">bypass főköri rajza</a>
+szerint, a készülékek átvizsgálása</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Gyakorlás:</strong> ennek az alfejezetnek a kidolgozott
+példái, gyakorlatai és megoldással ellátott feladatai az
+<em>Összefoglaló feladatgyűjtemény villanyszerelő tanulóknak</em> című
+kötet 35.1 szakaszában találhatók.</p>
+</blockquote>
+<h3 data-number="35.1.15" id="rövid-összefoglaló"><span
+class="header-section-number">35.1.15</span> Rövid összefoglaló</h3>
 <p>A frekvenciaváltós és lágyindítós motorvezérlő elosztó tervezésekor a
 motorvédelmi láncot, az EMC-elveket és a kábelezést együtt kell kezelni.
 A frekvenciaváltó a motort változtatható frekvenciával és feszültséggel
@@ -677,8 +829,8 @@ elosztók</a>, a <a href="ve131.html">Fázisjavítás méretezése</a> és a <a
 href="ve150.html">Frekvenciaváltó és lágyindító paraméterezése</a>
 alfejezetben kerül további alkalmazásra; a beépített védelmek és a
 EMC-kialakítás elvei minden hajtásos elosztó alapját adják.</p>
-<h3 data-number="35.1.18" id="források-és-ellenőrzési-hiányok"><span
-class="header-section-number">35.1.18</span> Források és ellenőrzési
+<h3 data-number="35.1.16" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">35.1.16</span> Források és ellenőrzési
 hiányok</h3>
 <ul>
 <li>Frekvenciaváltókra, lágyindítókra és EMC-re: MSZ EN 61800 sorozat,

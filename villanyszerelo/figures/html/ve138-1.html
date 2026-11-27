@@ -26,15 +26,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Egyenirányított feszültség kondenzátoros simítása: a hullámosság csúcs-csúcs értéke a terhelőáram, a kapacitás és a töltési frekvencia függvényében"></svg>
 <p class="small">Szaggatott szürke: az egyenirányított szinusz (kétutas, 50 Hz-es hálózat). A fűrészfog a fejezet közelítése (ΔU ≈ I/(f·C)); a diódák feszültségesését és a transzformátor belső ellenállását nem tartalmazza. Szemléltető, tanulási ábra.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"U":"V", "I":"A", "C":"µF", "f":"Hz"};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const dU=v.I/(v.f*v.C*1e-6), udc=v.U-dU/2, bad=dU>0.3*v.U, T=1/v.f;
 const X0=60,X1=540,Y0=250,Y1=24,tmax=0.04,sx=t=>X0+(X1-X0)*t/tmax,sy=u=>Y0-(Y0-Y1)*Math.max(u,0)/(v.U*1.1);
@@ -52,7 +56,7 @@ status("ΔU = I/(f·C) = "+fmt(v.I,1)+"/("+v.f+"·"+fmt(v.C*1e-6,6)+") = <b>"+fm
  (bad?' <span class="bad">A hullámosság nagy (&gt; 30 % Ucsúcs): a közelítés itt már durva, növeld a kapacitást.</span>':(dU/v.U>0.1?' <span class="bad">A közelítés még használható, de a hullámosság (&gt; 10 %) a gyakorlatban túl nagy: a szokásos cél néhány százalék.</span>':' <span class="ok">A közelítés itt elfogadható, a hullámosság kicsi.</span>')));
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

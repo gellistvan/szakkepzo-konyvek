@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Y-Δ vezérlés lépésről lépésre</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--cell:#fff;--cellhl:#d9d9d9;--line:#000;--code:#f3f3f3}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--cell:#262626;--cellhl:#4a4a4a;--line:#ddd;--code:#2a2a2a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+button{font:inherit;padding:3px 10px;cursor:pointer}
+input[type=range]{flex:1;min-width:120px}
+#status{margin:4px 0 6px;min-height:2.9em}
+/* A pszeudokód a rajz ALATT, teljes szélességben (hosszú sorok ne görgessenek oldalra) */
+.wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+svg{width:100%;height:auto;display:block}
+pre#code{width:100%;margin:0;padding:6px 8px;background:var(--code);font:12.5px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
+pre#code span{display:block;padding:0 4px}
+pre#code span.on{outline:2px solid var(--hl);font-weight:bold}
+svg text:not([fill]){fill:var(--fg);}
+svg text{font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="ctl" role="group" aria-label="Lejátszás vezérlői">
+  <button id="first" title="Első lépés">⏮</button>
+  <button id="prev" title="Előző lépés">◀ Lépés</button>
+  <button id="play" title="Lejátszás / szünet">▶ Lejátszás</button>
+  <button id="next" title="Következő lépés">Lépés ▶</button>
+  <input id="pos" type="range" min="0" max="0" value="0" aria-label="Lépés kiválasztása">
+  <span id="cnt" class="small"></span>
+</div>
+<div class="ctl"></div>
+<div id="status" aria-live="polite"></div>
+<div class="wrap">
+  <svg id="v" viewBox="0 0 560 300" role="img" aria-label="Az Y-Δ vezérlőkör áramútjai lépésenként: a feszültség alatti ágak vastag színes vonallal, a behúzott tekercsek kitöltve"></svg>
+  <pre id="code" aria-label="Pszeudokód"></pre>
+</div>
+<p class="small">Jelölés a ve115-4 teljes lap szerint (K1 hálózati, K2 csillag, K3 delta, KT1 általános időrelé). A KT1 kapocsjelei és a szünet hossza gyártófüggő (ellenőrizendő).</p>
+<script>
+// ---- Adat: lépések (a Python-szkript számolja ki és illeszti be, a könyv példájával egyezően) ----
+// Minden lépés: {msg: "állapotsor szövege", line: kiemelt pszeudokódsor indexe vagy -1, ...saját mezők}
+let STEPS = [{"msg": "1. Alapállapot: a vezérlőkör feszültség alatt (Q0, Q1 BE), minden kontaktor elengedve. A KT1 15–16 zárt, a 15–18 nyitott. Főkör: a motor feszültségmentes.", "on": [], "c": {"1516": 1, "1518": 0}}, {"msg": "2. S1 START megnyomva: a K1, a KT1 és – a zárt KT1 15–16 és K3 21–22 bontón át – a K2 is feszültséget kap. Főkör: a K1 a tekercskezdetekre, a K2 a tekercsvégeket csillagpontba kapcsolja – a motor CSILLAGBAN indul.", "on": ["S1", "K1", "KT1", "K2"], "c": {"1516": 1, "1518": 0}}, {"msg": "3. S1 elengedve: a K1 13–14 önfenntartása tartja a K1-et, a KT1-et és a K2-t. A K2 21–22 nyitva: a K3 ága reteszelt.", "on": ["K1", "KT1", "K2", "HOLD"], "c": {"1516": 1, "1518": 0}}, {"msg": "4. Gyorsulás csillagban (a beállított t ideig, itt 5,5 s): a vonali áram 42 A-ről csökken, a fordulatszám nő. A KT1 méri az időt.", "on": ["K1", "KT1", "K2", "HOLD"], "c": {"1516": 1, "1518": 0}}, {"msg": "5. A KT1 lejár: a 15–16 nyit → a K2 elenged (főkör: a csillagpont megszűnik, a motor egy pillanatra feszültségmentes). A 15–18 már zárt, de a K3 ága még a K2 21–22-n át nyitott.", "on": ["K1", "KT1", "HOLD"], "c": {"1516": 0, "1518": 1}}, {"msg": "6. A K2 elengedett, a K2 21–22 visszazár → a K3 behúz. A K2 elengedése és a K3 behúzása közötti kb. 50 ms az átkapcsolási szünet: a K2 és a K3 sosem zár egyszerre.", "on": ["K1", "KT1", "K3", "HOLD"], "c": {"1516": 0, "1518": 1}}, {"msg": "7. Deltaüzem: a K3 a tekercsvégeket a szomszédos fázisokra kapcsolja (U1–W2, V1–U2, W1–V2), a vonali áram az átkapcsolási csúcs után 21 A-re áll be. A K3 21–22 reteszeli a K2-t.", "on": ["K1", "KT1", "K3", "HOLD"], "c": {"1516": 0, "1518": 1}}, {"msg": "8. S0 STOP: a K1, a KT1 és a K3 elenged, a KT1 érintkezői alaphelyzetbe állnak – a vezérlés újra az 1. lépés állapotában van.", "on": ["S0"], "c": {"1516": 1, "1518": 0}}];
+const CODE = [];          // pszeudokód sorai (üres lista: a panel elrejtve)
+
+// ---- Rajzolás: ezt a függvényt kell az ábrához igazítani ----
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e;}
+const svg = document.getElementById("v");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function render(s){
+  // Példa: tömb cellákként, s.a = értékek, s.hl = kiemelt indexek
+  svg.innerHTML = "";
+  const a = s.a || [], w = 48, x0 = (560 - a.length * w) / 2, y0 = 110;
+  a.forEach((v, i) => {
+    const on = (s.hl || []).includes(i);
+    el("rect", {x: x0 + i * w, y: y0, width: w, height: w, fill: on ? css("--cellhl") : css("--cell"), stroke: css("--line"), "stroke-width": on ? 3 : 1.2});
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w / 2 + 6, "text-anchor": "middle", "font-size": 18}, String(v));
+    el("text", {x: x0 + i * w + w / 2, y: y0 + w + 18, "text-anchor": "middle", "font-size": 12, fill: css("--muted")}, String(i));
+  });
+}
+
+function render(s){
+  svg.setAttribute("viewBox","0 0 560 330");svg.innerHTML="";
+  const on=new Set(s.on),R=css("--hl2"),L=css("--line"),F=css("--fg"),M=css("--muted");
+  const live={};                          // feszültség alatti ágak
+  const common=!on.has("S0");
+  live.c=common&&(on.has("S1")||on.has("HOLD"));
+  const k3nc=!on.has("K3"),k2nc=!on.has("K2");
+  live.k2=live.c&&s.c["1516"]===1&&k3nc; live.k3=live.c&&s.c["1518"]===1&&k2nc;
+  function w(x1,y1,x2,y2,hot){el("line",{x1:x1,y1:y1,x2:x2,y2:y2,stroke:hot?R:L,"stroke-width":hot?3.5:1.6});}
+  function cont(x,y,lab,closed,hot,nc,delay){w(x,y,x,y+8,hot);w(x,y+32,x,y+40,hot);
+    if(closed)w(x,y+8,x,y+32,hot);else el("line",{x1:x,y1:y+8,x2:x+12,y2:y+30,stroke:L,"stroke-width":1.8});
+    if(nc)el("line",{x1:x,y1:y+32,x2:x+9,y2:y+32,stroke:L,"stroke-width":1.4});
+    if(delay)el("path",{d:"M"+(x+4)+","+(y+14)+" a6,6 0 0 1 12,0",fill:"none",stroke:L,"stroke-width":1.4});
+    el("text",{x:x+16,y:y+24,"font-size":11,fill:F},lab);}
+  function coil(x,y,lab,en){el("rect",{x:x-10,y:y,width:20,height:30,fill:en?R:"none",stroke:L,"stroke-width":1.8});
+    el("text",{x:x+15,y:y+19,"font-size":12,"font-weight":"bold",fill:F},lab);}
+  el("text",{x:8,y:16,"font-size":12,fill:M},"L (230 V)");
+  w(40,22,40,30,common);cont(40,30,"S0",!on.has("S0"),common,true);
+  w(40,70,40,78,common);w(40,78,110,78,common);
+  cont(40,78,"S1",on.has("S1"),common&&on.has("S1"));cont(110,78,"K1 13–14",on.has("K1"),common&&on.has("K1"));
+  w(40,118,110,118,live.c);w(40,118,40,126,live.c);
+  w(40,126,470,126,live.c);
+  [40,150].forEach(x=>{w(x,126,x,232,live.c);});
+  coil(40,232,"K1",on.has("K1"));coil(150,232,"KT1",on.has("KT1"));
+  w(260,126,260,140,live.c);cont(260,140,"KT1 15–16",s.c["1516"]===1,live.c&&s.c["1516"]===1,true,true);
+  w(260,180,260,188,live.c&&s.c["1516"]===1);cont(260,188,"K3 21–22",k3nc,live.k2,true);w(260,228,260,232,live.k2);
+  coil(260,232,"K2 Y",on.has("K2"));
+  w(390,126,390,140,live.c);cont(390,140,"KT1 15–18",s.c["1518"]===1,live.c&&s.c["1518"]===1,false,true);
+  w(390,180,390,188,live.c&&s.c["1518"]===1);cont(390,188,"K2 21–22",k2nc,live.k3,true);w(390,228,390,232,live.k3);
+  coil(390,232,"K3 Δ",on.has("K3"));
+  [40,150,260,390].forEach(x=>w(x,262,x,276,false));w(30,276,400,276,false);
+  el("text",{x:8,y:290,"font-size":12,fill:M},"N");
+  const mode=on.has("K2")?"CSILLAG (Y)":on.has("K3")?"DELTA (Δ)":on.has("K1")?"szünet – motor feszültségmentes":"áll";
+  el("text",{x:8,y:318,"font-size":13,"font-weight":"bold",fill:F},"Főkör: "+mode);
+}
+
+
+// ---- Vezérlés (általában nem kell módosítani) ----
+let k = 0, timer = null;
+const pos = document.getElementById("pos"), status = document.getElementById("status");
+const codeEl = document.getElementById("code");
+if (!CODE.length) codeEl.style.display = "none";
+else codeEl.innerHTML = CODE.map((l, i) => `<span id="L${i}">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span>`).join("");
+pos.max = STEPS.length - 1;
+// Új lépéssor betöltése (pl. saját bemenetből számolva): setSteps(lista)
+function setSteps(list){ stop(); STEPS = list; pos.max = STEPS.length - 1; show(0); }
+function show(i){
+  k = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[k];
+  pos.value = k;
+  document.getElementById("cnt").textContent = `${k + 1}/${STEPS.length}`;
+  status.textContent = s.msg || "";
+  codeEl.querySelectorAll("span").forEach(x => x.classList.remove("on"));
+  if (s.line !== undefined && s.line >= 0) { const L = document.getElementById("L" + s.line); if (L) L.classList.add("on"); }
+  render(s);
+}
+function stop(){ if (timer) { clearInterval(timer); timer = null; } document.getElementById("play").textContent = "▶ Lejátszás"; }
+document.getElementById("first").onclick = () => { stop(); show(0); };
+document.getElementById("prev").onclick = () => { stop(); show(k - 1); };
+document.getElementById("next").onclick = () => { stop(); show(k + 1); };
+document.getElementById("play").onclick = () => {
+  if (timer) { stop(); return; }
+  if (k >= STEPS.length - 1) show(0);
+  document.getElementById("play").textContent = "⏸ Szünet";
+  timer = setInterval(() => { if (k >= STEPS.length - 1) stop(); else show(k + 1); }, 2200);
+};
+pos.oninput = () => { stop(); show(+pos.value); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") { stop(); show(k + 1); } if (e.key === "ArrowLeft") { stop(); show(k - 1); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => show(k));
+show(0);
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

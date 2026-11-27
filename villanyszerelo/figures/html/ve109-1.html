@@ -25,15 +25,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 650 330" role="img" aria-label="Váltakozó áramon az ív az áram nullaátmeneténél kialszik, ha a rés szilárdsága gyorsabban nő a visszatérő feszültségnél; egyenáramon a deionkamra az ívfeszültséget a tápfeszültség fölé emeli, és az áram nullára csökken."></svg>
 <p class="small">Szemléltető modell, nem gyártói adat (ellenőrizendő): részívenként ≈ 150 V gyors szilárdság-visszatérés (AC) és ≈ 25 V ívfeszültség (DC); a visszatérő feszültség csillapított 5 kHz-es lengés. A valós értékek a készülék szerkezetétől függnek.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"t0":"ms", "n":"db", "U":"V"};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const UP=325,IP=10,F0=5000,TR=0.15e-3,TD=0.03e-3,PG=150,R=22,L=0.05,PD=25,TAU=L/R;
 const ur=t=>UP*(1-Math.exp(-t/TR)*Math.cos(2*Math.PI*F0*t));
@@ -79,7 +83,7 @@ s+="<b>DC:</b> u<sub>ív</sub> ≈ "+v.n+" · 25 V = <b>"+ua+" V</b>, U = "+v.U+
 status(s);
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

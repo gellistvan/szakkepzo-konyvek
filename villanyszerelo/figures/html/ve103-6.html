@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Szállítószalag hajtáslánca – méretezés</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="F">kerületi erő F</label><input id="F" type="range" min="500" max="6000" step="100" value="2000" aria-label="kerületi erő F"><output id="F_o" for="F"></output></div>
+<div class="row"><label for="v">szalagsebesség v</label><input id="v" type="range" min="0.1" max="2.0" step="0.05" value="0.5" aria-label="szalagsebesség v"><output id="v_o" for="v"></output></div>
+<div class="row"><label for="d">dobátmérő d</label><input id="d" type="range" min="0.2" max="0.8" step="0.05" value="0.4" aria-label="dobátmérő d"><output id="d_o" for="d"></output></div>
+<div class="row"><label for="nm">motor n</label><input id="nm" type="range" min="700" max="2900" step="10" value="1440" aria-label="motor n"><output id="nm_o" for="nm"></output></div>
+<div class="row"><label for="isz">szíjáttétel i_sz</label><input id="isz" type="range" min="1" max="4" step="0.1" value="1.5" aria-label="szíjáttétel i_sz"><output id="isz_o" for="isz"></output></div>
+<div class="row"><label for="esz">szíj η</label><input id="esz" type="range" min="0.85" max="0.99" step="0.01" value="0.95" aria-label="szíj η"><output id="esz_o" for="esz"></output></div>
+<div class="row"><label for="ih">hajtómű i_h</label><input id="ih" type="range" min="5" max="100" step="1" value="40" aria-label="hajtómű i_h"><output id="ih_o" for="ih"></output></div>
+<div class="row"><label for="eh">hajtómű η</label><input id="eh" type="range" min="0.6" max="0.98" step="0.01" value="0.9" aria-label="hajtómű η"><output id="eh_o" for="eh"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 680 345" role="img" aria-label="Hajtáslánc: motor, ékszíj, hajtómű, szalagdob; minden tengelyen fordulatszám, nyomaték és teljesítmény, alatta a teljesítményáram"></svg>
+<p class="small">Szemléltető számítás: P = F·v, M = F·d/2, a nyomaték i-szeresére nő (η-val szorozva), a fordulatszám i-ed részére csökken. Szabványos motorteljesítmények: 0,37–22 kW. A tartalék a választott motor névleges nyomatéka a szükségeshez képest.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"F":"N", "v":"m/s", "d":"m", "nm":"1/min", "isz":"", "esz":"", "ih":"", "eh":""};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const g=css("--fg"), mu=css("--muted"), hl=css("--hl"), ok=css("--ok"), bad=css("--bad");
+const MOT=[0.37,0.55,0.75,1.1,1.5,2.2,3,4,5.5,7.5,11,15,18.5,22];
+const w=n=>2*Math.PI*n/60;
+const Pg=v.F*v.v, ndob=v.v/(Math.PI*v.d)*60, Mdob=v.F*v.d/2, eta=v.esz*v.eh;
+const n2=v.nm/v.isz, n3=n2/v.ih, Mm=Mdob/(v.isz*v.ih*eta), M2=Mm*v.isz*v.esz;
+const P1=Mm*w(v.nm), P2=M2*w(n2), P3=Mdob*w(n3), vt=Math.PI*v.d*n3/60;
+const Pk=Pg/eta; let Pv=MOT.find(p=>p*1000>=Pk); if(Pv===undefined) Pv=NaN;
+const Mn=Pv*1000/w(v.nm), tart=(Mn/Mm-1)*100;
+const f0=n=>fmt(n,0), f2=n=>fmt(n,2);
+function blk(x,t,n,M,P){el("rect",{x:x-75,y:150,width:150,height:78,rx:6,fill:"none",stroke:mu});
+ el("text",{x:x,y:168,"text-anchor":"middle","font-size":12,fill:g,"font-weight":"bold"},t);
+ el("text",{x:x,y:186,"text-anchor":"middle","font-size":12,fill:g},"n = "+f0(n)+" 1/min");
+ el("text",{x:x,y:203,"text-anchor":"middle","font-size":12,fill:g},"M = "+(M<100?f2(M):f0(M))+" N·m");
+ el("text",{x:x,y:220,"text-anchor":"middle","font-size":12,fill:g},"P = "+f0(P)+" W");}
+el("line",{x1:40,y1:90,x2:640,y2:90,stroke:g,"stroke-width":3});
+[[70,"M 3~"],[240,"szíj"],[420,"hajtómű"],[600,"dob"]].forEach(([x,t])=>{el("circle",{cx:x,cy:90,r:30,fill:css("--bg"),stroke:g,"stroke-width":2});
+ el("text",{x:x,y:95,"text-anchor":"middle","font-size":12,fill:g},t);});
+blk(150,"motortengely",v.nm,Mm,P1); blk(330,"hajtómű be",n2,M2,P2); blk(510,"dobtengely",n3,Mdob,P3);
+const sc=60/Math.max(P1,1);
+el("rect",{x:40,y:255,width:200,height:P1*sc,fill:hl,opacity:0.5});
+el("rect",{x:240,y:255,width:180,height:P2*sc,fill:hl,opacity:0.5});
+el("rect",{x:420,y:255,width:220,height:P3*sc,fill:hl,opacity:0.5});
+el("text",{x:40,y:335,"font-size":12,fill:g},"teljesítményáram (magasság ∝ P): szíjveszteség "+f0(P1-P2)+" W, hajtómű-veszteség "+f0(P2-P3)+" W");
+el("text",{x:40,y:30,"font-size":13,fill:g},"P_gép = F·v = "+f0(Pg)+" W;  η = "+fmt(eta,3)+";  P_szükséges = "+f0(Pk)+" W → választott motor: "+(isNaN(Pv)?"nincs a listában":fmt(Pv,Pv<1?2:1)+" kW"));
+el("text",{x:40,y:52,"font-size":13,fill:g},"szükséges dobfordulat: "+fmt(ndob,1)+" 1/min; tényleges (n_m/(i_sz·i_h)): "+fmt(n3,1)+" 1/min → v = "+fmt(vt,3)+" m/s");
+status(isNaN(Pv)?'<span style="color:'+bad+'">A szükséges teljesítmény nagyobb a listánál.</span>':
+ 'Motornyomaték a dobterheléshez: <b>'+f2(Mm)+' N·m</b>, a választott motor névleges nyomatéka '+f2(Mn)+' N·m – tartalék <b style="color:'+(tart>=10?ok:bad)+'">'+fmt(tart,0)+' %</b>.');
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

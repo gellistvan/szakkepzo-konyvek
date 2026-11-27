@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Egyenirányító jelalak-szimulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="k">Kapcsolás</label><select id="k" aria-label="Kapcsolás"><option value="egyutas">egyutas</option><option value="kozep">középmegcsapolású</option><option value="hid" selected>híd (Graetz)</option><option value="b6">háromfázisú híd (B6, 400 V)</option></select></div>
+<div class="row"><label for="U">Csúcsfeszültség Ucsúcs (B6-nál rögzített 566 V)</label><input id="U" type="range" min="10" max="400" step="1" value="24" aria-label="Csúcsfeszültség Ucsúcs (B6-nál rögzített 566 V)"><output id="U_o" for="U"></output></div>
+<div class="row"><label for="C">Szűrőkondenzátor C (0 = szűretlen)</label><input id="C" type="range" min="0" max="10000" step="10" value="2200" aria-label="Szűrőkondenzátor C (0 = szűretlen)"><output id="C_o" for="C"></output></div>
+<div class="row"><label for="I">Terhelőáram I (a csúcsfeszültségen, R = Ucsúcs/I)</label><input id="I" type="range" min="0.1" max="5" step="0.1" value="1" aria-label="Terhelőáram I (a csúcsfeszültségen, R = Ucsúcs/I)"><output id="I_o" for="I"></output></div>
+<div class="row"><label for="d">Diódaesés</label><select id="d" aria-label="Diódaesés"><option value="0" selected>0 V (ideális)</option><option value="0.7">0,7 V (szilícium)</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 620 370" role="img" aria-label="Egyenirányító-szimulátor: a választott kapcsolás (egyutas, középmegcsapolású, híd, háromfázisú B6) bemeneti és kimeneti feszültsége, a diódák vezetési szakaszai és a hálózati oldali áram impulzusai, kiírt középértékkel, hullámossággal és frekvenciával"></svg>
+<p class="small">Tanulási modell: ideális dióda állandó nyitófeszültséggel, a transzformátor és a hálózat belső ellenállása elhanyagolva, ohmos terhelés. A valóságban a belső ellenállás a diódaáram-csúcsot korlátozza és a kimenetet csökkenti. Középmegcsapolásnál az Ucsúcs egy féltekercs csúcsértéke.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"U":"V", "C":"µF", "I":"A"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const w=2*Math.PI*50, kind=v.k, b6=kind==="b6", Upk=b6?400*Math.SQRT2:v.U, C=v.C*1e-6, R=Upk/v.I, ud=v.d;
+const fr={egyutas:50,kozep:100,hid:100,b6:300}[kind], dt=1e-5, nW=6000, n=4000, up=Upk/Math.sqrt(3);
+let u=0; const T=[],VR=[],UO=[],ID=[],IS=[];
+for(let k=0;k<nW+n;k++){const t=k*dt;let vr,sg;
+ if(kind==="egyutas"){vr=Upk*Math.sin(w*t)-ud;sg=1;}
+ else if(b6){const p=[up*Math.sin(w*t),up*Math.sin(w*t-2*Math.PI/3),up*Math.sin(w*t+2*Math.PI/3)];const mx=Math.max(...p),mn=Math.min(...p);vr=mx-mn-2*ud;sg=p[0]===mx?1:(p[0]===mn?-1:0);}
+ else{const s=Upk*Math.sin(w*t);vr=Math.abs(s)-(kind==="hid"?2*ud:ud);sg=s>=0?1:-1;}
+ const v0=Math.max(vr,0);let un,id;
+ if(C===0){un=v0;id=un/R;}else{const uc=u-u/(R*C)*dt;id=C*(v0-u)/dt+v0/R;if(v0>=uc&&id>0)un=v0;else{un=uc;id=0;}}
+ u=un; if(k>=nW){T.push((t-0.06)*1000);VR.push(v0);UO.push(u);ID.push(id);IS.push(sg*id);}}
+let s=0,mx=-1e9,mn=1e9,ipk=0;for(let k=0;k<n;k++){s+=UO[k];mx=Math.max(mx,UO[k]);mn=Math.min(mn,UO[k]);ipk=Math.max(ipk,ID[k]);}
+const udc=s/n, du=mx-mn;
+const X0=62,X1=600,Y0=210,Y1=20,sx=t=>X0+(X1-X0)*t/40,sy=x=>Y0-(Y0-Y1)*(x+1.1*Upk)/(2.3*Upk);
+for(let k=0;k<=4;k++){const t=k*10;el("line",{x1:sx(t),x2:sx(t),y1:Y0,y2:Y1,stroke:css("--grid")});}
+for(const q of [-1,-0.5,0,0.5,1]){const yy=sy(q*Upk);el("line",{x1:X0,x2:X1,y1:yy,y2:yy,stroke:css("--grid")});el("text",{x:X0-6,y:yy+4,"text-anchor":"end","font-size":11},fmt(q*Upk,Upk>=50?0:1));}
+el("text",{x:14,y:(Y0+Y1)/2,"text-anchor":"middle","font-size":12,transform:"rotate(-90 14 "+((Y0+Y1)/2)+")"},"feszültség (V)");
+const line=(arr,st,wd,da)=>{const p=[];for(let k=0;k<n;k+=4)p.push(sx(T[k])+","+sy(arr(k)));el("polyline",{points:p.join(" "),fill:"none",stroke:st,"stroke-width":wd,"stroke-dasharray":da||""});};
+if(b6){[0,-2*Math.PI/3,2*Math.PI/3].forEach((d,j)=>line(k=>up*Math.sin(w*T[k]/1000+d),css("--muted"),1.1,["6 3","2 3","8 3 2 3"][j]));}
+else line(k=>Upk*Math.sin(w*T[k]/1000),css("--muted"),1.2,"6 3");
+line(k=>UO[k],css("--hl2"),2.8,"");
+let a=-1;for(let k=0;k<=n;k++){const c=k<n&&ID[k]>1e-9;if(c&&a<0)a=k;if(!c&&a>=0){el("rect",{x:sx(T[a]),y:Y0+4,width:Math.max(sx(T[k-1])-sx(T[a]),1.5),height:7,fill:css("--fg")});a=-1;}}
+el("text",{x:X1,y:Y0+24,"text-anchor":"end","font-size":11},"fekete sáv: a diódák vezetnek");
+const Z0=330,Z1=245,im=Math.max(ipk,1e-9),zy=i=>(Z0+Z1)/2-(Z0-Z1)/2*i/im;
+el("line",{x1:X0,x2:X1,y1:zy(0),y2:zy(0),stroke:css("--grid")});
+for(let k=0;k<=4;k++){el("text",{x:sx(k*10),y:Z0+16,"text-anchor":"middle","font-size":11},fmt(k*10,0));}
+el("text",{x:(X0+X1)/2,y:Z0+32,"text-anchor":"middle","font-size":12},"idő (ms)");
+el("text",{x:X0-6,y:zy(im)+4,"text-anchor":"end","font-size":11},fmt(im,im>=10?0:1)+" A");
+el("text",{x:X0-6,y:zy(-im)+4,"text-anchor":"end","font-size":11},"−"+fmt(im,im>=10?0:1)+" A");
+{const p=[];for(let k=0;k<n;k+=2)p.push(sx(T[k])+","+zy(IS[k]));el("polyline",{points:p.join(" "),fill:"none",stroke:css("--hl"),"stroke-width":1.8});}
+el("text",{x:X0+4,y:Z1-4,"font-size":11,fill:css("--hl")},b6?"L1 fázisáram":"szekunder (hálózati oldali) áram");
+const th={egyutas:Upk/Math.PI,kozep:2*Upk/Math.PI,hid:2*Upk/Math.PI,b6:1.35*400}[kind], thtx={egyutas:"U<sub>csúcs</sub>/π",kozep:"2U<sub>csúcs</sub>/π",hid:"2U<sub>csúcs</sub>/π",b6:"1,35·U<sub>v</sub>"}[kind];
+let h="U<sub>DC</sub> (középérték) = <b>"+fmt(udc,1)+" V</b>; ΔU (csúcs-csúcs) = <b>"+fmt(du,2)+" V</b>; hullámosság frekvenciája: <b>"+fr+" Hz</b>; diódaáram-csúcs ≈ "+fmt(ipk,ipk>=10?0:1)+" A.";
+if(C===0)h+=" Szűretlen elméleti középérték (ideális dióda): "+thtx+" = "+fmt(th,1)+" V"+(ud>0?" – a diódaesés ezt csökkenti":"")+".";
+else{const ap=v.I/(fr*C);h+=" Közelítés: ΔU ≈ I/(f·C) = "+fmt(ap,2)+" V – a szimulált érték ennél kisebb, mert a kondenzátor nem egy teljes perióduson át és nem állandó árammal sül ki (a képlet felső becslés).";}
+if(b6)h+=" B6: a csúcsfeszültség rögzített (400 V vonali → 566 V).";
+status(h);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

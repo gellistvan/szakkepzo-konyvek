@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kikapcsolási túlfeszültség-korlátozók összehasonlítása</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="el">Védőelem</label><select id="el" aria-label="Védőelem"><option value="dz" selected>dióda + Zener-dióda</option><option value="var">varisztor / TVS</option><option value="d">csak szabadonfutó dióda</option></select></div>
+<div class="row"><label for="Uc">Korlátozási (Zener-, varisztor-) feszültség</label><input id="Uc" type="range" min="10" max="100" step="1" value="24" aria-label="Korlátozási (Zener-, varisztor-) feszültség"><output id="Uc_o" for="Uc"></output></div>
+<div class="row"><label for="L">Induktivitás L</label><input id="L" type="range" min="0.1" max="2" step="0.05" value="0.5" aria-label="Induktivitás L"><output id="L_o" for="L"></output></div>
+<div class="row"><label for="R">Tekercsellenállás R</label><input id="R" type="range" min="50" max="500" step="5" value="100" aria-label="Tekercsellenállás R"><output id="R_o" for="R"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 600 420" role="img" aria-label="A relétekercs árama és a kapcsolóelem feszültsége a kikapcsolás után a választott védőelemmel, összevetve a szabadonfutó diódával; kiírja az elengedési késést és a csúcsfeszültséget"></svg>
+<p class="small">Tanulási modell (5.4): i(t) = (I0 + Uc/R)·e^(−t/τ) − Uc/R, t_el = τ·ln[(I0 + Uc/R)/(0,3·I0 + Uc/R)]. A 0,3·I0 elengedési áram és a varisztor korlátozási feszültsége szemléltető; a valós értékek a relé és a védőelem adatlapjából (ellenőrizendő). A dióda nyitófeszültsége 0,7 V-tal közelítve; a Zener-ágban a vele sorba kötött dióda 0,7 V-ja hozzáadódik.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"Uc":"V", "L":"H", "R":"Ω"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const U = 24, L = v.L, R = v.R, I0 = U / R, tau = L / R, Iel = 0.3 * I0;
+const uc = v.el === "d" ? 0.7 : (v.el === "dz" ? v.Uc + 0.7 : v.Uc);
+const tel = c => tau * Math.log((I0 + c / R) / (Iel + c / R)), tz = c => tau * Math.log((I0 + c / R) / (c / R));
+const iof = (t, c) => Math.max((I0 + c / R) * Math.exp(-t / tau) - c / R, 0);
+const T = 5 * tau, x0 = 70, x1 = 580, X = t => x0 + (x1 - x0) * (t + 0.08 * T) / (1.08 * T);
+const line = css("--line"), grid = css("--grid"), hl = css("--hl"), hl2 = css("--hl2");
+// felső panel: i(t)
+const ya = 20, yb = 180, Yi = i => yb - (yb - ya) * i / (1.1 * I0);
+const ua = 230, ub = 380, Umax = Math.max(110, U + uc + 10), Yu = u => ub - (ub - ua) * u / Umax;
+[[ya, yb], [ua, ub]].forEach(p => { el("line", {x1: x0, y1: p[1], x2: x1, y2: p[1], stroke: line}); el("line", {x1: x0, y1: p[0], x2: x0, y2: p[1], stroke: line}); });
+el("line", {x1: X(0), y1: ya, x2: X(0), y2: ub, stroke: grid});
+for (let k = 0; k <= 5; k++) { const x = X(k * tau); el("line", {x1: x, y1: ub, x2: x, y2: ub + 4, stroke: line}); el("text", {x: x, y: ub + 17, "text-anchor": "middle", "font-size": 12}, fmt(k * tau * 1000, 1)); }
+el("text", {x: (x0 + x1) / 2, y: ub + 34, "text-anchor": "middle", "font-size": 12}, "idő a kikapcsolás után (ms)");
+el("text", {x: x0 - 8, y: Yi(I0) + 4, "text-anchor": "end", "font-size": 11}, fmt(I0 * 1000, 0));
+el("text", {x: x0 - 8, y: Yi(Iel) + 4, "text-anchor": "end", "font-size": 11}, fmt(Iel * 1000, 0));
+el("text", {x: x0 - 8, y: yb + 4, "text-anchor": "end", "font-size": 11}, "0");
+el("text", {x: 14, y: (ya + yb) / 2, "font-size": 12, transform: "rotate(-90 14 " + (ya + yb) / 2 + ")", "text-anchor": "middle"}, "i (mA)");
+el("line", {x1: x0, y1: Yi(Iel), x2: x1, y2: Yi(Iel), stroke: grid, "stroke-dasharray": "6 4"});
+el("text", {x: x1, y: Yi(Iel) - 5, "text-anchor": "end", "font-size": 11}, "elengedési áram 0,3·I0 (szemléltető)");
+[U, Umax - 10].forEach(u => { el("text", {x: x0 - 8, y: Yu(u) + 4, "text-anchor": "end", "font-size": 11}, fmt(u, 0)); el("line", {x1: x0, y1: Yu(u), x2: x1, y2: Yu(u), stroke: grid}); });
+el("text", {x: 14, y: (ua + ub) / 2, "font-size": 12, transform: "rotate(-90 14 " + (ua + ub) / 2 + ")", "text-anchor": "middle"}, "u kapcsolón (V)");
+function curves(c, col, dash, w) {
+  let di = "M" + X(-0.08 * T) + " " + Yi(I0) + " L" + X(0) + " " + Yi(I0), du = "M" + X(-0.08 * T) + " " + Yu(0.3) + " L" + X(0) + " " + Yu(0.3);
+  const t0 = tz(c);
+  for (let k = 0; k <= 300; k++) { const t = T * k / 300; di += " L" + X(t) + " " + Yi(iof(t, c)); }
+  du += " L" + X(0) + " " + Yu(U + c) + " L" + X(Math.min(t0, T)) + " " + Yu(U + c);
+  if (t0 < T) du += " L" + X(t0) + " " + Yu(U) + " L" + X(T) + " " + Yu(U);
+  el("path", {d: di, fill: "none", stroke: col, "stroke-width": w, "stroke-dasharray": dash});
+  el("path", {d: du, fill: "none", stroke: col, "stroke-width": w, "stroke-dasharray": dash});
+  const te = tel(c); if (te < T) el("circle", {cx: X(te), cy: Yi(Iel), r: 5, fill: css("--bg"), stroke: col, "stroke-width": 2});
+}
+if (v.el !== "d") curves(0.7, line, "7 4", 1.6);
+curves(uc, hl2, "", 3);
+el("text", {x: x1, y: ya + 12, "text-anchor": "end", "font-size": 12, fill: hl2}, "— választott védőelem");
+el("text", {x: X(Math.min(tz(uc), T)) + 6, y: Yu(U + uc) - 6, "font-size": 12, fill: hl2, "font-weight": "bold"}, fmt(U + uc, 1) + " V");
+if (v.el !== "d") el("text", {x: x1, y: ya + 28, "text-anchor": "end", "font-size": 12}, "- - csak dióda (összehasonlítás)");
+const te = tel(uc), t0 = uc > 1 ? tz(uc) : null, W = 0.5 * L * I0 * I0;
+status("I<sub>0</sub> = U/R = <b>" + fmt(I0 * 1000, 0) + " mA</b>, τ = L/R = <b>" + fmt(tau * 1000, 1) + " ms</b>, tárolt energia ½LI<sub>0</sub><sup>2</sup> = " + fmt(W * 1000, 1) + " mJ. " +
+  "Korlátozás U<sub>c</sub> ≈ " + fmt(uc, 1) + " V → csúcs a kapcsolón U + U<sub>c</sub> = <b>" + fmt(U + uc, 1) + " V</b>; elengedési késés t<sub>el</sub> = <b>" + fmt(te * 1000, 1) + " ms</b>" +
+  (t0 !== null ? ", az áram " + fmt(t0 * 1000, 1) + " ms alatt nullára fut." : " (a dióda árama hosszan, kb. 5τ-ig cseng le).") +
+  (v.el === "d" ? "" : " Csak diódával: " + fmt(tel(0.7) * 1000, 1) + " ms, " + fmt(U + 0.7, 1) + " V.") +
+  " A kapcsolóelem feszültségtűrése (U<sub>CE</sub>, U<sub>DS</sub>) legyen nagyobb a csúcsnál.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

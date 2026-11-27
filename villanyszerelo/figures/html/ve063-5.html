@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gG és aM 32 A betét és a motorindítás</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="im">Motor névleges árama</label><input id="im" type="range" min="5" max="40" step="0.5" value="11" aria-label="Motor névleges árama"><output id="im_o" for="im"></output></div>
+<div class="row"><label for="k">Indítási szorzó</label><input id="k" type="range" min="4" max="8" step="0.5" value="6" aria-label="Indítási szorzó"><output id="k_o" for="k"></output></div>
+<div class="row"><label for="ti">Indítási idő</label><input id="ti" type="range" min="1" max="15" step="1" value="5" aria-label="Indítási idő"><output id="ti_o" for="ti"></output></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 560 345" role="img" aria-label="gG és aM 32 A betét idő-áram sávja és egy motor indítási áramgörbéje (szemléltető), hőkioldó-görbével"></svg>
+<p class="small">Szemléltető sávok a szabványos kapuértékekből (gG 32 A: 1,25·In / 1,6·In, 10 s, 5 s, 0,1 s; aM 32 A: 4·In és 6,3·In 60 s-nál, 8·In, 12,5·In, 19·In) log–log interpolációval; a hőkioldó 10A osztályú termikus modell (7,2·Ir-nél 4 s). Nem gyártói görbék – ellenőrizendő: MSZ EN 60269-1/-2, MSZ EN 60947-4-1, gyártói adatlap. A motor vastag lépcsős vonala: indítási áram az indítási ideig, utána a névleges áram.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"im":"A", "k":"×", "ti":"s"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const GMIN=[[40.0, 3600.0], [75.0, 10.0], [200.0, 0.1]], GMAX=[[51.2, 3600.0], [150.0, 5.0], [350.0, 0.1]], AMIN=[[128.0, 60.0], [256.0, 0.5], [320.0, 0.2]], AMAX=[[201.6, 60.0], [400.0, 0.5], [608.0, 0.1]], KTH=1.15, TAU=154.78533686615918, IN=32, TM=1e4;
+function ip(p,i){if(i<p[0][0])return null;for(let k=0;k<p.length-1;k++){const [x0,y0]=p[k],[x1,y1]=p[k+1];if(i<=x1){const q=(Math.log10(y1)-Math.log10(y0))/(Math.log10(x1)-Math.log10(x0));return Math.pow(10,Math.log10(y0)+q*(Math.log10(i)-Math.log10(x0)));}}
+ const [x1,y1]=p[p.length-1];return y1*Math.pow(x1/i,2);}
+function th(i,ir){const m=i/ir;if(m<=KTH)return null;return TAU*Math.log(m*m/(m*m-KTH*KTH));}
+const L=62,R=545,T=12,B=300,X=i=>L+(Math.log10(i)-1)/(Math.log10(2000)-1)*(R-L),Y=t=>B-(Math.log10(Math.min(Math.max(t,0.01),TM))+2)/6*(B-T);
+el("rect",{x:X(IN),y:T,width:X(4*IN)-X(IN),height:B-T,fill:css("--grid"),opacity:.45});
+el("text",{x:X(100),y:Y(0.06),"text-anchor":"middle","font-size":11},"aM");el("text",{x:X(100),y:Y(0.06)+13,"text-anchor":"middle","font-size":11},"nem véd");
+[10,20,32,50,100,128,200,500,1000,2000].forEach(i=>{el("line",{x1:X(i),x2:X(i),y1:T,y2:B,stroke:css("--grid")});el("text",{x:X(i),y:B+15,"text-anchor":"middle","font-size":11},String(i));});
+[[0.01,"0,01"],[0.1,"0,1"],[1,"1"],[10,"10"],[60,"1 min"],[600,"10 min"],[3600,"1 h"]].forEach(p=>{el("line",{x1:L,x2:R,y1:Y(p[0]),y2:Y(p[0]),stroke:css("--grid")});el("text",{x:L-5,y:Y(p[0])+4,"text-anchor":"end","font-size":11},p[1]);});
+function pts(f,start){const a=[[start,TM]];for(let k=0;k<=240;k++){const i=start*Math.pow(2000/start,k/240),t=f(i);if(t!==null)a.push([i,t]);}return a;}
+function d(a){return a.map((p,k)=>(k?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)).join("");}
+function band(lo,hi,s1,s2,fill,dash,w){const a=pts(i=>ip(lo,i),s1),b=pts(i=>ip(hi,i),s2);
+ el("path",{d:d(a)+d(b.slice().reverse()).replace("M","L")+"Z",fill:fill,opacity:.35,stroke:"none"});
+ el("path",{d:d(a),fill:"none",stroke:css("--fg"),"stroke-width":w,"stroke-dasharray":dash});
+ el("path",{d:d(b),fill:"none",stroke:css("--fg"),"stroke-width":w,"stroke-dasharray":dash});}
+band(GMIN,GMAX,40,51.2,css("--muted"),"",1.5);
+band(AMIN,AMAX,128,201.6,css("--hl"),"2 3",2);
+const tp=pts(i=>th(i,v.im),v.im*1.16).slice(1);el("path",{d:d(tp),fill:"none",stroke:css("--hl2"),"stroke-width":1.6,"stroke-dasharray":"7 4"});
+const ii=v.im*v.k;
+el("path",{d:d([[ii,0.01],[ii,v.ti],[v.im,v.ti],[v.im,TM]]),fill:"none",stroke:css("--fg"),"stroke-width":4});
+el("circle",{cx:X(ii),cy:Y(v.ti),r:5,fill:css("--hl2")});
+const ov=1.2*v.im,tov=th(ov,v.im);if(tov!==null)el("circle",{cx:X(ov),cy:Y(tov),r:4,fill:css("--fg")});
+el("text",{x:(L+R)/2,y:B+33,"text-anchor":"middle","font-size":12},"áram I (A, log)");
+el("text",{x:13,y:(T+B)/2,"font-size":12,transform:"rotate(-90 13 "+((T+B)/2)+")","text-anchor":"middle"},"idő t (s, log)");
+[["gG 32 A","",1.5],["aM 32 A","2 3",2],["hőkioldó","7 4",1.6],["motor","",4]].forEach((q,k)=>{const y=T+34+k*16;
+ el("line",{x1:R-118,x2:R-90,y1:y,y2:y,stroke:k==2?css("--hl2"):css("--fg"),"stroke-width":q[2],"stroke-dasharray":q[1]});
+ el("text",{x:R-84,y:y+4,"font-size":11},q[0]);});
+const ts=t=>t<1?fmt(t,2)+" s":t<120?fmt(t,1)+" s":fmt(t/60,1)+" min";
+const g=ip(GMIN,ii),a=ip(AMIN,ii),h=th(ii,v.im),gm=g!==null&&g<=v.ti,am=a!==null&&a<=v.ti;
+let s="<b>Indítás: "+fmt(ii,0)+" A, "+fmt(v.ti,0)+" s</b> ("+fmt(v.k,1)+" × "+fmt(v.im,1)+" A)<br>";
+s+="Az indítási csúcs a <b>gG</b> sávot "+(gm?"<span class=bad>metszi – a gG 32 A betét indításkor kiolvadhat</span>":"<span class=ok>nem metszi</span>")+(g!==null?" (legkorábbi kiolvadás "+ts(g)+")":"")+".<br>";
+s+="Az indítási csúcs az <b>aM</b> sávot "+(am?"<span class=bad>metszi – az aM 32 A is kiolvadhat</span>":"<span class=ok>nem metszi</span>")+(a!==null?" (legkorábbi kiolvadás "+ts(a)+")":" (4·In = 128 A alatt)")+".<br>";
+s+="Hőkioldó indításkor: "+(h!==null&&h<=v.ti?"<span class=bad>leold ("+ts(h)+" ≤ "+fmt(v.ti,0)+" s) – hosszabb indításhoz nagyobb osztály kell</span>":"<span class=ok>nem old ("+(h===null?"–":ts(h))+" &gt; "+fmt(v.ti,0)+" s)</span>")+".<br>";
+const gt=ip(GMAX,ov);
+s+="Túlterhelés 1,2·I<sub>n,motor</sub> = "+fmt(ov,1)+" A ellen véd: <b>hőkioldó</b> ("+ts(tov)+")"+(gt===null?"; a gG 32 A nem (51,2 A alatt 1 h-n belül sem olvad ki), az aM soha":"; a gG legkésőbb "+ts(gt)+" alatt")+".";
+status(s);
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

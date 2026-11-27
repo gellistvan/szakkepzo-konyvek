@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lépcsőházi automata és impulzusrelé – szimulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#555;--line:#000;--cur:#d32f2f;--ok:#2e7d32;--bad:#b71c1c;--box:#f3f3f3;
+--coil:#ffe0b2;--lamp:#ffd54f;--btn:#e8eefc;--btnb:#1f4e79;--grid:#d9d9d9;--brown:#8d5524;--blue:#4fb3ee;--ge1:#2e9d3a;--ge2:#f2d600}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--line:#e6e6e6;--cur:#ff8a80;--ok:#81c784;--bad:#ef9a9a;--box:#2a2a2a;
+--coil:#6d4c1f;--lamp:#ffd54f;--btn:#26324a;--btnb:#8fb8e8;--grid:#4a4a4a;--brown:#b57a42;--blue:#6ec3f5;--ge1:#43b052;--ge2:#e6cf1a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 8px}
+button{font:inherit;padding:6px 14px;border:1.5px solid var(--btnb);background:var(--btn);color:var(--fg);border-radius:6px;cursor:pointer;user-select:none;touch-action:manipulation}
+button:hover{filter:brightness(.96)}button:focus-visible,[role=button]:focus-visible{outline:3px solid var(--btnb);outline-offset:2px}
+button.on,button[aria-pressed=true]{background:var(--btnb);color:var(--bg)}
+label.chk{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+#status{margin:6px 0;min-height:3.2em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}
+code,.mono{font-family:ui-monospace,Consolas,monospace}</style>
+</head>
+<body>
+<style>.tb{height:10px;background:var(--grid);border-radius:5px;overflow:hidden;max-width:420px}.tb div{height:100%;background:var(--lamp)}</style>
+<div class="bar" id="modes" role="group" aria-label="Üzemmód"></div>
+<div class="bar" id="btns" role="group" aria-label="Nyomógombok (kattintás vagy nyomva tartás)"></div>
+<div class="bar"><label>t = <input type="range" id="t" min="5" max="60" step="1" aria-label="Időzítés másodpercben"> <span id="tv"></span></label>
+<label class="chk"><input type="checkbox" id="rs" checked>újraindítás nyomásra</label></div>
+<div class="bar"><label for="fsel">Hibamód:</label><select id="fsel"></select></div>
+<div class="bar" id="gbox" style="display:none"><label for="guess">Tipp:</label><select id="guess"></select><button type="button" id="gok">Tipp rögzítése</button></div>
+<div id="expl" class="small" aria-live="polite"></div>
+<div id="st" aria-live="polite"></div>
+<div class="tb" aria-hidden="true"><div id="bar" style="width:0"></div></div><div class="small" id="rem"></div>
+<svg id="v" role="img" aria-label="Lépcsőházi automata vagy impulzusrelé kapcsolása nyomógombokkal és lámpákkal"></svg>
+<p class="small">A gombok kattintásra rövid impulzust adnak, nyomva tartva tartott jelet. A piros kiemelés a feszültség alatti / áramot vivő ágakat jelöli, a sárga lámpa ég. Szemléltető modell; a valódi készülékek viselkedése (újraindítás, jelzőfényáram) gyártófüggő (ellenőrizendő: adatlap).</p>
+<script>
+
+const NS="http://www.w3.org/2000/svg";
+let S, U=50, GX0=0, GY1=0;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function mk(tag,a,parent,text){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(text!==undefined)e.textContent=text;(parent||S).appendChild(e);return e;}
+function initSvg(id,x0,y0,x1,y1,unit){S=document.getElementById(id);U=unit||50;GX0=x0;GY1=y1;S.setAttribute("viewBox","0 0 "+((x1-x0)*U)+" "+((y1-y0)*U));S.innerHTML="";}
+function P(x,y){return [(x-GX0)*U,(GY1-y)*U];}
+function wire(pts,live,o){o=o||{};const p=pts.map(q=>P(q[0],q[1]).join(",")).join(" ");
+  if(o.color){mk("polyline",{points:p,fill:"none",stroke:css("--line"),"stroke-width":(o.w||7)+2.4,"stroke-linejoin":"round","stroke-linecap":"round"});
+    mk("polyline",{points:p,fill:"none",stroke:o.color,"stroke-width":o.w||7,"stroke-linejoin":"round","stroke-linecap":"round"});
+    if(o.color2)mk("polyline",{points:p,fill:"none",stroke:o.color2,"stroke-width":o.w||7,"stroke-dasharray":"9 9","stroke-linejoin":"round"});
+    if(live)mk("polyline",{points:p,fill:"none",stroke:css("--cur"),"stroke-width":2.6,"stroke-dasharray":"1 7","stroke-linecap":"round","stroke-linejoin":"round"});return;}
+  if(live)mk("polyline",{points:p,fill:"none",stroke:css("--cur"),"stroke-width":6.5,"stroke-linejoin":"round","stroke-linecap":"round",opacity:.9});
+  mk("polyline",{points:p,fill:"none",stroke:css("--line"),"stroke-width":2.2,"stroke-linejoin":"round","stroke-linecap":"round"});}
+function dot(x,y,live){const q=P(x,y);mk("circle",{cx:q[0],cy:q[1],r:4.5,fill:css("--line")});}
+function text(x,y,s,o){o=o||{};const q=P(x,y);return mk("text",{x:q[0],y:q[1],"text-anchor":o.anchor||"middle","dominant-baseline":"central","font-size":o.size||13,"font-weight":o.bold?"bold":"normal",fill:o.fill||css("--fg")},S,s);}
+function term(x,y,label,o){o=o||{};const q=P(x,y);mk("circle",{cx:q[0],cy:q[1],r:5,fill:css("--bg"),stroke:css("--line"),"stroke-width":2});
+  if(label)text(x+(o.dx||0),y+(o.dy===undefined?0.45:o.dy),label,{bold:true,anchor:o.anchor});}
+function busbar(x1,y1,x2,y2){const a=P(x1,y1),b=P(x2,y2);mk("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:css("--line"),"stroke-width":7,"stroke-linecap":"butt"});}
+function pe(x,y,label){const q=P(x,y);mk("line",{x1:q[0],y1:q[1],x2:q[0],y2:q[1]+12,stroke:css("--line"),"stroke-width":2.2});
+  [[22,12],[14,18],[6,24]].forEach(w=>mk("line",{x1:q[0]-w[0],y1:q[1]+w[1],x2:q[0]+w[0],y2:q[1]+w[1],stroke:css("--line"),"stroke-width":2.4}));
+  if(label)mk("text",{x:q[0],y:q[1]+42,"text-anchor":"middle","font-size":12},S,label);}
+/* két kivezetésű rajzjel az a-b rácsszakaszon; o: closed, l1, l2 (kivezetés áram alatt), body (tekercs/lámpa be), pressed,
+   label, sub, onclick, aria */
+function dev(kind,a,b,o){o=o||{};
+  const A=P(a[0],a[1]),B=P(b[0],b[1]),L=Math.hypot(B[0]-A[0],B[1]-A[1]),ang=Math.atan2(B[1]-A[1],B[0]-A[0])*180/Math.PI;
+  const cx=(A[0]+B[0])/2,cy=(A[1]+B[1])/2,h=30,g=mk("g",{transform:"translate("+cx+","+cy+") rotate("+ang+")"});
+  const line=css("--line"),cur=css("--cur"),sw=2.2;
+  const seg=(x1,y1,x2,y2,c,w,extra)=>mk("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:c||line,"stroke-width":w||sw,"stroke-linecap":"round"},extra||{}),g);
+  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res"||kind==="fuse")?true:!!o.closed;
+  // áram alatti halo (a kivezetések és a záródott test)
+  if(o.l1)seg(-L/2,0,-h,0,cur,6.5,{opacity:.9});
+  if(o.l2)seg(h,0,L/2,0,cur,6.5,{opacity:.9});
+  if(o.body&&closedPath)seg(-h,0,h,0,cur,6.5,{opacity:.9});
+  seg(-L/2,0,-h,0);seg(h,0,L/2,0);
+  const isContact=["no","nc","pbno","pbnc","sw","mcb"].includes(kind);
+  if(isContact){
+    mk("circle",{cx:-h,cy:0,r:3.2,fill:css("--bg"),stroke:line,"stroke-width":2},g);
+    mk("circle",{cx:h,cy:0,r:3.2,fill:css("--bg"),stroke:line,"stroke-width":2},g);
+    if(o.closed)seg(-h,0,h,0);else seg(-h,0,h-5,-24);
+    if(kind==="nc"||kind==="pbnc")seg(h-1,-11,h+1,11,line,2.6);          // NC: a rögzített érintkező jelzője
+    if(kind==="pbno"||kind==="pbnc"){const d=o.pressed?9:0;                // nyomógomb-működtető (T-alak)
+      seg(0,-8+d,0,-30+d,line,1.8,{"stroke-dasharray":"4 3"});seg(-9,-30+d,9,-30+d,line,3);}
+    if(kind==="sw"){seg(0,-12,0,-26,line,1.8,{"stroke-dasharray":"4 3"});seg(-8,-26,8,-26,line,3);}
+    if(kind==="mcb"){const dy=o.closed?12:0;                              // kismegszakító: a túláramkioldó X-e a késsel együtt mozog
+      seg(-6,-6+dy,6,-18+dy,line,2);seg(6,-6+dy,-6,-18+dy,line,2);}
+    if(o.delay==="on"||o.delay==="off"){seg(0,-10,0,-28,line,1.8);       // késleltetett érintkező (időrelé): ejtőernyő-ív
+      mk("path",{d:"M -9 -28 A 9 9 0 0 "+(o.delay==="on"?1:0)+" 9 -28",fill:"none",stroke:line,"stroke-width":2},g);}
+  }else if(kind==="coil"){
+    mk("rect",{x:-h,y:-17,width:2*h,height:34,fill:o.body?css("--coil"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+    if(o.hatch)seg(-h+4,13,h-4,-13,line,1.4);
+  }else if(kind==="thermal"){
+    mk("rect",{x:-h,y:-17,width:2*h,height:34,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);
+    mk("polyline",{points:"-14,0 -7,-9 0,9 7,-9 14,0",fill:"none",stroke:line,"stroke-width":2},g);
+  }else if(kind==="res"){                                                  // ellenállás (IEC téglalap)
+    mk("rect",{x:-h,y:-9,width:2*h,height:18,fill:o.body?css("--coil"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+  }else if(kind==="fuse"){                                                 // olvadóbiztosító: téglalap, középvonal
+    mk("rect",{x:-h,y:-10,width:2*h,height:20,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);seg(-h,0,h,0,line,2);
+  }else if(kind==="lamp"){
+    mk("circle",{cx:0,cy:0,r:17,fill:o.body?css("--lamp"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+    seg(-12,-12,12,12,line,2);seg(-12,12,12,-12,line,2);
+    if(o.body)for(let k=0;k<8;k++){const t=k*Math.PI/4+Math.PI/8;seg(Math.cos(t)*21,Math.sin(t)*21,Math.cos(t)*28,Math.sin(t)*28,line,1.8);}
+  }
+  // felirat: vízszintesnél fölötte, függőlegesnél jobbra (nem forgatva)
+  const horiz=Math.abs(B[1]-A[1])<1e-6;
+  const lx=o.left?cx-38:cx+38,an=o.left?"end":"start";
+  if(o.label)mk("text",{x:horiz?cx:lx,y:horiz?cy-44:cy-(o.sub?8:0),"text-anchor":horiz?"middle":an,"dominant-baseline":"central","font-size":13,"font-weight":"bold"},S,o.label);
+  if(o.sub)mk("text",{x:horiz?cx:lx,y:horiz?cy+34:cy+9,"text-anchor":horiz?"middle":an,"dominant-baseline":"central","font-size":11.5,fill:css("--muted")},S,o.sub);
+  if(o.onclick){const t=mk("circle",{cx:cx,cy:cy,r:36,fill:"transparent",role:"button",tabindex:0,"aria-label":o.aria||o.label||"",style:"cursor:pointer"},S);
+    t.addEventListener("click",o.onclick);t.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();o.onclick();}});}
+  return g;}
+function motor(x,y,on,label){const q=P(x,y),r=38;
+  mk("circle",{cx:q[0],cy:q[1],r:r,fill:on?css("--lamp"):css("--bg"),stroke:css("--line"),"stroke-width":2.4});
+  mk("text",{x:q[0],y:q[1]-6,"text-anchor":"middle","dominant-baseline":"central","font-size":22,fill:on?"#111":css("--fg")},S,"M");
+  mk("text",{x:q[0],y:q[1]+16,"text-anchor":"middle","dominant-baseline":"central","font-size":13,fill:on?"#111":css("--fg")},S,"3~");
+  if(on){const gg=mk("g",{transform:"translate("+q[0]+","+q[1]+")"});
+    const sp=mk("path",{d:"M0,-46 A46,46 0 0 1 40,-23",fill:"none",stroke:css("--cur"),"stroke-width":3.5,"stroke-linecap":"round"},gg);
+    mk("path",{d:"M40,-23 l-4,-9 m4,9 l-10,3",fill:"none",stroke:css("--cur"),"stroke-width":3.5,"stroke-linecap":"round"},gg);
+    if(!matchMedia("(prefers-reduced-motion: reduce)").matches)mk("animateTransform",{attributeName:"transform",type:"rotate",from:"0",to:"360",dur:"1.6s",repeatCount:"indefinite"},sp);}
+  if(label)mk("text",{x:q[0]-r-10,y:q[1],"text-anchor":"end","dominant-baseline":"central","font-size":13,"font-weight":"bold"},S,label);
+  // kapcsok a motor tetején: x-0.5, x, x+0.5
+  [-0.5,0,0.5].forEach(d=>{const t=P(x+d,y+1);const k=P(x+d,y+Math.sqrt(0.78*0.78-d*d)*0.97);mk("line",{x1:t[0],y1:t[1],x2:k[0],y2:k[1]+1,stroke:css("--line"),"stroke-width":2.2});});}
+/* nyomógomb nyomva tartása: egérrel/érintéssel tartásig, billentyűzetnél Enter/szóköz le- és felengedésig */
+function hold(el,down,up){let on=false;const d=e=>{if(!on){on=true;down();}},u=e=>{if(on){on=false;up();}};
+  el.addEventListener("pointerdown",e=>{d();});["pointerup","pointerleave","pointercancel","blur"].forEach(t=>el.addEventListener(t,u));
+  el.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!e.repeat){e.preventDefault();d();}});
+  el.addEventListener("keyup",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();u();}});}
+function pulse(down,up,ms){down();setTimeout(up,ms||600);}
+
+
+const Q=new URLSearchParams(location.search);
+const MODES={"4":"lépcsőházi automata, 4 vezetékes","3":"lépcsőházi automata, 3 vezetékes","i":"impulzusrelé"};
+const FAULTS=[["0","nincs hiba",""],["1","gombok sorosan kötve",""],["2","az S2 gomb beragadt",""],["3","3 vezetékes bekötés megvilágított gombokkal","3"],["4","túl sok megvilágított gomb (jelzőfényáram > megengedett)","4"]];
+const GUESS=[["A","bármelyik gombbal bekapcsol, t után kikapcsol"],["B","egyik gombbal sem kapcsol be (csak mindhárommal együtt)"],["C","bekapcsol, de nem kapcsol ki"],["D","kikapcsolva a lámpák derengenek, és az automata nem old"]];
+const OK={"1":"B","2":"C","3":"D","4":"C"};
+const WHY={"1":"Sorba kötött gomboknál a vezérlőkör csak akkor zár, ha minden gombot egyszerre nyomnak: egyenként egyik sem működik. A gombokat párhuzamosan kell kötni (logikai VAGY).",
+ "2":"A beragadt gomb folyamatos vezérlőjelet ad: az automata (újraindítás nyomásra funkcióval) újra és újra indítja az időt, a lámpák nem alszanak el. Keresd a gombot folytonosságméréssel: feszültségmentesen az L–S között gombnyomás nélkül is kis ellenállás mérhető.",
+ "3":"3 vezetékes bekötésnél a megvilágított gombok jelzőfényének árama a ↑ vezetéken és a lámpákon át folyik: a LED-lámpák kikapcsolva derengenek, és az automata a ↑-en megjelenő feszültséget bekapcsolási jelnek érzékeli, ezért nem old. Megoldás: 4 vezetékes bekötés vagy N-kapcsos jelzőfényes gomb.",
+ "4":"A jelzőfények összes árama nagyobb az adatlapon megengedettnél, ezért az automata bemenete folyamatos gombnyomást lát, és nem kapcsol ki. Megoldás: kevesebb megvilágított gomb, N-kapcsos gombok vagy nagyobb megengedett jelzőfényáramú automata."};
+/* ---- tiszta logika ---- */
+function inputActive(S,mode,fault){const p=S.btn;
+  let a=fault==="1"?(p[0]&&p[1]&&p[2]):(p[0]||p[1]||p[2]);
+  if(fault==="2")a=true;
+  if(fault==="3"&&mode==="3")a=true;            // jelzőfényáram a ↑-en: az automata „feszültséget lát”
+  if(fault==="4"&&mode==="4")a=true;            // túl nagy jelzőfényáram a bemeneten
+  return a;}
+function step(S,dt,mode,fault,T,restart){const a=inputActive(S,mode,fault);
+  if(mode==="i"){if(a&&!S.prev)S.out=!S.out;}
+  else{if(a&&(!S.prev||restart)){S.out=true;S.rem=T;}
+       else if(S.out){S.rem=Math.max(0,S.rem-dt);if(S.rem<=0)S.out=false;}}
+  S.prev=a;return S;}
+function newS(){return {btn:[false,false,false],out:false,rem:0,prev:false};}
+/* ---- állapot és felület ---- */
+let mode=Q.get("mode")||"4",fault="0",Z=newS(),guessed=true,T=+(Q.get("t")||20),restart=true;
+const valid=()=>FAULTS.find(f=>f[0]===fault)[2]===""||FAULTS.find(f=>f[0]===fault)[2]===mode;
+function render(){initSvg("v",-0.6,-1.4,21.5,13.4,40);const on=Z.out,cur=css("--cur");
+  const ctl=inputActive(Z,mode,fault);const three=mode==="3";
+  term(0.3,12,"L",{dy:0.5});term(0.3,2,"N",{dy:-0.5});
+  dev("mcb",[1,12],[3,12],{closed:true,l1:true,l2:true,body:true,label:"F1",sub:"B10"});wire([[0.3,12],[1,12]],true);
+  wire([[3,12],[13,12]],true);
+  // gombok
+  const xs=[4.5,6.5,8.5];
+  if(fault==="1"){ // sorosan
+    wire([[4.5,12],[4.5,11]],true);
+    xs.forEach((x,i)=>{dev("pbno",[x,11],[x,9],{closed:Z.btn[i],pressed:Z.btn[i],label:"S"+(i+1),l1:true});if(i<2)wire([[x,9],[x,8.5],[xs[i+1],8.5],[xs[i+1],11]],false);});
+    wire([[8.5,9],[8.5,8]],ctl);
+  }else{xs.forEach((x,i)=>{wire([[x,12],[x,11]],true);const pr=Z.btn[i]||(fault==="2"&&i===1);
+    dev("pbno",[x,11],[x,9],{closed:pr,pressed:pr,label:"S"+(i+1)+(fault==="2"&&i===1?" (beragadt)":""),l1:true,l2:pr});wire([[x,9],[x,8]],pr);});
+    wire([[4.5,8],[8.5,8]],ctl);}
+  if(!three){wire([[8.5,8],[10.5,8],[10.5,7.5]],ctl);dev("coil",[10.5,7.5],[10.5,4.5],{body:ctl,label:"K1",sub:mode==="i"?"A1–A2":"S bemenet"});wire([[10.5,4.5],[10.5,2]],ctl);}
+  else{wire([[8.5,8],[15,8]],on||ctl);dev("coil",[10.5,7.2],[10.5,4.5],{body:ctl,label:"K1",sub:"érzékelés"});wire([[10.5,8],[10.5,7.2]],on||ctl);wire([[10.5,4.5],[10.5,2]],ctl);}
+  dev("no",[13,12],[13,9],{closed:on,l1:true,l2:on,body:on,label:"K1",sub:mode==="i"?"11–14":"t",delay:mode==="i"?undefined:"off"});
+  wire([[13,9],[13,8],[20,8]],on||(three&&ctl));
+  [15,17.5,20].forEach((x,i)=>{const dim=!on&&fault==="3"&&three;wire([[x,8],[x,7]],on);
+    dev("lamp",[x,7],[x,4],{body:on,l1:on,l2:on,label:"E"+(i+1)});if(dim){const q=P(x,5.5);mk("circle",{cx:q[0],cy:q[1],r:14,fill:css("--lamp"),opacity:.35});}
+    wire([[x,4],[x,2]],on);});
+  wire([[0.3,2],[20,2]],on||ctl);
+  text(3,0.4,mode==="i"?"K1 impulzusrelé: minden impulzusra vált":"K1 lépcsőházi automata: impulzusra bekapcsol, t után kikapcsol",{anchor:"start",size:13});
+  const bar=document.getElementById("bar");bar.style.width=(mode==="i"||!on?0:100*Z.rem/T)+"%";
+  document.getElementById("rem").textContent=mode==="i"?"impulzusrelé: nincs időzítés":(on?("hátralévő idő: "+Z.rem.toFixed(1).replace(".",",")+" s"):"kikapcsolva");
+  const st=document.getElementById("st");if(guessed)st.innerHTML=(on?'<span class="ok">A lámpák égnek.</span>':"A lámpák nem égnek.")+(ctl?" Vezérlőjel: <b>aktív</b>.":" Vezérlőjel: nincs.");}
+let last=performance.now();
+function loop(){const now=performance.now(),dt=(now-last)/1000;last=now;step(Z,dt,mode,fault,T,restart);render();}
+const press=i=>{if(!guessed){document.getElementById("st").innerHTML='<span class="bad">Hibamódban előbb tippelj, és rögzítsd a tippet.</span>';return;}Z.btn[i]=true;loop();};
+const rel=i=>{Z.btn[i]=false;loop();};
+/* vezérlők */
+const mb=document.getElementById("modes");Object.keys(MODES).forEach(m=>{const b=document.createElement("button");b.type="button";b.textContent=MODES[m];b.dataset.m=m;b.addEventListener("click",()=>{mode=m;Z=newS();setFault(fault);});mb.appendChild(b);});
+const bb=document.getElementById("btns");[0,1,2].forEach(i=>{const b=document.createElement("button");b.type="button";b.textContent="S"+(i+1)+" nyomógomb";hold(b,()=>press(i),()=>rel(i));bb.appendChild(b);});
+const fs=document.getElementById("fsel");FAULTS.forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;fs.appendChild(o);});
+const gs=document.getElementById("guess");GUESS.forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;gs.appendChild(o);});
+function setFault(f){fault=f;Z=newS();document.querySelectorAll("#modes button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===mode));
+  if(!valid()){document.getElementById("st").innerHTML='<span class="bad">Ez a hibamód a(z) '+MODES[FAULTS.find(x=>x[0]===f)[2]]+' üzemmódhoz tartozik – válts üzemmódot.</span>';}
+  guessed=(f==="0"||!valid());document.getElementById("gbox").style.display=guessed?"none":"flex";
+  if(!guessed)document.getElementById("st").innerHTML="Hibamód: előbb tippelj, mit tapasztal a lakó!";render();}
+fs.addEventListener("change",e=>setFault(e.target.value));
+document.getElementById("gok").addEventListener("click",()=>{guessed=true;document.getElementById("gbox").style.display="none";
+  document.getElementById("expl").innerHTML=(gs.value===OK[fault]?'<span class="ok">Helyes tipp.</span> ':'<span class="bad">Nem ez történik.</span> ')+WHY[fault]+" Most próbáld ki a gombokat.";render();});
+const sl=document.getElementById("t");sl.value=T;document.getElementById("tv").textContent=T+" s";sl.addEventListener("input",()=>{T=+sl.value;document.getElementById("tv").textContent=T+" s";});
+document.getElementById("rs").addEventListener("change",e=>{restart=e.target.checked;});
+/* önteszt virtuális idővel */
+if(Q.get("selftest")){let bad=0;const run=(m,f,seq,exp,msg)=>{const s=newS();seq.forEach(([b,dt])=>{s.btn=b;step(s,dt,m,f,10,true);});if(s.out!==exp){bad++;console.error("SELFTEST error",msg,s.out);}};
+  const P1=[[[true,false,false],0.3],[[false,false,false],0.1]];
+  run("4","0",P1,true,"4v: gombnyomásra be");
+  run("4","0",P1.concat([[[false,false,false],10.5]]),false,"4v: t után ki");
+  run("3","0",P1.concat([[[false,false,false],10.5]]),false,"3v: t után ki");
+  run("4","1",P1,false,"soros gombok: egy gombbal nem kapcsol");
+  run("4","1",[[[true,true,true],0.3],[[false,false,false],0.1]],true,"soros: mind a hárommal bekapcsol");
+  run("4","2",P1.concat([[[false,false,false],30]]),true,"beragadt gomb: nem kapcsol ki");
+  run("3","3",P1.concat([[[false,false,false],30]]),true,"3v megvilágított: nem old");
+  run("4","4",P1.concat([[[false,false,false],30]]),true,"sok jelzőfény: nem old");
+  run("i","0",P1,true,"impulzus: be");run("i","0",P1.concat(P1),false,"impulzus: ki");
+  if(!bad)console.log("SELFTEST OK");}
+if(Q.get("static"))document.querySelectorAll(".bar,.small,#expl").forEach(e=>e.style.display="none");
+setFault("0");
+if(Q.get("press")){Z.btn=[true,false,false];step(Z,0.1,mode,fault,T,restart);Z.btn=[false,false,false];step(Z,0.1,mode,fault,T,restart);Z.rem=T*0.6;render();}
+else setInterval(loop,100);
+
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(typeof render==="function")render();});
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

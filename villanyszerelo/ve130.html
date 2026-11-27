@@ -40,22 +40,122 @@ id="szemléletes-kép-egy-kis-ipari-vezérlőhálózat"><span
 class="header-section-number">35.4.2</span> Szemléletes kép: egy kis
 ipari vezérlőhálózat</h3>
 <p>Egy tipikus gépi vezérlésben a berendezések három rétegbe
-rendeződnek. Legalul a terepi eszközök (frekvenciaváltók, motorvédő
-relék, szenzorok) vannak, felettük a vezérlőhálózat (PLC, HMI, switch),
-legfelül pedig a felügyeleti réteg (mérnöki munkaállomás, adatnaplózó).
-Az alábbi rétegábra ezt a felépítést mutatja:</p>
-<figure>
-<img src="assets/ve130-diagram-1.png"
-alt="Ipari vezérlőhálózat rétegei - Szemléltető topológia fentről lefelé: felügyeleti réteg, vezérlőhálózat, terepi eszközök. Az adat felfelé, a parancs lefelé halad." />
-<figcaption aria-hidden="true">Ipari vezérlőhálózat rétegei -
-Szemléltető topológia fentről lefelé: felügyeleti réteg, vezérlőhálózat,
-terepi eszközök. Az adat felfelé, a parancs lefelé halad.</figcaption>
+rendeződnek: legalul a terepi eszközök (frekvenciaváltók, motorvédő
+relék, mérők), felettük a vezérlőhálózat (PLC, HMI, switch), legfelül a
+felügyeleti réteg (mérnöki munkaállomás, adatnaplózó), amely már az
+irodai hálózat felől érkezik. Az alábbi rajz ezt egy valódi
+szekrény-topológián mutatja: milyen eszköz hol van, milyen kábellel,
+melyik portra és milyen címmel csatlakozik.</p>
+<figure id="fig-ve130-2">
+<div class="fig-interactive"><iframe src="figures/html/ve130-2.html" title="Vezérlőszekrény +S1: G1 24 V DC tápegység, A1 PLC 192.168.0.20, A2 HMI az ajtón 192.168.0.10, A3 nyolcportos ipari switch (8. port VLAN 10 az A4 tűzfal felé, 7. port portdugóval lezárva), A4 tűzfal/átjáró. Hajtásszekrény +S2: U1 192.168.0.31 és U2 192.168.0.32 frekvenciaváltó Cat 6 S/FTP kábellel. RS-485 Modbus RTU lánc A1 → P1 energiamérő (cím 1) → F5 motorvédő relé (cím 2), a két végén 120 Ω lezárás. Szaggatott zónahatár: gépi zóna | irodai zóna, az irodai hálózat csak az A4-en át érhető el. A szekrények között potenciálkiegyenlítő vezető." loading="lazy" style="width:100%;border:0;height:620px"></iframe><noscript><img src="figures/img/ve130-2.png" style="width:100.0%"
+alt="Vezérlőszekrény +S1: G1 24 V DC tápegység, A1 PLC 192.168.0.20, A2 HMI az ajtón 192.168.0.10, A3 nyolcportos ipari switch (8. port VLAN 10 az A4 tűzfal felé, 7. port portdugóval lezárva), A4 tűzfal/átjáró. Hajtásszekrény +S2: U1 192.168.0.31 és U2 192.168.0.32 frekvenciaváltó Cat 6 S/FTP kábellel. RS-485 Modbus RTU lánc A1 → P1 energiamérő (cím 1) → F5 motorvédő relé (cím 2), a két végén 120 Ω lezárás. Szaggatott zónahatár: gépi zóna | irodai zóna, az irodai hálózat csak az A4-en át érhető el. A szekrények között potenciálkiegyenlítő vezető." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve130-2.png" style="width:100.0%"
+alt="Vezérlőszekrény +S1: G1 24 V DC tápegység, A1 PLC 192.168.0.20, A2 HMI az ajtón 192.168.0.10, A3 nyolcportos ipari switch (8. port VLAN 10 az A4 tűzfal felé, 7. port portdugóval lezárva), A4 tűzfal/átjáró. Hajtásszekrény +S2: U1 192.168.0.31 és U2 192.168.0.32 frekvenciaváltó Cat 6 S/FTP kábellel. RS-485 Modbus RTU lánc A1 → P1 energiamérő (cím 1) → F5 motorvédő relé (cím 2), a két végén 120 Ω lezárás. Szaggatott zónahatár: gépi zóna | irodai zóna, az irodai hálózat csak az A4-en át érhető el. A szekrények között potenciálkiegyenlítő vezető." /></details></div>
+<figcaption>Egy kis ipari vezérlőhálózat szekrény-topológiája IP- és
+Modbus-címekkel, RS-485-lezárással és zónahatárral (sematikus
+rajz)</figcaption>
 </figure>
-<p>A rajz azt hangsúlyozza, hogy a HMI nem közvetlenül a terepi
-eszközökhöz csatlakozik, hanem a PLC-n keresztül éri el az adatokat. A
-PLC gyűjti az állapotjeleket, a HMI pedig megjeleníti azokat, illetve
-parancsokat küld vissza. A rétegek közötti nyilak azt is mutatják, hogy
-az adat felfelé áramlik, a beavatkozó jel pedig lefelé.</p>
+<p><strong>Ábraértelmezés.</strong> A HMI (A2) nem közvetlenül a terepi
+eszközökhöz csatlakozik, hanem a switchen át a PLC-től (A1) kapja az
+adatokat; a PLC gyűjti az állapotjeleket, és küldi a parancsokat. A
+frekvenciaváltók ipari Etherneten, csillagban, a switch egy-egy portjára
+csatlakoznak; a mérő (P1) és a motorvédő relé (F5) RS-485 Modbus RTU
+<strong>láncon</strong>, leágazás nélkül, és a lánc két fizikai végén
+(A1 és F5) van egy-egy 120 Ω-os lezárás, középen (P1) nincs. Az irodai
+hálózatot a gépi zónától az A4 tűzfal választja el; a nem használt
+switchport portdugóval lezárt és a konfigurációban letiltott. A rajz
+adatait az alábbi címlista foglalja össze – ezt a dokumentációban a
+szekrény mellé kell tenni, és minden módosításkor frissíteni.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Eszköz</th>
+<th>Jelölés</th>
+<th>IP- / Modbus-cím</th>
+<th>Port</th>
+<th>Kábel</th>
+<th>Árnyékolás bekötése</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PLC</td>
+<td>A1</td>
+<td>192.168.0.20</td>
+<td>A3:1; soros port</td>
+<td>Cat 6 S/FTP; RS-485 árnyékolt csavart érpár</td>
+<td>Ethernet: mindkét végen, 360°; RS-485: egy ponton</td>
+</tr>
+<tr>
+<td>HMI (ajtón)</td>
+<td>A2</td>
+<td>192.168.0.10</td>
+<td>A3:2</td>
+<td>Cat 6 S/FTP, hajlékony</td>
+<td>mindkét végen</td>
+</tr>
+<tr>
+<td>Frekvenciaváltó 1</td>
+<td>U1</td>
+<td>192.168.0.31</td>
+<td>A3:3</td>
+<td>Cat 6 S/FTP</td>
+<td>mindkét végen, 360°</td>
+</tr>
+<tr>
+<td>Frekvenciaváltó 2</td>
+<td>U2</td>
+<td>192.168.0.32</td>
+<td>A3:4</td>
+<td>Cat 6 S/FTP</td>
+<td>mindkét végen, 360°</td>
+</tr>
+<tr>
+<td>Tűzfal / átjáró</td>
+<td>A4</td>
+<td>192.168.0.1 (gépi oldal)</td>
+<td>A3:8 (VLAN 10)</td>
+<td>Cat 6 S/FTP</td>
+<td>mindkét végen</td>
+</tr>
+<tr>
+<td>Energiamérő</td>
+<td>P1</td>
+<td>Modbus RTU cím 1</td>
+<td>RS-485 lánc</td>
+<td>árnyékolt csavart érpár (A, B, GND)</td>
+<td>egy ponton, a szekrényben</td>
+</tr>
+<tr>
+<td>Motorvédő relé</td>
+<td>F5</td>
+<td>Modbus RTU cím 2</td>
+<td>RS-485 lánc vége (120 Ω)</td>
+<td>árnyékolt csavart érpár (A, B, GND)</td>
+<td>egy ponton, a szekrényben</td>
+</tr>
+<tr>
+<td>24 V DC tápegység</td>
+<td>G1</td>
+<td>–</td>
+<td>–</td>
+<td>–</td>
+<td>–</td>
+</tr>
+</tbody>
+</table>
+<p>A címek és a port-kiosztás mintaértékek; az árnyékolás bekötésének
+módját a protokoll-irányelv és a gyártó adja <strong>(ellenőrizendő:
+PROFINET/Modbus szerelési irányelv, gyártói előírás)</strong>. Kérdés:
+melyik eszközt kell a kiosztásban megváltoztatni, ha egy harmadik
+Modbus-eszköz kerül a lánc végére az F5 után?</p>
 <h3 data-number="35.4.3"
 id="definíciók-protokollok-és-alapfogalmak"><span
 class="header-section-number">35.4.3</span> Definíciók, protokollok és
@@ -204,22 +304,47 @@ vízhőmérsékletet, az <code>%M100</code> pedig a „szivattyú túlmelegedés
 riasztást. A változó-összerendelést a HMI fejlesztőkörnyezetében kell
 elvégezni, amelyet a gyártó biztosít <strong>(ellenőrizendő: a konkrét
 változócímek a PLC programjából)</strong>.</p>
-<p><strong>Példa – hőmérséklet-riasztás bekötése.</strong> Legyen egy
-PLC, amely a 0. analóg bemenetéről olvassa a szivattyú hőmérsékletét. A
-PLC programja a mért értéket a <code>%MW10</code> regiszterbe írja, és
-ha az érték 80 °C fölé emelkedik, az <code>%M100</code> riasztásbitet
-1-be állítja. A HMI-t úgy konfigurálják, hogy:</p>
-<ol type="1">
-<li>a <code>%MW10</code> regisztert egy numerikus mező jelenítse meg
-„Vízhőmérséklet” címen,</li>
-<li>az <code>%M100</code> bithez egy piros jelzőlámpa és egy „Szivattyú
-túlmelegedés” szöveg tartozzon,</li>
-<li>a bekövetkezés időbélyegét a riasztási napló tárolja.</li>
-</ol>
-<p>A szerelő feladata nem a program megírása, hanem a fizikai bekötés és
-a kommunikáció ellenőrzése. Ha a HMI nem mutat értéket, először a
-tápellátást, a kábelt, a csatlakozót és az IP-címet kell ellenőrizni,
-nem a PLC-programot.</p>
+<h4 data-number="35.4.5.1" id="ve130-skalazas"><span
+class="header-section-number">35.4.5.1</span> Mit mutat a HMI?
+Jelskálázás</h4>
+<p>A terepi jel (áram, feszültség vagy regiszterérték) és a kijelzett
+fizikai mennyiség között <strong>skálázás</strong> van. Ha ezt a szerelő
+ki tudja számolni, mérőműszerrel ellenőrizni tudja, hogy a jel és a
+kijelzés összhangban van-e. Legyen a tartomány alsó és felső vége
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">x_{min}</annotation></semantics></math>
+és
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">x_{max}</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><msub><mi>x</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>+</mo><mfrac><mrow><mi>I</mi><mo>−</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><mrow><mn>16</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow></mfrac><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mspace width="1.0em"></mspace><mtext mathvariant="normal">(4–20 mA-es jel)</mtext></mrow><annotation encoding="application/x-tex">
+x = x_{min} + \frac{I - 4\,\text{mA}}{16\,\text{mA}}\,(x_{max} - x_{min}) \quad \text{(4–20 mA-es jel)}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><msub><mi>x</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>+</mo><mfrac><mi>U</mi><mrow><mn>10</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow></mfrac><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mspace width="1.0em"></mspace><mtext mathvariant="normal">(0–10 V-os jel)</mtext></mrow><annotation encoding="application/x-tex">
+x = x_{min} + \frac{U}{10\,\text{V}}\,(x_{max} - x_{min}) \quad \text{(0–10 V-os jel)}
+</annotation></semantics></math></p>
+<p>Egész értékű (például Modbus-) regiszternél:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">érték</mtext><mo>=</mo><mtext mathvariant="normal">regiszter</mtext><mo>⋅</mo><mtext mathvariant="normal">felbontás</mtext></mrow><annotation encoding="application/x-tex">\text{érték} = \text{regiszter} \cdot \text{felbontás}</annotation></semantics></math>.
+A felbontást, az előjelet és a tartományt mindig a készülék
+dokumentációja adja meg.</p>
+<p><strong>Gyakorlati tipp.</strong> A hurokáramot sorosan kötött
+multiméterrel vagy mA-lakatfogóval mérheted. A hurok megbontása előtt a
+PLC-ben a jelet – az üzemeltetővel egyeztetve – kézi értékre kell
+állítani, különben a folyamat hamis jelet kap; a mérést törpefeszültségű
+körben, a gyártói utasítás szerint végezd.</p>
+<p><strong>Skálázási feladatok</strong> (megoldás a „Megoldások”
+alatt):</p>
+<ul>
+<li><strong>S1 (A).</strong> 4–20 mA, 0–16 bar; mért áram 9 mA. Mekkora
+a nyomás?</li>
+<li><strong>S2 (B).</strong> 0–10 V, −20…+80 °C; mért feszültség 3 V.
+Mekkora a hőmérséklet?</li>
+<li><strong>S3 (A).</strong> 4–20 mA, 0–2000 m³/h; mért áram 15 mA.
+Mekkora a térfogatáram?</li>
+<li><strong>S4 (B).</strong> Egy hőmérséklet-regiszter tartalma 2450,
+felbontása 0,1 °C/egység. Mit mutat a HMI, és mi a gyanús?</li>
+<li><strong>S5 (A).</strong> 0–10 V = 0–100 %, a PLC bemenete 0–27648; a
+nyers érték 13824. Hány százalék?</li>
+<li><strong>S6 (C).</strong> Egy 4–20 mA-es hurokban 20,8 mA mérhető.
+Mit jelent?</li>
+</ul>
 <h3 data-number="35.4.6"
 id="kiberbiztonság-alapjai-az-ipari-hálózatokban"><span
 class="header-section-number">35.4.6</span> Kiberbiztonság alapjai az
@@ -295,92 +420,8 @@ portjára tették), a kapcsolat felépült, és a HMI megjelenítette a
 motoráramokat. A tanulság: a hálózati hibák egy része nem kábel-, hanem
 konfigurációs hiba, de a szerelőnek a fizikai rétegtől a címzésig végig
 kell tudni járni a láncot.</p>
-<h3 data-number="35.4.9"
-id="gyakorlati-útmutató-hmi-panel-bekötése-és-indítása"><span
-class="header-section-number">35.4.9</span> Gyakorlati útmutató:
-HMI-panel bekötése és indítása</h3>
-<p><strong>Cél.</strong> HMI-panel fizikai bekötése egy PLC-hez
-Ethernet- vagy Modbus RTU-kapcsolattal, a tápfeszültség és a
-kommunikáció ellenőrzése.</p>
-<p><strong>Eszközök és anyagok.</strong> HMI-panel, PLC, 24 V DC
-tápegység, Ethernet- vagy Modbus RTU-kábel, RJ45/M12 csatlakozó,
-egalizáló/földelő vezeték, multiméter, csavarhúzó, kábelkés,
-feszültségmentesítési eszközök. A beállításhoz laptop és a gyártói
-program.</p>
-<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
-(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
-vonatkozik; hálózati feszültségen önállóan ne végezd. Hálózati
-feszültségű betáp esetén a munkát csak jogosult, arra képesített személy
-végezheti.</p>
-<p><strong>Öt biztonsági szabály a szerelés előtt.</strong></p>
-<ol type="1">
-<li><strong>Lekapcsolás</strong> – kapcsold le a vezérlőszekrény
-betáplálását és a törpefeszültségű tápegység primer oldalát.</li>
-<li><strong>Visszakapcsolás elleni biztosítás</strong> – a kapcsolót
-lakatold le vagy helyezz el figyelmeztető táblát.</li>
-<li><strong>Feszültségmentesség megállapítása</strong> – a hálózati
-oldalon (betáplálás, tápegység primer kapcsai) kétpólusú
-feszültségvizsgálóval (MSZ EN 61243-3, ellenőrizendő: aktuális kiadás)
-minden pólus között és a PE felé, a vizsgáló előtte és utána történő
-kipróbálásával; a törpefeszültségű tápegység kimenetén multiméterrel
-is.</li>
-<li><strong>Földelés és rövidre zárás</strong> – ha a hálózati oldalon
-szükséges, a vonatkozó előírások szerint.</li>
-<li><strong>Szomszédos feszültség alatti részek lefedése</strong> –
-takard le vagy kerítsd el a közeli feszültség alatti kapcsokat.</li>
-</ol>
-<p><strong>Lépések.</strong></p>
-<ol type="1">
-<li>Szereld a HMI-panelt az ajtóba vagy a pultba a gyártói kivágási
-méret szerint; ügyelj a tömítésre, hogy a homlokoldali IP-védettség
-megmaradjon.</li>
-<li>Kösd be a HMI tápellátását. A legtöbb ipari panel 24 V DC-t használ;
-a <code>+</code> és <code>–</code> jelölést pontosan követve csavaros
-kapcsokkal rögzítsd a vezetékeket. A védőföldelő kapocshoz a gyártó
-utasítása szerint csatlakoztasd a zöld-sárga védővezetőt.</li>
-<li>Készítsd el a kommunikációs kábelt. Ethernet esetén a T568B színkód
-szerint krimpelj vagy gyári patch-kábelt használj; ipari
-M12-csatlakozónál a gyártói bekötési rajzot kövesd. Modbus RTU esetén
-csavart érpárt és közös GND-t köss, a vonal végére helyezd fel a lezáró
-ellenállást.</li>
-<li>Húzd a kábelt a vezérlőszekrényben lehetőleg külön a motor- és
-tápfeszültségű vezetékektől; ha közös csatornában kell haladnia,
-használj árnyékolt kábelt és tartsd a lehető legnagyobb távolságot.</li>
-<li>Kösd be az árnyékolást a szekrény földelési pontjára a gépgyártó és
-a protokoll szerelési irányelve szerint (egy vagy két végén,
-potenciálkiegyenlítéssel – ellenőrizendő: gyártói utasítás).</li>
-<li>Ellenőrizd a folytonosságot multiméterrel: az RJ45 lábkiosztása
-mindkét végén azonos legyen, szakadás vagy zárlat ne legyen.</li>
-<li>Kapcsold be a törpefeszültségű tápegységet. Mérj a HMI tápkapcsain:
-várt érték 24 V DC ± tolerancia <strong>(ellenőrizendő: a gyártói
-adatlap szerint)</strong>.</li>
-<li>Állítsd be a HMI hálózati paramétereit a gyártói programból vagy a
-panel menüjéből: például fix IP-cím <code>192.168.0.10</code>, maszk
-<code>255.255.255.0</code>. A PLC címe legyen ugyanabban az alhálózatban
-(például <code>192.168.0.20</code>), de ne ütközzön más eszközzel.</li>
-<li>Teszteld a kapcsolatot: a HMI diagnosztikai oldalán ellenőrizd, hogy
-a PLC elérhető-e; Modbus TCP esetén egy register- vagy bitcímet olvass
-ki próbaként.</li>
-<li>Próbáld ki a HMI-képernyőt: jelenjen meg egy érték, és váltson a
-riasztás. A nyugtázást és a naplózást is próbáld ki, majd a
-beállításokat mentsd el.</li>
-</ol>
-<p><strong>Ellenőrzési pontok.</strong> A tápkapocs feszültsége a
-névleges értéken belül van; a folytonosság rendben; a ping vagy a
-protokoll-teszt sikeres; a HMI legalább egy PLC-változót valósághűen
-mutat; a riasztás nyugtázása működik.</p>
-<p><strong>Tipikus hibák.</strong> Az árnyékolás bekötése nem a gyártói
-irányelv szerinti (pl. potenciálkiegyenlítő vezető nélkül, kétvégű
-bekötésnél kiegyenlítő áram folyik rajta); a táp- és jelkábel azonos
-kötegelésben halad; az IP-cím más eszközzel ütközik vagy más
-alhálózatban van; Modbus RTU-nál hiányzik a lezáró ellenállás; a HMI táp
-polaritása fel van cserélve.</p>
-<p><strong>Dokumentálás.</strong> Jegyezd fel a HMI és PLC IP-címét,
-maszkját, a protokoll típusát, a Modbus-címeket, a kábel típusát,
-hosszát és az árnyékolás földelési pontját. Ezt a későbbi hibakeresésnél
-és felülvizsgálatnál is használni fogják.</p>
-<h3 data-number="35.4.10" id="tipikus-hibák"><span
-class="header-section-number">35.4.10</span> Tipikus hibák</h3>
+<h3 data-number="35.4.9" id="tipikus-hibák"><span
+class="header-section-number">35.4.9</span> Tipikus hibák</h3>
 <ol type="1">
 <li><p><strong>Árnyékolás hibás földelése.</strong> Sok szerelő az
 irányelv ismerete nélkül köti be az árnyékolást. Kétvégű bekötésnél
@@ -403,126 +444,107 @@ időszakosan megszakad. A lezáró ellenállást a fizikai vonal két végére,
 a gyártó értékével (tipikusan 120 Ω) kell bekötni, nem minden
 résztvevőre.</p></li>
 </ol>
-<h3 data-number="35.4.11" id="önellenőrzés"><span
-class="header-section-number">35.4.11</span> Önellenőrzés</h3>
-<ol type="1">
-<li>Igaz-e, hogy a HMI közvetlenül a frekvenciaváltó analóg kimenetét
-olvassa, és nincs szükség PLC-re? Indokold.</li>
-<li>Mi a különbség a Modbus RTU és a Modbus TCP között a fizikai közeg
-szempontjából?</li>
-<li>Mikor kötjük az árnyékolást egy, és mikor két végén, és mi
-akadályozza meg a kiegyenlítő áramot?</li>
-<li>Egy HMI IP-címe <code>192.168.10.20</code>, maszkja
-<code>255.255.255.0</code>. Milyen hálózati címen van, és melyik
-broadcast-cím tartozik hozzá?</li>
-<li>Sorold fel a HMI három alapfeladatát.</li>
-<li>Milyen mérési ellenőrzést végzel el a HMI bekapcsolása előtt?</li>
-<li>Sorolj fel három alapvető kiberbiztonsági intézkedést egy gép
-hálózatán!</li>
-</ol>
-<h3 data-number="35.4.12" id="feladatok"><span
-class="header-section-number">35.4.12</span> Feladatok</h3>
-<p><strong>1. feladat (A).</strong> Írd le, mit jelent a HMI kifejezés,
-és adj meg három jellemző feladatát.</p>
-<p><strong>2. feladat (A).</strong> Egy PLC és egy HMI Etherneten
-kommunikál. A PLC címe <code>192.168.10.200</code>, a maszk
-<code>255.255.255.0</code>. Ellenőrizd, hogy a HMI
-<code>192.168.10.50</code> címe ugyanabban az alhálózatban van-e. Add
-meg a hálózati címet és a broadcast-címet.</p>
-<p><strong>3. feladat (B).</strong> Rajzold le szövegesen egy Modbus
-RTU-vonal bekötését három eszközzel: PLC, HMI és egy frekvenciaváltó.
-Hol helyezkednek el a lezáró ellenállások, és mi kerül a közös
-GND-re?</p>
-<p><strong>4. feladat (B).</strong> Egy HMI nem mutatja a PLC
-<code>%MW10</code> regiszterét. Sorolj fel négy ellenőrzési lépést a
-fizikai rétegtől a protokollig.</p>
-<p><strong>5. feladat (C).</strong> Egy műhelyben a vezérlőszekrénybe új
-Cat 6 FTP-kábelt húztak a switch és a HMI közé, de a kábel a
-frekvenciaváltó kimeneti kábeleivel azonos kábeltálcában halad 20
-méteren át. A HMI időnként eldobja a kapcsolatot. Milyen okot gyanítasz,
-és mit javasolsz?</p>
-<p><strong>6. feladat (D).</strong> A gyakorlati útmutató alapján
-bekapcsoltál egy HMI-t. A tápkapcson 23,8 V DC-t mérsz. Az
-Ethernet-kábel folytonossága rendben. A PLC IP-címe
-<code>192.168.0.20</code>, a HMI-é <code>192.168.0.100</code>, a maszk
-<code>255.255.255.0</code>. A HMI „PLC nem elérhető” hibát ír. Mi a
-következő ellenőrzési lépés, és milyen eredményt vársz?</p>
-<h3 data-number="35.4.13" id="megoldások"><span
-class="header-section-number">35.4.13</span> Megoldások</h3>
-<p><strong>Önellenőrzés – válaszok.</strong></p>
-<ol type="1">
-<li>Nem. A HMI általában a PLC-n keresztül kommunikál; a PLC olvassa a
-frekvenciaváltó állapotát, és a HMI a PLC változóit jeleníti meg.</li>
-<li>A Modbus RTU soros RS-485-ön fut, csavart érpáron, mester–szolga
-jelleggel. A Modbus TCP Etherneten, TCP/IP-hálózaton, switchekkel.</li>
-<li>Az irányelv és a gépgyártó határozza meg: ipari Ethernetnél
-jellemzően mindkét végén (360°-os), potenciálkiegyenlítő vezetővel, hogy
-az árnyékoláson ne folyjon kiegyenlítő áram; alacsony frekvenciás analóg
-jeleknél gyakori az egyvégű bekötés (ellenőrizendő: gyártói
-utasítás).</li>
-<li>Hálózati cím: <code>192.168.10.0</code>, broadcast:
-<code>192.168.10.255</code>.</li>
-<li>Állapotjelzés, beavatkozás, riasztáskezelés és adatnaplózás.</li>
-<li>Feszültségmentesség-ellenőrzés és a bekötött táp polaritásának,
-valamint a folytonosságnak a mérése, mielőtt feszültséget
-kapcsolsz.</li>
-<li>Például: zárható szekrény és lezárt, nem használt portok; a gépi
-hálózat szegmentálása az irodai hálózattól (VLAN/tűzfal); az
-alapértelmezett jelszavak cseréje; engedélyezett, naplózott távoli
-hozzáférés.</li>
-</ol>
-<p><strong>1. feladat megoldása (A).</strong> A HMI betűszó:
-Human–Machine Interface, ember–gép kapcsolat. Feladatai: a gépállapot
-kijelzése, kezelői beavatkozások fogadása, riasztások megjelenítése és
-nyugtázása, események időbélyeges naplózása.</p>
-<p><strong>2. feladat megoldása (A).</strong> Mindkét eszköz maszkja
-<code>255.255.255.0</code>, tehát <code>/24</code> alhálózat. A hálózati
-cím <code>192.168.10.0</code>, a broadcast <code>192.168.10.255</code>.
-A HMI <code>192.168.10.50</code> és a PLC <code>192.168.10.200</code> is
-ebben a tartományban van, tehát ugyanabban az alhálózatban vannak. Ha az
-IP-k nem ütköznek más eszközzel, a kapcsolat fizikai hibától eltekintve
-lehetséges.</p>
-<p><strong>3. feladat megoldása (B).</strong> A Modbus RTU-vonal
-szöveges bekötése: mindhárom eszköz A-kapcsát az A-érhez, B-kapcsát a
-B-érhez kötjük. A közös GND-t mindegyik eszköznél össze kell kötni, hogy
-az A/B jeleknek legyen közös referencia. A lezáró ellenállások a fizikai
-vonal két végén helyezkednek el, tehát a PLC-nél és a
-frekvenciaváltónál, tipikusan 120 Ω értékkel. A HMI-re, ha a vonal
-közepén van, nem kell lezáró ellenállás. Az árnyékolást egy ponton, a
-gyártó szerint földelve kötjük.</p>
-<p><strong>4. feladat megoldása (B).</strong> Ellenőrzési lépések:<br />
-1. HMI tápellátása: 24 V DC jelen van-e, polaritás helyes.<br />
-2. Kommunikációs kábel: folytonosság, csatlakozók, árnyékolás.<br />
-3. IP-címek és maszkok: HMI és PLC ugyanabban az alhálózatban, nincs
-ütközés.<br />
-4. Protokollbeállítások: Modbus TCP esetén a portszám, RTU esetén a
-sebesség, paritás és a címek; valamint a PLC-program valóban írja a
-<code>%MW10</code> regisztert.</p>
-<p><strong>5. feladat megoldása (C).</strong> A valószínű ok
-elektromágneses zavar: a frekvenciaváltó kimeneti kábele kapcsolási
-zavart sugároz, amely az árnyékolás ellenére bekeveredik a hálózati
-kábelbe. Javaslat: a hálózati kábelt másik tálcába vagy attól legalább a
-gyártó által előírt távolságra kell helyezni; ha nem lehetséges,
-használjanak erősebb árnyékolású kábelt, fém elválasztólapot, és az
-árnyékolást a gyártói és protokoll-irányelv szerint – ipari Ethernetnél
-jellemzően mindkét végén, 360°-os csatlakozással, a szekrények között
-potenciálkiegyenlítő vezetővel – kössék be (ellenőrizendő: PROFINET
-szerelési irányelv, gyártói előírás). A gyártói és szabványos
-távolságokat ellenőrizni kell <strong>(ellenőrizendő: gyártói
-előírás)</strong>.</p>
-<p><strong>6. feladat megoldása (D).</strong> A táp és a kábel rendben
-van, a címek is megfelelő alhálózatban vannak. A következő lépés a
-hálózati elérés ellenőrzése: a HMI diagnosztikai oldaláról (vagy a
-switchre kötött laptopról) pingeld a PLC-t. Ha nem válaszol, ellenőrizd,
-hogy a két eszköz portja ugyanabban a VLAN-ban van-e a menedzselt
-switchen, és nincs-e címütközés. Ha a ping átmegy, de a HMI mégsem lát
-adatot, protokollszinten is ellenőrizz: a megfelelő portra (Modbus TCP:
-502) indított kapcsolat létrejön-e, és a PLC kommunikációs beállításai
-(IP-cím, egységazonosító, regiszterkiosztás) egyeznek-e a HMI-ben
-beállítottakkal. Várt eredmény: a ping és a protokollszintű kérés is
-eléri a PLC-t, és a PLC válaszol.</p>
-<h3 data-number="35.4.14" id="rövid-összefoglaló"><span
-class="header-section-number">35.4.14</span> Rövid összefoglaló</h3>
+<h3 data-number="35.4.10" id="hibakeresés-lépésről-lépésre"><span
+class="header-section-number">35.4.10</span> Hibakeresés lépésről
+lépésre</h3>
+<p>A hibakeresés a fizikai rétegtől halad a protokoll felé: a felsőbb
+szintet csak akkor vizsgáljuk, ha az alatta lévő rendben van. Az
+általános, rétegenkénti hálózati hibakeresési táblázat: <a
+href="ve051.html">Számítógépes hálózatok és adatkommunikáció</a>; itt a
+vezérlési hálózat sajátosságai következnek.</p>
+<figure>
+<img src="assets/ve130-diagram-1.png"
+alt="Kommunikációs hibakeresés - Ha egy lépés nem megfelelő, javítsd a hibát, majd ellenőrizd újra onnan. Modbus RTU-nál a ping és a VLAN lépés helyett a sebesség, paritás, állomáscím és lezárás ellenőrzése következik." />
+<figcaption aria-hidden="true">Kommunikációs hibakeresés - Ha egy lépés
+nem megfelelő, javítsd a hibát, majd ellenőrizd újra onnan. Modbus
+RTU-nál a ping és a VLAN lépés helyett a sebesség, paritás, állomáscím
+és lezárás ellenőrzése következik.</figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Jelenség</th>
+<th>Valószínű ok</th>
+<th>Ellenőrzés</th>
+<th>Javítás</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nincs link-LED</td>
+<td>nincs táp, hibás kábel vagy csatlakozó, letiltott port</td>
+<td>tápfeszültség; kábelteszter</td>
+<td>kábel cseréje, port engedélyezése</td>
+</tr>
+<tr>
+<td>link van, ping nincs</td>
+<td>eltérő alhálózat, címütközés, más VLAN</td>
+<td>IP-beállítás, switch-konfiguráció</td>
+<td>cím, maszk, VLAN javítása</td>
+</tr>
+<tr>
+<td>ping van, adat nincs</td>
+<td>protokollbeállítás, port, egységazonosító, regisztercím</td>
+<td>HMI- és PLC-diagnosztika</td>
+<td>beállítások egyeztetése</td>
+</tr>
+<tr>
+<td>időszakos kiesés a frekvenciaváltó indításakor</td>
+<td>zavar: közös nyomvonal, hibás árnyékolás</td>
+<td>a kiesés időbeli egybeesése; nyomvonal</td>
+<td>szétválasztás, árnyékolás az irányelv szerint</td>
+</tr>
+<tr>
+<td>RS-485: egy állomás nem válaszol</td>
+<td>cím- vagy sebességhiba, A/B csere, szakadt leágazás</td>
+<td>állomásbeállítás; folytonosság (táp nélkül)</td>
+<td>beállítás, kötés javítása</td>
+</tr>
+<tr>
+<td>RS-485: minden állomás hibás</td>
+<td>hiányzó vagy többszörös lezárás, A/B zárlat, mester beállítása</td>
+<td>lezárás ellenállásmérése táp nélkül (két 120 Ω párhuzamosan kb. 60
+Ω)</td>
+<td>lezárás a két végre, zárlat megszüntetése</td>
+</tr>
+<tr>
+<td>rossz érték a HMI-n (pl. 10-szeres)</td>
+<td>skálázás vagy tizedesbeállítás hibás</td>
+<td>regiszter és terepi jel összevetése (<a
+href="ve130.html#ve130-skalazas">jelskálázás</a>)</td>
+<td>felbontás, tartomány javítása</td>
+</tr>
+<tr>
+<td>kommunikáció csak egy irányban</td>
+<td>írási jog, rossz regisztertípus, szétvált adatér</td>
+<td>PLC-ben az írt változó; kábelminősítő</td>
+<td>jogosultság, címzés, kábel javítása</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kábelteszter.</strong> A multiméter csak folytonosságot (és
+zárlatot) mér, a <strong>szétválasztott párt</strong> (split pair: a
+jelpár két ere nem ugyanabból a sodrott párból való) nem veszi észre,
+mert minden ér végponttól végpontig jó. A split pairt a párosítást is
+vizsgáló wire-map teszter vagy a kábelminősítő mutatja ki (az egyszerű,
+LED-es folytonosságteszter nem minden esetben; ellenőrizendő: a műszer
+adatlapja). A wire-map a szakadást, a zárlatot, a felcserélt ereket és
+párokat is megmutatja. Az Ethernet-kábel vizsgálatakor mindkét végét
+válaszd le az aktív eszközökről.</p>
+<blockquote>
+<p><strong>Gyakorlás:</strong> ennek az alfejezetnek a kidolgozott
+példái, gyakorlatai és megoldással ellátott feladatai az
+<em>Összefoglaló feladatgyűjtemény villanyszerelő tanulóknak</em> című
+kötet 35.4 szakaszában találhatók.</p>
+</blockquote>
+<h3 data-number="35.4.11" id="rövid-összefoglaló"><span
+class="header-section-number">35.4.11</span> Rövid összefoglaló</h3>
 <p>Az ipari vezérlőberendezések informatikai hálózata a PLC, a HMI és az
 intelligens terepi eszközök közötti adatcserét szolgálja. A leggyakoribb
 protokollok a Modbus RTU/TCP, a Profinet és az EtherNet/IP; a szerelő
@@ -545,8 +567,8 @@ vizsgafeladatok és hibakeresés, értékelési szempontok</a> alfejezetben a
 hibakeresés és a vizsgafelkészülés során használhatók fel. Hálózati
 feszültségű részt érintő munkát csak jogosult személy végezhet; az öt
 biztonsági szabályt mindig be kell tartani.</p>
-<h3 data-number="35.4.15" id="források-és-ellenőrzési-hiányok"><span
-class="header-section-number">35.4.15</span> Források és ellenőrzési
+<h3 data-number="35.4.12" id="források-és-ellenőrzési-hiányok"><span
+class="header-section-number">35.4.12</span> Források és ellenőrzési
 hiányok</h3>
 <p>A fejezet az MSZ EN 60204-1 (gépek villamos berendezése), az MSZ EN
 IEC 62443 sorozat (ipari kiberbiztonság), az MSZ EN 50173 (strukturált

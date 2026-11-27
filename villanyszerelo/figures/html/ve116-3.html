@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Időrelé-funkciók – próbapad</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="mode">funkció</label><select id="mode" aria-label="funkció"><option value="E" selected>meghúzás-késleltetés (E*)</option><option value="R">elengedés-késleltetés B1-gyel (R*)</option><option value="Wu">egyszeri impulzus bekapcsoláskor (Wu*)</option><option value="Wa">impulzus a B1 lefutó élére (Wa*)</option><option value="Bi">villogó, szünettel kezd (Bi*)</option><option value="SD">Y-Δ funkció (SD*)</option></select></div>
+<div class="row"><label for="t">beállított idő t</label><input id="t" type="range" min="0.5" max="10" step="0.5" value="4" aria-label="beállított idő t"><output id="t_o" for="t"></output></div>
+<div class="row"><label for="a1">A1–A2 táp BE</label><input id="a1" type="checkbox" aria-label="A1–A2 táp BE"></div>
+<div class="row"><label for="b1">B1 vezérlőbemenet (nyomva)</label><input id="b1" type="checkbox" aria-label="B1 vezérlőbemenet (nyomva)"></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 700 330" role="img" aria-label="Időrelé idődiagramja: táp, vezérlőbemenet és kimenet az utolsó 20 másodpercben"></svg>
+<p class="small">* A funkció-betűjel (E, R, Wu, Wa, Bi, SD) és a kapocsszámozás gyártófüggő (ellenőrizendő: adatlap). Az Y-Δ funkció szünete itt 50 ms. Billentyűzettel: Tab a vezérlők között, szóköz a jelölőnégyzeten.</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"t":"s"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+if(!window.TR){window.TR={hist:[],r:null,mode:null,a1:0,b1:0,T:0};
+  window.TR.step=function(R,a1,b1,dt){const m=R.mode,t=R.t;
+    if(m==="E"){R.acc=a1?R.acc+dt:0;R.out=a1&&R.acc>=t-1e-9;}
+    else if(m==="R"){if(!a1){R.out=false;R.acc=0;}else if(b1){R.out=true;R.acc=0;}else if(R.out){R.acc+=dt;if(R.acc>=t-1e-9)R.out=false;}}
+    else if(m==="Wu"){if(a1&&!R.pa){R.out=true;R.acc=0;}if(!a1)R.out=false;else if(R.out){R.acc+=dt;if(R.acc>=t-1e-9)R.out=false;}}
+    else if(m==="Wa"){if(!a1)R.out=false;else if(R.pb&&!b1){R.out=true;R.acc=0;}else if(R.out){R.acc+=dt;if(R.acc>=t-1e-9)R.out=false;}}
+    else if(m==="Bi"){R.acc=a1?R.acc+dt:0;R.out=a1&&Math.floor((R.acc+1e-9)/t)%2===1;}
+    else if(m==="SD"){R.acc=a1?R.acc+dt:0;R.out=a1&&R.acc<t-1e-9;R.out2=a1&&R.acc>=t+0.05-1e-9;}
+    R.pa=a1;R.pb=b1;};
+  setInterval(()=>{const S=window.TR;if(!S.r)return;for(let i=0;i<2;i++){S.step(S.r,S.a1,S.b1,0.05);S.T+=0.05;
+    S.hist.push([S.T,S.a1?1:0,S.b1?1:0,S.r.out?1:0,S.r.out2?1:0]);}while(S.hist.length&&S.hist[0][0]<S.T-20)S.hist.shift();draw();},100);}
+const S=window.TR;
+if(S.mode!==v.mode||!S.r||Math.abs(S.r.t-v.t)>1e-9){const keep=S.r&&S.mode===v.mode;
+  if(!keep){S.r={mode:v.mode,t:v.t,acc:0,out:false,out2:false,pa:false,pb:false};S.hist=[];}else S.r.t=v.t;S.mode=v.mode;}
+S.a1=v.a1;S.b1=v.b1;
+const F=css("--fg")||"#111",M=css("--muted")||"#777",R=css("--accent")||"#c62828";
+const usesB=(v.mode==="R"||v.mode==="Wa"),sd=v.mode==="SD";
+const rows=[["A1–A2",1]];if(usesB)rows.push(["B1",2]);
+if(sd){rows.push(["17–18 Y",3]);rows.push(["17–28 Δ",4]);}else rows.push(["15–18",3]);
+el("text",{x:10,y:18,fill:F,"font-size":13},"Idődiagram (utolsó 20 s)  –  t = "+fmt(v.t,1)+" s");
+rows.forEach((rw,j)=>{const y=40+j*52;el("text",{x:10,y:y+28,fill:F,"font-size":12},rw[0]);
+  el("line",{x1:90,y1:y+36,x2:690,y2:y+36,stroke:M,"stroke-width":0.6});
+  let d="";S.hist.forEach(h=>{const x=90+(h[0]-(S.T-20))*30,yy=y+36-(h[rw[1]]?28:0);d+=(d?"L":"M")+x.toFixed(1)+","+yy;});
+  if(d)el("path",{d:d,stroke:j===rows.length-1||(sd&&j>=rows.length-2)?R:F,"stroke-width":2.2,fill:"none"});});
+const yl=40+rows.length*52+10,on=S.r&&S.r.out,on2=S.r&&S.r.out2;
+el("circle",{cx:110,cy:yl+16,r:12,fill:on?R:"none",stroke:F,"stroke-width":2});
+el("text",{x:130,y:yl+21,fill:F,"font-size":12},sd?"17–18 (Y)":"kimenet (R LED)");
+if(sd){el("circle",{cx:290,cy:yl+16,r:12,fill:on2?R:"none",stroke:F,"stroke-width":2});el("text",{x:310,y:yl+21,fill:F,"font-size":12},"17–28 (Δ)");}
+status("Funkció: <b>"+v.mode+"</b>. Kapcsold az A1 tápot és (az R és a Wa funkciónál) a B1 vezérlőbemenetet; a diagram valós időben rajzolódik.");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

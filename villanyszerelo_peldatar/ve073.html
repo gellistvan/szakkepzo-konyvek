@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>20.4 Intelligens épület: tervezés, üzembe helyezés,
+energiahatékonyság – Összefoglaló feladatgyűjtemény villanyszerelő
+tanulóknak</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz4">IV. RÉSZ – Épületvillamosság (közös ismeretek)</a> › <a href="index.html#vech19">20 Épületautomatika és vezérlők</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve072.html">← 20.3 KNX, DALI és más épületautomatikai rendszerek</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve074.html">21.1 Alapvédelem, hibavédelem, kiegészítő védelem →</a></div>
+</nav>
+<h2 data-number="20.4" id="ve073"><span
+class="header-section-number">20.4</span> Intelligens épület: tervezés,
+üzembe helyezés, energiahatékonyság</h2>
+<p><em>A kapcsolódó elmélet: tankönyv, 20.4 alfejezet.</em></p>
+<h3 data-number="20.4.1"
+id="esettanulmány-egy-kétszobás-lakás-automatizálása-lépésről-lépésre"><span
+class="header-section-number">20.4.1</span> Esettanulmány: egy kétszobás
+lakás automatizálása lépésről lépésre</h3>
+<p>Az alábbiakban ugyanazt a kétszobás lakást visszük végig az
+igényfelméréstől az átadásig, amelynek a kábelezési tervét a fejezet
+elején láttad. A betűjelek a tervrajzot követik; a hosszak, árak és
+munkaidők <strong>példaadatok</strong>.</p>
+<p><strong>1. Igényfelmérés: funkciólista.</strong> A megrendelővel
+egyeztetett, számozott lista a projekt szerződése: ami nincs rajta, az
+nem része az átadásnak.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Ssz.</th>
+<th>Funkció</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F01</td>
+<td>nappali mennyezeti lámpa (E1) kapcsolása, „tévé” jelenettel</td>
+</tr>
+<tr>
+<td>F02</td>
+<td>étkező lámpa (E2) dimmelése</td>
+</tr>
+<tr>
+<td>F03</td>
+<td>konyhai (E5), háló- (E3) és fürdőlámpa (E4) kapcsolása</td>
+</tr>
+<tr>
+<td>F04</td>
+<td>redőnyök (M1, M2) egyenként és központilag fel/le</td>
+</tr>
+<tr>
+<td>F05</td>
+<td>szélvédelem: szélriasztáskor redőnyök fel, a LE parancs tiltva</td>
+</tr>
+<tr>
+<td>F06</td>
+<td>fűtés helyiségenként (nappali, háló, fürdő)</td>
+</tr>
+<tr>
+<td>F07</td>
+<td>éjszakai és távolléti hőmérséklet-csökkentés</td>
+</tr>
+<tr>
+<td>F08</td>
+<td>fürdőszobai ventilátor (M3) páraérzékelőre, utánfutással</td>
+</tr>
+<tr>
+<td>F09</td>
+<td>„távozás” gomb: minden világítás ki, csökkentett fűtés</td>
+</tr>
+<tr>
+<td>F10</td>
+<td>vízszivárgás: a hidegvíz-főcsap mágnesszelepe (Y5) zár, jelzés</td>
+</tr>
+<tr>
+<td>F11</td>
+<td>füstjelzés továbbítása; a füstérzékelő <strong>önállóan</strong>
+riaszt, a busz csak jelez</td>
+</tr>
+</tbody>
+</table>
+<p><strong>2. Funkció–eszköz mátrix.</strong> Minden funkcióhoz
+bemenetet és kimenetet rendelünk.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Funkció</th>
+<th>Érzékelő, bemenet</th>
+<th>Beavatkozó, kimenet</th>
+<th>Átvitel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F01</td>
+<td>S1, B1 jelenlét</td>
+<td>A1.1 → E1</td>
+<td>busz → 230 V</td>
+</tr>
+<tr>
+<td>F02</td>
+<td>S1</td>
+<td>A2 → E2</td>
+<td>busz → 230 V</td>
+</tr>
+<tr>
+<td>F03</td>
+<td>S4, S2, S3</td>
+<td>A1.2–A1.4 → E5, E3, E4</td>
+<td>busz → 230 V</td>
+</tr>
+<tr>
+<td>F04</td>
+<td>S1, S2, S4</td>
+<td>A3.1, A3.2 → M1, M2</td>
+<td>busz → 230 V</td>
+</tr>
+<tr>
+<td>F05</td>
+<td>B6 szélérzékelő</td>
+<td>A3 prioritásobjektum</td>
+<td>busz</td>
+</tr>
+<tr>
+<td>F06, F07</td>
+<td>B2, B3, S3 hőmérője; időprogram</td>
+<td>A4 → Y1–Y3</td>
+<td>busz → 230 V</td>
+</tr>
+<tr>
+<td>F08</td>
+<td>B4 páraérzékelő</td>
+<td>A1.5 → M3</td>
+<td>busz → 230 V</td>
+</tr>
+<tr>
+<td>F09</td>
+<td>S4</td>
+<td>A1, A2, A4</td>
+<td>busz</td>
+</tr>
+<tr>
+<td>F10</td>
+<td>B5 szivárgásérzékelő (buszcsatolós)</td>
+<td>A1.6 → Y5 (NC)</td>
+<td>busz → 230 V</td>
+</tr>
+<tr>
+<td>F11</td>
+<td>füstérzékelő érintkezője → A5</td>
+<td>kijelzés</td>
+<td>vezeték → busz</td>
+</tr>
+</tbody>
+</table>
+<p>Az Y5 zárt alaphelyzetű (NC) szelep: normál üzemben folyamatosan
+gerjesztve tart nyitva (folyamatos üzemre méretezett tekercs kell),
+szivárgáskor és <strong>áramszünetkor</strong> zár. Ezt a viselkedést a
+megrendelővel egyeztetni kell; a szelepek kiválasztását a Beavatkozók:
+mágneskapcsolók, szelepek, szervomotorok (tankönyv, 20.2) alfejezet
+tárgyalja. Az alaprajzon a B4 a fürdőszobában, az M3 ventilátor a fürdő
+külső falán, a B6 szélérzékelő a homlokzaton kívül látható. A
+redőnymotor (M1, M2) hagyományos kapcsolós bekötése a Kapcsolók,
+dugaszoló aljzatok és szerelvények (tankönyv, 16.1) alfejezetben
+szerepel; itt az aktor veszi át a reteszelést.</p>
+<p><strong>3. Eszközlista és elosztó-kiosztás.</strong> Az elosztó
+felépítése a KNX, DALI és más épületautomatikai rendszerek (tankönyv,
+20.3) mintaelosztóját követi (szemléltető modulszámok, a valós érték
+gyártófüggő):</p>
+<table>
+<thead>
+<tr>
+<th>Jel</th>
+<th>Készülék</th>
+<th>Modul</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q1, Q2</td>
+<td>főkapcsoló, FI (2P)</td>
+<td>4</td>
+</tr>
+<tr>
+<td>F1–F6</td>
+<td>kismegszakítók</td>
+<td>6</td>
+</tr>
+<tr>
+<td>G1</td>
+<td>busztáp 640 mA</td>
+<td>4</td>
+</tr>
+<tr>
+<td>–</td>
+<td>IP-interfész</td>
+<td>2</td>
+</tr>
+<tr>
+<td>A1</td>
+<td>8 csatornás kapcsolóaktor</td>
+<td>8</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>dimmeraktor</td>
+<td>4</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>2 csatornás redőnyaktor</td>
+<td>4</td>
+</tr>
+<tr>
+<td>A4</td>
+<td>6 csatornás fűtésaktor</td>
+<td>4</td>
+</tr>
+<tr>
+<td>A5</td>
+<td>bináris bemenet</td>
+<td>2</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>Összesen</strong></td>
+<td><strong>38</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Legalább 20 % tartalékkal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>38</mn><mo>⋅</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>=</mo><mn>45</mn><mo>,</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">38 \cdot 1{,}2 = 45{,}6</annotation></semantics></math>,
+ezért 48 modulos (négysoros) szekrényt választunk.</p>
+<p><strong>4. Kábelezési terv és kábellista.</strong> A tervrajzon a
+busz zöld szaggatott, a 230 V-os kábel fekete folytonos vonal; a
+buszkábel az elosztóból fa-topológiában indul. A kábellista minden
+kábelt azonosít (részlet):</p>
+<table>
+<thead>
+<tr>
+<th>Jel</th>
+<th>Típus</th>
+<th>Honnan – hová</th>
+<th>Hossz</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W1</td>
+<td>YCYM 2×2×0,8</td>
+<td>+E1 – S1 – B1</td>
+<td>12 m</td>
+</tr>
+<tr>
+<td>W2</td>
+<td>YCYM 2×2×0,8</td>
+<td>+E1 – S2 – B3</td>
+<td>11 m</td>
+</tr>
+<tr>
+<td>W3</td>
+<td>YCYM 2×2×0,8</td>
+<td>+E1 – S3 – B5</td>
+<td>7 m</td>
+</tr>
+<tr>
+<td>W10</td>
+<td>NYM-J 5×1,5 (1 tartalék ér)</td>
+<td>+E1 – M1</td>
+<td>9 m</td>
+</tr>
+<tr>
+<td>W11</td>
+<td>NYM-J 3×1,5</td>
+<td>+E1 – E1 (A1.1 csatorna)</td>
+<td>10 m</td>
+</tr>
+<tr>
+<td>W12</td>
+<td>NYM-J 3×1,5</td>
+<td>+E1 – E2 (A2 dimmer)</td>
+<td>7 m</td>
+</tr>
+<tr>
+<td>W20</td>
+<td>NYM-J 3×1,5</td>
+<td>+E1 – Y5</td>
+<td>6 m</td>
+</tr>
+</tbody>
+</table>
+<p><strong>5. Címzés és programozás.</strong> Fizikai címek:
+IP-interfész 1.1.1, A1–A5: 1.1.2–1.1.6, S1–S4: 1.1.11–1.1.14, érzékelők
+(B1–B6): 1.1.15–1.1.25 tartományban. A csoportcímek a KNX, DALI és más
+épületautomatikai rendszerek (tankönyv, 20.3) ETS-mintafeladatának
+struktúráját követik (főcsoport: 1 világítás, 2 árnyékolás, 3 fűtés, 4
+biztonság; középcsoport: helyiség). A paramétereket (utánfutás,
+futásidő, szélriasztási prioritás, viselkedés buszfeszültség
+visszatérésekor) paraméterlistában rögzítjük.</p>
+<p><strong>6. Üzembe helyezés és teszt.</strong> A lenti 9 lépéses
+útmutató szerint dolgozunk, a funkciókat a „Funkcióteszt-lista és
+átadási jegyzőkönyv” soraival igazoljuk. A tesztlista sorszámai a
+funkciólistára hivatkoznak, így egy funkció sem maradhat ki.</p>
+<p><strong>7. Átadási csomag.</strong></p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dokumentum</th>
+<th>Megvan?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kapcsolási és egyvonalas rajz, alaprajzi kábelezési terv</td>
+<td></td>
+</tr>
+<tr>
+<td>kábellista, fizikai és csoportcímlista, paraméterlista</td>
+<td></td>
+</tr>
+<tr>
+<td>ETS-projektfájl a jelszóval, a tulajdonos példánya</td>
+<td></td>
+</tr>
+<tr>
+<td>mérési jegyzőkönyv: folytonosság, szigetelés, hurokimpedancia, FI
+(Jegyzőkönyv, szabványossági felülvizsgálat és hibakeresés (tankönyv,
+24.4))</td>
+<td></td>
+</tr>
+<tr>
+<td>funkcióteszt-lista és átadási jegyzőkönyv</td>
+<td></td>
+</tr>
+<tr>
+<td>kezelési útmutató a felhasználónak, oktatás igazolása</td>
+<td></td>
+</tr>
+<tr>
+<td>garancia- és karbantartási tájékoztató</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>8. Munkaidő- és költségbecslés</strong> (tanulási értékek,
+<strong>ellenőrizendő</strong> a helyi viszonyok szerint; a munkadíj 8
+000 Ft/óra példaadat):</p>
+<table>
+<thead>
+<tr>
+<th>Munkarész</th>
+<th>Óra</th>
+<th>Munkadíj (Ft)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>buszkábel és érzékelőkábelek szerelése</td>
+<td>8</td>
+<td>64 000</td>
+</tr>
+<tr>
+<td>eszközök bekötése</td>
+<td>10</td>
+<td>80 000</td>
+</tr>
+<tr>
+<td>elosztó összeállítása</td>
+<td>6</td>
+<td>48 000</td>
+</tr>
+<tr>
+<td>programozás</td>
+<td>8</td>
+<td>64 000</td>
+</tr>
+<tr>
+<td>tesztelés, dokumentálás, átadás</td>
+<td>4</td>
+<td>32 000</td>
+</tr>
+<tr>
+<td><strong>Összesen</strong></td>
+<td><strong>36</strong></td>
+<td><strong>288 000</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Az anyagárat tételesen, az eszközlista alapján, szállítói ajánlatból
+adjuk hozzá, lásd Anyag- és eszközkiválasztás, árajánlat (tankönyv,
+15.2).</p>
+<h3 data-number="20.4.2"
+id="gyakorlati-útmutató-buszrendszer-üzembe-helyezése"><span
+class="header-section-number">20.4.2</span> Gyakorlati útmutató –
+buszrendszer üzembe helyezése</h3>
+<p><strong>Cél:</strong> a rendszer minden funkciójának ellenőrzése, a
+hibák dokumentálása és a biztonságos átadás.</p>
+<p><strong>Eszközök:</strong> feszültségvizsgáló, multiméter,
+szigetelési ellenállásmérő, buszdiagnosztikai eszköz (pl. KNX/DALI
+interfész), gyártói szoftver, laptop.</p>
+<ol type="1">
+<li><strong>Feszültségmentesítés az öt biztonsági szabály
+szerint:</strong> lekapcsolás (a kapcsolótábla főkapcsolója),
+visszakapcsolás elleni biztosítás, a feszültségmentesség ellenőrzése
+kétpólusú vizsgálóval (nem fázisceruzával), földelés és rövidre zárás
+(ha indokolt), a szomszédos feszültség alatti részek lefedése.</li>
+<li><strong>Szemrevételezés:</strong> ellenőrizd, hogy a busz- és
+erősáramú kábelek elválasztása megfelelő, a kábelek sértetlenek, a
+sorkapcsok meghúzottak, a vezetékjelölés olvasható.</li>
+<li><strong>Szigetelési ellenállás-mérés:</strong> a buszkészülékeket, a
+busztápot és az elektronikus előtéteket/illesztőket a mérés idejére
+válaszd le (vagy kövesd a gyártói útmutatót), mert rákötött állapotban
+károsodhatnak vagy hamis eredményt adnak. SELV/PELV buszkör: 250 V DC
+mérőfeszültség, ≥ 0,5 MΩ; hálózati kör: 500 V DC, ≥ 1 MΩ
+<strong>(ellenőrizendő: MSZ HD 60364-6 aktuális táblázata)</strong>. A
+tápellátás visszakapcsolását jogosult személy végzi.</li>
+<li><strong>Tápfeszültség ellenőrzése:</strong> kapcsold be a rendszer
+tápegységét (jogosult személy által), mérd a kimenő feszültséget a
+buszra kapcsolás előtt (KNX: 29–31 V DC, DALI: kb. 16 V tipikus, de
+gyártófüggő; <strong>ellenőrizendő</strong>).</li>
+<li><strong>Fizikai címzés:</strong> minden buszeszközt gyári
+szoftverrel vagy programozógombbal azonosíts, és a terv szerinti egyedi
+címre állíts.</li>
+<li><strong>Paraméterezés:</strong> töltsd be a funkciókat:
+csoportcímek, időzítések, jelenléti logika, dimmerszintek,
+redőnyvégállások, fűtési görbék.</li>
+<li><strong>Funkcióteszt:</strong> minden érzékelő-bemenetet és
+beavatkozó-kimenetet tesztelj: nyomd meg a gombokat, ellenőrizd a relé,
+a dimmer, a redőny, a fűtés működését; DALI lámpáknál ellenőrizd a
+minimális és maximális dimmerszintet.</li>
+<li><strong>Hibanapló:</strong> minden eltérést jegyezz fel, javítsd ki,
+majd a javítás után ismételt tesztet végezz.</li>
+<li><strong>Dokumentálás:</strong> készíts kapcsolási rajzot, címzési
+listát, paraméter-beállításokat, mérési jegyzőkönyvet; a szoftveres
+projektet mentsd el és adj át a tulajdonosnak.</li>
+</ol>
+<p>A gyakorlat során a hálózatot csak akkor kapcsolhatod vissza, ha a
+munkát befejezted, a földelést/rövidzárat és a lefedéseket
+eltávolítottad, a burkolatok a helyükön vannak, és mindenki tud a
+visszakapcsolásról.</p>
+<h3 data-number="20.4.3" id="önellenőrzés"><span
+class="header-section-number">20.4.3</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? Az intelligens épületben a buszrendszer teljesen
+kiváltja a hagyományos 230 V-os erősáramú hálózatot. Indokolj.</li>
+<li>Miért fontos az erősáramú és a buszkábelezés elválasztása? Nevezd
+meg a legfontosabb fizikai okot.</li>
+<li>Egy iroda világítási fogyasztása 4 MWh/év. Ha a
+jelenlét-érzékelőkkel 25%-ot takarítunk meg, mennyi lesz az új
+fogyasztás?</li>
+<li>Milyen mérési lépést végzel a busztápfeszültség visszakapcsolása
+előtt?</li>
+</ol>
+<h3 data-number="20.4.4" id="feladatok"><span
+class="header-section-number">20.4.4</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Sorold fel az intelligens épület
+négy fő rendszerét, és adj meg mindegyikhez egy-egy tipikus érzékelőt és
+beavatkozót.</p>
+<p><strong>2. feladat (A).</strong> Nevezz meg három módot az erősáramú
+és a buszkábelezés elválasztására.</p>
+<p><strong>3. feladat (B).</strong> Egy irodai folyosó 240 W-os
+világítását jelenlét-érzékelő naponta átlagosan 2 órával rövidebb ideig
+működteti (250 munkanap/év). Mennyi az éves energia-megtakarítás? Adj
+választ Wh-ban és kWh-ban.</p>
+<p><strong>4. feladat (B).</strong> Egy lakás világítási fogyasztása 800
+kWh/év. A DALI + jelenlét-érzékelő rendszer után 560 kWh/év. a) Számítsd
+ki a megtakarítás százalékát. b) Mennyi az éves pénzbeli megtakarítás,
+ha az áram ára 70 Ft/kWh? (ellenőrizendő)</p>
+<p><strong>5. feladat (C).</strong> Egy KNX-rendszerben a busztáp 29 V
+DC-t ad, de a hálózati feszültségű vezetékekkel egy vályúban vezetett
+buszkábelen a szoftver szakaszos buszhibát jelez. Milyen
+hibalehetőségeket és milyen méréseket végzel? (Tételezzük fel, hogy a
+telepítés előtt az elválasztási szabályt nem tartották be.)</p>
+<p><strong>6. feladat (D).</strong> Tervezz meg egy kis lakás
+automatizálási vázlatát (szövegesen vagy ábrával): világítás,
+árnyékolás, fűtés, biztonság. Sorold fel a szükséges érzékelőket és
+beavatkozókat, és jelöld, hol választod el az erősáramú és a
+buszkábelezést. Ez a tervezési feladat előkészíti a záró részek komplex
+feladatait.</p>
+<p><strong>7. feladat (B).</strong> Egy automatizálási rendszer
+készenléti teljesítménye 12 W. Mennyi az éves saját fogyasztás?</p>
+<p><strong>8. feladat (B).</strong> A 3. feladat folyosóján (240 W, napi
+2 óra megtakarítás, 250 nap) a három érzékelő egyenként 0,5 W-ot
+fogyaszt egész évben. Mennyi a nettó éves megtakarítás?</p>
+<p><strong>9. feladat (C).</strong> Milyen esetben nem térül meg egy
+automatizálási beruházás? Fogalmazd meg a feltételt!</p>
+<h3 data-number="20.4.5" id="megoldások"><span
+class="header-section-number">20.4.5</span> Megoldások</h3>
+<h4 data-number="20.4.5.1" id="önellenőrzés-válaszok"><span
+class="header-section-number">20.4.5.1</span> Önellenőrzés –
+válaszok</h4>
+<ol type="1">
+<li><strong>Hamis.</strong> A buszrendszer a vezérlési jeleket
+szállítja, de a fogyasztók (lámpák, motorok, fűtés) továbbra is a 230
+V-os hálózatból kapják a táplálást.</li>
+<li>Az erősáramú vezetékben folyó váltakozó áram és a kapcsolási
+tranziensek zavaró mágneses és elektromos teret keltenek, ami a busz
+kommunikációját megzavarhatja.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">MWh</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>75</mn><mo>=</mo><mn>3</mn><mo>,</mo><mn>0</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">MWh/év</mtext></mrow><annotation encoding="application/x-tex">4{,}0\,\text{MWh} \cdot 0{,}75 = 3{,}0\,\text{MWh/év}</annotation></semantics></math>.</li>
+<li>Szigetelési ellenállás-mérést a buszkészülékek, a busztáp és az
+elektronikus illesztők leválasztása után kell végezni (SELV/PELV
+buszkör: 250 V DC, ≥ 0,5 MΩ; <strong>ellenőrizendő: MSZ HD
+60364-6</strong>), majd a tápegység kimenő feszültségét ellenőrizni,
+mielőtt a buszt rákapcsoljuk.</li>
+</ol>
+<h4 data-number="20.4.5.2" id="feladat-a"><span
+class="header-section-number">20.4.5.2</span> 1. feladat (A)</h4>
+<ul>
+<li>Világítás: érzékelő – jelenlét-, fényérzékelő; beavatkozó –
+DALI-dimmer.</li>
+<li>Árnyékolás: érzékelő – időjárás-érzékelő, szélmérő; beavatkozó –
+redőnymotor.</li>
+<li>Fűtés/hűtés: érzékelő – hőmérséklet-érzékelő; beavatkozó –
+szelepmozgató, termosztát.</li>
+<li>Biztonság: érzékelő – mozgás-, nyitásérzékelő; beavatkozó – sziréna,
+zárvezérlő.</li>
+</ul>
+<h4 data-number="20.4.5.3" id="feladat-a-1"><span
+class="header-section-number">20.4.5.3</span> 2. feladat (A)</h4>
+<p>Külön csatorna vagy védőcső, tartótávolság tartása (pl. 50–100 mm),
+árnyékolt buszkábel alkalmazása, keresztezések derékszögben.</p>
+<h4 data-number="20.4.5.4" id="feladat-b"><span
+class="header-section-number">20.4.5.4</span> 3. feladat (B)</h4>
+<p>A napi megtakarított idő:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext></mrow><annotation encoding="application/x-tex">2\,\text{h}</annotation></semantics></math>.
+A megtakarított energia naponta:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">nap</mtext></msub><mo>=</mo><mn>240</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>⋅</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>=</mo><mn>480</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">E_{\text{nap}} = 240\,\text{W} \cdot 2\,\text{h} = 480\,\text{Wh}.</annotation></semantics></math></p>
+<p>Éves szinten:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">éves</mtext></msub><mo>=</mo><mn>480</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mo>⋅</mo><mn>250</mn><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">E_{\text{éves}} = 480\,\text{Wh} \cdot 250 = 120\,000\,\text{Wh} = 120\,\text{kWh}.</annotation></semantics></math></p>
+<h4 data-number="20.4.5.5" id="feladat-b-1"><span
+class="header-section-number">20.4.5.5</span> 4. feladat (B)</h4>
+<ol type="a">
+<li>A fogyasztáscsökkenés:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>800</mn><mo>−</mo><mn>560</mn><mo>=</mo><mn>240</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh/év</mtext></mrow><annotation encoding="application/x-tex">800 - 560 = 240\,\text{kWh/év}</annotation></semantics></math>.
+A megtakarítás aránya:</li>
+</ol>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>240</mn><mn>800</mn></mfrac><mo>⋅</mo><mn>100</mn><mo>=</mo><mn>30</mn><mspace width="0.167em"></mspace><mi>%</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">\frac{240}{800} \cdot 100 = 30\,\%.</annotation></semantics></math></p>
+<ol start="2" type="a">
+<li>Az éves pénzbeli megtakarítás:</li>
+</ol>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>240</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mo>⋅</mo><mn>70</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/kWh</mtext><mo>=</mo><mn>16</mn><mspace width="0.167em"></mspace><mn>800</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/év</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">S = 240\,\text{kWh} \cdot 70\,\text{Ft/kWh} = 16\,800\,\text{Ft/év}.</annotation></semantics></math></p>
+<p>(Ez a számítás az energiaárat adottnak veszi; a tényleges tarifát
+ellenőrizni kell.)</p>
+<h4 data-number="20.4.5.6" id="feladat-c"><span
+class="header-section-number">20.4.5.6</span> 5. feladat (C)</h4>
+<p>A hiba jellege szakaszos buszhiba, ami zavarérzékenységre utal. A
+lehetséges okok:</p>
+<ul>
+<li>Az erősáramú kábelek és a busz közelsége miatt
+induktív/csatorna-csatolás.</li>
+<li>A buszkábel nem a KNX-előírás szerinti (árnyékolt, csavart érpárú)
+kábel.</li>
+<li>Hosszú, párhuzamos szakaszok kedvezőtlen elrendezésben.</li>
+<li>Sérült vagy rosszul meghúzott sorkapcsok.</li>
+</ul>
+<p>Mérések:</p>
+<ul>
+<li>Buszfeszültség oszcilloszkóppal a zavarforrás közelében; ha 50 Hz-es
+moduláció látható, a zavar jelen van.</li>
+<li>Szigetelési ellenállás mérése az erősáramú és a buszvezeték között,
+a buszeszközök leválasztása után, a gyakorlati útmutató 3. lépése
+szerint.</li>
+<li>Folytonosságmérés a sorkapcsoknál.</li>
+<li>A gyártói diagnosztikai szoftverrel buszminőség-vizsgálat.</li>
+</ul>
+<p>Javítás: a buszkábelt külön, lehetőleg fém védőcsőben vagy árnyékolt
+kivitelben vezetni, a távolságot növelni, a keresztezéseket derékszögben
+kialakítani, az árnyékolást és a kísérőeret a KNX telepítési irányelv
+szerint nem kötjük be <strong>(ellenőrizendő: KNX Association / gyártói
+útmutató)</strong>. Ezután ismételt teszt.</p>
+<h4 data-number="20.4.5.7" id="feladat-d"><span
+class="header-section-number">20.4.5.7</span> 6. feladat (D)</h4>
+<p>Például egy kétszobás lakás terve:</p>
+<ul>
+<li><strong>Nappali:</strong> DALI mennyezeti világítás, kombinált fény-
+és jelenlét-érzékelő, redőnymotor, falon KNX nyomógomb. Az erősáramú
+tápkábel a redőnymotort táplálja, a buszkábel a nyomógombtól a buszhoz
+megy.</li>
+<li><strong>Hálószoba:</strong> világítási kör, hőmérséklet-érzékelő,
+radiátorszelep-mozgató. A buszvezetéket külön, a hálózati kábelektől
+legalább 10 cm távolságra vezetjük, közös csatornában nem.</li>
+<li><strong>Előszoba:</strong> központi betáp, busztáp, IP-kapcsoló,
+riasztóközpont. Itt az elosztóban külön sínre kerülnek a modulok.</li>
+<li><strong>Biztonság:</strong> mozgásérzékelő az előszobában,
+nyitásérzékelők ajtókon, sziréna. A riasztóbusz lehet a KNX-busz része,
+de a gyártói előírás szerint.</li>
+</ul>
+<p>A kábelezési terven az erősáramú kábelek vastag, a buszkábelek vékony
+vonallal szerepelnek, a keresztezések derékszögben, a
+tartótávolságokkal. Az elosztóban a busztáp törpefeszültségű részét
+elkülönítve, a hálózati sorkapcsoktól távol helyezzük el.</p>
+<p>A teljes, dokumentumokkal végigvezetett mintamegoldás (funkciólista,
+funkció–eszköz mátrix, eszközlista, kábellista, átadási csomag) a fenti
+„Esettanulmány: egy kétszobás lakás automatizálása lépésről lépésre”
+szakasz; a saját tervedet azzal vesd össze.</p>
+<h4 data-number="20.4.5.8" id="feladat-b-2"><span
+class="header-section-number">20.4.5.8</span> 7. feladat (B)</h4>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>⋅</mo><mn>8760</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>=</mo><mn>105</mn><mspace width="0.167em"></mspace><mn>120</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Wh</mtext><mo>≈</mo><mn>105</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh/év</mtext></mrow><annotation encoding="application/x-tex">E = 12\,\text{W} \cdot 8760\,\text{h} = 105\,120\,\text{Wh} \approx 105{,}1\,\text{kWh/év}</annotation></semantics></math>.</p>
+<h4 data-number="20.4.5.9" id="feladat-b-3"><span
+class="header-section-number">20.4.5.9</span> 8. feladat (B)</h4>
+<p>Bruttó megtakarítás:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>240</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>⋅</mo><mn>2</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>⋅</mo><mn>250</mn><mo>=</mo><mn>120</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">240\,\text{W} \cdot 2\,\text{h} \cdot 250 = 120\,\text{kWh}</annotation></semantics></math>.
+Érzékelők:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>⋅</mo><mn>8760</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>13</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext></mrow><annotation encoding="application/x-tex">3 \cdot 0{,}5\,\text{W} \cdot 8760\,\text{h} \approx 13{,}1\,\text{kWh}</annotation></semantics></math>.
+Nettó:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mo>−</mo><mn>13</mn><mo>,</mo><mn>1</mn><mo>=</mo><mn>106</mn><mo>,</mo><mn>9</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh/év</mtext></mrow><annotation encoding="application/x-tex">120 - 13{,}1 = 106{,}9\,\text{kWh/év}</annotation></semantics></math>.</p>
+<h4 data-number="20.4.5.10" id="feladat-c-1"><span
+class="header-section-number">20.4.5.10</span> 9. feladat (C)</h4>
+<p>Ha a nettó éves megtakarítás (a saját fogyasztás levonásával) nem
+pozitív, vagy a megtérülési idő hosszabb az eszközök várható
+élettartamánál (pl. 15 év, <strong>ellenőrizendő: gyártói
+adat</strong>). Ilyenkor a beruházást csak más szempontok (kényelem,
+biztonság, rugalmasság) indokolhatják, és ezt a megrendelőnek őszintén
+meg kell mondani.</p>
+<h3 data-number="20.4.6"
+id="energiamegtakarítás-számítása-és-megtérülés-példák-és-gyakorlók"><span
+class="header-section-number">20.4.6</span> Energiamegtakarítás
+számítása és megtérülés – példák és gyakorlók</h3>
+<p><strong>Példa.</strong> Egy lakás világítási rendszere összesen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext></mrow><annotation encoding="application/x-tex">0{,}5\,\text{kW}</annotation></semantics></math>
+névleges teljesítményű. A régi kapcsolás napi 5 órán át égette a
+lámpákat, évente 365 napon keresztül:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kW</mtext><mo>⋅</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h/nap</mtext><mo>⋅</mo><mn>365</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">nap</mtext><mo>=</mo><mn>912</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh/év</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">E = 0{,}5\,\text{kW} \cdot 5\,\text{h/nap} \cdot 365\,\text{nap} = 912{,}5\,\text{kWh/év}.</annotation></semantics></math></p>
+<p>Jelenlét-érzékelők és DALI-dimmelés hatására a tényleges használat
+30%-kal csökken (a lámpák csak akkor égnek, ha valaki a helyiségben van,
+és fényerő-szabályozással a fényforrás kisebb teljesítményt vesz fel). A
+megtakarítás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">megt</mtext></msub><mo>=</mo><mn>912</mn><mo>,</mo><mn>5</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>30</mn><mo>=</mo><mn>273</mn><mo>,</mo><mn>75</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh/év</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">E_{\text{megt}} = 912{,}5\,\text{kWh} \cdot 0{,}30 = 273{,}75\,\text{kWh/év}.</annotation></semantics></math></p>
+<p>Ha az áram ára
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>70</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/kWh</mtext></mrow><annotation encoding="application/x-tex">70\,\text{Ft/kWh}</annotation></semantics></math>
+<strong>(ellenőrizendő: aktuális tarifa)</strong>, az éves pénzbeli
+megtakarítás:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mtext mathvariant="normal">Ft</mtext></msub><mo>=</mo><mn>273</mn><mo>,</mo><mn>75</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh</mtext><mo>⋅</mo><mn>70</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/kWh</mtext><mo>≈</mo><mn>19</mn><mspace width="0.167em"></mspace><mn>163</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/év</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">S_{\text{Ft}} = 273{,}75\,\text{kWh} \cdot 70\,\text{Ft/kWh} \approx 19\,163\,\text{Ft/év}.</annotation></semantics></math></p>
+<p>Ha a világítás-automatizálás beruházása (érzékelők, aktuátorok,
+programozás, kábelezés)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext></mrow><annotation encoding="application/x-tex">120\,000\,\text{Ft}</annotation></semantics></math>
+<strong>(ellenőrizendő: piaci árak)</strong>, a megtérülési idő:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>T</mi><mtext mathvariant="normal">megt</mtext></msub><mo>=</mo><mfrac><mrow><mn>120</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft</mtext></mrow><mrow><mn>19</mn><mspace width="0.167em"></mspace><mn>163</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/év</mtext></mrow></mfrac><mo>≈</mo><mn>6</mn><mo>,</mo><mn>3</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">év</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">T_{\text{megt}} = \frac{120\,000\,\text{Ft}}{19\,163\,\text{Ft/év}} \approx 6{,}3\,\text{év}.</annotation></semantics></math></p>
+<p>Ez elfogadható lehet, de a valódi megtérülés a használati szokásoktól
+és az energiaáraktól függ. Fűtésnél a megtakarítás nagyságrenddel
+nagyobb lehet, de ott a fűtési rendszer típusát (hőszivattyú, gáz) és a
+hőszükségletet is számításba kell venni.</p>
+<p><strong>Példa (folytatás): a rendszer saját fogyasztása.</strong> Az
+automatika (busztáp, aktorok, interfész) éjjel-nappal fogyaszt. Legyen a
+készenléti teljesítmény összesen 8 W (tanulási érték,
+<strong>ellenőrizendő: gyártói adatlapok</strong>):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">saját</mtext></msub><mo>=</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">W</mtext><mo>⋅</mo><mn>8760</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">h</mtext><mo>≈</mo><mn>70</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh/év</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">E_{\text{saját}} = 8\,\text{W} \cdot 8760\,\text{h} \approx 70{,}1\,\text{kWh/év}.</annotation></semantics></math></p>
+<p>A nettó megtakarítás
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>273</mn><mo>,</mo><mn>75</mn><mo>−</mo><mn>70</mn><mo>,</mo><mn>1</mn><mo>≈</mo><mn>203</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh/év</mtext></mrow><annotation encoding="application/x-tex">273{,}75 - 70{,}1 \approx 203{,}7\,\text{kWh/év}</annotation></semantics></math>,
+azaz
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>203</mn><mo>,</mo><mn>7</mn><mo>⋅</mo><mn>70</mn><mo>≈</mo><mn>14</mn><mspace width="0.167em"></mspace><mn>257</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/év</mtext></mrow><annotation encoding="application/x-tex">203{,}7 \cdot 70 \approx 14\,257\,\text{Ft/év}</annotation></semantics></math>,
+a megtérülési idő pedig
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mspace width="0.167em"></mspace><mn>000</mn><mi>/</mi><mn>14</mn><mspace width="0.167em"></mspace><mn>257</mn><mo>≈</mo><mn>8</mn><mo>,</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">120\,000/14\,257 \approx 8{,}4</annotation></semantics></math>
+év a korábbi 6,3 helyett. <strong>Tanulság:</strong> a megrendelőnek a
+nettó értéket mondd meg; kis rendszernél a saját fogyasztás a
+megtakarítás jelentős részét elviheti (ez a becsületes tanácsadás
+része).</p>
+<p><strong>Példa: fűtés.</strong> Éves fűtési hőigény 12 000 kWh (gáz).
+Gyakran használt hüvelykujjszabály szerint 1 K tartós
+hőmérséklet-csökkentés kb. 6 % megtakarítást ad; napi 8 órás (a nap
+harmada) 2 K-es csökkentés ennek alapján kb.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>⋅</mo><mn>2</mn><mo>⋅</mo><mn>1</mn><mi>/</mi><mn>3</mn><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mi>%</mi></mrow><annotation encoding="application/x-tex">6 \cdot 2 \cdot 1/3 = 4\,\%</annotation></semantics></math>
+<strong>(ellenőrizendő: épületenergetikai irodalom; a megtakarítás
+erősen épületfüggő)</strong>. Ez
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mspace width="0.167em"></mspace><mn>000</mn><mo>⋅</mo><mn>0</mn><mo>,</mo><mn>04</mn><mo>=</mo><mn>480</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">kWh/év</mtext></mrow><annotation encoding="application/x-tex">12\,000 \cdot 0{,}04 = 480\,\text{kWh/év}</annotation></semantics></math>,
+35 Ft/kWh gázárral (példaadat)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mspace width="0.167em"></mspace><mn>800</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">Ft/év</mtext></mrow><annotation encoding="application/x-tex">16\,800\,\text{Ft/év}</annotation></semantics></math>.</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve072.html">← 20.3 KNX, DALI és más épületautomatikai rendszerek</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve074.html">21.1 Alapvédelem, hibavédelem, kiegészítő védelem →</a></div>
+</nav>
+</body>
+</html>

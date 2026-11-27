@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>32.6 PLC-alapok és ipari vezérlés – Összefoglaló
+feladatgyűjtemény villanyszerelő tanulóknak</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz7">VII. RÉSZ – Kapcsoló- és vezérlőkészülékek, ipari elosztóberendezések</a> › <a href="index.html#vech31">32 Motorvezérlések</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve117.html">← 32.5 Vezérlések hibakeresése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve119.html">33.1 Ipari elosztóhálózatok jellemzői és topológiája →</a></div>
+</nav>
+<h2 data-number="32.6" id="ve118"><span
+class="header-section-number">32.6</span> PLC-alapok és ipari
+vezérlés</h2>
+<p><em>A kapcsolódó elmélet: tankönyv, 32.6 alfejezet.</em></p>
+<h3 data-number="32.6.1"
+id="kidolgozott-példa-direktindítás-plc-vel-létradiagram-és-bekötés"><span
+class="header-section-number">32.6.1</span> Kidolgozott példa:
+direktindítás PLC-vel, létradiagram és bekötés</h3>
+<p><strong>Példa.</strong> Egy háromfázisú szivattyúmotort kell PLC-vel
+vezérelni. A vezérlési feltételek: - Start gomb (S1, NO) és Stop gomb
+(S0, NC) a PLC bemeneteire csatlakozik. - Vészleállító (S2, két
+bontóérintkezős): az 1. NC érintkező sorosan a K1 mágneskapcsoló
+tekercsének 230 V AC körében van (a segédrelé NO érintkezőjével sorban),
+így a PLC-től függetlenül bontja a kört; a 2. NC érintkező a PLC
+bemenetére csatlakozik (felügyelet). A kockázatértékeléstől függően
+biztonsági relé alkalmazandó (ellenőrizendő: MSZ EN 60204-1, MSZ EN ISO
+13850). - A PLC DO0 kimenete a K10 jelű 24 V DC segédrelét vezérli,
+amely a K1 mágneskapcsolót kapcsolja. - Az önfenntartást a program
+valósítja meg.</p>
+<p><strong>Bekötési terv (szöveges leírás):</strong> - 24 V DC
+tápegység: +24 V a PLC tápfeszültségére (L+), 0 V a PLC M jelű kapcsára.
+- S1 Start gomb egyik kapcsa a PLC DI0 bemenetre, másik kapcsa a +24
+V-ra. - S0 Stop gomb egyik kapcsa a DI1 bemenetre, másik kapcsa a +24
+V-ra. - S2 vészleállító 2. NC érintkezőjének egyik kapcsa a DI2
+bemenetre, másik kapcsa a +24 V-ra (felügyelet). - A PLC DO0 kimenete
+egy K10 segédrelé tekercsét vezérli; a segédrelé egyik kapcsa a PLC
+DO0-ra, másik kapcsa a 0 V-ra. - A K10 segédrelé NO érintkezője a K1
+mágneskapcsoló tekercsének 230 V AC körét kapcsolja, sorban az S2
+vészleállító 1. NC érintkezőjével.</p>
+<p>A bekötési tervet huzalozási nézetben az alábbi ábra mutatja. A
+nyomógombok egyik kapcsa a +24 V-on van, a másik a bemenetre megy, ezért
+a bemeneti közös kapocs (1M) a 0 V-ra (M) kerül; a relés kimenet
+csoportjának közös kapcsára (1L) a kapcsolt +24 V jut, így a DO0
+bekapcsolásakor a K10 tekercse feszültséget kap. A K10 egyenáramú
+tekercsével párhuzamosan szabadonfutó dióda (D) van (a katódja a +
+oldalon), lásd a Mágneskapcsolók és relék (tankönyv, 31.2) alfejezetet.
+A K1 230 V-os tekercskörében a vészleállító 1. bontója és a K10 záró
+érintkezője sorosan van: a vészleállító így a PLC-től függetlenül
+bont.</p>
+<figure id="fig-ve118-3">
+<div class="fig-interactive"><iframe src="figures/html/ve118-3.html" title="Huzalozási nézet: 24 V DC tápegység a PLC L+, M és 1M kapcsára; S1 START, S0 STOP és a vészleállító 2. bontója a DI0, DI1, DI2 bemenetre, másik kapcsuk a +24 V-on; 1L a +24 V-on, DO0 a K10 segédrelé A1 kapcsára, A2 a 0 V-ra, diódával; a 230 V-os körben L, vészleállító 1. bontó, K10 11–14, K1 A1, A2, N." loading="lazy" style="width:100%;border:0;height:600px"></iframe><noscript><img src="figures/img/ve118-3.png" style="width:95.0%"
+alt="Huzalozási nézet: 24 V DC tápegység a PLC L+, M és 1M kapcsára; S1 START, S0 STOP és a vészleállító 2. bontója a DI0, DI1, DI2 bemenetre, másik kapcsuk a +24 V-on; 1L a +24 V-on, DO0 a K10 segédrelé A1 kapcsára, A2 a 0 V-ra, diódával; a 230 V-os körben L, vészleállító 1. bontó, K10 11–14, K1 A1, A2, N." /></noscript><details class="fig-static"><summary>Statikus változat (mint a PDF-ben)</summary><img src="figures/img/ve118-3.png" style="width:95.0%"
+alt="Huzalozási nézet: 24 V DC tápegység a PLC L+, M és 1M kapcsára; S1 START, S0 STOP és a vészleállító 2. bontója a DI0, DI1, DI2 bemenetre, másik kapcsuk a +24 V-on; 1L a +24 V-on, DO0 a K10 segédrelé A1 kapcsára, A2 a 0 V-ra, diódával; a 230 V-os körben L, vészleállító 1. bontó, K10 11–14, K1 A1, A2, N." /></details></div>
+<figcaption>A PLC bekötése: tápegység, bemenetek, relés kimenet K10
+segédrelével és a K1 független vészleállító-köre (sematikus
+rajz)</figcaption>
+</figure>
+<p>A bekötés ellenőrzésekor a 24 V-os és a 230 V-os kört külön kezeld: a
+230 V-os tekercskört csak jogosult személy felügyeletével szabad bekötni
+és kipróbálni. A HTML-kiadásban a rétegek (24 V DC táp, bemenetek,
+kimenet, 230 V AC kör) külön ki-be kapcsolhatók.</p>
+<p><strong>A létradiagram:</strong></p>
+<figure>
+<img src="assets/ve118-diagram-1.png"
+alt="PLC létradiagram: direktindítás önfenntartással és vészleállító felügyelettel - A létradiagram a PLC program logikáját mutatja. S1 Start NO, S0 Stop és S2 vészleállító fizikailag NC gomb (nyugalomban 1-et ad a bemenetre), ezért a programban záró (NO) kontaktussal vizsgáljuk. A DO0 kimenet a K10 segédrelé tekercsét vezérli (a K1 mágneskapcsolót a K10 NO érintkezője kapcsolja); a DO0 NO az önfenntartó (tartó) érintkező. A vészleállító a programban is tiltja a DO0-t." />
+<figcaption aria-hidden="true">PLC létradiagram: direktindítás
+önfenntartással és vészleállító felügyelettel - A létradiagram a PLC
+program logikáját mutatja. S1 Start NO, S0 Stop és S2 vészleállító
+fizikailag NC gomb (nyugalomban 1-et ad a bemenetre), ezért a programban
+záró (NO) kontaktussal vizsgáljuk. A DO0 kimenet a K10 segédrelé
+tekercsét vezérli (a K1 mágneskapcsolót a K10 NO érintkezője kapcsolja);
+a DO0 NO az önfenntartó (tartó) érintkező. A vészleállító a programban
+is tiltja a DO0-t.</figcaption>
+</figure>
+<p>A létradiagram itt a Start gomb és az önfenntartó DO0 érintkező
+párhuzamos kapcsolását, majd a Stop és vészleállító soros kapcsolatát
+mutatja. Ha a Start gombot megnyomják, a DO0 kimenet (K10 segédrelé)
+bekapcsol (logikai 1), és a DO0 tartóérintkező lezár. Amíg a Stop és a
+vészleállító nincs benyomva, a DO0 bekapcsolva marad.</p>
+<p><strong>Számítási ellenőrzés.</strong> A PLC bemeneti áramát a
+bemeneti ellenállásból számíthatjuk. Ha a bemeneti ellenállás 4,7 kΩ és
+a tápfeszültség 24 V:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>b</mi><mi>e</mi></mrow></msub><mo>=</mo><mfrac><mrow><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>4</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">I_{be} = \frac{24\,\text{V}}{4{,}7\,\text{k}\Omega} = 5{,}1\,\text{mA}.</annotation></semantics></math></p>
+<p>Ez az érték a PLC bemeneti adatlapján szereplő tipikus tartományba
+esik (általában 3–10 mA), így a nyomógomb érintkezője megfelelő. A relés
+kimenet terhelhetőségét is ellenőrizni kell: ha a segédrelé tekercsének
+árama 30 mA, a PLC kimenet névleges 2 A terhelhetősége bőven elegendő,
+de a gyártói adatlapot mindig meg kell nézni <strong>(ellenőrizendő:
+gyártói adatlap)</strong>.</p>
+<h3 data-number="32.6.2"
+id="gyakorlati-útmutató-plc-bekötése-és-egyszerű-program-feltöltése"><span
+class="header-section-number">32.6.2</span> Gyakorlati útmutató: PLC
+bekötése és egyszerű program feltöltése</h3>
+<p><strong>Cél.</strong> Egy PLC digitális bemeneteinek és kimenetének
+bekötése, valamint egy egyszerű önfenntartó motorindítás
+létradiagramjának elkészítése.</p>
+<p><strong>Eszközök és anyagok:</strong> - PLC (24 V DC tápfeszültségű,
+legalább 4 digitális bemenet és 1 relés kimenet) - 24 V DC tápegység -
+Start nyomógomb (NO), Stop nyomógomb (NC), vészleállító (NC) - Segédrelé
+24 V DC tekercssel és NO érintkezővel - Mágneskapcsoló (a motor
+vezérléséhez, a tanműhelyben lehet szimulált terhelés) - Huzalok,
+érvéghüvelyek, sorkapcsok - Multiméter, programozó eszköz (PC vagy
+programozópanel) - A PLC programozószoftvere</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
+(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
+vonatkozik; hálózati feszültségen önállóan ne végezd. A
+kapcsolószekrényben 230/400 V is jelen lehet, ezért a munkát csak
+feszültségmentesítés után kezdd el.</p>
+<p><strong>Az öt biztonsági szabály:</strong> 1.
+<strong>Lekapcsolás:</strong> a kapcsolószekrény főkapcsolóját kapcsold
+ki. 2. <strong>Visszakapcsolás elleni biztosítás:</strong> lakatold le a
+főkapcsolót, vagy távolítsd el a biztosítékokat. 3.
+<strong>Feszültségmentesség ellenőrzése:</strong> ellenőrizd a 24 V DC
+és a 230/400 V AC áramköröket is. 4. <strong>Földelés és rövidre
+zárás:</strong> a hálózati feszültségű oldalon csak akkor, ha az előírás
+megköveteli; a tanműhelyi gyakorlatnál általában elegendő a
+feszültségmentesítés és a visszakapcsolás elleni biztosítás. 5.
+<strong>Szomszédos feszültség alatti részek lefedése:</strong> ha a
+szekrényben más áramkör feszültség alatt marad, takard le.</p>
+<p><strong>Lépések:</strong></p>
+<ol type="1">
+<li><strong>Készítsd elő a PLC-t:</strong> rögzítsd a szerelőlemezre, és
+ellenőrizd a tápellátás bekötési pontjait (L+, M, PE).</li>
+<li><strong>Kösd be a tápegységet:</strong> a 24 V DC tápegység
+kimenetét kösd a PLC L+ és M kapcsaira; a bemeneti közös kapcsot (1M) –
+mivel a nyomógombok a +24 V-ot kapcsolják – a 0 V-ra, a relés kimenet
+közös kapcsát (1L) a +24 V-ra kösd (a pontos bekötést a gyártói rajz
+adja; ellenőrizendő).</li>
+<li><strong>Kösd be a bemeneteket:</strong> a Start gombot a DI0, a Stop
+gombot a DI1, a vészleállító 2. NC érintkezőjét a DI2 bemenetre kösd.
+Mindegyik érintkező másik kapcsa a +24 V-ra csatlakozzon.</li>
+<li><strong>Kösd be a kimenetet:</strong> a PLC DO0 kimenetét kösd a
+segédrelé tekercsének egyik kapcsára, a másik kapcsot a 0 V-ra; a
+tekercsre szabadonfutó diódát (védőmodult) tegyél, ha a foglalatban
+nincs. A segédrelé NO érintkezője és sorosan a vészleállító 1. NC
+érintkezője kerül a mágneskapcsoló tekercs áramkörébe.</li>
+<li><strong>Ellenőrizd a bekötést:</strong> feszültségmentes állapotban
+a nyomógomb-érintkezők folytonosságát a PLC-ről lekötve mérd (nyitva
+szakadás, zárva kb. 0 Ω); bekapcsolt tápnál a bemenetet a bemeneti
+LED-del és a DI–M feszültség mérésével ellenőrizd (aktív: kb. 24
+V).</li>
+<li><strong>Töltsd fel a programot:</strong> készítsd el a
+létradiagramot a programozószoftverben, fordítsd le, és töltsd fel a
+PLC-re.</li>
+<li><strong>Teszteld a működést:</strong> a vészleállító legyen
+alaphelyzetben, a Stop gomb legyen zárva. Nyomd meg a Start gombot: a
+K10 segédrelé behúz, a K1 mágneskapcsoló meghúz. Engedd el a Start
+gombot: a K10 önfenntartásból behúzva marad. Nyomd meg a Stop gombot: a
+K10 elenged, vele a K1 is. Nyomd meg a vészleállítót: a mágneskapcsoló
+azonnal elenged, függetlenül a PLC állapotától.</li>
+<li><strong>Dokumentáld:</strong> rögzítsd a bekötési rajzot, a
+programot és a teszt eredményeit.</li>
+</ol>
+<h3 data-number="32.6.3" id="önellenőrzés"><span
+class="header-section-number">32.6.3</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis? A PLC program ciklikusan fut, és a bemeneteket a
+ciklus elején olvassa be. Indokold!</li>
+<li>Hány mA áram folyik egy 4,7 kΩ-os PLC bemeneten 24 V DC
+tápfeszültségnél?</li>
+<li>Mi a különbség a relés és a tranzisztoros PLC kimenet között?</li>
+<li>Miért nem szabad a vészleállítót csak a PLC bemenetére kötni?</li>
+<li>Rajzold le a létradiagramot egy olyan vezérléshez, ahol a motor csak
+akkor indulhat, ha egy hővédő (termosztát) NC érintkezője zárt, és a
+Start gomb megnyomása után önfenntartással működik.</li>
+<li>Mi a teendő, ha a PLC bemenet nem érzékeli a nyomógomb zárását?</li>
+</ol>
+<h3 data-number="32.6.4" id="feladatok"><span
+class="header-section-number">32.6.4</span> Feladatok</h3>
+<p><strong>1. feladat (A)</strong> Sorold fel a PLC fő részeit, és
+magyarázd el egy-egy mondatban a szerepüket!</p>
+<p><strong>2. feladat (A)</strong> Egy PLC bemeneti ellenállása 6,8 kΩ,
+a bemeneti feszültség 24 V DC. Számítsd ki a bemeneti áramot! Mekkora
+teljesítményt vesz fel a bemenet?</p>
+<p><strong>3. feladat (B)</strong> Készíts létradiagramot egy
+kútszivattyú vezérléséhez: a szivattyú akkor indul, ha a Start gombot
+megnyomják, és a tartály szintje alacsony (S4 szintérzékelő NO érintkező
+zár). A szivattyú önfenntartással működik, és leáll, ha a Stop gombot
+megnyomják, vagy a tartály megtelik (S5 szintérzékelő NC érintkező
+nyit). A vészleállító (S6 NC) szintén leállítja.</p>
+<p><strong>4. feladat (B)</strong> Rajzold le egy PLC bekötési vázlatát:
+Start gomb a DI0, Stop gomb a DI1, vészleállító a DI2 bemenetre; a DO0
+kimenet egy 24 V DC segédrelét vezérel. Jelöld a tápegység
+csatlakozásait is.</p>
+<p><strong>5. feladat (C)</strong> Egy PLC-s motorvezérlésben a
+vészleállító benyomásakor a motor nem áll le. Sorold fel a lehetséges
+okokat, és add meg a hiba behatárolásának lépéseit!</p>
+<p><strong>6. feladat (D)</strong> A tanműhelyben a PLC programja fut, a
+Start gomb megnyomásakor a DO0 kimeneten nem jelenik meg feszültség. A
+PLC bemenetén a DI0 jel megjelenik (a bemeneti LED világít). Ismertesd a
+hibakeresés lépéseit, és jelöld meg, melyik hibát hogyan lehet
+kizárni!</p>
+<h4 data-number="32.6.4.1"
+id="programozási-feladatsor-716.-feladat"><span
+class="header-section-number">32.6.4.1</span> Programozási feladatsor
+(7–16. feladat)</h4>
+<p>Írd fel mindegyikhez a programot létradiagramként vagy logikai
+kifejezésként. NC jeladónál a bit nyugalomban 1. A vészleállító és a
+hardveres reteszek minden feladatban a PLC-től
+<strong>függetlenül</strong> is megvannak.</p>
+<p><strong>7. feladat (A)</strong> Direktindítás üzemjelzéssel: H1
+világítson, amíg a motor vezérelve van. I/O: DI0 = S0 STOP (NC), DI1 =
+S1 START (NO), DO0 = K1, DO2 = H1.</p>
+<p><strong>8. feladat (A)</strong> Indítás és leállítás két helyről.
+I/O: DI0 = S1.1, DI1 = S1.2 (NO); DI2 = S0.1, DI3 = S0.2 (NC); DO0 =
+K1.</p>
+<p><strong>9. feladat (A)</strong> Önfenntartás SET/RESET tekercsekkel,
+törlés-domináns módon. I/O: DI0 = S0 (NC), DI1 = S1 (NO), DI3 = F1 95–96
+(NC); DO0 = K1.</p>
+<p><strong>10. feladat (B)</strong> Zavarjelzés: a hőkioldó kioldásakor
+a H2 1 Hz-cel villogjon a nyugtázásig. I/O: DI3 = F1 95–96 (NC), DI4 =
+S6 nyugtázó (NO); DO3 = H2.</p>
+<p><strong>11. feladat (B)</strong> Reverzálás programbeli retesszel és
+1 s-os irányváltási tiltással (TOF). I/O: DI0 = S0 (NC), DI1 = S1 előre,
+DI2 = S2 hátra (NO), DI3 = F1 (NC); DO0 = K1, DO1 = K2.</p>
+<p><strong>12. feladat (B)</strong> Csillag–delta indítás 6 s
+csillagidővel, 50 ms átkapcsolási szünettel, deltaüzemben H1 jelzéssel.
+I/O: DI0 = S0 (NC), DI1 = S1 (NO), DI3 = F1 (NC); DO0 = K1, DO1 = K2
+csillag, DO2 = K3 delta, DO3 = H1.</p>
+<p><strong>13. feladat (C)</strong> A szalag 10 darab elhaladása után
+álljon le; nyugtázás után indítható újra. I/O: DI0 = S0 (NC), DI1 = S1
+(NO), DI2 = B1 darabérzékelő (NO), DI4 = S7 nullázás (NO); DO0 = K1.</p>
+<p><strong>14. feladat (C)</strong> Három szalag: indítás K1 (végső
+fogadó), 3 s múlva K2, további 3 s múlva K3 (etető); leállításkor a K3
+azonnal, a K2 8 s, a K1 további 8 s múlva áll le. I/O: DI0 = S00
+azonnali STOP (NC), DI1 = S1 START, DI2 = S0 leállítás (NO); DO0–DO2 =
+K1–K3.</p>
+<p><strong>15. feladat (C)</strong> Kétpontos szivattyúvezérlés
+KÉZI–0–AUTO választóval és szárazonfutás-védelemmel. I/O: DI0 = S0 (NC),
+DI1 = S1, DI2 = B1 alsó úszó (NO, 1 = alacsony szint), DI3 = B2 felső
+úszó (NC), DI4 = S3 KÉZI, DI5 = S3 AUTO, DI6 = B3 szárazonfutás-védő
+(NC), DI7 = Q2 13–14; DO0 = K1.</p>
+<p><strong>16. feladat (D)</strong> Üzemóra-számláló: a motor minden 500
+üzemórája után kérjen karbantartást a H2 lámpa, nyugtázásig. I/O: DI6 =
+K1 43–44 visszajelzés, DI4 = S7 nyugtázó; DO3 = H2.</p>
+<h3 data-number="32.6.5" id="megoldások"><span
+class="header-section-number">32.6.5</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok:</strong></p>
+<ol type="1">
+<li><strong>Igaz.</strong> A PLC ciklikusan dolgozik: bemenetek olvasása
+→ program végrehajtása → kimenetek írása → diagnosztika. A bemeneteket a
+ciklus elején beolvassa, így a program a ciklus közbeni változásokat
+csak a következő ciklusban érzékeli.</li>
+<li>Az áram:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mrow><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><mrow><mn>4</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mo>,</mo><mn>1</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I = \frac{24\,\text{V}}{4{,}7\,\text{k}\Omega} = 5{,}1\,\text{mA}</annotation></semantics></math>.</li>
+<li>A relés kimenet galvanikusan leválasztott, egyen- és váltakozó
+feszültséget is kapcsolhat, de lassabb és kopik. A tranzisztoros kimenet
+csak egyenfeszültséget kapcsol, gyors, nincs mechanikus kopás.</li>
+<li>Mert ha a PLC lefagy, programhiba lép fel vagy a tápellátás kiesik,
+a vészleállító nem tudná leállítani a motort. A vészleállítónak
+közvetlenül kell megszakítania a mágneskapcsoló áramkörét.</li>
+<li>A létradiagram: Start gomb (NO) párhuzamosan a K1 önfenntartó
+érintkezővel (NO), sorosan a termosztát és a Stop gomb kontaktusa
+(hardveresen NC jeladók, a programban NO kontaktussal vizsgálva),
+sorosan a K1 tekercs.</li>
+<li>Ellenőrizni kell a bekötést (a gomb a +24 V-ról a bemenetre van-e
+kötve), a tápfeszültséget, a bemeneti LED állapotát, a programban a
+bemenet címét, és a bemeneti feszültséget multiméterrel.</li>
+</ol>
+<p><strong>Feladatok megoldásai:</strong></p>
+<p><strong>1. feladat (A)</strong> A PLC fő részei: CPU (program
+tárolása és végrehajtása), bemeneti egység (külső jelek fogadása és
+leválasztása), kimeneti egység (beavatkozók vezérlése), tápegység (belső
+feszültségek előállítása), kommunikációs interfész (programozás,
+felügyelet, adatcsere).</p>
+<p><strong>2. feladat (A)</strong><br />
+Adott:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mn>6</mn><mo>,</mo><mn>8</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">k</mtext><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R = 6{,}8\,\text{k}\Omega</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">U = 24\,\text{V}</annotation></semantics></math>.
+Keresett:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mfrac><mi>U</mi><mi>R</mi></mfrac><mo>=</mo><mfrac><mn>24</mn><mn>6800</mn></mfrac><mo>≈</mo><mn>3</mn><mo>,</mo><mn>53</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">I = \frac{U}{R} = \frac{24}{6800} \approx 3{,}53\,\text{mA}</annotation></semantics></math>.<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mstyle displaystyle="true"><mfrac><msup><mi>U</mi><mn>2</mn></msup><mi>R</mi></mfrac></mstyle><mo>=</mo><mstyle displaystyle="true"><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mn>24</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mrow><mn>6800</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow></mfrac></mstyle><mo>≈</mo><mn>84</mn><mo>,</mo><mn>7</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mW</mtext><mo>≈</mo><mn>85</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mW</mtext></mrow><annotation encoding="application/x-tex">P = \dfrac{U^2}{R} = \dfrac{(24\,\text{V})^2}{6800\,\Omega} \approx 84{,}7\,\text{mW} \approx 85\,\text{mW}</annotation></semantics></math>.<br />
+Ellenőrzés: a bemeneti áram tipikusan 3–10 mA, így az érték reális.</p>
+<p><strong>3. feladat (B)</strong> A létradiagram (szöveges
+leírás):<br />
+- 1. sor: [Start gomb (NO) → S4 alacsony szint (NO)] párhuzamosan K1
+önfenntartó érintkezővel (NO) → S5 tele szint → S6 vészleállító → Stop
+gomb → K1 tekercs (az S5, S6 és a Stop fizikailag NC jeladó, a
+programban NO kontaktussal vizsgáljuk).<br />
+A sorrend lényeges: az S4 csak az indítást engedélyezi (a Start-tal
+sorosan, az indítóágban); a tartóág a tele szintig fenntartja a
+szivattyút, így az szintemelkedéskor sem áll le idő előtt (kétpontos
+szabályozás: alsó szinten indul, felsőn áll le).</p>
+<p><strong>4. feladat (B)</strong> A bekötési vázlat (szöveges
+leírás):<br />
+- 24 V DC tápegység + kimenete a PLC L+ és a nyomógombok közös
+pontjára.<br />
+- 0 V a PLC M-re.<br />
+- Start gomb másik kapcsa DI0, Stop gomb másik kapcsa DI1, vészleállító
+2. NC érintkezőjének másik kapcsa DI2 (az 1. NC érintkező a
+mágneskapcsoló tekercsének 230 V-os körében van).<br />
+- DO0 a segédrelé tekercs egyik kapcsára, a másik kapocs a 0 V-ra.<br />
+- A segédrelé NO érintkezője és sorosan a vészleállító 1. NC érintkezője
+a mágneskapcsoló tekercs áramkörébe.</p>
+<p><strong>5. feladat (C)</strong> Lehetséges okok:<br />
+- A vészleállító csak a PLC bemenetére van kötve, és a PLC program a
+kimenetet nem tiltja le (vagy a PLC lefagyott).<br />
+- A vészleállító érintkezője rosszul van bekötve (pl. NO helyett NC,
+vagy a hardveres áramkörben nincs benne).<br />
+- A mágneskapcsoló tekercs áramköre nem a vészleállítón át megy, hanem
+közvetlenül a tápfeszültségre van kötve.<br />
+- A PLC kimenete nem kapcsol le (pl. ragasztott reléérintkező a PLC
+kimenetén).<br />
+Behatárolás: feszültségmentes állapotban ellenőrizni a bekötést, a
+vészleállító érintkezőjének működését multiméterrel, és a PLC programban
+a bemenet állapotát.</p>
+<p><strong>6. feladat (D)</strong> Hibakeresés lépései:<br />
+- Ellenőrizd, hogy a PLC RUN üzemmódban van-e.<br />
+- Nézd meg a DO0 kimeneti LED állapotát a PLC-n. Ha világít, a hiba a
+kimeneti áramkörben van (pl. a segédrelé nem húz be, vagy a kimenet
+terhelése meghaladja a határt).<br />
+- Ha a DO0 LED nem világít, ellenőrizd a programot: a létradiagramban a
+DI0 érintkező helyesen van-e, a Stop és a vészleállító kontaktusok a
+hardveres NC gomboknak megfelelően NO kontaktusként szerepelnek-e, és az
+önfenntartás megvan-e.<br />
+- Ellenőrizd a 24 V DC tápfeszültséget a kimeneti közös ponton.<br />
+- Multiméterrel mérj feszültséget a DO0 és a 0 V között, amikor a Start
+gomb aktív. Ha nincs feszültség, a program logikája hibás, vagy a
+kimenet nem lett hozzárendelve.</p>
+<p><strong>7–16. feladat – mintamegoldások.</strong> Más helyes megoldás
+is lehet. Mindegyiknél érvényes: <strong>a vészleállító a PLC-től
+függetlenül bontja a kontaktorköröket, a hardveres reteszek
+megmaradnak.</strong> Az időzítő jelölése: TON, TOF; IN a bemenet, Q a
+kimenet, PT az idő.</p>
+<p><strong>7.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>0</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>1</mn><mo>∨</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">DO0 = (DI1 \lor DO0) \land DI0</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>2</mn><mo>=</mo><mi>D</mi><mi>O</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">DO2 = DO0</annotation></semantics></math>.
+A kontaktor tényleges állapotát a 43–44 visszajelzés mutatná.</p>
+<p><strong>8.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>0</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>0</mn><mo>∨</mo><mi>D</mi><mi>I</mi><mn>1</mn><mo>∨</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>2</mn><mo>∧</mo><mi>D</mi><mi>I</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">DO0 = (DI0 \lor DI1 \lor DO0) \land DI2 \land DI3</annotation></semantics></math>.</p>
+<p><strong>9.</strong> 1. sor:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>I</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">DI1</annotation></semantics></math>
+felfutó éle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math>
+SET DO0. 2. sor:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>¬</mi><mi>D</mi><mi>I</mi><mn>0</mn><mo>∨</mo><mi>¬</mi><mi>D</mi><mi>I</mi><mn>3</mn><mo>→</mo></mrow><annotation encoding="application/x-tex">\lnot DI0 \lor \lnot DI3 \rightarrow</annotation></semantics></math>
+RESET DO0. A törlő sor áll később, ezért egyidejűleg a törlés
+érvényesül; az élre indítás megakadályozza, hogy a beragadt START
+újraindítson.</p>
+<p><strong>10.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">M1</annotation></semantics></math>:
+SET, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>¬</mi><mi>D</mi><mi>I</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">\lnot DI3</annotation></semantics></math>;
+RESET, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>I</mi><mn>4</mn><mo>∧</mo><mi>D</mi><mi>I</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">DI4 \land DI3</annotation></semantics></math>
+(csak megszűnt hiba nyugtázható). Ütemadó: T1 (TON 0,5 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>M</mi><mn>1</mn><mo>∧</mo><mi>¬</mi><mi>T</mi><mn>2</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">IN = M1 \land \lnot T2.Q</annotation></semantics></math>;
+T2 (TON 0,5 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>T</mi><mn>1</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">IN = T1.Q</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>3</mn><mo>=</mo><mi>M</mi><mn>1</mn><mo>∧</mo><mi>T</mi><mn>1</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">DO3 = M1 \land T1.Q</annotation></semantics></math>.</p>
+<p><strong>11.</strong> T1 (TOF 1 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>D</mi><mi>O</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">IN = DO1</annotation></semantics></math>;
+T2 (TOF 1 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>D</mi><mi>O</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">IN = DO0</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>0</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>1</mn><mo>∨</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>0</mn><mo>∧</mo><mi>D</mi><mi>I</mi><mn>3</mn><mo>∧</mo><mi>¬</mi><mi>D</mi><mi>O</mi><mn>1</mn><mo>∧</mo><mi>¬</mi><mi>T</mi><mn>1</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">DO0 = (DI1 \lor DO0) \land DI0 \land DI3 \land \lnot DO1 \land \lnot T1.Q</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>1</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>2</mn><mo>∨</mo><mi>D</mi><mi>O</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>0</mn><mo>∧</mo><mi>D</mi><mi>I</mi><mn>3</mn><mo>∧</mo><mi>¬</mi><mi>D</mi><mi>O</mi><mn>0</mn><mo>∧</mo><mi>¬</mi><mi>T</mi><mn>2</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">DO1 = (DI2 \lor DO1) \land DI0 \land DI3 \land \lnot DO0 \land \lnot T2.Q</annotation></semantics></math>.
+A T1.Q a HÁTRA leállása után még 1 s-ig tiltja az ELŐRE irányt (és
+fordítva).</p>
+<p><strong>12.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>0</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>1</mn><mo>∨</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>0</mn><mo>∧</mo><mi>D</mi><mi>I</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">DO0 = (DI1 \lor DO0) \land DI0 \land DI3</annotation></semantics></math>;
+T1 (TON 6 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>D</mi><mi>O</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">IN = DO0</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>1</mn><mo>=</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo>∧</mo><mi>¬</mi><mi>T</mi><mn>1</mn><mi>.</mi><mi>Q</mi><mo>∧</mo><mi>¬</mi><mi>D</mi><mi>O</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">DO1 = DO0 \land \lnot T1.Q \land \lnot DO2</annotation></semantics></math>;
+T2 (TON 50 ms)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>T</mi><mn>1</mn><mi>.</mi><mi>Q</mi><mo>∧</mo><mi>¬</mi><mi>D</mi><mi>O</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">IN = T1.Q \land \lnot DO1</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>2</mn><mo>=</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo>∧</mo><mi>T</mi><mn>2</mn><mi>.</mi><mi>Q</mi><mo>∧</mo><mi>¬</mi><mi>D</mi><mi>O</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">DO2 = DO0 \land T2.Q \land \lnot DO1</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>3</mn><mo>=</mo><mi>D</mi><mi>O</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">DO3 = DO2</annotation></semantics></math>.</p>
+<p><strong>13.</strong> C1 (CTU, PV = 10):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>U</mi><mo>=</mo><mi>D</mi><mi>I</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">CU = DI2</annotation></semantics></math>
+(felfutó él),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mi>D</mi><mi>I</mi><mn>4</mn></mrow><annotation encoding="application/x-tex">R = DI4</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>0</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>1</mn><mo>∨</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>0</mn><mo>∧</mo><mi>¬</mi><mi>C</mi><mn>1</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">DO0 = (DI1 \lor DO0) \land DI0 \land \lnot C1.Q</annotation></semantics></math>.
+A darabimpulzus legyen hosszabb a ciklusidőnél.</p>
+<p><strong>14.</strong> M0 („leállítás folyik”): SET, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>I</mi><mn>2</mn><mo>∧</mo><mi>D</mi><mi>O</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">DI2 \land DO0</annotation></semantics></math>;
+RESET, ha
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mn>4</mn><mi>.</mi><mi>Q</mi><mo>∨</mo><mi>¬</mi><mi>D</mi><mi>I</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">T4.Q \lor \lnot DI0</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>0</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>1</mn><mo>∨</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>0</mn><mo>∧</mo><mi>¬</mi><mi>T</mi><mn>4</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">DO0 = (DI1 \lor DO0) \land DI0 \land \lnot T4.Q</annotation></semantics></math>;
+T1 (TON 3 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo>∧</mo><mi>¬</mi><mi>M</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">IN = DO0 \land \lnot M0</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>1</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>T</mi><mn>1</mn><mi>.</mi><mi>Q</mi><mo>∨</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>O</mi><mn>1</mn><mo>∧</mo><mi>M</mi><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>O</mi><mn>0</mn><mo>∧</mo><mi>¬</mi><mi>T</mi><mn>3</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">DO1 = (T1.Q \lor (DO1 \land M0)) \land DO0 \land \lnot T3.Q</annotation></semantics></math>;
+T2 (TON 3 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>D</mi><mi>O</mi><mn>1</mn><mo>∧</mo><mi>¬</mi><mi>M</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">IN = DO1 \land \lnot M0</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>2</mn><mo>=</mo><mi>T</mi><mn>2</mn><mi>.</mi><mi>Q</mi><mo>∧</mo><mi>D</mi><mi>O</mi><mn>1</mn><mo>∧</mo><mi>¬</mi><mi>M</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">DO2 = T2.Q \land DO1 \land \lnot M0</annotation></semantics></math>;
+T3 (TON 8 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>M</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">IN = M0</annotation></semantics></math>;
+T4 (TON 8 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>T</mi><mn>3</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">IN = T3.Q</annotation></semantics></math>.</p>
+<p><strong>15.</strong> Kézi bit:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mn>2</mn><mo>=</mo><mi>D</mi><mi>I</mi><mn>4</mn><mo>∧</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>1</mn><mo>∨</mo><mi>M</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>0</mn><mo>∧</mo><mi>D</mi><mi>I</mi><mn>6</mn><mo>∧</mo><mi>D</mi><mi>I</mi><mn>7</mn></mrow><annotation encoding="application/x-tex">M2 = DI4 \land (DI1 \lor M2) \land DI0 \land DI6 \land DI7</annotation></semantics></math>.
+Automata bit:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mn>1</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>2</mn><mo>∨</mo><mi>M</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>∧</mo><mi>D</mi><mi>I</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">M1 = (DI2 \lor M1) \land DI3</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>0</mn><mo>=</mo><mi>D</mi><mi>I</mi><mn>6</mn><mo>∧</mo><mi>D</mi><mi>I</mi><mn>7</mn><mo>∧</mo><mo stretchy="false" form="prefix">(</mo><mi>M</mi><mn>2</mn><mo>∨</mo><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mi>I</mi><mn>5</mn><mo>∧</mo><mi>M</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">DO0 = DI6 \land DI7 \land (M2 \lor (DI5 \land M1))</annotation></semantics></math>.
+AUTO-ban a szivattyú feszültség-visszatéréskor magától indulhat: ez csak
+kockázatértékelés alapján, figyelmeztető jelzéssel engedhető meg.</p>
+<p><strong>16.</strong> T1 (TON 60 s)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mi>N</mi><mo>=</mo><mi>D</mi><mi>I</mi><mn>6</mn><mo>∧</mo><mi>¬</mi><mi>T</mi><mn>1</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">IN = DI6 \land \lnot T1.Q</annotation></semantics></math>
+(percenként egy impulzus); C1 (CTU, PV =
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>500</mn><mo>⋅</mo><mn>60</mn><mo>=</mo><mn>30</mn><mspace width="0.167em"></mspace><mn>000</mn></mrow><annotation encoding="application/x-tex">500 \cdot 60 = 30\,000</annotation></semantics></math>):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>U</mi><mo>=</mo><mi>T</mi><mn>1</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">CU = T1.Q</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mi>D</mi><mi>I</mi><mn>4</mn><mo>∧</mo><mi>C</mi><mn>1</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">R = DI4 \land C1.Q</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mi>O</mi><mn>3</mn><mo>=</mo><mi>C</mi><mn>1</mn><mi>.</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">DO3 = C1.Q</annotation></semantics></math>.
+A számlálót <strong>remanens</strong> (kikapcsoláskor megőrzött)
+memóriába kell tenni, és a leálláskor elveszett tört percek miatt
+pontosabb a megőrző időzítő vagy a rendszer üzemóra-funkciója
+(gyártófüggő).</p>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve117.html">← 32.5 Vezérlések hibakeresése</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve119.html">33.1 Ipari elosztóhálózatok jellemzői és topológiája →</a></div>
+</nav>
+<script>addEventListener("message",function(e){var d=e.data;if(!d||typeof d.figResize!=="number"||d.figResize<20)return;document.querySelectorAll(".fig-interactive iframe").forEach(function(f){if(f.contentWindow===e.source)f.style.height=(d.figResize+4)+"px"})})</script></body>
+</html>

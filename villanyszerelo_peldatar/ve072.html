@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hu" xml:lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>20.3 KNX, DALI és más épületautomatikai rendszerek –
+Összefoglaló feladatgyűjtemény villanyszerelő tanulóknak</title>
+  <link rel="stylesheet" href="pandoc.css" />
+  <link rel="stylesheet" href="math.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="pagenav top" aria-label="Lapozás">
+<p class="crumbs"><a href="index.html#resz4">IV. RÉSZ – Épületvillamosság (közös ismeretek)</a> › <a href="index.html#vech19">20 Épületautomatika és vezérlők</a></p>
+<div class="links"><a class="prev" rel="prev" href="ve071.html">← 20.2 Beavatkozók: mágneskapcsolók, szelepek, szervomotorok</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve073.html">20.4 Intelligens épület: tervezés, üzembe helyezés, energiahatékonyság →</a></div>
+</nav>
+<h2 data-number="20.3" id="ve072"><span
+class="header-section-number">20.3</span> KNX, DALI és más
+épületautomatikai rendszerek</h2>
+<p><em>A kapcsolódó elmélet: tankönyv, 20.3 alfejezet.</em></p>
+<h3 data-number="20.3.1"
+id="mintafeladat-egy-nappali-programozása-ets-ben"><span
+class="header-section-number">20.3.1</span> Mintafeladat: egy nappali
+programozása ETS-ben</h3>
+<p><strong>Négy fogalom.</strong></p>
+<ul>
+<li><strong>Kommunikációs objektum:</strong> a készülék egy
+„csatlakozópontja” a buszon, például „1. csatorna – kapcsolás” vagy „1.
+csatorna – állapot”.</li>
+<li><strong>Csoportcím:</strong> logikai „vezeték”, amely a különböző
+készülékek objektumait köti össze.</li>
+<li><strong>Adattípus (DPT):</strong> az adat formátuma és jelentése;
+csak azonos típusú objektumok köthetők össze.</li>
+<li><strong>Jelző (flag):</strong> az objektum viselkedését (küldhet-e,
+fogadhat-e, olvasható-e) engedélyező beállítás.</li>
+</ul>
+<p><strong>Feladat.</strong> A nappaliban S1 egy többgombos nyomógomb: a
+bal gomb a mennyezeti lámpát kapcsolja, a jobb gomb az étkező lámpáját
+kapcsolja és dimmeli, az alsó gombpár a redőnyt mozgatja. A beavatkozók:
+A1.1 kapcsolóaktor-csatorna (mennyezet), A2 dimmeraktor (étkező), A3.1
+redőnyaktor-csatorna (nappali redőny). B1 jelenlétérzékelő, B2 a
+nyomógombba épített hőmérséklet-érzékelő.</p>
+<p><strong>Csoportcím-struktúra:</strong> főcsoport = funkcióterület (1
+világítás, 2 árnyékolás, 3 fűtés), középcsoport = hely (1
+nappali–étkező, földszint), alcsoport = funkció. Ez a mintafeladat saját
+számozása; a mintaelosztó táblájának címei egy másik, szintén lehetséges
+struktúrát mutatnak.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Csoportcím</th>
+<th>Név</th>
+<th>DPT</th>
+<th>Küldő objektum</th>
+<th>Fogadó objektum</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1/1/0</td>
+<td>mennyezet kapcsolás</td>
+<td>1.001</td>
+<td>S1 bal gomb, B1</td>
+<td>A1.1 kapcsolás</td>
+</tr>
+<tr>
+<td>1/1/1</td>
+<td>mennyezet állapot</td>
+<td>1.001</td>
+<td>A1.1 állapot</td>
+<td>S1 bal gomb (LED, átkapcsolás)</td>
+</tr>
+<tr>
+<td>1/1/10</td>
+<td>étkező kapcsolás</td>
+<td>1.001</td>
+<td>S1 jobb gomb, rövid</td>
+<td>A2 kapcsolás</td>
+</tr>
+<tr>
+<td>1/1/11</td>
+<td>étkező relatív dimmelés</td>
+<td>3.007</td>
+<td>S1 jobb gomb, hosszú</td>
+<td>A2 relatív dimmelés</td>
+</tr>
+<tr>
+<td>1/1/12</td>
+<td>étkező fényerő érték</td>
+<td>5.001</td>
+<td>vizualizáció</td>
+<td>A2 érték</td>
+</tr>
+<tr>
+<td>1/1/13</td>
+<td>étkező fényerő állapot</td>
+<td>5.001</td>
+<td>A2 állapot (érték)</td>
+<td>vizualizáció</td>
+</tr>
+<tr>
+<td>2/1/0</td>
+<td>redőny fel/le</td>
+<td>1.008</td>
+<td>S1 alsó gombpár, hosszú</td>
+<td>A3.1 mozgatás</td>
+</tr>
+<tr>
+<td>2/1/1</td>
+<td>redőny állj/lamella</td>
+<td>1.007</td>
+<td>S1 alsó gombpár, rövid</td>
+<td>A3.1 léptetés/állj</td>
+</tr>
+<tr>
+<td>3/1/0</td>
+<td>nappali hőmérséklet</td>
+<td>9.001</td>
+<td>B2</td>
+<td>fűtésszabályozó</td>
+</tr>
+</tbody>
+</table>
+<p>A DPT-számok: 1.001 be/ki, 3.007 relatív dimmelés, 5.001 százalék,
+9.001 hőmérséklet, 1.008 fel/le, 1.007 léptetés <strong>(ellenőrizendő:
+KNX DPT-lista)</strong>.</p>
+<p><strong>Paraméterek</strong> (kitalált, tipikus beállítások):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Készülék</th>
+<th>Paraméter</th>
+<th>Érték</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1.1</td>
+<td>lépcsőházi (időzítő) funkció</td>
+<td>ki</td>
+</tr>
+<tr>
+<td>A1.1</td>
+<td>viselkedés a buszfeszültség visszatérésekor</td>
+<td>utolsó állapot</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>legkisebb fényerő; dimmelési idő 0–100 %</td>
+<td>10 %; 5 s</td>
+</tr>
+<tr>
+<td>A3.1</td>
+<td>futásidő; irányváltási szünet</td>
+<td>60 s; 0,5 s (ellenőrizendő: motoradat)</td>
+</tr>
+<tr>
+<td>B1</td>
+<td>utánfutási idő; fényküszöb</td>
+<td>15 perc; 300 lx</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ellenőrző lépések.</strong> Letöltés után indítsd el az ETS
+<strong>csoportmonitorát</strong>; nyomd meg a bal gombot: a monitorban
+távirat jelenik meg az 1/1/0 címen (érték: 1) → az A1.1 behúz → az aktor
+az 1/1/1 címen visszaküldi az állapotot → az S1 LED-je világít. Végezd
+el ugyanezt minden sorra, a redőnynél a végállásokat és a stop parancsot
+is figyelve.</p>
+<p><strong>Gyakorló feladat (C).</strong> Egészítsd ki a táblát a
+hálószobával (egy lámpa kapcsolása és állapota, egy redőny)! Adj
+csoportcímeket a struktúra szerint.</p>
+<p><em>Megoldás:</em> a középcsoport a következő helyiség (2): lámpa
+kapcsolás <strong>1/2/0</strong> (1.001), állapot <strong>1/2/1</strong>
+(1.001); redőny fel/le <strong>2/2/0</strong> (1.008), állj/lamella
+<strong>2/2/1</strong> (1.007). Nem a konkrét számok, hanem a
+következetes struktúra a lényeg (ha a projekt a középcsoportot emeletre
+használja, azt kell követni).</p>
+<p><strong>Tipikus hibák.</strong></p>
+<ul>
+<li><strong>Hiányzik az állapotobjektum:</strong> a nyomógomb LED-je
+„hazudik”, és az átkapcsoló funkció nem vált a következő nyomásra (a
+gomb nem tudja, mi az aktor tényleges állapota).</li>
+<li><strong>DPT-eltérés:</strong> például egy 1 bites objektumot
+dimmelési objektummal próbálunk összekötni; az ETS nem engedi vagy
+figyelmeztet.</li>
+<li><strong>Egy küldő objektum több csoportcímen:</strong> küldeni csak
+a küldő címre fog, a többit legfeljebb figyeli, ezért a „második” cím
+aktora nem reagál a gombra.</li>
+</ul>
+<h3 data-number="20.3.2"
+id="gyakorlati-útmutató-egyszerű-knxdali-buszhálózat-előkészítése-és-címzése"><span
+class="header-section-number">20.3.2</span> Gyakorlati útmutató:
+egyszerű KNX/DALI buszhálózat előkészítése és címzése</h3>
+<p><strong>Cél.</strong> A tanuló ismerje a buszos rendszer
+kábelezésének és programozásának alapvető lépéseit, és értse, hogy hol
+kell a 230 V-os és a buszköri munkát szétválasztani.</p>
+<p><strong>Eszközök és anyagok.</strong> KNX TP busztáp, buszos
+nyomógomb, KNX aktor, buszkábel, ETS-képes számítógép,
+KNX/USB-csatlakozó, multiméter. DALI egység esetén DALI-táp, DALI-címző,
+LED-illesztő.</p>
+<p><strong>Biztonsági korlát.</strong> A feladat tanműhelyi
+(törpefeszültségű) környezetre vagy jogosult oktató felügyeletére
+vonatkozik; hálózati feszültségen önállóan ne végezd. A 230/400 V-os
+készülékek bekötését csak jogosult személy végezheti, az öt biztonsági
+szabály betartása után.</p>
+<p><strong>Lépések.</strong></p>
+<ol type="1">
+<li><strong>Feszültségmentesítés.</strong> A tanműhelyi táp esetén is
+győződj meg róla, hogy a gyakorlópanel nincs feszültség alatt.
+Ellenőrizd a táp feszültségmentességét.</li>
+<li><strong>Busztáp bekötése.</strong> Kösd a busztáp <code>+</code> és
+<code>-</code> kapcsait a buszkábel megfelelő pólusaira a
+gyakorlótáblán. Ellenőrizd a kapcsolatot multiméterrel, és ne keverd a
+buszt a 230 V-os sorkapcsokkal.</li>
+<li><strong>Eszközök felfűzése.</strong> Kösd a nyomógombot és az aktort
+a buszra. A bekötésnél ügyelj a pólusokra, ahol a gyártó előírja.</li>
+<li><strong>Busz tápellátása.</strong> Kapcsold be a busztápot, és mérd
+a busz feszültségét. Jellemzően 29 V körül kell lenni (ellenőrizendő:
+konkrét érték a gyártói adatlapon).</li>
+<li><strong>ETS-projekt létrehozása.</strong> Indítsd az ETS-t, hozz
+létre egy projektet, add hozzá a busztápot, a nyomógombot és az
+aktort.</li>
+<li><strong>Fizikai címzés.</strong> Rendeld a készülékeket fizikai
+címekre (pl. 1.1.1, 1.1.2) az ETS-ben, és töltsd le a címzést.</li>
+<li><strong>Csoportcím létrehozása.</strong> Hozz létre egy csoportcímet
+(pl. 0/0/1), és rendeld hozzá a nyomógomb és az aktor megfelelő
+funkciójához.</li>
+<li><strong>Letöltés és teszt.</strong> Töltsd le a konfigurációt, majd
+nyomd meg a nyomógombot, és figyeld az aktor kapcsolását.</li>
+<li><strong>Dokumentálás.</strong> Jegyezd fel a busztáp feszültségét, a
+fizikai címeket, a csoportcímeket és a teszt eredményét a Szerelési
+dokumentáció, referenciajelölés és átadás (tankönyv, 13.4) alfejezetben
+tanultak szerint.</li>
+</ol>
+<p><strong>Ellenőrzési pontok.</strong> A busz feszültsége stabil; a
+nyomógomb megnyomására az aktor reléje kapcsol; az ETS diagnosztikában
+nincs kommunikációs hiba; a 230 V-os oldali feszültségmentesítés és a
+védővezető bekötése megtörtént.</p>
+<p><strong>Tipikus hibák.</strong></p>
+<ul>
+<li>A buszkábelt a 230 V-os áramkörrel közös csőben vezetik.</li>
+<li>A busztáp feszültségét nem ellenőrzik bekapcsolás előtt.</li>
+<li>Kihagyják a fizikai címzést, ezért a készülék nem válaszol.</li>
+<li>Rossz csoportcím miatt a nyomógomb nem a kívánt lámpát
+kapcsolja.</li>
+</ul>
+<h3 data-number="20.3.3" id="önellenőrzés"><span
+class="header-section-number">20.3.3</span> Önellenőrzés</h3>
+<ol type="1">
+<li>Igaz vagy hamis: a KNX TP buszon a készülékek tápellátása és
+adatátvitele ugyanazon az érpáron zajlik. Indokold.</li>
+<li>Mi a különbség a fizikai cím és a csoportcím között?</li>
+<li>Miért kell a KNX TP buszkábelt (SELV) a 230 V-os erektől elválasztva
+vezetni, és miért nem kezelhetők a DALI-erek törpefeszültségű, érinthető
+vezetékként?</li>
+<li>Egy KNX nyomógomb táviratot küld az aktornak. Mit kell ellenőrizni,
+ha az aktor nem kapcsol?</li>
+<li>Sorolj fel legalább három tipikus hibát a DALI-címzés során.</li>
+</ol>
+<h3 data-number="20.3.4" id="feladatok"><span
+class="header-section-number">20.3.4</span> Feladatok</h3>
+<p><strong>1. feladat (A).</strong> Határozd meg a buszos rendszer fő
+előnyét a hagyományos vezérléssel szemben, és mondj egy példát, amikor
+ez az előny megjelenik.</p>
+<p><strong>2. feladat (A).</strong> Egy KNX-rendszerben a nyomógomb
+fizikai címe 1.1.5, az aktoré 1.1.20. A csoportcím 2/1/0. Magyarázd el,
+miért kell mindkét eszközt ugyanarra a csoportcímre helyezni, és mi
+történik, ha a csoportcím eltérő.</p>
+<p><strong>3. feladat (B).</strong> Rajzolj egy egyszerű buszkapcsolást,
+amelyben egy buszos nyomógomb egy KNX-aktort vezérel, az aktor pedig egy
+230 V-os lámpát kapcsol. A <code>diagram</code> blokkban a fenti
+vázlatot használhatod; jelöld a csoportcímet, amely a nyomógombot az
+aktor kimenetéhez rendeli. A nyomógombot – mint minden buszeszközt – a
+busz <code>+</code> és <code>-</code> ere közé, párhuzamosan kösd; a két
+ér között soha nem lehet közvetlen összeköttetés.</p>
+<p><strong>4. feladat (B).</strong> Egy irodai DALI-rendszerben 8
+LED-illesztő csatlakozik a buszra. A DALI-táp üresjárási feszültsége 16
+V, terhelés alatt a legtávolabbi illesztőnél 12 V. Az adatlap szerint a
+busz feszültségének 9,5–22,5 V között kell lennie, és a buszon a
+megengedett feszültségesés legfeljebb 2 V <strong>(ellenőrizendő: IEC
+62386-101, gyártói adat)</strong>. Megfelel-e a rendszer? Indokold a
+hosszabb kábel és a feszültségesés szerepét.</p>
+<p><strong>5. feladat (C).</strong> Egy KNX-bővítés során a meglévő
+vonalra további 10 eszközt szeretnek kötni. Milyen szempontokat kell
+ellenőrizni a bővítés előtt? Gondolj a tápáramra, a busz hosszára, a
+címzésre és a dokumentációra.</p>
+<p><strong>6. feladat (D).</strong> Egy buszos világítási rendszerben a
+nyomógomb benyomásakor a lámpa nem kapcsol. A multiméterrel a busztáp
+feszültsége 29 V, az aktor 230 V-os oldalán nincs feszültség. Milyen
+hibát gyanítasz? Írj le egy hibakeresési lépéssort, ahol a méréssel
+elkülöníted a buszhibát, a programozási hibát és a 230 V-os oldali
+hibát.</p>
+<p><strong>7. feladat (B).</strong> Egy lakás KNX-rendszerében 58 eszköz
+van egyetlen vonalon. A tulajdonos 15 újabb eszközzel bővítene. Mit
+teszel?</p>
+<p><strong>8. feladat (B).</strong> Egy DALI-vonalra 55 LED-illesztő, 4
+érzékelő (6 mA) és 2 nyomógomb-csatoló (6 mA) kerülne, illesztőnként 2
+mA-rel. Elég-e egy 250 mA-es táp, és belefér-e a címtartományba, ha
+egyszerűsítve minden eszközt egy 64-es keretbe számolsz? Mi a teendő 70
+illesztő esetén?</p>
+<h3 data-number="20.3.5" id="megoldások"><span
+class="header-section-number">20.3.5</span> Megoldások</h3>
+<p><strong>Önellenőrzés – válaszok</strong></p>
+<ol type="1">
+<li>Igaz: a KNX TP az érpáron 29 V DC tápot és a ráültetett adatjelet
+viszi, külön tápvezeték nélkül.</li>
+<li>A fizikai cím a készülék azonosítója (terület.vonal.eszköz); a
+csoportcím a funkciót jelöli (pl. „nappali világítás be/ki”), és a
+nyomógomb és az aktor ugyanazon a csoportcímen kommunikál.</li>
+<li>A KNX TP busz SELV, ezért a hálózati erektől elválasztva kell
+vezetni (az érintésvédelmi és zavarvédelmi szabályok miatt). A
+DALI-vezérlőerek csak alapszigetelésűek, hálózati feszültségűként
+kezelendők, ezért nem tekinthetők érinthető törpefeszültségű vezetéknek
+<strong>(ellenőrizendő: IEC 62386-101, KNX telepítési
+irányelv)</strong>.</li>
+<li>Ellenőrizd a busz feszültségét, az aktor csoportcímét és az
+ETS-letöltés állapotát, a 230 V-os betáp meglétét a feszültségmentesítés
+öt szabályának betartása mellett, majd az aktor relé működését.</li>
+<li>Kihagyott vagy kétszer kiosztott rövid cím, az illesztő rossz
+csoportba sorolása, a címzés utáni mentés és dokumentálás hiánya.</li>
+</ol>
+<p><strong>1. feladat (A).</strong> A buszos rendszer legfőbb előnye a
+rugalmasság. A hagyományos kapcsolásnál a funkció a vezetékezésből
+adódik, így módosításkor vezetéket kell bontani. A buszos rendszernél a
+funkciót szoftveresen lehet megváltoztatni. Például egy nyomógombhoz
+újabb csoportcímet rendelve ugyanaz a nyomógomb egy másik lámpát is
+vezérelhet anélkül, hogy a falat megbontanánk.</p>
+<p><strong>2. feladat (A).</strong> A fizikai cím az eszköz hálózati
+azonosítója, a csoportcím a funkciót jelöli. Ha a nyomógomb és az aktor
+ugyanazt a csoportcímet használja, akkor a nyomógomb táviratát az aktor
+megkapja és végrehajtja. Ha a csoportcímük eltér, akkor az aktor
+figyelmen kívül hagyja a nyomógomb táviratát, mert az nem neki szól.</p>
+<p><strong>3. feladat (B).</strong> A vázlat a fent bemutatott KNX/DALI
+kapcsolási rajz mintájára módosítható, ahol S1 a buszos nyomógomb, G1 a
+busztáp, K1 az aktor (mindhárom a busz + és − ere közé kötve), K1.1 az
+aktor relékimenete, E1 a lámpa, F1 a lámpakör kismegszakítója. A busz és
+a 230 V-os kör külön van vezetve; a 230 V-os kör L → F1 → K1.1 → E1 → N,
+a lámpatest teste a PE-re csatlakozik.</p>
+<figure>
+<img src="assets/ve072-diagram-1.png"
+alt="Buszos nyomógomb és aktor (a 3. feladat megoldása) - Szemléltető vázlat: S1 és K1 a busz + és − ere közé kötve (párhuzamosan), G1 a busztáp; a K1 aktor K1.1 relékimenete a 230 V-os körben az F1 kismegszakító után kapcsolja az E1 lámpát (L → E1 → N), az E1 teste PE-re kötve." />
+<figcaption aria-hidden="true">Buszos nyomógomb és aktor (a 3. feladat
+megoldása) - Szemléltető vázlat: S1 és K1 a busz + és − ere közé kötve
+(párhuzamosan), G1 a busztáp; a K1 aktor K1.1 relékimenete a 230 V-os
+körben az F1 kismegszakító után kapcsolja az E1 lámpát (L → E1 → N), az
+E1 teste PE-re kötve.</figcaption>
+</figure>
+<p><strong>4. feladat (B).</strong> A feszültségesés
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>−</mo><mn>12</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">16\,\text{V} - 12\,\text{V} = 4\,\text{V}</annotation></semantics></math>.
+A 12 V a 9,5–22,5 V tartományon belül van, de a 4 V-os esés több a
+megengedett 2 V-nál, ezért a rendszer nem felel meg: nagyobb
+keresztmetszetű vezetékre vagy rövidebb vonalra van szükség, és az
+eszközök áramfelvételét is ellenőrizni kell <strong>(ellenőrizendő: IEC
+62386-101, gyártói adat)</strong>.</p>
+<p><strong>5. feladat (C).</strong> A bővítés előtt ellenőrizni kell: -
+a busztáp terhelhetőségét (a 10 új eszköz áramfelvételét hozzáadva), - a
+busz hosszát és az eszközök közötti feszültségesést, - a rendelkezésre
+álló fizikai címeket és csoportcímeket, - az ETS-projektben a
+készülékadatbázis elérhetőségét, - a kábelezés állapotát és az
+árnyékolást, - a dokumentáció frissítését.</p>
+<p><strong>6. feladat (D).</strong> Ha a busztáp feszültsége rendben
+van, de az aktor 230 V-os oldalán nincs feszültség, akkor a hiba lehet
+az aktor konfigurációjában (nem kapott csoportcímet, nincs letöltve a
+program), az aktor buszkapcsolatában (buszpólus laza, törött ér), vagy a
+230 V-os oldal védelmében (kismegszakító kioldott, csatlakozó laza). A
+hibakeresési lépéssor: 1. Jogosult személy feszültség alatt, megfelelő
+(CAT III) műszerrel mérje meg az aktor 230 V-os bemenő kapcsán a
+feszültséget (F1 állapota). 2. Ha a bemeneten van feszültség, mérje meg
+a kimeneten is kapcsolás közben. Ha javítani kell, előbb
+feszültségmentesíts az öt biztonsági szabály szerint. 3. Ellenőrizd a
+busz feszültségét az aktor kapcsain. 4. Olvasd ki az ETS-ből a
+csoportcímeket és a letöltés állapotát. 5. Küldj kézzel táviratot a
+buszra, és figyeld az aktor LED-jét. 6. Ha az aktor reléje nem húz be,
+cseréld vagy programozd újra az aktort.</p>
+<p><strong>7. feladat (B).</strong> A bővítés után
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>58</mn><mo>+</mo><mn>15</mn><mo>=</mo><mn>73</mn></mrow><annotation encoding="application/x-tex">58 + 15 = 73</annotation></semantics></math>
+eszköz lenne a vonalon, ez több a tanulási határértéknek vett 64-nél
+(ellenőrizendő: KNX telepítési irányelv). Ezért második vonalat nyitunk:
+új vonalcsatolóval (pl. 1.2.0) és a vonal saját busztápjával, az új
+eszközök 1.2.x fizikai címet kapnak; az ETS-projektben a csoportcímeket
+a csatolók szűrőtáblájával együtt frissítjük. Alternatíva a gyártó
+szerinti vonalszegmens-bővítés (vonalerősítő saját táppal), de a tiszta
+megoldás az új vonal.</p>
+<p><strong>8. feladat (B).</strong> Buszáram:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>55</mn><mo>⋅</mo><mn>2</mn><mo>+</mo><mn>4</mn><mo>⋅</mo><mn>6</mn><mo>+</mo><mn>2</mn><mo>⋅</mo><mn>6</mn><mo>=</mo><mn>146</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>≤</mo><mn>250</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">55 \cdot 2 + 4 \cdot 6 + 2 \cdot 6 = 146\,\text{mA} \le 250\,\text{mA}</annotation></semantics></math>,
+a táp elég. Eszközszám:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>55</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>2</mn><mo>=</mo><mn>61</mn><mo>≤</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">55 + 4 + 2 = 61 \le 64</annotation></semantics></math>,
+tehát az óvatos, egyszerűsített számítás szerint is belefér. 70
+illesztőnél
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>70</mn><mo>&gt;</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">70 &gt; 64</annotation></semantics></math>:
+második DALI-vonal (saját táppal) vagy több vonalat kezelő gateway kell.
+Megjegyzés: a DALI-2 a beviteli eszközöknek külön címtartományt ad; a
+tényleges korlátot a vezérlő vagy gateway adatlapja adja meg
+<strong>(ellenőrizendő: IEC 62386-101/-103, gyártói adat)</strong>.</p>
+<h3 data-number="20.3.6"
+id="dali-vezérlőegység-hálózat-és-címzés-példák-és-gyakorlók"><span
+class="header-section-number">20.3.6</span> DALI: vezérlőegység, hálózat
+és címzés – példák és gyakorlók</h3>
+<p><strong>Kidolgozott példa: egy irodaszint DALI-terve.</strong></p>
+<p><em>Korlátok</em> (tanulási értékek, <strong>ellenőrizendő: IEC
+62386-101/-102, gyártói adat</strong>): egy vonalon legfeljebb 64
+vezérlőegység (LED-illesztő) rövid címmel (0–63), 16 csoport, 16
+jelenet; a busz tápárama legfeljebb 250 mA; a feszültségesés a
+leghosszabb ágon legfeljebb 2 V; egy illesztő buszárama jellemzően
+legfeljebb 2 mA, egy DALI-2 érzékelőé vagy nyomógomb-csatolóé 6 mA
+körül.</p>
+<p><em>Megengedett kábelhossz.</em> A legkedvezőtlenebb esetben a teljes
+250 mA a vonal végéig folyik; a két ér együtt (oda-vissza)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>≤</mo><mn>2</mn><mi>/</mi><mn>0</mn><mo>,</mo><mn>25</mn><mo>=</mo><mn>8</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">Ω</mi></mrow><annotation encoding="application/x-tex">R \le 2/0{,}25 = 8\,\Omega</annotation></semantics></math>,
+erenként 4 Ω. Réz vezetőre
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>56</mn></mrow><annotation encoding="application/x-tex">\kappa = 56</annotation></semantics></math>)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>l</mi><mo>=</mo><msub><mi>R</mi><mtext mathvariant="normal">ér</mtext></msub><mo>⋅</mo><mi>κ</mi><mo>⋅</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">l = R_{\text{ér}} \cdot \kappa \cdot A</annotation></semantics></math>:</p>
+<table>
+<thead>
+<tr>
+<th>Keresztmetszet</th>
+<th>Számított hossz</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1,5 mm²</td>
+<td>≈ 336 m (a gyakorlatban 300 m-re kerekítve)</td>
+</tr>
+<tr>
+<td>0,75 mm²</td>
+<td>≈ 168 m</td>
+</tr>
+<tr>
+<td>0,5 mm²</td>
+<td>≈ 112 m</td>
+</tr>
+</tbody>
+</table>
+<p><em>A terv.</em> 40 LED-panel (A1–A40, rövid cím 0–39), 2 DALI-2
+jelenlétérzékelő és 1 nyomógomb-csatoló.</p>
+<ul>
+<li>Buszáram-mérleg:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>40</mn><mo>⋅</mo><mn>2</mn><mo>+</mo><mn>2</mn><mo>⋅</mo><mn>6</mn><mo>+</mo><mn>6</mn><mo>=</mo><mn>98</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext><mo>≤</mo><mn>250</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">mA</mtext></mrow><annotation encoding="application/x-tex">40 \cdot 2 + 2 \cdot 6 + 6 = 98\,\text{mA} \le 250\,\text{mA}</annotation></semantics></math>:
+egy busz és egy táp elég.</li>
+<li>Csoportok: G0 ablak menti sor (10 db), G1 belső sorok (20 db), G2
+tárgyaló (10 db).</li>
+<li>Jelenetek: J0 „munka” (G0 60 %, G1 100 %), J1 „prezentáció” (G2 20
+%), J2 „takarítás” (minden 100 %), J15 „ki” (minden 0 %).</li>
+<li>Kábel: NYM-J 5×1,5, a leghosszabb ág 120 m, ami a 300 m alatt van:
+megfelel.</li>
+</ul>
+<p><em>Dokumentációs táblázat</em> (minta, a teljes tervben mind a 40
+címmel):</p>
+<table>
+<thead>
+<tr>
+<th>Rövid cím</th>
+<th>Helyiség</th>
+<th>Csoport(ok)</th>
+<th>Jelenetszintek (J0 / J1 / J2)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–9</td>
+<td>iroda, ablak mellett</td>
+<td>G0</td>
+<td>60 % / – / 100 %</td>
+</tr>
+<tr>
+<td>10–29</td>
+<td>iroda, belső sorok</td>
+<td>G1</td>
+<td>100 % / – / 100 %</td>
+</tr>
+<tr>
+<td>30–39</td>
+<td>tárgyaló</td>
+<td>G2</td>
+<td>– / 20 % / 100 %</td>
+</tr>
+</tbody>
+</table>
+<nav class="pagenav bottom" aria-label="Lapozás">
+<div class="links"><a class="prev" rel="prev" href="ve071.html">← 20.2 Beavatkozók: mágneskapcsolók, szelepek, szervomotorok</a><a class="home" href="index.html">Tartalomjegyzék</a><a class="next" rel="next" href="ve073.html">20.4 Intelligens épület: tervezés, üzembe helyezés, energiahatékonyság →</a></div>
+</nav>
+</body>
+</html>

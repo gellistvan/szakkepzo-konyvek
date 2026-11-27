@@ -30,15 +30,19 @@ svg text{fill:var(--fg);font-family:system-ui,sans-serif}
 <svg id="v" viewBox="0 0 560 260" role="img" aria-label="Oszlopdiagram: üzemi áram 14,0 A, kismegszakító 16 A, korrigált terhelhetőség 14,6 A – a 16 A nagyobb a terhelhetőségnél, a feltétel nem teljesül."></svg>
 <p class="small">k1 a fejezet képletéből (PVC 70 °C, XLPE 90 °C üzemi hőmérséklet, 30 °C referencia). Az I_alap referencia-terhelhetőséget és a k2, k3 tényezőt a hatályos táblázatból kell venni (ellenőrizendő: MSZ HD 60364-5-52); a gombok a fejezet példáinak (szemléltető) értékeit töltik be. A „teljesül/nem teljesül” felirat színtől függetlenül olvasható.</p>
 <script>
-const NS="http://www.w3.org/2000/svg", S=document.getElementById("v"), ST=document.getElementById("status");
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
 const UN={"ia":"A", "ins":"", "th":"°C", "k2":"", "k3":"", "ib":"A", "ni":"", "pt":""};
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
-function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;S.appendChild(e);return e;}
-function status(h){ST.innerHTML=h;}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
 const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
 function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
-  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});return v;}
-function draw(){S.innerHTML="";const v=values();
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
 
 const IN=[6,10,13,16,20,25,32,35,40,50,63,80,100], In=IN[v.ni];
 document.getElementById("ni_o").textContent=In+" A";
@@ -64,7 +68,7 @@ for(let i=0;i<3;i++){const h=H*val[i]/top;
  el("text",{x:xs[i],y:y0+18,"text-anchor":"middle","font-size":13},lab[i]);}
 
 }
-document.querySelectorAll("input[type=range]").forEach(i=>i.addEventListener("input",draw));
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 draw();
 </script>

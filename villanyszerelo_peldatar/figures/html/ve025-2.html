@@ -1,0 +1,1265 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Csillag–delta feladatgenerátor</title>
+<style>
+:root{--fg:#111;--bg:#fff;--muted:#5a5a5a;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9;
+--box:#f4f6f9;--btn:#e8eefc;--btnb:#1f4e79;--lit:#ffd54f;--typ:#7a4a00}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;
+--line:#e6e6e6;--grid:#4a4a4a;--box:#252a31;--btn:#26324a;--btnb:#8fb8e8;--lit:#ffd54f;--typ:#ffcc80}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:15px/1.5 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:2px 0 8px}
+button,select,input{font:inherit;color:var(--fg)}
+button{padding:5px 13px;border:1.5px solid var(--btnb);background:var(--btn);border-radius:6px;cursor:pointer;touch-action:manipulation}
+button:hover{filter:brightness(.96)}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--btnb);outline-offset:2px}
+button[aria-pressed=true]{background:var(--btnb);color:var(--bg);font-weight:bold}
+button.main{background:var(--btnb);color:var(--bg);font-weight:bold}
+select,input[type=text]{background:var(--bg);border:1.5px solid var(--muted);border-radius:5px;padding:4px 7px}
+#qz-lvls{display:inline-flex;gap:4px}#qz-lvls button{min-width:2.4em;padding:5px 8px}
+#qz-seed{width:7.5em}
+.card{background:var(--box);border:1px solid var(--grid);border-radius:8px;padding:10px 12px;margin:6px 0}
+#qz-meta{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.qtext{font-size:16px;margin:2px 0 6px}
+#qz-svg{margin:4px 0 8px}
+.qsvg{width:100%;height:auto;display:block;margin:0 auto}
+.qsvg text{font-family:system-ui,sans-serif}
+.q-tx{fill:var(--fg)}.q-mut{fill:var(--muted)}.q-hl2t{fill:var(--hl2);font-weight:bold}
+.q-ln{stroke:var(--line);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.q-fill{fill:var(--bg)}.q-lit{fill:var(--lit)}.q-hl{stroke:var(--hl2)}
+.q-dot{fill:var(--line)}.q-ar{fill:var(--line)}.q-hlf{fill:var(--hl2)}
+.q-mu{stroke:var(--muted)}.q-grid{stroke:var(--grid);stroke-width:1}
+.frow{display:grid;grid-template-columns:minmax(80px,max-content) minmax(150px,240px) 1.4em 1fr;gap:6px 10px;align-items:center;margin:5px 0}
+.frow>label{text-align:right;font-weight:600}
+.inp{display:flex;align-items:center;gap:6px}.inp input{width:100%;min-width:0}.unit{min-width:2.2em;color:var(--muted)}
+.inp.multi{flex-direction:column;align-items:flex-start;gap:2px}
+label.chk{display:inline-flex;gap:6px;align-items:center;cursor:pointer;font-weight:normal}
+.mark{font-weight:bold;font-size:18px;text-align:center}.mark.ok,.ok{color:var(--ok);font-weight:bold}.mark.bad,.bad{color:var(--bad);font-weight:bold}
+.msg{font-size:13.5px;color:var(--bad)}.msg.typ{color:var(--typ);font-weight:600}
+.muted,.small{color:var(--muted)}.small{font-size:12.5px}
+#qz-fb{min-height:1.6em;margin:6px 0}
+#qz-round{font-size:13.5px;color:var(--muted)}
+details{margin:6px 0}summary{cursor:pointer;font-weight:600}
+#qz-steplist{margin:6px 0 4px;padding-left:1.6em}#qz-steplist li{margin:3px 0}#qz-steplist li.res{list-style:none;margin-left:-1.2em;margin-top:6px}
+#qz-loglist{font-size:13px;padding-left:1.2em;max-height:14em;overflow:auto}
+textarea{width:100%;height:8em;font:12px ui-monospace,Consolas,monospace;background:var(--bg);color:var(--fg)}
+#qz-selftest{margin:4px 0;padding:4px 8px;border:1px solid currentColor;border-radius:5px}
+@media (max-width:520px){.frow{grid-template-columns:1fr 1.4em}.frow>label{text-align:left;grid-column:1/3}.frow .msg{grid-column:1/3}}
+@media print{.bar,#qz-log,details.help{display:none}}
+</style>
+</head>
+<body>
+<div id="qz-selftest" hidden></div>
+<div class="bar">
+  <label id="qz-type-w">Feladattípus <select id="qz-type" aria-label="Feladattípus"></select></label>
+  <span>Szint <span id="qz-lvls" role="group" aria-label="Nehézségi szint"></span></span>
+  <label>Feladatszám <input id="qz-seed" type="text" inputmode="numeric" aria-label="Feladatszám (mag): ugyanaz a szám mindig ugyanazt a feladatot adja"></label>
+  <button id="qz-new" type="button" class="main" title="Új feladat (N)">Új feladat</button>
+</div>
+<div class="bar"><span id="qz-round" aria-live="polite"></span><button id="qz-newround" type="button">Új kör</button></div>
+<div class="card" role="region" aria-label="Csillag–delta gyakorló: véletlen feladatok négy szinten (ohmos, induktív, fordított, motor-adattábla), ellenőrzéssel és lépésenkénti megoldással">
+  <div id="qz-meta"></div>
+  <div id="qz-text" class="qtext" aria-live="polite"></div>
+  <div id="qz-svg"></div>
+  <form id="qz-form" autocomplete="off" novalidate>
+    <div id="qz-fields"></div>
+    <div class="bar"><button type="submit" class="main">Ellenőrzés</button><span class="small">(Enter)</span></div>
+  </form>
+  <div id="qz-fb" aria-live="polite"></div>
+  <details id="qz-steps"><summary>Megoldás lépésenként</summary>
+    <ol id="qz-steplist"></ol>
+    <div class="bar"><button id="qz-next" type="button">Következő lépés</button><button id="qz-all" type="button">Összes lépés</button></div>
+  </details>
+</div>
+<details class="help"><summary>Számbevitel – így írd be</summary>
+<p class="small">Tizedesvessző vagy -pont is jó (0,47 = 0.47); ezres tagolás szóközzel (1 200). Előtagok: <b>k</b> (kilo), <b>M</b> (mega),
+<b>m</b> (milli), <b>µ</b> vagy <b>u</b> (mikro), <b>n</b>, <b>p</b> – pl. <code>4,7k</code>, <code>4.7 kΩ</code>, <code>470 m</code>, <code>2,2 µF</code>, <code>4k7</code>.
+A mértékegységet nem kötelező kiírni (Ω helyett „ohm” is jó); szám önmagában a mező melletti mértékegységben értendő.
+Százalék: <code>85 %</code> = 0,85 (mértékegység nélküli mezőben). </p>
+</details>
+<details id="qz-log"><summary>Hibanapló (<span id="qz-logn">0</span>)</summary>
+  <ul id="qz-loglist"></ul>
+  <div class="bar"><button id="qz-exp" type="button">Megjelenítés szövegként</button><button id="qz-dl" type="button">Letöltés (.txt)</button><button id="qz-clr" type="button">Napló törlése</button></div>
+  <textarea id="qz-exptext" readonly hidden aria-label="A hibanapló szövege (másolható)"></textarea>
+  <p class="small">A napló csak ebben a böngészőben tárolódik (localStorage); privát ablakban a lap bezárásáig marad meg.</p>
+</details>
+<p class="small">U<sub>v</sub> = 400 V minden feladatban; tűrés ±1 %. A motorfeladat η- és cos φ-értékei példaértékek.</p>
+<script>
+/* quiz_core.js – a feladatgenerátor-lapok közös magja (T-H0-001).
+   A figures/ve_quiz.py write_quiz_page() inline-olja a lapba; a Python-pár (ve_quiz.py) minden
+   számoló- és formázófüggvényt bitre azonosan megvalósít (mulberry32, E-sorok, fixed/sig/si, parse).
+   Globális névtér: QZ (és a register() rövidítés). A témaköri modulok (templates/quiz_tasks/*.js)
+   QZ.register("azonosító", {...}) hívással jegyzik be magukat. */
+"use strict";
+const QZ = (function () {
+  const TASKS = {}, ORDER = [];
+
+  /* ---------------- PRNG: mulberry32 (32 bites mag) ---------------- */
+  function mulberry32(seed) {
+    let a = seed | 0;
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const POW10 = [1, 10, 100, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12];
+  const ESERIES = {
+    E3: [10, 22, 47],
+    E6: [10, 15, 22, 33, 47, 68],
+    E12: [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82],
+    E24: [10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30, 33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91]
+  };
+  /* Az E-sor tagjai [lo, hi]-ban növekvő sorrendben (0,0001 … 10^11). v = m·10^j, m kétjegyű egész. */
+  function eValues(series, lo, hi) {
+    const S = ESERIES[series] || series, out = [];
+    for (let j = -5; j <= 10; j++) for (const m of S) {
+      const v = j >= 0 ? m * POW10[j] : m / POW10[-j];
+      if (v >= lo * (1 - 1e-9) && v <= hi * (1 + 1e-9)) out.push(v);
+    }
+    return out;
+  }
+  function isESeries(x, series) {
+    if (!(x > 0)) return false;
+    return eValues(series, x * 0.999, x * 1.001).some(v => Math.abs(v - x) <= 1e-6 * x);
+  }
+  class RNG {
+    constructor(seed) { this.seed = seed >>> 0; this._f = mulberry32(this.seed); }
+    next() { return this._f(); }                                     // [0, 1)
+    int(lo, hi) { return lo + Math.floor(this.next() * (hi - lo + 1)); } // egész, mindkét végpont benne
+    pick(arr) { return arr[this.int(0, arr.length - 1)]; }
+    chance(p) { return this.next() < p; }
+    uniform(lo, hi) { return lo + (hi - lo) * this.next(); }
+    shuffle(arr) { const b = arr.slice(); for (let i = b.length - 1; i > 0; i--) { const j = this.int(0, i); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    eseries(series, lo, hi) { return this.pick(eValues(series, lo, hi)); }
+  }
+
+  /* ---------------- Formázás (tizedesvessző; azonos a Python fixed/sig/si függvényekkel) ---------------- */
+  const NBSP = " ";
+  function group(intPart) {                     // ezres tagolás 5 jegytől (magyar tipográfia)
+    if (intPart.length < 5) return intPart;
+    return intPart.replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
+  }
+  function _join(neg, s) {
+    const k = s.indexOf(".");
+    const ip = k < 0 ? s : s.slice(0, k), fp = k < 0 ? "" : s.slice(k + 1);
+    const out = group(ip) + (fp ? "," + fp : "");
+    return (neg && /[1-9]/.test(s) ? "\u2212" : "") + out;   // U+2212 mínuszjel
+  }
+  /* d tizedesjegy (JS toFixed: pontos bináris érték, felfelé kerekítés döntetlennél) */
+  function fixed(x, d) {
+    if (!isFinite(x)) return String(x);
+    d = d === undefined ? 2 : d;
+    return _join(x < 0, Math.abs(x).toFixed(d));
+  }
+  function _digits(x, n) {                       // [számjegyek, kitevő] n értékes jegyre kerekítve
+    const s = Math.abs(x).toExponential(n - 1);
+    const k = s.indexOf("e");
+    return [s.slice(0, k).replace(".", ""), parseInt(s.slice(k + 1), 10)];
+  }
+  function _place(digits, e) {                   // 0,ddd·10^(e+1) tizedes alakja ponttal
+    if (e >= 0) return digits.length <= e + 1 ? digits + "0".repeat(e + 1 - digits.length)
+      : digits.slice(0, e + 1) + "." + digits.slice(e + 1);
+    return "0." + "0".repeat(-e - 1) + digits;
+  }
+  function _trim(s) { return s.indexOf(".") < 0 ? s : s.replace(/0+$/, "").replace(/\.$/, ""); }
+  /* n értékes jegy; keep=false: a záró nullák elhagyva (4,70 → 4,7) */
+  function sig(x, n, keep) {
+    if (!isFinite(x)) return String(x);
+    if (x === 0) return "0";
+    n = n || 3;
+    const [dg, e] = _digits(x, n);
+    let s = _place(dg, e);
+    if (!keep) s = _trim(s);
+    return _join(x < 0, s);
+  }
+  const PFX_EXP = { p: -12, n: -9, "µ": -6, u: -6, m: -3, "": 0, k: 3, K: 3, M: 6, G: 9 };
+  const PFX_OF = { "-12": "p", "-9": "n", "-6": "µ", "-3": "m", "0": "", "3": "k", "6": "M", "9": "G" };
+  const PREFIXABLE = ["Ω", "V", "A", "W", "VA", "var", "VAr", "Wh", "VAh", "varh", "F", "H", "Hz", "S", "m", "s", "J", "T", "Wb", "g", "C"];
+  /* SI-előtaggal, n értékes jeggyel: si(0.0025,"A") → "2,5 mA" */
+  function si(x, unit, n, keep) {
+    n = n || 3;
+    if (!isFinite(x)) return String(x) + " " + unit;
+    if (x === 0) return "0 " + unit;
+    const [dg, e] = _digits(x, n);
+    let e3 = Math.floor(e / 3) * 3;
+    e3 = Math.max(-12, Math.min(9, e3));
+    let s = _place(dg, e - e3);
+    if (!keep) s = _trim(s);
+    return _join(x < 0, s) + " " + PFX_OF[String(e3)] + unit;
+  }
+  function splitUnit(u) {                         // "kWh" → {exp:3, base:"Wh", pre:true}
+    u = u || "";
+    if (PREFIXABLE.includes(u)) return { exp: 0, base: u, pre: true };
+    if (u.length > 1 && u[0] in PFX_EXP && u[0] !== "" && PREFIXABLE.includes(u.slice(1)))
+      return { exp: PFX_EXP[u[0]], base: u.slice(1), pre: true };
+    return { exp: 0, base: u, pre: false };
+  }
+  /* Egy válaszmező értékének kiírása a mező mértékegységével (prefix:false → előtag nélkül). */
+  function show(value, field) {
+    field = field || {};
+    const unit = field.unit || "", n = field.sig || 3;
+    if (field.kind === "text") return String(value);
+    if (field.kind === "select" || field.kind === "multi") {
+      const opts = field.options || [];
+      const name = v => { const o = opts.find(q => String(q[0]) === String(v)); return o ? o[1] : String(v); };
+      return Array.isArray(value) ? value.map(name).join(", ") : name(value);
+    }
+    if (field.digits !== undefined) return fixed(value, field.digits) + (unit ? " " + unit : "");
+    const su = splitUnit(unit);
+    if (!su.pre || field.prefix === false) return sig(value, n) + (unit ? (unit === "°" ? "" : " ") + unit : "");
+    const base = su.exp ? parseFloat("1e" + su.exp) * value : value;
+    return si(base, su.base, n);
+  }
+
+  /* ---------------- Számbevitel értelmezése ---------------- */
+  const RX = /^([+-]?)(\d{1,3}(?: \d{3})+|\d*)(?:[.,](\d*))?(?:[eE]([+-]?\d+))?(.*)$/;
+  const RKM = /^([+-]?)(\d+)([pnuµmkKMGRr])(\d+)(.*)$/;
+  const ALIAS = { "°": ["fok"], "h": ["óra", "ó"], "s": ["sec", "mp"], "min": ["perc"], "Ft": ["forint"] };
+  const KNOWN = PREFIXABLE.concat(["h", "min", "Ft", "%", "°", "mm²", "mm2", "°C", "K", "kWh"]);
+  /* parse(szöveg, mértékegység) → {ok:true, value} a mező mértékegységében | {ok:false, empty?, msg} */
+  function parse(str, unit) {
+    let s = String(str === undefined || str === null ? "" : str);
+    s = s.replace(/[    ]/g, " ").replace(/[−–]/g, "-").trim();
+    s = s.replace(/^(?:=|≈|~)\s*/, "").replace(/^([+-])\s+/, "$1");
+    if (s === "") return { ok: false, empty: true, msg: "Nincs kitöltve." };
+    let sign, ip, fp, ex, rest, m = RKM.exec(s);
+    if (m) {
+      sign = m[1]; ip = m[2]; fp = m[4]; ex = 0; rest = m[5];
+      const p = m[3] === "R" || m[3] === "r" ? "" : m[3];
+      rest = p + rest.trim();
+      if (p === "" && rest !== "" && !/^\s*(Ω|ohm)/i.test(m[5])) return { ok: false, msg: "Nem értelmezhető szám: „" + str + "”." };
+    } else {
+      m = RX.exec(s);
+      if (!m || (m[2] === "" && (m[3] === undefined || m[3] === ""))) return { ok: false, msg: "Nem értelmezhető szám: „" + str + "”. Példák: 4,7k  0,35 Ω  2,2 µF  470 mA  4k7" };
+      sign = m[1]; ip = m[2].replace(/ /g, "") || "0"; fp = m[3] || ""; ex = m[4] ? parseInt(m[4], 10) : 0; rest = m[5];
+    }
+    let r = rest.replace(/\s+/g, "").replace(/Ω/g, "Ω").replace(/ohm/gi, "Ω").replace(/μ/g, "µ");
+    const fu = splitUnit(unit || "");
+    if (fu.base === "" && r === "%") return { ok: true, value: parseFloat(sign + ip + "." + (fp || "0") + "e" + (ex - 2)) };
+    let had = false;
+    const bases = fu.base ? [fu.base].concat(ALIAS[fu.base] || []) : [];
+    if (fu.base === "mm²") bases.push("mm2");
+    for (const b of bases) if (r.length >= b.length && r.slice(r.length - b.length) === b) { r = r.slice(0, r.length - b.length); had = true; break; }
+    let pexp;
+    if (r === "") pexp = had ? 0 : fu.exp;
+    else if (fu.pre && r in PFX_EXP && !(r === "K" && fu.base === "K")) pexp = PFX_EXP[r];
+    else {
+      const other = KNOWN.includes(r) || (r.length > 1 && r[0] in PFX_EXP && KNOWN.includes(r.slice(1)));
+      if (other) return { ok: false, msg: "Más mértékegység („" + r + "”): ide " + (unit || "mértékegység nélküli szám") + " kell." };
+      if (!fu.pre && r in PFX_EXP) return { ok: false, msg: "Ebben a mezőben (" + (unit || "–") + ") nem használható előtag („" + r + "”)." };
+      return { ok: false, msg: "Nem értelmezhető előtag vagy mértékegység: „" + r + "”. Előtagok: p n µ(u) m k M G." };
+    }
+    return { ok: true, value: parseFloat(sign + ip + "." + (fp || "0") + "e" + (ex + pexp - fu.exp)) };
+  }
+
+  /* ---------------- Ellenőrzés ---------------- */
+  function within(x, v, tol) {
+    tol = tol || { rel: 0.01 };
+    const lim = Math.max(tol.abs || 0, (tol.rel || 0) * Math.abs(v));
+    return Math.abs(x - v) <= lim * (1 + 1e-9) + 1e-12 * Math.abs(v);
+  }
+  function tolText(tol) {
+    const p = [];
+    if (tol.series) return tol.series + "-es szabványérték";
+    if (tol.rel) p.push("±" + sig(tol.rel * 100, 3) + " %");
+    if (tol.abs) p.push("±" + sig(tol.abs, 3));
+    return p.join(" vagy ");
+  }
+  /* Egy mező ellenőrzése: {ok, msg, value?}. typical: a feladat typical_errors() listájának ehhez a mezőhöz tartozó elemei. */
+  function checkField(field, input, typical, defTol) {
+    const kind = field.kind || "num";
+    if (kind === "text") {                          // pontos szöveg (pl. IP-cím): szóköz nélkül, kisbetűsítve hasonlít
+      const nz = v => String(v === undefined || v === null ? "" : v).replace(/\s+/g, "").toLowerCase();
+      if (nz(input) === "") return { ok: false, empty: true, msg: "Nincs kitöltve." };
+      if (nz(input) === nz(field.value)) return { ok: true };
+      const t = (typical || []).find(q => nz(q.value) === nz(input));
+      return { ok: false, typical: !!t, msg: t ? t.msg : "Nem jó." };
+    }
+    if (kind === "select") {
+      if (input === "" || input === undefined || input === null) return { ok: false, empty: true, msg: "Nincs kiválasztva." };
+      if (String(input) === String(field.value)) return { ok: true };
+      const t = (typical || []).find(q => String(q.value) === String(input));
+      return { ok: false, msg: t ? t.msg : "Nem ez a helyes választás." };
+    }
+    if (kind === "multi") {
+      const a = (input || []).map(String).sort().join("|"), b = (field.value || []).map(String).sort().join("|");
+      if (a === b) return { ok: true };
+      const t = (typical || []).find(q => (q.value || []).map(String).sort().join("|") === a);
+      return { ok: false, msg: t ? t.msg : "A kiválasztott elemek nem pontosan a helyesek (több is lehet)." };
+    }
+    const r = parse(input, field.unit || "");
+    if (!r.ok) return { ok: false, empty: !!r.empty, parse: true, msg: r.msg };
+    const x = r.value, v = field.value, tol = field.tol || defTol || { rel: 0.01 };
+    if (tol.series) {
+      const exact = within(x, v, { rel: 1e-3 });
+      if (exact) return { ok: true, value: x };
+      if (!isESeries(x, tol.series)) return { ok: false, value: x, msg: show(x, field) + " nem " + tol.series + "-es szabványérték." };
+    } else if (within(x, v, tol)) return { ok: true, value: x };
+    for (const t of typical || []) {
+      if (within(v, t.value, tol)) continue;                       // a hibás képlet itt véletlenül a jót adná
+      if (within(x, t.value, t.tol || tol)) return { ok: false, value: x, typical: true, msg: t.msg };
+    }
+    if (v !== 0) {
+      for (const k of [1e3, 1e-3, 1e6, 1e-6])
+        if (within(x, v * k, tol)) return { ok: false, value: x, msg: (k === 1e3 || k === 1e-3 ? "1000" : "1 000 000") + "-szeres eltérés: előtag- vagy átváltási hiba (k ↔ m, W ↔ kW, Wh ↔ kWh, mA ↔ A)?" };
+      if (within(x, -v, tol)) return { ok: false, value: x, msg: "Előjelhiba: az érték nagysága jó, az előjele nem (nézd meg a referenciairányt)." };
+      if (within(x, v, { rel: Math.max(0.02, 3 * (tol.rel || 0)), abs: 3 * (tol.abs || 0) })) return { ok: false, value: x, msg: "Közel van, de kívül esik a tűrésen (" + tolText(tol) + "): túl korán kerekítettél? Számolj 3–4 értékes jeggyel." };
+    }
+    return { ok: false, value: x, msg: "Nem jó." };
+  }
+
+  /* ---------------- Mini-HTML (sub, sup, b, i, br) → sima szöveg ---------------- */
+  function plain(s) {
+    return String(s).replace(/<sub>(.*?)<\/sub>/g, "_$1").replace(/<sup>(.*?)<\/sup>/g, "^$1")
+      .replace(/<br\s*\/?>/g, " ").replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&nbsp;/g, " ");
+  }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+  function register(id, task) {
+    task.id = id;
+    if (!TASKS[id]) ORDER.push(id);
+    TASKS[id] = task;
+    return task;
+  }
+  /* Feladat létrehozása magból: egy típusnál gen(rng, level); vegyes módban a típust is a mag választja. */
+  function make(ids, seed, level) {
+    const rng = new RNG(seed);
+    const id = ids.length === 1 ? ids[0] : rng.pick(ids);
+    const task = TASKS[id];
+    const lv = (task.levels || [["A", ""]]).map(l => l[0]);
+    const L = level === "*" ? rng.pick(lv) : lv.includes(level) ? level : lv[Math.min(lv.length - 1, Math.max(0, "ABCDE".indexOf(level)))];
+    const p = task.gen(rng, L);
+    return { id: id, task: task, level: L, seed: seed >>> 0, params: p };
+  }
+  function solveOf(task, p) {
+    const s = task.solve(p);
+    const tol = task.tolerance || { rel: 0.01 };
+    s.answers.forEach(a => { if (!a.tol && (a.kind || "num") === "num") a.tol = tol; });
+    return s;
+  }
+
+  /* ---------------- Önteszt (?selftest=1): a Python által beírt vektorokkal ---------------- */
+  function nearEq(a, b, path, errs) {
+    if (typeof a === "number" && typeof b === "number") {
+      if (!(a === b || Math.abs(a - b) <= 1e-9 * Math.max(Math.abs(a), Math.abs(b)))) errs.push(path + ": JS " + a + " ≠ Py " + b);
+    } else if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) errs.push(path + ": hossz " + a.length + " ≠ " + b.length);
+      else a.forEach((x, i) => nearEq(x, b[i], path + "[" + i + "]", errs));
+    } else if (a && b && typeof a === "object" && typeof b === "object") {
+      const ka = Object.keys(a).sort(), kb = Object.keys(b).sort();
+      if (ka.join() !== kb.join()) errs.push(path + ": kulcsok " + ka + " ≠ " + kb);
+      else ka.forEach(k => nearEq(a[k], b[k], path + "." + k, errs));
+    } else if (a !== b) errs.push(path + ": JS " + JSON.stringify(a) + " ≠ Py " + JSON.stringify(b));
+  }
+  function selftest(ST) {
+    const errs = [];
+    let n = 0;
+    (ST.prng || []).forEach(v => { const r = new RNG(v.seed); const got = v.values.map(() => r.next()); nearEq(got, v.values, "prng(" + v.seed + ")", errs); n++; });
+    (ST.format || []).forEach(v => {
+      const got = v.f === "fixed" ? fixed(v.x, v.n) : v.f === "sig" ? sig(v.x, v.n, v.keep) : si(v.x, v.unit, v.n);
+      if (got !== v.out) errs.push("format " + v.f + "(" + v.x + "," + v.n + "): JS „" + got + "” ≠ Py „" + v.out + "”");
+      n++;
+    });
+    (ST.parse || []).forEach(v => {
+      const r = parse(v.s, v.unit), got = r.ok ? r.value : null;
+      if (!(got === v.value || (got !== null && v.value !== null && Math.abs(got - v.value) <= 1e-12 * Math.abs(v.value)))) errs.push("parse(„" + v.s + "”, " + v.unit + "): JS " + got + " ≠ Py " + v.value);
+      n++;
+    });
+    (ST.core || []).forEach(v => {
+      const tag = "core " + v.mod + "." + v.fn + "(" + JSON.stringify(v.args).slice(1, -1) + ")";
+      try { const f = core[v.mod] && core[v.mod][v.fn]; if (!f) errs.push(tag + ": nincs ilyen JS-függvény"); else nearEq(f.apply(null, v.args), v.out, tag, errs); }
+      catch (e) { errs.push(tag + ": kivétel " + e); }
+      n++;
+    });
+    (ST.tasks || []).forEach(v => {
+      const tag = v.task + " seed=" + v.seed + " lvl=" + v.level;
+      try {
+        let p = v.params_in;
+        if (!p) { const t = make(v.ids || [v.task], v.seed, v.level); p = t.params; nearEq(p, v.params, tag + " params", errs); }
+        const task = TASKS[v.task], s = solveOf(task, p), vals = {};
+        s.answers.forEach(a => { vals[a.id] = a.value; });
+        nearEq(vals, v.values, tag + " answers", errs);
+        if (v.nsteps !== s.steps.length) errs.push(tag + ": lépésszám JS " + s.steps.length + " ≠ Py " + v.nsteps);
+        else if (v.steps) s.steps.forEach((x, k) => { if (x !== v.steps[k]) errs.push(tag + " lépés " + (k + 1) + ": JS „" + x + "” ≠ Py „" + v.steps[k] + "”"); });
+        const txt = task.render(p).text;
+        if (v.text !== undefined && txt !== v.text) errs.push(tag + " text: JS „" + txt + "” ≠ Py „" + v.text + "”");
+        if (task.typical_errors) task.typical_errors(p, s);
+      } catch (e) { errs.push(tag + ": kivétel " + e); }
+      n++;
+    });
+    errs.slice(0, 40).forEach(e => console.error("SELFTEST error: " + e));
+    if (!errs.length) console.log("SELFTEST OK: " + n + " vektor egyezik (JS = Python)");
+    return { n: n, errs: errs };
+  }
+
+  /* ---------------- Válaszmezők (közös a gyakorló- és a vizsgalapnak) ---------------- */
+  function fieldsHtml(answers, pre) {
+    return answers.map((a, i) => {
+      const fid = pre + i, kind = a.kind || "num";
+      let html = '<div class="frow"><label for="' + fid + '">' + a.label + (kind === "num" || kind === "text" ? " =" : "") + "</label>";
+      if (kind === "num" || kind === "text") {
+        html += '<span class="inp"><input id="' + fid + '" type="text"' + (kind === "num" ? ' inputmode="decimal"' : "") +
+          ' autocomplete="off" spellcheck="false" aria-describedby="' + fid + '-m"' + (a.placeholder ? ' placeholder="' + esc(a.placeholder) + '"' : "") + ">" +
+          '<span class="unit">' + esc(a.unit || "") + "</span></span>";
+      } else if (kind === "select") {
+        html += '<span class="inp"><select id="' + fid + '" aria-describedby="' + fid + '-m"><option value="">– válassz –</option>' +
+          a.options.map(o => '<option value="' + esc(o[0]) + '">' + o[1] + "</option>").join("") + "</select></span>";
+      } else {
+        html += '<span class="inp multi" id="' + fid + '" role="group">' + a.options.map((o, k) =>
+          '<label class="chk"><input type="checkbox" value="' + esc(o[0]) + '" id="' + fid + "-" + k + '"> ' + o[1] + "</label>").join("") + "</span>";
+      }
+      return html + '<span class="mark" id="' + fid + '-k" aria-hidden="true"></span><span class="msg" id="' + fid + '-m"></span></div>';
+    }).join("");
+  }
+  function readFieldAt(pre, i, a) {
+    const el = document.getElementById(pre + i), kind = a.kind || "num";
+    if (kind === "multi") return Array.from(el.querySelectorAll("input:checked")).map(x => x.value);
+    return el.value;
+  }
+  /* Opcionális egyedi kiértékelés (szabad hozzárendelés, több helyes válasz): task.check(params, inputs, sol) →
+     mezőnként null (marad a checkField eredménye) vagy {ok: bool, msg?: string}. A bevitelhibás/üres mező nem írható felül. */
+  function applyHook(cur, sol, inputs, res) {
+    if (!cur.task.check) return res;
+    let h = null;
+    try { h = cur.task.check(cur.params, inputs, sol); } catch (e) { console.error("check-hook: " + e); }
+    if (!Array.isArray(h)) return res;
+    return res.map((r, i) => (h[i] && !r.empty && !r.parse) ? { ok: !!h[i].ok, msg: h[i].ok ? "" : (h[i].msg || "Nem jó."), typical: !!h[i].typical } : r);
+  }
+  function typicalFor(cur, sol) {
+    const typ = cur.task.typical_errors ? cur.task.typical_errors(cur.params, sol) || [] : [];
+    return a => typ.filter(t => (t.field || sol.answers[0].id) === a.id);
+  }
+  function storeFor(key) {
+    let mem = [];
+    return {
+      get() { try { const s = window.localStorage.getItem(key); return s ? JSON.parse(s) : mem; } catch (e) { return mem; } },
+      set(a) { mem = a; try { window.localStorage.setItem(key, JSON.stringify(a)); } catch (e) { /* privát ablak / sandbox */ } }
+    };
+  }
+
+  /* ---------------- A lap felülete ---------------- */
+  function app(CFG) {
+    const $ = id => document.getElementById(id);
+    const ids = CFG.tasks.filter(id => TASKS[id]);
+    if (!ids.length) throw new Error("quiz: nincs bejegyzett feladattípus: " + CFG.tasks.join(", "));
+    const LOGKEY = "vequiz:" + CFG.name;
+    let memLog = [];
+    const store = {
+      get() { try { const s = window.localStorage.getItem(LOGKEY); return s ? JSON.parse(s) : memLog; } catch (e) { return memLog; } },
+      set(a) { memLog = a; try { window.localStorage.setItem(LOGKEY, JSON.stringify(a)); } catch (e) { /* privát ablak / sandbox: csak memóriában */ } }
+    };
+    let Q = new URLSearchParams("");
+    try { Q = new URLSearchParams(window.location.search); } catch (e) { /* srcdoc */ }
+    const st = {
+      type: ids.length > 1 ? (Q.get("type") && (Q.get("type") === "mix" || ids.includes(Q.get("type"))) ? Q.get("type") : "mix") : ids[0],
+      level: (Q.get("lvl") || CFG.level || "A").toUpperCase(),
+      seed: Q.get("seed") !== null && /^\d+$/.test(Q.get("seed")) ? (+Q.get("seed")) >>> 0 : (CFG.seed !== undefined ? CFG.seed : (Math.floor(Math.random() * 9000) + 1000)),
+      cur: null, sol: null, checked: false, scored: null, shown: false, stepN: 0,
+      round: { n: 0, pts: 0, done: false }
+    };
+    const levelsOf = () => CFG.levels || (st.type === "mix" ? TASKS[ids[0]].levels : TASKS[st.type].levels) || [["A", "A"]];
+
+    // típusválasztó
+    const tsel = $("qz-type");
+    if (ids.length > 1) {
+      tsel.innerHTML = '<option value="mix">Vegyes (minden típus)</option>' + ids.map(i => '<option value="' + i + '">' + esc(TASKS[i].title || i) + "</option>").join("");
+      tsel.value = st.type;
+      tsel.addEventListener("change", () => { st.type = tsel.value; buildLevels(); finishTask(); newTask(st.seed); });
+    } else $("qz-type-w").hidden = true;
+
+    function buildLevels() {
+      const L = levelsOf(), box = $("qz-lvls");
+      if (!L.some(l => l[0] === st.level)) st.level = L[0][0];
+      box.innerHTML = "";
+      L.forEach(l => {
+        const b = document.createElement("button");
+        b.type = "button"; b.textContent = l[0]; b.title = l[1] || ""; b.setAttribute("aria-label", l[0] + " szint: " + (l[1] || ""));
+        b.setAttribute("aria-pressed", String(l[0] === st.level));
+        b.addEventListener("click", () => { if (st.level === l[0]) return; st.level = l[0]; buildLevels(); finishTask(); newTask(st.seed); });
+        box.appendChild(b);
+      });
+    }
+
+    function syncUrl() {
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.set("seed", st.seed); u.searchParams.set("lvl", st.level);
+        if (ids.length > 1) u.searchParams.set("type", st.type); else u.searchParams.delete("type");
+        window.history.replaceState(null, "", u.toString());
+      } catch (e) { /* file:// sandbox vagy srcdoc: az URL nem frissíthető, nem baj */ }
+    }
+
+    function roundText() {
+      const R = st.round, len = CFG.roundLen;
+      $("qz-round").innerHTML = R.done
+        ? "<b>Kör vége:</b> " + fixed(R.pts, R.pts % 1 ? 1 : 0) + " / " + len + " pont. " + (R.pts >= 0.8 * len ? "Nagyon jó!" : R.pts >= 0.5 * len ? "Jó, a hibanaplóban nézd meg a hibáidat." : "Ismételd át a lépésenkénti megoldásokat, és kezdj új kört.")
+        : "Kör: " + (R.n + 1) + ". feladat / " + len + " · pont: " + fixed(R.pts, R.pts % 1 ? 1 : 0);
+    }
+    function finishTask() {                          // az előző feladat lezárása a körben
+      if (!st.cur) return;
+      const R = st.round;
+      if (R.done || !st.checked) return;           // csak a megkísérelt (ellenőrzött vagy megnézett) feladat számít
+      R.pts += st.scored === null ? 0 : st.scored;
+      R.n += 1;
+      if (R.n >= CFG.roundLen) R.done = true;
+    }
+
+    function newTask(seed) {
+      st.seed = seed >>> 0;
+      $("qz-seed").value = st.seed;
+      let t;
+      try { t = make(st.type === "mix" ? ids : [st.type], st.seed, st.level); }
+      catch (e) { console.error("quiz gen error: " + e); $("qz-text").textContent = "Hiba a feladat előállításakor: " + e; return; }
+      st.cur = t; st.sol = solveOf(t.task, t.params); st.checked = false; st.scored = null; st.shown = false; st.stepN = 0;
+      const rd = t.task.render(t.params);
+      const lv = (t.task.levels || []).find(l => l[0] === t.level);
+      $("qz-meta").textContent = (ids.length > 1 ? (t.task.title || t.id) + " · " : "") + t.level + " szint" + (lv && lv[1] ? " – " + lv[1] : "") + " · feladatszám " + st.seed;
+      $("qz-text").innerHTML = rd.text;
+      $("qz-svg").innerHTML = rd.svg || "";
+      $("qz-svg").hidden = !rd.svg;
+      buildFields();
+      $("qz-fb").innerHTML = "";
+      const det = $("qz-steps");
+      det.open = false; $("qz-steplist").innerHTML = ""; $("qz-next").hidden = false; $("qz-all").hidden = false;
+      roundText(); syncUrl();
+      if (R_done()) $("qz-fb").innerHTML = '<span class="muted">A kör véget ért; a feladatot gyakorlásként még megoldhatod, vagy indíts új kört.</span>';
+    }
+    const R_done = () => st.round.done;
+
+    function buildFields() {
+      $("qz-fields").innerHTML = fieldsHtml(st.sol.answers, "qz-f-");
+      const first = $("qz-fields").querySelector("input,select"); if (first && CFG.autofocus) first.focus();
+    }
+    const readField = (i, a) => readFieldAt("qz-f-", i, a);
+
+    function check() {
+      if (!st.cur) return;
+      const typ = st.cur.task.typical_errors ? st.cur.task.typical_errors(st.cur.params, st.sol) || [] : [];
+      const n = st.sol.answers.length;
+      const inputs = st.sol.answers.map((a, i) => readField(i, a));
+      const res = applyHook(st.cur, st.sol, inputs, st.sol.answers.map((a, i) => checkField(a, inputs[i], typ.filter(t => (t.field || st.sol.answers[0].id) === a.id), st.cur.task.tolerance)));
+      const bad = res.filter(r => r.parse && !r.empty).length, empty = res.filter(r => r.empty).length;
+      res.forEach((r, i) => {                       // bevitelhiba: csak jelzés, nem pontozzuk és nem naplózzuk
+        const k = $("qz-f-" + i + "-k"), m = $("qz-f-" + i + "-m");
+        const show_ = !bad || r.parse;
+        k.textContent = !show_ ? "" : r.ok ? "✔" : (r.empty ? "?" : "✘"); k.className = "mark " + (r.ok ? "ok" : "bad");
+        m.innerHTML = !show_ || r.ok ? "" : esc(r.msg || "");
+        m.className = "msg " + (r.typical ? "typ" : "");
+      });
+      if (empty === n) { $("qz-fb").innerHTML = '<span class="muted">Írd be az eredményt (mértékegységgel vagy anélkül), majd kattints az Ellenőrzésre.</span>'; return; }
+      if (bad) { $("qz-fb").innerHTML = '<span class="muted">Javítsd a bevitelt (a jelölt mező nem értelmezhető szám vagy más mértékegység); ez még nem számít próbálkozásnak.</span>'; return; }
+      const good = res.filter(r => r.ok).length;
+      res.forEach((r, i) => { if (!r.ok && !r.empty) logErr(st.sol.answers[i], inputs[i], r.msg); });
+      if (!st.checked) { st.checked = true; st.scored = st.shown ? 0 : good / n; }
+      const all = good === n;
+      $("qz-fb").innerHTML = all ? '<span class="ok">Helyes! ✔</span> ' + (st.scored === 1 ? "(első próbálkozásra, 1 pont)" : "") + ' <span class="muted">– Új feladat: N billentyű vagy a gomb.</span>'
+        : '<span class="bad">' + good + " / " + n + " mező helyes.</span> " + '<span class="muted">Javíthatsz és újra ellenőrizhetsz; a pont az első ellenőrzésből számít (' + fixed(st.scored, st.scored % 1 ? 2 : 0) + ").</span>";
+      roundText();
+      if (all) $("qz-new").focus();
+    }
+
+    function logErr(a, input, msg) {
+      const L = store.get().slice(-199);
+      L.push({ t: new Date().toISOString().slice(0, 16).replace("T", " "), feladat: st.cur.id, szint: st.cur.level, seed: st.seed,
+        mezo: plain(a.label), beirt: Array.isArray(input) ? input.join("+") : String(input), helyes: plain(show(a.value, a)), uzenet: msg });
+      store.set(L); logView();
+    }
+    function logView() {
+      const L = store.get();
+      $("qz-logn").textContent = String(L.length);
+      const ul = $("qz-loglist");
+      ul.innerHTML = L.length ? L.slice(-30).reverse().map(e => "<li><span class='muted'>" + esc(e.t) + " · " + esc(e.feladat) + " " + esc(e.szint) + " #" + e.seed + "</span> " +
+        esc(e.mezo) + ": <b>" + esc(e.beirt) + "</b> (helyes: " + esc(e.helyes) + ") – " + esc(e.uzenet) + "</li>").join("") : "<li class='muted'>Még nincs bejegyzés.</li>";
+    }
+    function logText() {
+      const L = store.get(), cols = ["t", "feladat", "szint", "seed", "mezo", "beirt", "helyes", "uzenet"];
+      return [CFG.title + " – hibanapló", cols.join("\t")].concat(L.map(e => cols.map(c => String(e[c]).replace(/\s+/g, " ")).join("\t"))).join("\n");
+    }
+
+    function showStep(all) {
+      const s = st.sol.steps, ol = $("qz-steplist");
+      if (!st.checked && !st.shown) { st.shown = true; st.scored = 0; $("qz-fb").innerHTML = '<span class="muted">Megnézted a megoldást ellenőrzés előtt: erre a feladatra 0 pont jár, de gyakorlásnak jó.</span>'; st.checked = true; roundText(); }
+      st.shown = true;
+      const upto = all ? s.length : Math.min(s.length, st.stepN + 1);
+      for (let k = st.stepN; k < upto; k++) { const li = document.createElement("li"); li.innerHTML = s[k]; ol.appendChild(li); }
+      st.stepN = upto;
+      if (st.stepN >= s.length) {
+        $("qz-next").hidden = true; $("qz-all").hidden = true;
+        const li = document.createElement("li"); li.className = "res";
+        li.innerHTML = "<b>Eredmény:</b> " + st.sol.answers.map(a => a.label + " = " + esc(show(a.value, a))).join("; ");
+        ol.appendChild(li);
+      }
+    }
+
+    // események
+    $("qz-form").addEventListener("submit", e => { e.preventDefault(); check(); });
+    $("qz-new").addEventListener("click", () => { finishTask(); newTask(st.seed + 1); const f = document.querySelector("#qz-fields input,#qz-fields select"); if (f) f.focus(); });
+    $("qz-seed").addEventListener("change", () => { const v = $("qz-seed").value.trim(); if (/^\d+$/.test(v)) { finishTask(); newTask(+v); } else $("qz-seed").value = st.seed; });
+    $("qz-steps").addEventListener("toggle", () => { if ($("qz-steps").open && st.stepN === 0) showStep(false); });
+    $("qz-next").addEventListener("click", () => showStep(false));
+    $("qz-all").addEventListener("click", () => showStep(true));
+    $("qz-newround").addEventListener("click", () => { st.round = { n: 0, pts: 0, done: false }; newTask(st.seed + 1); });
+    $("qz-exp").addEventListener("click", () => { const ta = $("qz-exptext"); ta.hidden = false; ta.value = logText(); ta.focus(); ta.select(); });
+    $("qz-dl").addEventListener("click", () => {
+      try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([logText()], { type: "text/plain;charset=utf-8" })); a.download = CFG.name + "-hibanaplo.txt"; document.body.appendChild(a); a.click(); a.remove(); }
+      catch (e) { $("qz-exp").click(); /* letöltés tiltva (pl. beágyazott keret): a szövegdobozból másolható */ } });
+    $("qz-clr").addEventListener("click", () => { store.set([]); logView(); $("qz-exptext").hidden = true; });
+    document.addEventListener("keydown", e => {
+      if (e.key === "n" && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|SELECT|TEXTAREA)$/.test((e.target.tagName || ""))) { e.preventDefault(); $("qz-new").click(); }
+    });
+
+    buildLevels(); logView(); newTask(st.seed);
+    if (Q.get("selftest") === "1" && CFG.selftest) {
+      const r = selftest(CFG.selftest);
+      const b = $("qz-selftest"); b.hidden = false;
+      b.className = r.errs.length ? "bad" : "ok";
+      b.textContent = r.errs.length ? "Önteszt: " + r.errs.length + " eltérés (lásd a konzolt)" : "Önteszt rendben: " + r.n + " vektor (JS = Python)";
+    }
+    return st;
+  }
+
+  /* ---------------- Vizsgamód (vegyes gyakorló időre, T-H18-029) ----------------
+     CFG.modes: [{id, label, n, min, type?:"choose"}]; a feladatok magja seed, seed+1, …; a típust (vegyes módban)
+     és a szintet ("*" = vegyes) a mag választja. Egy beküldés feladatonként; pont = helyes mezők aránya. */
+  function examApp(CFG) {
+    const $ = id => document.getElementById(id);
+    const ids = CFG.tasks.filter(id => TASKS[id]);
+    const store = storeFor("vequiz:" + CFG.name);
+    let Q = new URLSearchParams("");
+    try { Q = new URLSearchParams(window.location.search); } catch (e) { /* srcdoc */ }
+    const modes = CFG.modes;
+    const st = { mode: modes[0], type: ids[0], level: "*", seed: 0, list: [], i: 0, res: [], t0: 0, left: 0, timer: null, done: false, sol: null, cur: null, sent: false };
+    const msel = $("qx-mode"), tsel = $("qx-type"), lsel = $("qx-lvl");
+    msel.innerHTML = modes.map(m => '<option value="' + m.id + '">' + esc(m.label) + "</option>").join("");
+    tsel.innerHTML = ids.map(i => '<option value="' + i + '">' + esc(TASKS[i].title || i) + "</option>").join("");
+    lsel.innerHTML = '<option value="*">vegyes</option>' + ["A", "B", "C", "D"].map(l => '<option value="' + l + '">' + l + "</option>").join("");
+    if (Q.get("mode") && modes.some(m => m.id === Q.get("mode"))) msel.value = Q.get("mode");
+    if (Q.get("type") && ids.includes(Q.get("type"))) tsel.value = Q.get("type");
+    if (Q.get("lvl")) lsel.value = Q.get("lvl") === "*" || /^[A-D]$/.test(Q.get("lvl")) ? Q.get("lvl") : "*";
+    $("qx-seed").value = Q.get("seed") !== null && /^\d+$/.test(Q.get("seed")) ? Q.get("seed") : (CFG.seed !== undefined ? CFG.seed : Math.floor(Math.random() * 90000) + 10000);
+    const syncType = () => { $("qx-type-w").hidden = (modes.find(m => m.id === msel.value) || {}).type !== "choose"; };
+    msel.addEventListener("change", syncType); syncType();
+    const mmss = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+
+    function start() {
+      st.mode = modes.find(m => m.id === msel.value); st.level = lsel.value;
+      st.seed = (+$("qx-seed").value || 0) >>> 0; $("qx-seed").value = st.seed;
+      const pool = st.mode.type === "choose" ? [tsel.value] : ids;
+      st.list = []; for (let k = 0; k < st.mode.n; k++) st.list.push(make(pool, st.seed + k, st.level));
+      st.i = 0; st.res = st.list.map(() => null); st.done = false;
+      st.left = st.mode.min * 60; st.t0 = Date.now();
+      try { const u = new URL(window.location.href); u.searchParams.set("seed", st.seed); u.searchParams.set("mode", st.mode.id); u.searchParams.set("lvl", st.level);
+        if (st.mode.type === "choose") u.searchParams.set("type", tsel.value); window.history.replaceState(null, "", u.toString()); } catch (e) { /* file:// / srcdoc */ }
+      $("qx-setup").hidden = true; $("qx-run").hidden = false; $("qx-sum").hidden = true;
+      clearInterval(st.timer);
+      st.timer = setInterval(tick, 1000); tick();
+      show_(0);
+    }
+    function tick() {
+      st.left = st.mode.min * 60 - (Date.now() - st.t0) / 1000;
+      $("qx-clock").textContent = mmss(st.left);
+      $("qx-clock").className = st.left < 120 ? "bad" : "";
+      if (st.left <= 0 && !st.done) finish(true);
+    }
+    function show_(i) {
+      st.i = i; const t = st.list[i]; st.cur = t; st.sol = solveOf(t.task, t.params); st.sent = st.res[i] !== null;
+      const rd = t.task.render(t.params);
+      $("qx-pos").textContent = (i + 1) + " / " + st.list.length;
+      $("qx-meta").textContent = (t.task.title || t.id) + " · " + t.level + " szint · feladatszám " + t.seed;
+      $("qx-text").innerHTML = rd.text; $("qx-svg").innerHTML = rd.svg || ""; $("qx-svg").hidden = !rd.svg;
+      $("qx-fields").innerHTML = fieldsHtml(st.sol.answers, "qx-f-");
+      $("qx-fb").innerHTML = ""; $("qx-steps").hidden = true; $("qx-steps").open = false;
+      $("qx-send").disabled = st.sent; $("qx-prev").disabled = i === 0; $("qx-next").textContent = i + 1 < st.list.length ? "Következő" : "Befejezés";
+      if (st.sent) feedback(st.res[i].inputs);
+      dots();
+      const f = $("qx-fields").querySelector("input,select"); if (f && !st.sent) f.focus();
+    }
+    function dots() {
+      $("qx-dots").innerHTML = st.list.map((t, k) => { const r = st.res[k];
+        return '<button type="button" class="dot' + (k === st.i ? " cur" : "") + (r ? (r.pts === 1 ? " okd" : r.pts > 0 ? " half" : " badd") : "") +
+          '" data-k="' + k + '" aria-label="' + (k + 1) + '. feladat' + (r ? ", beküldve" : "") + '">' + (k + 1) + "</button>"; }).join("");
+      $("qx-dots").querySelectorAll("button").forEach(b => b.addEventListener("click", () => show_(+b.dataset.k)));
+    }
+    function feedback(inputs) {
+      const sel = typicalFor(st.cur, st.sol);
+      let good = 0;
+      const RES = applyHook(st.cur, st.sol, inputs, st.sol.answers.map((a, k) => checkField(a, inputs[k], sel(a), st.cur.task.tolerance)));
+      st.sol.answers.forEach((a, k) => {
+        const r = RES[k];
+        const el = $("qx-f-" + k); if (el) { if ((a.kind || "num") === "multi") el.querySelectorAll("input").forEach(x => { x.checked = (inputs[k] || []).includes(x.value); x.disabled = true; }); else { el.value = inputs[k]; el.disabled = true; } }
+        $("qx-f-" + k + "-k").textContent = r.ok ? "✔" : "✘"; $("qx-f-" + k + "-k").className = "mark " + (r.ok ? "ok" : "bad");
+        $("qx-f-" + k + "-m").innerHTML = r.ok ? "" : esc((r.msg && r.msg !== "Nem jó." ? r.msg + " " : "") + "Helyes: " + plain(show(a.value, a)));
+        $("qx-f-" + k + "-m").className = "msg" + (r.typical ? " typ" : "");
+        if (r.ok) good++;
+      });
+      $("qx-fb").innerHTML = good === st.sol.answers.length ? '<span class="ok">Helyes ✔</span>' : '<span class="bad">' + good + " / " + st.sol.answers.length + " mező helyes.</span>";
+      $("qx-steplist").innerHTML = st.sol.steps.map(x => "<li>" + x + "</li>").join("");
+      $("qx-steps").hidden = false;
+      return good;
+    }
+    function send() {
+      if (st.sent || st.done) return;
+      const inputs = st.sol.answers.map((a, k) => readFieldAt("qx-f-", k, a));
+      const pre = st.sol.answers.map((a, k) => checkField(a, inputs[k], [], st.cur.task.tolerance));
+      if (pre.some(r => r.parse && !r.empty)) {
+        pre.forEach((r, k) => { $("qx-f-" + k + "-m").textContent = r.parse && !r.empty ? r.msg : ""; });
+        $("qx-fb").innerHTML = '<span class="muted">Javítsd a bevitelt (nem értelmezhető szám vagy más mértékegység); ez még nem beküldés.</span>'; return;
+      }
+      const good = feedback(inputs), n = st.sol.answers.length;
+      st.res[st.i] = { inputs: inputs, pts: good / n };
+      st.sent = true; $("qx-send").disabled = true;
+      const sel = typicalFor(st.cur, st.sol);
+      const RES = applyHook(st.cur, st.sol, inputs, st.sol.answers.map((a, k) => checkField(a, inputs[k], sel(a), st.cur.task.tolerance)));
+      st.sol.answers.forEach((a, k) => { const r = RES[k]; if (!r.ok) {
+        const L = store.get().slice(-299);
+        L.push({ t: new Date().toISOString().slice(0, 16).replace("T", " "), feladat: st.cur.id, szint: st.cur.level, seed: st.cur.seed, mezo: plain(a.label),
+          beirt: Array.isArray(inputs[k]) ? inputs[k].join("+") : String(inputs[k]), helyes: plain(show(a.value, a)), uzenet: r.msg || "", ismetles: st.cur.task.section || "" });
+        store.set(L); } });
+      dots();
+      $("qx-next").focus();
+    }
+    function finish(timeout) {
+      if (st.done) return;
+      st.done = true; clearInterval(st.timer);
+      $("qx-run").hidden = true; $("qx-sum").hidden = false;
+      const total = st.res.reduce((a, r) => a + (r ? r.pts : 0), 0), n = st.list.length;
+      const by = {};
+      st.list.forEach((t, k) => { const b = by[t.id] || (by[t.id] = { title: t.task.title || t.id, section: t.task.section || "", chapter: t.task.chapter || "", n: 0, pts: 0, miss: 0 });
+        b.n++; b.pts += st.res[k] ? st.res[k].pts : 0; if (!st.res[k]) b.miss++; });
+      const pct = total / n * 100;
+      $("qx-score").innerHTML = (timeout ? '<span class="bad">Lejárt az idő.</span> ' : "") + "<b>Eredmény: " + fixed(total, total % 1 ? 1 : 0) + " / " + n + " pont (" + fixed(pct, 0) + " %)</b>" +
+        " · felhasznált idő " + mmss(Math.min(st.mode.min * 60, (Date.now() - st.t0) / 1000)) + " · feladatszám " + st.seed;
+      $("qx-bytopic").innerHTML = "<tr><th>Témakör</th><th>Feladat</th><th>Pont</th><th>Ismételd</th></tr>" + Object.values(by).map(b =>
+        "<tr><td>" + esc(b.title) + "</td><td>" + b.n + (b.miss ? " (" + b.miss + " kihagyva)" : "") + "</td><td>" + fixed(b.pts, b.pts % 1 ? 1 : 0) + "</td><td>" +
+        (b.pts < b.n ? (b.chapter ? '<a href="../../' + b.chapter + '.html" target="_top">' + esc(b.section || b.chapter) + "</a>" : esc(b.section)) : "–") + "</td></tr>").join("");
+      logView();
+    }
+    function logView() {
+      const L = store.get();
+      $("qx-logn").textContent = String(L.length);
+      $("qx-loglist").innerHTML = L.length ? L.slice(-40).reverse().map(e => "<li><span class='muted'>" + esc(e.t) + " · " + esc(e.feladat) + " " + esc(e.szint) + " #" + e.seed + "</span> " +
+        esc(e.mezo) + ": <b>" + esc(e.beirt) + "</b> (helyes: " + esc(e.helyes) + ")" + (e.uzenet && e.uzenet !== "Nem jó." ? " – " + esc(e.uzenet) : "") + (e.ismetles ? " · ismételd: " + esc(e.ismetles) : "") + "</li>").join("")
+        : "<li class='muted'>Még nincs bejegyzés.</li>";
+    }
+    const logText = () => { const cols = ["t", "feladat", "szint", "seed", "mezo", "beirt", "helyes", "uzenet", "ismetles"];
+      return [CFG.title + " – hibanapló", cols.join("\t")].concat(store.get().map(e => cols.map(c => String(e[c] === undefined ? "" : e[c]).replace(/\s+/g, " ")).join("\t"))).join("\n"); };
+
+    $("qx-start").addEventListener("click", start);
+    $("qx-form").addEventListener("submit", e => { e.preventDefault(); send(); });
+    $("qx-prev").addEventListener("click", () => { if (st.i > 0) show_(st.i - 1); });
+    $("qx-next").addEventListener("click", () => { if (st.i + 1 < st.list.length) show_(st.i + 1); else finish(false); });
+    $("qx-stop").addEventListener("click", () => finish(false));
+    $("qx-again").addEventListener("click", () => { $("qx-seed").value = st.seed + st.list.length; $("qx-sum").hidden = true; $("qx-setup").hidden = false; });
+    $("qx-exp").addEventListener("click", () => { const ta = $("qx-exptext"); ta.hidden = false; ta.value = logText(); ta.focus(); ta.select(); });
+    $("qx-clr").addEventListener("click", () => { store.set([]); logView(); });
+    logView();
+    if (Q.get("selftest") === "1" && CFG.selftest) {
+      const r = selftest(CFG.selftest);
+      const b = $("qz-selftest"); b.hidden = false; b.className = r.errs.length ? "bad" : "ok";
+      b.textContent = r.errs.length ? "Önteszt: " + r.errs.length + " eltérés (lásd a konzolt)" : "Önteszt rendben: " + r.n + " vektor (JS = Python)";
+    }
+    if (Q.get("start") === "1") start();
+    return st;
+  }
+
+  const core = {};                                   // témaköri számítómagok: QZ.core.<modul>.<függvény>
+  return { register, TASKS, ORDER, core, examApp, fieldsHtml, readFieldAt, RNG, mulberry32, eValues, isESeries, ESERIES, fixed, sig, si, show, splitUnit, parse,
+    within, checkField, plain, esc, make, solveOf, selftest, app, PFX_EXP };
+})();
+const register = QZ.register;
+
+/* quiz_svg.js – SVG-rajzolók a feladatgenerátorokhoz (T-H0-001). Minden függvény SVG-szöveget ad vissza
+   (a render(p).svg mezőbe), a színeket CSS-osztályok adják (.q-ln vonal, .q-tx szöveg, .q-mu halvány,
+   .q-hl kiemelt/keresett, .q-hl2 második kiemelés, .q-fill háttérkitöltés), így világos/sötét témában
+   újrarajzolás nélkül jó. Rajzjelek: MSZ EN 60617 (IEC) – a könyv `circuit` rajzolójához igazítva.
+
+   QSVG.circuit({w, h, unit, title})          – rácsos kapcsolási rajz (y felfelé nő, mint a circuit-blokkban)
+     .wire([[x,y],…]) .dot([x,y]) .node([x,y], "A", {pos}) .term([x,y], "A", {pos}) .text([x,y], "s", {anchor, cls, size})
+     .res(a,b,o) .src(a,b,o) .ac(a,b,o) .sw(a,b,o) .lamp(a,b,o) .meter(a,b,{sym:"A"}) .cap(a,b,o) .ind(a,b,o)
+     .fuse(a,b,o) .load(a,b,{sym}) .two(kind,a,b,o)   o: {label, value, left, hl, closed, on, lsize}
+     .iarrow(a,b,"I")  áramnyíl a vezetéken a→b   .uarrow(a,b,"U",{side})  feszültségnyíl (számlálóirány) a→b mellett
+     .box([x,y],[w,h],"szöveg") .arrow(a,b,{label}) .toString()
+   QSVG.resTree(tree, {unit, labels:["A","B"], title})   soros–párhuzamos ellenállásfa
+     tree: "R1" | {l:"R1", v:"10 Ω", hl, kind} | {s:[…]} (soros) | {p:[…]} (párhuzamos)
+   QSVG.phasors({vectors:[{label, to:[x,y] (abszolút) | d:[dx,dy] | mag+ang (fok), from:[x,y]|"címke" (head-to-tail), dashed, hl}], arcs:[{a, b, label, r}], size, ref})
+   QSVG.timing({t:[t0,t1], unit, ticks, rows:[{label, steps:[[t,v],…]} | {label, fn, lo, hi} | {label, points}], marks:[{t,label}]})
+   QSVG.chain({from:"P_fel", to:"P_le", blocks:["η_1 = 0,88", …], losses:["P_v1", …]})  energialánc (hatásfok)
+   Feliratokban az "U_R", "I_{Δn}" alak alsó indexet ad; a „?”-et tartalmazó felirat (a keresett mennyiség)
+   automatikusan kiemelt színű és félkövér (q-hl2t). */
+"use strict";
+const QSVG = (function () {
+  const f1 = x => String(Math.round(x * 10) / 10);
+  const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  /* "U_R", "I_{Δn}" → <tspan> alsó index */
+  function rich(s) {
+    const out = []; let rest = String(s);
+    const rx = /_\{([^}]*)\}|_([A-Za-z0-9µΔ]+)/;
+    let m;
+    while ((m = rx.exec(rest))) {
+      out.push(esc(rest.slice(0, m.index)));
+      out.push('<tspan baseline-shift="sub" font-size="75%">' + esc(m[1] !== undefined ? m[1] : m[2]) + "</tspan>");
+      rest = rest.slice(m.index + m[0].length);
+    }
+    out.push(esc(rest));
+    return out.join("");
+  }
+  function txt(x, y, s, o) {
+    o = o || {};
+    return '<text x="' + f1(x) + '" y="' + f1(y) + '" text-anchor="' + (o.anchor || "middle") + '" dominant-baseline="central" font-size="' + (o.size || 14) + '"' +
+      (o.bold ? ' font-weight="bold"' : "") + ' class="' + (o.cls || (String(s).indexOf("?") >= 0 ? "q-hl2t" : "q-tx")) + '">' + rich(s) + "</text>";
+  }
+  function head(x, y, ang, cls, sz) {             // kitöltött nyílhegy (x,y) csúccsal, ang irányba
+    sz = sz || 9;
+    const a1 = ang + Math.PI - 0.38, a2 = ang + Math.PI + 0.38;
+    return '<polygon points="' + f1(x) + "," + f1(y) + " " + f1(x + sz * Math.cos(a1)) + "," + f1(y + sz * Math.sin(a1)) + " " +
+      f1(x + sz * Math.cos(a2)) + "," + f1(y + sz * Math.sin(a2)) + '" class="' + (cls || "q-ar") + '"/>';
+  }
+
+  /* ---------------- Rácsos kapcsolási rajz ---------------- */
+  class Circuit {
+    constructor(o) {
+      o = o || {};
+      this.u = o.unit || 46; this.w = o.w || 8; this.h = o.h || 5; this.x0 = o.x0 || 0; this.y0 = o.y0 || 0;
+      this.pad = o.pad === undefined ? 1.1 : o.pad; this.title = o.title || "kapcsolási rajz"; this.yDown = !!o.yDown;
+      this.items = []; this.top = [];
+    }
+    P(p) {
+      const X = (p[0] - this.x0 + this.pad) * this.u;
+      const Y = this.yDown ? (p[1] - this.y0 + this.pad) * this.u : (this.y0 + this.h - p[1] + this.pad) * this.u;
+      return [X, Y];
+    }
+    add(s) { this.items.push(s); return this; }
+    wire(pts, o) {
+      o = o || {};
+      this.add('<polyline points="' + pts.map(p => this.P(p).map(f1).join(",")).join(" ") + '" class="' + (o.hl ? "q-ln q-hl" : "q-ln") + '"' + (o.dashed ? ' stroke-dasharray="6 4"' : "") + "/>");
+      return this;
+    }
+    dot(p) { const q = this.P(p); return this.add('<circle cx="' + f1(q[0]) + '" cy="' + f1(q[1]) + '" r="4" class="q-dot"/>'); }
+    term(p, label, o) {
+      o = o || {}; const q = this.P(p);
+      this.add('<circle cx="' + f1(q[0]) + '" cy="' + f1(q[1]) + '" r="5" class="q-ln q-fill"/>');
+      if (label) this._lab(q, label, o.pos || "left", 16, true);
+      return this;
+    }
+    node(p, label, o) { this.dot(p); if (label) this._lab(this.P(p), label, (o && o.pos) || "above", 13, true); return this; }
+    _lab(q, s, pos, d, bold) {
+      const D = { left: [-d, 0, "end"], right: [d, 0, "start"], above: [0, -d, "middle"], below: [0, d, "middle"],
+        "above-left": [-d * 0.7, -d * 0.8, "end"], "above-right": [d * 0.7, -d * 0.8, "start"], "below-left": [-d * 0.7, d * 0.8, "end"], "below-right": [d * 0.7, d * 0.8, "start"] }[pos] || [0, -d, "middle"];
+      this.top.push(txt(q[0] + D[0], q[1] + D[1], s, { anchor: D[2], bold: bold }));
+    }
+    text(p, s, o) { o = o || {}; const q = this.P(p); this.top.push(txt(q[0] + (o.dx || 0), q[1] + (o.dy || 0), s, o)); return this; }
+
+    /* kétkivezetésű elem az a–b (vízszintes vagy függőleges) szakaszon; a rajzjel a közepén, 2×h hosszú */
+    two(kind, a, b, o) {
+      o = o || {};
+      const A = this.P(a), B = this.P(b), L = Math.hypot(B[0] - A[0], B[1] - A[1]);
+      const ang = Math.atan2(B[1] - A[1], B[0] - A[0]) * 180 / Math.PI, cx = (A[0] + B[0]) / 2, cy = (A[1] + B[1]) / 2;
+      const h = { res: 26, src: 9, ac: 20, sw: 22, lamp: 17, meter: 17, cap: 6, ind: 26, fuse: 24, load: 22, diode: 12, led: 12, zener: 12 }[kind] || 22;
+      const ln = o.hl ? "q-ln q-hl" : "q-ln";
+      const g = [];
+      const seg = (x1, y1, x2, y2, cls, extra) => g.push('<line x1="' + f1(x1) + '" y1="' + f1(y1) + '" x2="' + f1(x2) + '" y2="' + f1(y2) + '" class="' + (cls || ln) + '"' + (extra || "") + "/>");
+      seg(-L / 2, 0, -h, 0, "q-ln"); seg(h, 0, L / 2, 0, "q-ln");
+      if (kind === "res") g.push('<rect x="' + -h + '" y="-9" width="' + 2 * h + '" height="18" class="' + ln + ' q-fill"/>');
+      else if (kind === "fuse") { g.push('<rect x="' + -h + '" y="-9" width="' + 2 * h + '" height="18" class="' + ln + ' q-fill"/>'); seg(-h, 0, h, 0); }
+      else if (kind === "load") { g.push('<rect x="' + -h + '" y="-15" width="' + 2 * h + '" height="30" class="' + ln + ' q-fill"/>'); }
+      else if (kind === "src") {                       // egyenfeszültség-forrás: hosszú lap = +, a b vég felé
+        seg(-h, 0, -h, 0, "q-ln"); seg(-9, 0, -4, 0, "q-ln"); seg(4, 0, 9, 0, "q-ln");
+        seg(-4, -9, -4, 9, ln, ' stroke-width="4"'); seg(4, -19, 4, 19, ln);
+      } else if (kind === "ac") {
+        g.push('<circle cx="0" cy="0" r="' + h + '" class="' + ln + ' q-fill"/>');
+        g.push('<path d="M -11 0 C -6 -12, -1 -12, 0 0 S 6 12, 11 0" class="' + ln + '" fill="none"/>');
+      } else if (kind === "lamp") {
+        g.push('<circle cx="0" cy="0" r="' + h + '" class="' + ln + (o.on ? " q-lit" : " q-fill") + '"/>');
+        seg(-12, -12, 12, 12); seg(-12, 12, 12, -12);
+      } else if (kind === "meter") {
+        g.push('<circle cx="0" cy="0" r="' + h + '" class="' + ln + ' q-fill"/>');
+      } else if (kind === "sw") {
+        g.push('<circle cx="' + -h + '" cy="0" r="3" class="q-dot"/>', '<circle cx="' + h + '" cy="0" r="3" class="q-dot"/>');
+        if (o.closed) seg(-h, 0, h, 0); else seg(-h, 0, h - 3, -20);
+      } else if (kind === "cap") { seg(-h, 0, -h, 0); seg(-h, -15, -h, 15, ln, ' stroke-width="3"'); seg(h, -15, h, 15, ln, ' stroke-width="3"'); }
+      else if (kind === "ind") {                       // IEC: négy félkörív
+        let d = "M " + -h + " 0"; for (let k = 0; k < 4; k++) d += " a 6.5 6.5 0 0 1 13 0";
+        g.push('<path d="' + d + '" class="' + ln + '" fill="none"/>');
+      } else if (kind === "diode" || kind === "led" || kind === "zener") {   // IEC: a = anód, b = katód (háromszög → katódvonal)
+        g.push('<path d="M ' + -h + ' -15 L ' + -h + ' 15 L ' + h + ' 0 Z" class="' + ln + ' q-fill"/>');
+        seg(-h, 0, h, 0); seg(h, -15, h, 15, ln, ' stroke-width="2.4"');
+        if (kind === "zener") { seg(h, -15, h - 7, -20); seg(h, 15, h + 7, 20); }
+        if (kind === "led") [-5, 6].forEach(du => {      // kifelé mutató fénynyilak (a –v oldalon)
+          const x1 = du, y1 = -19, x2 = du + 11, y2 = -32;
+          seg(x1, y1, x2 - 3.5, y2 + 4.2);
+          g.push(head(x2, y2, Math.atan2(y2 - y1, x2 - x1), "q-ar", 8));
+        });
+      }
+      let s = '<g transform="translate(' + f1(cx) + "," + f1(cy) + ") rotate(" + f1(ang) + ')">' + g.join("") + "</g>";
+      if (kind === "meter" || kind === "load") s += txt(cx, cy, o.sym || (kind === "meter" ? "V" : ""), { size: 15, bold: kind === "meter" });
+      if (kind === "src" && o.plus !== false) {        // + jel a pozitív (b felőli) lap mellé, a felirattal ellentétes oldalon
+        const ux = (B[0] - A[0]) / L, uy = (B[1] - A[1]) / L, vert = Math.abs(ux) < 0.5;
+        const px = cx + ux * 12 + (vert ? (o.left ? 20 : -20) : 0), py = cy + uy * 12 + (vert ? 0 : (o.below ? -22 : 22));
+        s += txt(px, py, "+", { size: 15 });
+      }
+      this.add(s);
+      // felirat: vízszintesnél fölötte (label, alatta value is fölött), függőlegesnél jobbra/balra
+      const horiz = Math.abs(B[1] - A[1]) < 1e-6, size = o.lsize || 14;
+      const hh = { res: 9, fuse: 9, load: 15, src: 19, ac: 20, sw: 20, lamp: 17, meter: 17, cap: 15, ind: 7, diode: 16, zener: 20, led: 32 }[kind] || 15;  // a rajzjel fél-vastagsága
+      const lines = [o.label, o.value].filter(x => x !== undefined && x !== null && x !== "");
+      const clsOf = k => undefined;                   // a „?”-et tartalmazó sor automatikusan kiemelt (txt)
+      if (horiz) {
+        const off = hh + 11, base = cy - off - (lines.length - 1) * (size + 3);
+        lines.forEach((t, k) => this.top.push(txt(cx, (o.below ? cy + off + k * (size + 3) : base + k * (size + 3)), t, { size: size, bold: k === 0 && !!o.label, cls: clsOf(k) })));
+      } else {
+        const d = hh + 12, x = o.left ? cx - d : cx + d, y0 = cy - (lines.length - 1) * (size + 3) / 2;
+        lines.forEach((t, k) => this.top.push(txt(x, y0 + k * (size + 3), t, { anchor: o.left ? "end" : "start", size: size, bold: k === 0 && !!o.label, cls: clsOf(k) })));
+      }
+      return this;
+    }
+    res(a, b, o) { return this.two("res", a, b, o); }
+    src(a, b, o) { return this.two("src", a, b, o); }
+    ac(a, b, o) { return this.two("ac", a, b, o); }
+    sw(a, b, o) { return this.two("sw", a, b, o); }
+    lamp(a, b, o) { return this.two("lamp", a, b, o); }
+    meter(a, b, o) { return this.two("meter", a, b, o); }
+    cap(a, b, o) { return this.two("cap", a, b, o); }
+    ind(a, b, o) { return this.two("ind", a, b, o); }
+    fuse(a, b, o) { return this.two("fuse", a, b, o); }
+    load(a, b, o) { return this.two("load", a, b, o); }
+    diode(a, b, o) { return this.two("diode", a, b, o); }   // a = anód, b = katód
+    led(a, b, o) { return this.two("led", a, b, o); }
+    zener(a, b, o) { return this.two("zener", a, b, o); }   // záróirányú beépítés: b (katód) a + felé
+    /* tranzisztor (run.py-alakkal azonos): 'at' a bázis-/kapuvonal; kapcsok rácsban: B/G (x−1, y),
+       C/D (x+0,6, y+1), E/S (x+0,6, y−1) – „fent” a képernyőn felfelé (yDown esetén y−1). Opció: label (jobbra). */
+    _tr(kind, at, o) {
+      o = o || {}; const q = this.P(at), u = this.u, x = q[0], y = q[1], g = [];
+      const L = (x1, y1, x2, y2, w) => g.push('<line x1="' + f1(x1) + '" y1="' + f1(y1) + '" x2="' + f1(x2) + '" y2="' + f1(y2) + '" class="q-ln"' + (w ? ' stroke-width="' + w + '"' : "") + "/>");
+      const cx = x + 0.6 * u;
+      if (kind === "nmos") {
+        L(x - u, y, x - 0.22 * u, y); L(x - 0.22 * u, y - 0.45 * u, x - 0.22 * u, y + 0.45 * u, 2.4);
+        [[0.28, 0.58], [-0.15, 0.15], [-0.58, -0.28]].forEach(([a, b]) => L(x, y - a * u, x, y - b * u, 2.6));
+        L(x, y - 0.43 * u, cx, y - 0.43 * u); L(cx, y - 0.43 * u, cx, y - u);           // D
+        L(x, y + 0.43 * u, cx, y + 0.43 * u); L(cx, y + 0.43 * u, cx, y + u);           // S
+        L(cx, y, cx, y + 0.43 * u); L(cx, y, x + 0.12 * u, y);
+        g.push(head(x + 0.04 * u, y, Math.PI, "q-ar", 10));                          // hordozónyíl a csatorna felé
+        g.push('<circle cx="' + f1(cx) + '" cy="' + f1(y + 0.43 * u) + '" r="3" class="q-dot"/>');
+      } else {
+        L(x - u, y, x, y); L(x, y - 0.45 * u, x, y + 0.45 * u, 3);
+        L(x, y - 0.2 * u, cx, y - 0.6 * u); L(cx, y - 0.6 * u, cx, y - u);           // C
+        L(x, y + 0.2 * u, cx, y + 0.6 * u); L(cx, y + 0.6 * u, cx, y + u);           // E
+        const ang = Math.atan2(0.4, 0.6);
+        if (kind === "npn") g.push(head(x + 0.48 * u, y + 0.52 * u, ang, "q-ar", 11));  // nyíl kifelé (E felé)
+        else g.push(head(x + 0.14 * u, y + 0.29 * u, ang + Math.PI, "q-ar", 11));       // PNP: befelé
+      }
+      g.push('<circle cx="' + f1(x + 0.25 * u) + '" cy="' + f1(y) + '" r="' + f1(0.78 * u) + '" class="q-ln" fill="none" stroke-width="1.2"/>');
+      this.add(g.join(""));
+      if (o.label) this.top.push(txt(x + 1.15 * u, y, o.label, { anchor: "start", size: o.lsize || 14, bold: true }));
+      if (o.value) this.top.push(txt(x + 1.15 * u, y + 18, o.value, { anchor: "start", size: o.lsize || 14 }));
+      return this;
+    }
+    npn(at, o) { return this._tr("npn", at, o); }
+    pnp(at, o) { return this._tr("pnp", at, o); }
+    nmos(at, o) { return this._tr("nmos", at, o); }
+    /* áramnyíl a vezetéken (a→b irányba, a szakasz közepén) */
+    iarrow(a, b, label, o) {
+      o = o || {};
+      const A = this.P(a), B = this.P(b), ang = Math.atan2(B[1] - A[1], B[0] - A[0]);
+      const t = o.at === undefined ? 0.5 : o.at, x = A[0] + (B[0] - A[0]) * t + 6 * Math.cos(ang), y = A[1] + (B[1] - A[1]) * t + 6 * Math.sin(ang);
+      this.top.push(head(x, y, ang, o.hl ? "q-ar q-hlf" : "q-ar", 12));
+      if (label) {
+        const horiz = Math.abs(B[1] - A[1]) < 1e-6, side = o.side || 1;
+        this.top.push(horiz ? txt(x - 6 * Math.cos(ang), y - 16 * side, label, { size: 14, cls: o.hl ? "q-hl2t" : "q-tx" })
+          : txt(x + 14 * side, y - 6 * Math.sin(ang), label, { size: 14, anchor: side > 0 ? "start" : "end", cls: o.hl ? "q-hl2t" : "q-tx" }));
+      }
+      return this;
+    }
+    /* feszültségnyíl (számlálóirány a→b) a szakasz mellett, side: +1 jobbra/lent, −1 balra/fent (a menetirányhoz képest) */
+    uarrow(a, b, label, o) {
+      o = o || {};
+      const A = this.P(a), B = this.P(b), L = Math.hypot(B[0] - A[0], B[1] - A[1]);
+      const ux = (B[0] - A[0]) / L, uy = (B[1] - A[1]) / L, side = o.side || 1, d = (o.dist || 0.8) * this.u;
+      const nx = -uy * side, ny = ux * side, sh = o.shrink === undefined ? 0.22 : o.shrink;
+      const x1 = A[0] + ux * L * sh + nx * d, y1 = A[1] + uy * L * sh + ny * d, x2 = B[0] - ux * L * sh + nx * d, y2 = B[1] - uy * L * sh + ny * d;
+      const cls = o.hl ? "q-ln q-hl" : "q-ln";
+      this.top.push('<line x1="' + f1(x1) + '" y1="' + f1(y1) + '" x2="' + f1(x2 - ux * 8) + '" y2="' + f1(y2 - uy * 8) + '" class="' + cls + '" stroke-width="1.6"/>');
+      this.top.push(head(x2, y2, Math.atan2(uy, ux), o.hl ? "q-ar q-hlf" : "q-ar", 11));
+      if (label) {
+        const mx = (x1 + x2) / 2 + nx * 16, my = (y1 + y2) / 2 + ny * 16;
+        const an = Math.abs(nx) < 0.3 ? "middle" : (nx > 0 ? "start" : "end");
+        this.top.push(txt(mx, my, label, { size: 14, anchor: an, cls: o.hl ? "q-hl2t" : "q-tx" }));
+      }
+      return this;
+    }
+    box(p, wh, s, o) {
+      o = o || {}; const q = this.P(p), w = wh[0] * this.u, h = wh[1] * this.u;
+      this.add('<rect x="' + f1(q[0] - w / 2) + '" y="' + f1(q[1] - h / 2) + '" width="' + f1(w) + '" height="' + f1(h) + '" rx="4" class="q-ln q-fill' + (o.hl ? " q-hl" : "") + '"/>');
+      String(s || "").split("\n").forEach((t, k, arr) => this.top.push(txt(q[0], q[1] + (k - (arr.length - 1) / 2) * 17, t, { size: o.size || 14 })));
+      return this;
+    }
+    arrow(a, b, o) {
+      o = o || {}; const A = this.P(a), B = this.P(b), ang = Math.atan2(B[1] - A[1], B[0] - A[0]);
+      this.add('<line x1="' + f1(A[0]) + '" y1="' + f1(A[1]) + '" x2="' + f1(B[0] - 8 * Math.cos(ang)) + '" y2="' + f1(B[1] - 8 * Math.sin(ang)) + '" class="q-ln' + (o.hl ? " q-hl" : "") + '"' + (o.dashed ? ' stroke-dasharray="6 4"' : "") + "/>");
+      this.top.push(head(B[0], B[1], ang, o.hl ? "q-ar q-hlf" : "q-ar", 11));
+      if (o.label) this.top.push(txt((A[0] + B[0]) / 2 + (o.dx || 0), (A[1] + B[1]) / 2 + (o.dy === undefined ? -13 : o.dy), o.label, { size: o.size || 13 }));
+      return this;
+    }
+    toString() {
+      const W = (this.w + 2 * this.pad) * this.u, H = (this.h + 2 * this.pad) * this.u;
+      return '<svg class="qsvg" viewBox="0 0 ' + f1(W) + " " + f1(H) + '" role="img" aria-label="' + esc(this.title) + '" style="max-width:' + Math.round(W) + 'px">' + this.items.join("") + this.top.join("") + "</svg>";
+    }
+  }
+  function circuit(o) { return new Circuit(o); }
+
+  /* ---------------- Soros–párhuzamos ellenállásfa ---------------- */
+  function resTree(tree, o) {
+    o = o || {};
+    const LW = 3, LH = 1.7;                     // levél: 3 egység széles, 1,7 magas (felirattal)
+    function size(n) {
+      if (typeof n === "string" || n.l !== undefined) return [LW, LH];
+      if (n.s) { const z = n.s.map(size); return [z.reduce((a, b) => a + b[0], 0), Math.max.apply(null, z.map(q => q[1]))]; }
+      const z = n.p.map(size); return [Math.max.apply(null, z.map(q => q[0])) + 2, z.reduce((a, b) => a + b[1], 0)];
+    }
+    const [W, H] = size(tree);
+    const c = new Circuit({ w: W + 2, h: H, unit: o.unit || 40, yDown: true, pad: 0.6, title: o.title || "ellenállás-hálózat" });
+    function draw(n, x, y) {                       // x: bal szél, y: a középvonal
+      const [w] = size(n);
+      if (typeof n === "string" || n.l !== undefined) {
+        const L = typeof n === "string" ? { l: n } : n;
+        c.two(L.kind || "res", [x, y], [x + LW, y], { label: L.l, value: L.v, hl: L.hl, lsize: 13 });
+        return;
+      }
+      if (n.s) { let xx = x; n.s.forEach(ch => { draw(ch, xx, y); xx += size(ch)[0]; }); return; }
+      const z = n.p.map(size), Ht = z.reduce((a, b) => a + b[1], 0), xl = x + 1, xr = x + w - 1, inner = w - 2;
+      let yy = y - Ht / 2; const ys = [];
+      n.p.forEach((ch, i) => {
+        const yc = yy + z[i][1] / 2, cw = z[i][0], cx = xl + (inner - cw) / 2;
+        ys.push(yc);
+        if (cx > xl + 1e-9) c.wire([[xl, yc], [cx, yc]]);
+        if (cx + cw < xr - 1e-9) c.wire([[cx + cw, yc], [xr, yc]]);
+        draw(ch, cx, yc); yy += z[i][1];
+      });
+      c.wire([[x, y], [xl, y]]); c.wire([[xr, y], [x + w, y]]);
+      c.wire([[xl, ys[0]], [xl, ys[ys.length - 1]]]); c.wire([[xr, ys[0]], [xr, ys[ys.length - 1]]]);
+      const pts = ys.concat([y]).filter((v, i, a) => a.findIndex(q => Math.abs(q - v) < 1e-9) === i);
+      pts.forEach(yp => {
+        const deg = (yp > ys[0] + 1e-9 ? 1 : 0) + (yp < ys[ys.length - 1] - 1e-9 ? 1 : 0) + (ys.some(q => Math.abs(q - yp) < 1e-9) ? 1 : 0) + (Math.abs(yp - y) < 1e-9 ? 1 : 0);
+        if (deg >= 3) { c.dot([xl, yp]); c.dot([xr, yp]); }
+      });
+    }
+    const ym = H / 2;
+    draw(tree, 1, ym);
+    c.wire([[0, ym], [1, ym]]); c.wire([[W + 1, ym], [W + 2, ym]]);
+    const lab = o.labels || ["A", "B"];
+    c.term([0, ym], lab[0], { pos: "left" }); c.term([W + 2, ym], lab[1], { pos: "right" });
+    c.pad = 0.6; c.x0 = -0.5; c.w = W + 3;
+    return c.toString();
+  }
+
+  /* ---------------- Fázorábra ---------------- */
+  function phasors(o) {
+    const size = o.size || 320, V = o.vectors || [], ends = {};
+    const pts = [[0, 0]];
+    const vec = V.map(v => {                   // to: abszolút végpont; d: [dx,dy] vagy mag+ang: a kezdőponthoz képest
+      const from = v.from === undefined ? [0, 0] : (typeof v.from === "string" ? (ends[v.from] || [0, 0]) : v.from);
+      const to = v.to ? v.to : v.d ? [from[0] + v.d[0], from[1] + v.d[1]]
+        : [from[0] + v.mag * Math.cos(v.ang * Math.PI / 180), from[1] + v.mag * Math.sin(v.ang * Math.PI / 180)];
+      if (v.label) ends[v.label] = to;
+      pts.push(from, to);
+      return { v: v, from: from, to: to };
+    });
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    let x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+    const span = Math.max(x1 - x0, y1 - y0) || 1, m = span * 0.16;
+    x0 -= m; x1 += m * 1.6; y0 -= m; y1 += m;
+    const k = (size - 20) / Math.max(x1 - x0, y1 - y0), W = (x1 - x0) * k + 20, H = (y1 - y0) * k + 20;
+    const X = x => 10 + (x - x0) * k, Y = y => H - 10 - (y - y0) * k;
+    const out = [];
+    if (o.ref !== false) {
+      out.push('<line x1="' + f1(X(Math.min(0, x0))) + '" y1="' + f1(Y(0)) + '" x2="' + f1(W - 6) + '" y2="' + f1(Y(0)) + '" class="q-mu" stroke-dasharray="5 4" stroke-width="1.2"/>');
+      out.push(txt(W - 8, Y(0) + 13, o.refLabel || "ref.", { anchor: "end", size: 12, cls: "q-mut" }));
+    }
+    (o.arcs || []).forEach(a => {
+      const angOf = q => typeof q === "number" ? q * Math.PI / 180 : Math.atan2(ends[q][1], ends[q][0]);
+      const a0 = angOf(a.a === undefined ? 0 : a.a), a1 = angOf(a.b), r = (a.r || 0.28) * span * k;
+      const sx = X(0) + r * Math.cos(a0), sy = Y(0) - r * Math.sin(a0), ex = X(0) + r * Math.cos(a1), ey = Y(0) - r * Math.sin(a1);
+      const sweep = a1 > a0 ? 0 : 1, large = Math.abs(a1 - a0) > Math.PI ? 1 : 0;
+      out.push('<path d="M ' + f1(sx) + " " + f1(sy) + " A " + f1(r) + " " + f1(r) + " 0 " + large + " " + sweep + " " + f1(ex) + " " + f1(ey) + '" class="q-ln" fill="none" stroke-width="1.4"/>');
+      out.push(head(ex, ey, Math.atan2(-Math.cos(a1) * (a1 > a0 ? 1 : -1), -Math.sin(a1) * (a1 > a0 ? 1 : -1)), "q-ar", 8));
+      const am = (a0 + a1) / 2, rr = r + 14;
+      out.push(txt(X(0) + rr * Math.cos(am), Y(0) - rr * Math.sin(am), a.label || "φ", { size: 14, anchor: Math.cos(am) > 0.3 ? "start" : Math.cos(am) < -0.3 ? "end" : "middle" }));
+    });
+    vec.forEach(q => {
+      const x1p = X(q.from[0]), y1p = Y(q.from[1]), x2p = X(q.to[0]), y2p = Y(q.to[1]);
+      const ang = Math.atan2(y2p - y1p, x2p - x1p), L = Math.hypot(x2p - x1p, y2p - y1p);
+      if (L < 1) return;
+      const cls = q.v.hl ? "q-ln q-hl" : "q-ln";
+      out.push('<line x1="' + f1(x1p) + '" y1="' + f1(y1p) + '" x2="' + f1(x2p - 9 * Math.cos(ang)) + '" y2="' + f1(y2p - 9 * Math.sin(ang)) + '" class="' + cls + '" stroke-width="' + (q.v.thin ? 1.6 : 2.4) + '"' + (q.v.dashed ? ' stroke-dasharray="7 5"' : "") + "/>");
+      out.push(head(x2p, y2p, ang, q.v.hl ? "q-ar q-hlf" : "q-ar", 12));
+      if (q.v.label) {
+        const side = q.v.side || 1, nx = Math.sin(ang) * side, ny = -Math.cos(ang) * side;
+        const at = q.v.at === undefined ? 0.62 : q.v.at;
+        const lx = x1p + (x2p - x1p) * at + nx * 15, ly = y1p + (y2p - y1p) * at + ny * 15;
+        out.push(txt(lx, ly, q.v.label, { size: 15, bold: true, anchor: Math.abs(nx) < 0.35 ? "middle" : nx > 0 ? "start" : "end", cls: q.v.hl ? "q-hl2t" : "q-tx" }));
+      }
+    });
+    out.push('<circle cx="' + f1(X(0)) + '" cy="' + f1(Y(0)) + '" r="3" class="q-dot"/>');
+    return '<svg class="qsvg" viewBox="0 0 ' + f1(W) + " " + f1(H) + '" role="img" aria-label="' + esc(o.title || "fázorábra") + '" style="max-width:' + Math.round(W) + 'px">' + out.join("") + "</svg>";
+  }
+
+  /* ---------------- Idődiagram ---------------- */
+  function timing(o) {
+    const W = o.width || 560, LW = o.labelWidth || 74, RH = o.rowHeight || 52, rows = o.rows || [], top = (o.marks && o.marks.length) ? 22 : 8;
+    const H = top + rows.length * RH + 34, t0 = o.t[0], t1 = o.t[1];
+    const X = t => LW + (t - t0) / (t1 - t0) * (W - LW - 14);
+    const out = [];
+    const fmt = x => String(Math.round(x * 1e6) / 1e6).replace(".", ",");
+    (o.ticks || []).forEach(t => {
+      out.push('<line x1="' + f1(X(t)) + '" y1="' + top + '" x2="' + f1(X(t)) + '" y2="' + f1(H - 30) + '" class="q-grid"/>');
+      out.push(txt(X(t), H - 20, fmt(t), { size: 12, cls: "q-mut" }));
+    });
+    out.push('<line x1="' + LW + '" y1="' + f1(H - 30) + '" x2="' + (W - 8) + '" y2="' + f1(H - 30) + '" class="q-ln" stroke-width="1.4"/>');
+    out.push(head(W - 4, H - 30, 0, "q-ar", 9));
+    out.push(txt(W - 6, H - 8, "t" + (o.unit ? " (" + o.unit + ")" : ""), { anchor: "end", size: 12 }));
+    rows.forEach((r, i) => {
+      const yb = top + (i + 1) * RH - 10, ya = top + i * RH + 12;   // alsó/felső szint
+      out.push(txt(LW - 10, (ya + yb) / 2, r.label || "", { anchor: "end", size: 14, bold: true }));
+      out.push('<line x1="' + LW + '" y1="' + f1(yb) + '" x2="' + (W - 14) + '" y2="' + f1(yb) + '" class="q-grid"/>');
+      let pts = [];
+      if (r.steps) {
+        const lo = r.lo === undefined ? 0 : r.lo, hi = r.hi === undefined ? 1 : r.hi, Yv = v => yb - (v - lo) / (hi - lo) * (yb - ya);
+        r.steps.forEach((s, k) => {
+          const tEnd = k + 1 < r.steps.length ? r.steps[k + 1][0] : t1;
+          if (k > 0) pts.push([X(s[0]), Yv(r.steps[k - 1][1])]);
+          pts.push([X(s[0]), Yv(s[1])], [X(tEnd), Yv(s[1])]);
+        });
+      } else {
+        const lo = r.lo, hi = r.hi, Yv = v => yb - (v - lo) / (hi - lo) * (yb - ya);
+        if (lo < 0 && hi > 0) out.push('<line x1="' + LW + '" y1="' + f1(Yv(0)) + '" x2="' + (W - 14) + '" y2="' + f1(Yv(0)) + '" class="q-grid" stroke-dasharray="3 3"/>');
+        if (r.fn) for (let k = 0; k <= 240; k++) { const t = t0 + (t1 - t0) * k / 240; pts.push([X(t), Yv(r.fn(t))]); }
+        else pts = r.points.map(p => [X(p[0]), Yv(p[1])]);
+      }
+      out.push('<polyline points="' + pts.map(p => f1(p[0]) + "," + f1(p[1])).join(" ") + '" class="q-ln' + (r.hl ? " q-hl" : "") + '" stroke-width="2.2"' + (r.dashed ? ' stroke-dasharray="7 4"' : "") + "/>");
+    });
+    (o.marks || []).forEach(m => {
+      out.push('<line x1="' + f1(X(m.t)) + '" y1="14" x2="' + f1(X(m.t)) + '" y2="' + f1(H - 30) + '" class="q-ln q-hl" stroke-width="1.3" stroke-dasharray="5 4"/>');
+      out.push(txt(X(m.t), 9, m.label || "", { size: 12, cls: "q-hl2t" }));
+    });
+    return '<svg class="qsvg" viewBox="0 0 ' + W + " " + f1(H) + '" role="img" aria-label="' + esc(o.title || "idődiagram") + '" style="max-width:' + W + 'px">' + out.join("") + "</svg>";
+  }
+
+  /* ---------------- Energialánc (hatásfok) ---------------- */
+  function chain(o) {
+    const B = o.blocks || [], n = B.length, bw = o.bw || 2.4, eg = o.endGap || 3.6, ig = o.gap || 1.6;
+    const w = 2 * eg + n * bw + (n - 1) * ig;
+    const lossy = (o.losses || []).some(x => x);
+    const c = new Circuit({ w: w, h: lossy ? 3.0 : 1.8, unit: o.unit || 40, pad: 0.35, title: o.title || "energialánc" });
+    const y = lossy ? 2.2 : 1.0;
+    let x = 0;
+    for (let i = 0; i < n; i++) {
+      const g = i === 0 ? eg : ig, lab = i === 0 ? o.from : (o.mid && o.mid[i - 1]);
+      c.arrow([x, y], [x + g, y], { label: lab || "" });
+      x += g;
+      c.box([x + bw / 2, y], [bw, 1.0], B[i], { size: 14 });
+      if (o.losses && o.losses[i]) {
+        c.arrow([x + bw / 2, y - 0.5], [x + bw / 2, y - 1.6], {});
+        c.text([x + bw / 2 + 0.2, y - 1.3], o.losses[i], { anchor: "start", size: 14 });
+      }
+      x += bw;
+    }
+    c.arrow([x, y], [x + eg, y], { label: o.to || "" });
+    return c.toString();
+  }
+
+  return { circuit, Circuit, resTree, phasors, timing, chain, rich, txt, head, esc };
+})();
+
+/* --- feladattípus: csillagdelta --- */
+(function () {
+  const { si, sig } = QZ;
+  const S3 = Math.sqrt(3);
+  const R_SET = [22, 27, 33, 39, 47, 56, 68, 82, 100, 120];
+  const COS = [0.6, 0.7, 0.8, 0.85, 0.9];
+  const PM = [1.1, 1.5, 2.2, 3, 4, 5.5, 7.5];
+  const ETA = [0.8, 0.82, 0.84, 0.86, 0.88, 0.9];
+  const COSM = [0.78, 0.8, 0.82, 0.84, 0.86];
+  const KN = c => c === "Y" ? "csillagba" : "deltába";
+  function gen(rng, lv) {
+    if (lv === "A") { const c = rng.pick(["Y", "D"]); return { v: "A", conn: c, R: rng.pick(R_SET) }; }
+    if (lv === "B") { const c = rng.pick(["Y", "D"]); const Z = rng.pick(R_SET); return { v: "B", conn: c, Z: Z, cos: rng.pick(COS) }; }
+    if (lv === "C") { const c = rng.pick(["Y", "D"]); return { v: "C", conn: c, P: 1000 + 500 * rng.int(0, 22) }; }
+    const P = rng.pick(PM), eta = rng.pick(ETA), cos = rng.pick(COSM);
+    return { v: "D", P: P, eta: eta, cos: cos, volt: rng.pick(["230/400", "400/690"]) };
+  }
+  function phase(conn, Z) {
+    const Uf = conn === "Y" ? 400 / S3 : 400, If = Uf / Z, Iv = conn === "Y" ? If : S3 * If;
+    return [Uf, If, Iv];
+  }
+  function solve(p) {
+    if (p.v === "A" || p.v === "B") {
+      const Z = p.v === "A" ? p.R : p.Z, cos = p.v === "A" ? 1 : p.cos;
+      const r = phase(p.conn, Z), Uf = r[0], If = r[1], Iv = r[2];
+      const S = 3 * Uf * If, P = S * cos, Q = Math.sqrt(S * S - P * P);
+      const ans = [{ id: "Uf", label: "U<sub>f</sub>", unit: "V", value: Uf, sig: 4 }, { id: "If", label: "I<sub>f</sub>", unit: "A", value: If },
+        { id: "Iv", label: "I<sub>v</sub>", unit: "A", value: Iv }, { id: "P", label: "P", unit: "W", value: P }];
+      const zs = p.v === "A" ? "R = " + si(Z, "Ω") : "Z = " + si(Z, "Ω");
+      const st = [p.conn === "Y" ? `Csillagban a tekercs a fázisfeszültséget kapja: U<sub>f</sub> = U<sub>v</sub> / √3 = 400 V / 1,732 = ${si(Uf, "V", 4)}.`
+          : "Deltában a tekercs két fázisvezető közé kerül: U<sub>f</sub> = U<sub>v</sub> = 400 V.",
+        `Fázisáram: I<sub>f</sub> = U<sub>f</sub> / ${p.v === "A" ? "R" : "Z"} = ${si(Uf, "V", 4)} / ${zs.slice(4)} = ${si(If, "A")}.`,
+        p.conn === "Y" ? `Csillagban a vonali áram azonos a fázisárammal: I<sub>v</sub> = I<sub>f</sub> = ${si(Iv, "A")}.`
+          : `Deltában a vonali áram két fázisáram különbsége: I<sub>v</sub> = √3 · I<sub>f</sub> = ${si(Iv, "A")}.`,
+        `Hatásos teljesítmény: P = 3 · U<sub>f</sub> · I<sub>f</sub> · cos φ = 3 · ${si(Uf, "V", 4)} · ${si(If, "A")} · ${sig(cos, 3)} = ${si(P, "W")}.`];
+      if (p.v === "B") {
+        ans.push({ id: "Q", label: "Q", unit: "var", value: Q }, { id: "S", label: "S", unit: "VA", value: S });
+        st.push(`Látszólagos: S = 3 · U<sub>f</sub> · I<sub>f</sub> = ${si(S, "VA")}; meddő: Q = √(S<sup>2</sup> − P<sup>2</sup>) = ${si(Q, "var")}.`);
+      }
+      st.push(`Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v</sub> · I<sub>v</sub> · cos φ = 1,732 · 400 V · ${si(Iv, "A")} · ${sig(cos, 3)} = ${si(S3 * 400 * Iv * cos, "W")} ✓`);
+      return { answers: ans, steps: st };
+    }
+    if (p.v === "C") {
+      const Uf = p.conn === "Y" ? 400 / S3 : 400, Pf = p.P / 3, R = Uf * Uf / Pf, P2 = p.conn === "Y" ? 3 * p.P : p.P / 3;
+      return { answers: [{ id: "R", label: "R", unit: "Ω", value: R }, { id: "P2", label: "P<sub>" + (p.conn === "Y" ? "Δ" : "Y") + "</sub>", unit: "W", value: P2 }],
+        steps: [`Egy fázis teljesítménye: P<sub>f</sub> = P / 3 = ${si(p.P, "W")} / 3 = ${si(Pf, "W")}.`,
+          `A tekercs feszültsége ${p.conn === "Y" ? "csillagban U<sub>f</sub> = 400 V / √3 = " + si(Uf, "V", 4) : "deltában U<sub>f</sub> = U<sub>v</sub> = 400 V"}.`,
+          `P<sub>f</sub> = U<sub>f</sub><sup>2</sup> / R-ből R = U<sub>f</sub><sup>2</sup> / P<sub>f</sub> = (${si(Uf, "V", 4)})<sup>2</sup> / ${si(Pf, "W")} = ${si(R, "Ω")}.`,
+          `Átkötve ${p.conn === "Y" ? "deltába a tekercsfeszültség √3-szoros, a teljesítmény háromszoros" : "csillagba a tekercsfeszültség √3-ad részére csökken, a teljesítmény harmadára"}: ${si(P2, "W")}; a vonali áramok aránya I<sub>vΔ</sub> / I<sub>vY</sub> = 3.`] };
+    }
+    const Pw = p.P * 1000, P1 = Pw / p.eta, Iv = P1 / (S3 * 400 * p.cos), conn = p.volt === "230/400" ? "Y" : "D", It = conn === "Y" ? Iv : Iv / S3;
+    return { answers: [{ id: "conn", label: "kapcsolás", kind: "select", options: [["Y", "csillag (Y)"], ["D", "delta (Δ)"]], value: conn },
+      { id: "Iv", label: "I<sub>v</sub>", unit: "A", value: Iv }, { id: "It", label: "I<sub>tekercs</sub>", unit: "A", value: It }],
+      steps: [`Az adattábla kisebbik feszültsége a tekercsfeszültség: ${p.volt === "230/400" ? "230 V" : "400 V"}. A 400 V-os hálózaton ${conn === "Y" ? "ezért csillagba kell kötni (a tekercs 400 / √3 = 230 V-ot kap)" : "ezért deltába kell kötni (a tekercs a 400 V-os vonali feszültséget kapja)"}.`,
+        `Felvett teljesítmény: P<sub>fel</sub> = P<sub>le</sub> / η = ${si(Pw, "W")} / ${sig(p.eta, 3)} = ${si(P1, "W")}.`,
+        `Vonali áram: I<sub>v</sub> = P<sub>fel</sub> / (√3 · U<sub>v</sub> · cos φ) = ${si(P1, "W")} / (1,732 · 400 V · ${sig(p.cos, 3)}) = ${si(Iv, "A")}.`,
+        conn === "Y" ? `Csillagban a tekercsáram azonos a vonali árammal: ${si(It, "A")}.` : `Deltában a tekercsáram I<sub>v</sub> / √3 = ${si(It, "A")}.`] };
+  }
+  function text(p) {
+    if (p.v === "A") return `Három egyforma, R = ${si(p.R, "Ω")} ellenállású fűtőellenállást ${KN(p.conn)} kötünk, és U<sub>v</sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f</sub>, I<sub>f</sub>, I<sub>v</sub> és P?`;
+    if (p.v === "B") return `Három egyforma, Z = ${si(p.Z, "Ω")} impedanciájú, cos φ = ${sig(p.cos, 3)} teljesítménytényezőjű (induktív) fázisterhelést ${KN(p.conn)} kötünk U<sub>v</sub> = 400 V-ra. Mekkora U<sub>f</sub>, I<sub>f</sub>, I<sub>v</sub>, P, Q és S?`;
+    if (p.v === "C") return `Egy ${KN(p.conn)} kötött, ohmos háromfázisú fűtőtest 400 V-on P = ${si(p.P, "W")} teljesítményt vesz fel. Mekkora egy fázis ellenállása, és mekkora lenne a teljesítmény, ha ugyanezt ${p.conn === "Y" ? "deltába" : "csillagba"} kötnénk át?`;
+    return `Egy motor adattáblája: P<sub>le</sub> = ${sig(p.P, 3)} kW, η = ${sig(p.eta, 3)}, cos φ = ${sig(p.cos, 3)}, ${p.volt} V Δ/Y. Hogyan kötöd be a 400 V-os hálózatra, mekkora a vonali áram és a tekercsáram?`;
+  }
+  function typical_errors(p, s) {
+    const E = [], add = (f, v, m) => E.push({ field: f, value: v, msg: m });
+    const val = id => { const a = s.answers.find(x => x.id === id); return a ? a.value : 0; };
+    const M3 = "A √3-as szorzót rossz mennyiségre alkalmaztad: csillagban U<sub>v</sub> = √3·U<sub>f</sub>, I<sub>v</sub> = I<sub>f</sub>; deltában U<sub>v</sub> = U<sub>f</sub>, I<sub>v</sub> = √3·I<sub>f</sub>.";
+    if (p.v === "A" || p.v === "B") {
+      if (p.conn === "D") add("Uf", 400 / S3, "Deltában a tekercs a vonali feszültséget kapja: U<sub>f</sub> = U<sub>v</sub> = 400 V.");
+      else add("Uf", 400 * S3, M3);
+      if (p.conn === "D") add("If", val("If") / S3, "Deltában a tekercs a vonali feszültséget kapja: I<sub>f</sub> = 400 V / Z.");
+      add("Iv", val("Iv") * S3, M3); add("Iv", val("Iv") / S3, M3);
+      add("P", val("P") / 3, "Egy fázis teljesítményét adtad meg: a háromfázisú P = 3 · U<sub>f</sub> · I<sub>f</sub> · cos φ.");
+      add("P", val("P") * 3, "Háromszor számoltál: P = 3 · U<sub>f</sub> · I<sub>f</sub> · cos φ = √3 · U<sub>v</sub> · I<sub>v</sub> · cos φ.");
+    }
+    if (p.v === "C") { add("R", val("R") * 3, "P / 3 egy fázis teljesítménye, de az U<sub>f</sub><sup>2</sup>-et osztottad a teljes P-vel? R = U<sub>f</sub><sup>2</sup> / (P / 3)."); add("R", val("R") / 3, "R = U<sub>f</sub><sup>2</sup> / P<sub>f</sub>, ahol P<sub>f</sub> = P / 3."); }
+    if (p.v === "D") { add("It", val("Iv") * S3, M3); add("Iv", val("Iv") * p.eta, "Kihagytad a hatásfokot: az adattáblán a leadott teljesítmény áll, P<sub>fel</sub> = P<sub>le</sub> / η."); }
+    return E;
+  }
+  QZ.register("csillagdelta", { title: "Csillag–delta számítás",
+    levels: [["A", "ohmos terhelés"], ["B", "induktív terhelés (P, Q, S)"], ["C", "fordított feladat, átkötés"], ["D", "motor-adattábla"]],
+    tolerance: { rel: 0.01 }, gen: gen, solve: solve, render: p => ({ text: text(p), svg: "" }), typical_errors: typical_errors });
+})();
+QZ.app({"name": "ve025-2", "title": "Csillag–delta feladatgenerátor", "tasks": ["csillagdelta"], "levels": null, "level": "A", "roundLen": 10, "autofocus": false, "selftest": {"prng": [{"seed": 0, "values": [0.26642920868471265, 0.0003297457005828619, 0.2232720274478197, 0.1462021479383111, 0.46732782293111086, 0.5450490827206522]}, {"seed": 1, "values": [0.6270739405881613, 0.002735721180215478, 0.5274470399599522, 0.9810509674716741, 0.9683778982143849, 0.281103502959013]}, {"seed": 42, "values": [0.6011037519201636, 0.44829055899754167, 0.8524657934904099, 0.6697340414393693, 0.17481389874592423, 0.5265925421845168]}, {"seed": 123456789, "values": [0.2577907438389957, 0.9707721115555614, 0.7853280142880976, 0.20616457983851433, 0.30307188746519387, 0.7470660470426083]}, {"seed": 4294967295, "values": [0.8964226141106337, 0.189478256739676, 0.7156526781618595, 0.9440599093213677, 0.8452364315744489, 0.5391399988438934]}], "format": [{"f": "sig", "x": 0, "n": 1, "keep": false, "out": "0"}, {"f": "sig", "x": 0, "n": 2, "keep": false, "out": "0"}, {"f": "sig", "x": 0, "n": 3, "keep": true, "out": "0"}, {"f": "sig", "x": 0, "n": 4, "keep": false, "out": "0"}, {"f": "fixed", "x": 0, "n": 0, "out": "0"}, {"f": "fixed", "x": 0, "n": 1, "out": "0,0"}, {"f": "fixed", "x": 0, "n": 2, "out": "0,00"}, {"f": "fixed", "x": 0, "n": 3, "out": "0,000"}, {"f": "si", "x": 0, "n": 3, "unit": "A", "out": "0 A"}, {"f": "si", "x": 0, "n": 3, "unit": "Ω", "out": "0 Ω"}, {"f": "si", "x": 0, "n": 3, "unit": "Wh", "out": "0 Wh"}, {"f": "sig", "x": 0.125, "n": 1, "keep": false, "out": "0,1"}, {"f": "sig", "x": 0.125, "n": 2, "keep": false, "out": "0,13"}, {"f": "sig", "x": 0.125, "n": 3, "keep": true, "out": "0,125"}, {"f": "sig", "x": 0.125, "n": 4, "keep": false, "out": "0,125"}, {"f": "fixed", "x": 0.125, "n": 0, "out": "0"}, {"f": "fixed", "x": 0.125, "n": 1, "out": "0,1"}, {"f": "fixed", "x": 0.125, "n": 2, "out": "0,13"}, {"f": "fixed", "x": 0.125, "n": 3, "out": "0,125"}, {"f": "si", "x": 0.125, "n": 3, "unit": "A", "out": "125 mA"}, {"f": "si", "x": 0.125, "n": 3, "unit": "Ω", "out": "125 mΩ"}, {"f": "si", "x": 0.125, "n": 3, "unit": "Wh", "out": "125 mWh"}, {"f": "sig", "x": 0.0025, "n": 1, "keep": false, "out": "0,003"}, {"f": "sig", "x": 0.0025, "n": 2, "keep": false, "out": "0,0025"}, {"f": "sig", "x": 0.0025, "n": 3, "keep": true, "out": "0,00250"}, {"f": "sig", "x": 0.0025, "n": 4, "keep": false, "out": "0,0025"}, {"f": "fixed", "x": 0.0025, "n": 0, "out": "0"}, {"f": "fixed", "x": 0.0025, "n": 1, "out": "0,0"}, {"f": "fixed", "x": 0.0025, "n": 2, "out": "0,00"}, {"f": "fixed", "x": 0.0025, "n": 3, "out": "0,003"}, {"f": "si", "x": 0.0025, "n": 3, "unit": "A", "out": "2,5 mA"}, {"f": "si", "x": 0.0025, "n": 3, "unit": "Ω", "out": "2,5 mΩ"}, {"f": "si", "x": 0.0025, "n": 3, "unit": "Wh", "out": "2,5 mWh"}, {"f": "sig", "x": 4700, "n": 1, "keep": false, "out": "5000"}, {"f": "sig", "x": 4700, "n": 2, "keep": false, "out": "4700"}, {"f": "sig", "x": 4700, "n": 3, "keep": true, "out": "4700"}, {"f": "sig", "x": 4700, "n": 4, "keep": false, "out": "4700"}, {"f": "fixed", "x": 4700, "n": 0, "out": "4700"}, {"f": "fixed", "x": 4700, "n": 1, "out": "4700,0"}, {"f": "fixed", "x": 4700, "n": 2, "out": "4700,00"}, {"f": "fixed", "x": 4700, "n": 3, "out": "4700,000"}, {"f": "si", "x": 4700, "n": 3, "unit": "A", "out": "4,7 kA"}, {"f": "si", "x": 4700, "n": 3, "unit": "Ω", "out": "4,7 kΩ"}, {"f": "si", "x": 4700, "n": 3, "unit": "Wh", "out": "4,7 kWh"}, {"f": "sig", "x": 4.7, "n": 1, "keep": false, "out": "5"}, {"f": "sig", "x": 4.7, "n": 2, "keep": false, "out": "4,7"}, {"f": "sig", "x": 4.7, "n": 3, "keep": true, "out": "4,70"}, {"f": "sig", "x": 4.7, "n": 4, "keep": false, "out": "4,7"}, {"f": "fixed", "x": 4.7, "n": 0, "out": "5"}, {"f": "fixed", "x": 4.7, "n": 1, "out": "4,7"}, {"f": "fixed", "x": 4.7, "n": 2, "out": "4,70"}, {"f": "fixed", "x": 4.7, "n": 3, "out": "4,700"}, {"f": "si", "x": 4.7, "n": 3, "unit": "A", "out": "4,7 A"}, {"f": "si", "x": 4.7, "n": 3, "unit": "Ω", "out": "4,7 Ω"}, {"f": "si", "x": 4.7, "n": 3, "unit": "Wh", "out": "4,7 Wh"}, {"f": "sig", "x": 11.75, "n": 1, "keep": false, "out": "10"}, {"f": "sig", "x": 11.75, "n": 2, "keep": false, "out": "12"}, {"f": "sig", "x": 11.75, "n": 3, "keep": true, "out": "11,8"}, {"f": "sig", "x": 11.75, "n": 4, "keep": false, "out": "11,75"}, {"f": "fixed", "x": 11.75, "n": 0, "out": "12"}, {"f": "fixed", "x": 11.75, "n": 1, "out": "11,8"}, {"f": "fixed", "x": 11.75, "n": 2, "out": "11,75"}, {"f": "fixed", "x": 11.75, "n": 3, "out": "11,750"}, {"f": "si", "x": 11.75, "n": 3, "unit": "A", "out": "11,8 A"}, {"f": "si", "x": 11.75, "n": 3, "unit": "Ω", "out": "11,8 Ω"}, {"f": "si", "x": 11.75, "n": 3, "unit": "Wh", "out": "11,8 Wh"}, {"f": "sig", "x": 0.5106382978723404, "n": 1, "keep": false, "out": "0,5"}, {"f": "sig", "x": 0.5106382978723404, "n": 2, "keep": false, "out": "0,51"}, {"f": "sig", "x": 0.5106382978723404, "n": 3, "keep": true, "out": "0,511"}, {"f": "sig", "x": 0.5106382978723404, "n": 4, "keep": false, "out": "0,5106"}, {"f": "fixed", "x": 0.5106382978723404, "n": 0, "out": "1"}, {"f": "fixed", "x": 0.5106382978723404, "n": 1, "out": "0,5"}, {"f": "fixed", "x": 0.5106382978723404, "n": 2, "out": "0,51"}, {"f": "fixed", "x": 0.5106382978723404, "n": 3, "out": "0,511"}, {"f": "si", "x": 0.5106382978723404, "n": 3, "unit": "A", "out": "511 mA"}, {"f": "si", "x": 0.5106382978723404, "n": 3, "unit": "Ω", "out": "511 mΩ"}, {"f": "si", "x": 0.5106382978723404, "n": 3, "unit": "Wh", "out": "511 mWh"}, {"f": "sig", "x": 15.329709716755891, "n": 1, "keep": false, "out": "20"}, {"f": "sig", "x": 15.329709716755891, "n": 2, "keep": false, "out": "15"}, {"f": "sig", "x": 15.329709716755891, "n": 3, "keep": true, "out": "15,3"}, {"f": "sig", "x": 15.329709716755891, "n": 4, "keep": false, "out": "15,33"}, {"f": "fixed", "x": 15.329709716755891, "n": 0, "out": "15"}, {"f": "fixed", "x": 15.329709716755891, "n": 1, "out": "15,3"}, {"f": "fixed", "x": 15.329709716755891, "n": 2, "out": "15,33"}, {"f": "fixed", "x": 15.329709716755891, "n": 3, "out": "15,330"}, {"f": "si", "x": 15.329709716755891, "n": 3, "unit": "A", "out": "15,3 A"}, {"f": "si", "x": 15.329709716755891, "n": 3, "unit": "Ω", "out": "15,3 Ω"}, {"f": "si", "x": 15.329709716755891, "n": 3, "unit": "Wh", "out": "15,3 Wh"}, {"f": "sig", "x": 0.032616, "n": 1, "keep": false, "out": "0,03"}, {"f": "sig", "x": 0.032616, "n": 2, "keep": false, "out": "0,033"}, {"f": "sig", "x": 0.032616, "n": 3, "keep": true, "out": "0,0326"}, {"f": "sig", "x": 0.032616, "n": 4, "keep": false, "out": "0,03262"}, {"f": "fixed", "x": 0.032616, "n": 0, "out": "0"}, {"f": "fixed", "x": 0.032616, "n": 1, "out": "0,0"}, {"f": "fixed", "x": 0.032616, "n": 2, "out": "0,03"}, {"f": "fixed", "x": 0.032616, "n": 3, "out": "0,033"}, {"f": "si", "x": 0.032616, "n": 3, "unit": "A", "out": "32,6 mA"}, {"f": "si", "x": 0.032616, "n": 3, "unit": "Ω", "out": "32,6 mΩ"}, {"f": "si", "x": 0.032616, "n": 3, "unit": "Wh", "out": "32,6 mWh"}, {"f": "sig", "x": 999.96, "n": 1, "keep": false, "out": "1000"}, {"f": "sig", "x": 999.96, "n": 2, "keep": false, "out": "1000"}, {"f": "sig", "x": 999.96, "n": 3, "keep": true, "out": "1000"}, {"f": "sig", "x": 999.96, "n": 4, "keep": false, "out": "1000"}, {"f": "fixed", "x": 999.96, "n": 0, "out": "1000"}, {"f": "fixed", "x": 999.96, "n": 1, "out": "1000,0"}, {"f": "fixed", "x": 999.96, "n": 2, "out": "999,96"}, {"f": "fixed", "x": 999.96, "n": 3, "out": "999,960"}, {"f": "si", "x": 999.96, "n": 3, "unit": "A", "out": "1 kA"}, {"f": "si", "x": 999.96, "n": 3, "unit": "Ω", "out": "1 kΩ"}, {"f": "si", "x": 999.96, "n": 3, "unit": "Wh", "out": "1 kWh"}, {"f": "sig", "x": 0.0009996, "n": 1, "keep": false, "out": "0,001"}, {"f": "sig", "x": 0.0009996, "n": 2, "keep": false, "out": "0,001"}, {"f": "sig", "x": 0.0009996, "n": 3, "keep": true, "out": "0,00100"}, {"f": "sig", "x": 0.0009996, "n": 4, "keep": false, "out": "0,0009996"}, {"f": "fixed", "x": 0.0009996, "n": 0, "out": "0"}, {"f": "fixed", "x": 0.0009996, "n": 1, "out": "0,0"}, {"f": "fixed", "x": 0.0009996, "n": 2, "out": "0,00"}, {"f": "fixed", "x": 0.0009996, "n": 3, "out": "0,001"}, {"f": "si", "x": 0.0009996, "n": 3, "unit": "A", "out": "1 mA"}, {"f": "si", "x": 0.0009996, "n": 3, "unit": "Ω", "out": "1 mΩ"}, {"f": "si", "x": 0.0009996, "n": 3, "unit": "Wh", "out": "1 mWh"}, {"f": "sig", "x": 1e-07, "n": 1, "keep": false, "out": "0,0000001"}, {"f": "sig", "x": 1e-07, "n": 2, "keep": false, "out": "0,0000001"}, {"f": "sig", "x": 1e-07, "n": 3, "keep": true, "out": "0,000000100"}, {"f": "sig", "x": 1e-07, "n": 4, "keep": false, "out": "0,0000001"}, {"f": "fixed", "x": 1e-07, "n": 0, "out": "0"}, {"f": "fixed", "x": 1e-07, "n": 1, "out": "0,0"}, {"f": "fixed", "x": 1e-07, "n": 2, "out": "0,00"}, {"f": "fixed", "x": 1e-07, "n": 3, "out": "0,000"}, {"f": "si", "x": 1e-07, "n": 3, "unit": "A", "out": "100 nA"}, {"f": "si", "x": 1e-07, "n": 3, "unit": "Ω", "out": "100 nΩ"}, {"f": "si", "x": 1e-07, "n": 3, "unit": "Wh", "out": "100 nWh"}, {"f": "sig", "x": 2.5, "n": 1, "keep": false, "out": "3"}, {"f": "sig", "x": 2.5, "n": 2, "keep": false, "out": "2,5"}, {"f": "sig", "x": 2.5, "n": 3, "keep": true, "out": "2,50"}, {"f": "sig", "x": 2.5, "n": 4, "keep": false, "out": "2,5"}, {"f": "fixed", "x": 2.5, "n": 0, "out": "3"}, {"f": "fixed", "x": 2.5, "n": 1, "out": "2,5"}, {"f": "fixed", "x": 2.5, "n": 2, "out": "2,50"}, {"f": "fixed", "x": 2.5, "n": 3, "out": "2,500"}, {"f": "si", "x": 2.5, "n": 3, "unit": "A", "out": "2,5 A"}, {"f": "si", "x": 2.5, "n": 3, "unit": "Ω", "out": "2,5 Ω"}, {"f": "si", "x": 2.5, "n": 3, "unit": "Wh", "out": "2,5 Wh"}, {"f": "sig", "x": 1234567, "n": 1, "keep": false, "out": "1 000 000"}, {"f": "sig", "x": 1234567, "n": 2, "keep": false, "out": "1 200 000"}, {"f": "sig", "x": 1234567, "n": 3, "keep": true, "out": "1 230 000"}, {"f": "sig", "x": 1234567, "n": 4, "keep": false, "out": "1 235 000"}, {"f": "fixed", "x": 1234567, "n": 0, "out": "1 234 567"}, {"f": "fixed", "x": 1234567, "n": 1, "out": "1 234 567,0"}, {"f": "fixed", "x": 1234567, "n": 2, "out": "1 234 567,00"}, {"f": "fixed", "x": 1234567, "n": 3, "out": "1 234 567,000"}, {"f": "si", "x": 1234567, "n": 3, "unit": "A", "out": "1,23 MA"}, {"f": "si", "x": 1234567, "n": 3, "unit": "Ω", "out": "1,23 MΩ"}, {"f": "si", "x": 1234567, "n": 3, "unit": "Wh", "out": "1,23 MWh"}, {"f": "sig", "x": 16425, "n": 1, "keep": false, "out": "20 000"}, {"f": "sig", "x": 16425, "n": 2, "keep": false, "out": "16 000"}, {"f": "sig", "x": 16425, "n": 3, "keep": true, "out": "16 400"}, {"f": "sig", "x": 16425, "n": 4, "keep": false, "out": "16 430"}, {"f": "fixed", "x": 16425, "n": 0, "out": "16 425"}, {"f": "fixed", "x": 16425, "n": 1, "out": "16 425,0"}, {"f": "fixed", "x": 16425, "n": 2, "out": "16 425,00"}, {"f": "fixed", "x": 16425, "n": 3, "out": "16 425,000"}, {"f": "si", "x": 16425, "n": 3, "unit": "A", "out": "16,4 kA"}, {"f": "si", "x": 16425, "n": 3, "unit": "Ω", "out": "16,4 kΩ"}, {"f": "si", "x": 16425, "n": 3, "unit": "Wh", "out": "16,4 kWh"}, {"f": "sig", "x": 5940, "n": 1, "keep": false, "out": "6000"}, {"f": "sig", "x": 5940, "n": 2, "keep": false, "out": "5900"}, {"f": "sig", "x": 5940, "n": 3, "keep": true, "out": "5940"}, {"f": "sig", "x": 5940, "n": 4, "keep": false, "out": "5940"}, {"f": "fixed", "x": 5940, "n": 0, "out": "5940"}, {"f": "fixed", "x": 5940, "n": 1, "out": "5940,0"}, {"f": "fixed", "x": 5940, "n": 2, "out": "5940,00"}, {"f": "fixed", "x": 5940, "n": 3, "out": "5940,000"}, {"f": "si", "x": 5940, "n": 3, "unit": "A", "out": "5,94 kA"}, {"f": "si", "x": 5940, "n": 3, "unit": "Ω", "out": "5,94 kΩ"}, {"f": "si", "x": 5940, "n": 3, "unit": "Wh", "out": "5,94 kWh"}, {"f": "sig", "x": -3.14159, "n": 1, "keep": false, "out": "−3"}, {"f": "sig", "x": -3.14159, "n": 2, "keep": false, "out": "−3,1"}, {"f": "sig", "x": -3.14159, "n": 3, "keep": true, "out": "−3,14"}, {"f": "sig", "x": -3.14159, "n": 4, "keep": false, "out": "−3,142"}, {"f": "fixed", "x": -3.14159, "n": 0, "out": "−3"}, {"f": "fixed", "x": -3.14159, "n": 1, "out": "−3,1"}, {"f": "fixed", "x": -3.14159, "n": 2, "out": "−3,14"}, {"f": "fixed", "x": -3.14159, "n": 3, "out": "−3,142"}, {"f": "si", "x": -3.14159, "n": 3, "unit": "A", "out": "−3,14 A"}, {"f": "si", "x": -3.14159, "n": 3, "unit": "Ω", "out": "−3,14 Ω"}, {"f": "si", "x": -3.14159, "n": 3, "unit": "Wh", "out": "−3,14 Wh"}, {"f": "sig", "x": 0.005, "n": 1, "keep": false, "out": "0,005"}, {"f": "sig", "x": 0.005, "n": 2, "keep": false, "out": "0,005"}, {"f": "sig", "x": 0.005, "n": 3, "keep": true, "out": "0,00500"}, {"f": "sig", "x": 0.005, "n": 4, "keep": false, "out": "0,005"}, {"f": "fixed", "x": 0.005, "n": 0, "out": "0"}, {"f": "fixed", "x": 0.005, "n": 1, "out": "0,0"}, {"f": "fixed", "x": 0.005, "n": 2, "out": "0,01"}, {"f": "fixed", "x": 0.005, "n": 3, "out": "0,005"}, {"f": "si", "x": 0.005, "n": 3, "unit": "A", "out": "5 mA"}, {"f": "si", "x": 0.005, "n": 3, "unit": "Ω", "out": "5 mΩ"}, {"f": "si", "x": 0.005, "n": 3, "unit": "Wh", "out": "5 mWh"}, {"f": "sig", "x": 1.005, "n": 1, "keep": false, "out": "1"}, {"f": "sig", "x": 1.005, "n": 2, "keep": false, "out": "1"}, {"f": "sig", "x": 1.005, "n": 3, "keep": true, "out": "1,00"}, {"f": "sig", "x": 1.005, "n": 4, "keep": false, "out": "1,005"}, {"f": "fixed", "x": 1.005, "n": 0, "out": "1"}, {"f": "fixed", "x": 1.005, "n": 1, "out": "1,0"}, {"f": "fixed", "x": 1.005, "n": 2, "out": "1,00"}, {"f": "fixed", "x": 1.005, "n": 3, "out": "1,005"}, {"f": "si", "x": 1.005, "n": 3, "unit": "A", "out": "1 A"}, {"f": "si", "x": 1.005, "n": 3, "unit": "Ω", "out": "1 Ω"}, {"f": "si", "x": 1.005, "n": 3, "unit": "Wh", "out": "1 Wh"}, {"f": "sig", "x": 2.675, "n": 1, "keep": false, "out": "3"}, {"f": "sig", "x": 2.675, "n": 2, "keep": false, "out": "2,7"}, {"f": "sig", "x": 2.675, "n": 3, "keep": true, "out": "2,67"}, {"f": "sig", "x": 2.675, "n": 4, "keep": false, "out": "2,675"}, {"f": "fixed", "x": 2.675, "n": 0, "out": "3"}, {"f": "fixed", "x": 2.675, "n": 1, "out": "2,7"}, {"f": "fixed", "x": 2.675, "n": 2, "out": "2,67"}, {"f": "fixed", "x": 2.675, "n": 3, "out": "2,675"}, {"f": "si", "x": 2.675, "n": 3, "unit": "A", "out": "2,67 A"}, {"f": "si", "x": 2.675, "n": 3, "unit": "Ω", "out": "2,67 Ω"}, {"f": "si", "x": 2.675, "n": 3, "unit": "Wh", "out": "2,67 Wh"}, {"f": "sig", "x": 99.95, "n": 1, "keep": false, "out": "100"}, {"f": "sig", "x": 99.95, "n": 2, "keep": false, "out": "100"}, {"f": "sig", "x": 99.95, "n": 3, "keep": true, "out": "100"}, {"f": "sig", "x": 99.95, "n": 4, "keep": false, "out": "99,95"}, {"f": "fixed", "x": 99.95, "n": 0, "out": "100"}, {"f": "fixed", "x": 99.95, "n": 1, "out": "100,0"}, {"f": "fixed", "x": 99.95, "n": 2, "out": "99,95"}, {"f": "fixed", "x": 99.95, "n": 3, "out": "99,950"}, {"f": "si", "x": 99.95, "n": 3, "unit": "A", "out": "100 A"}, {"f": "si", "x": 99.95, "n": 3, "unit": "Ω", "out": "100 Ω"}, {"f": "si", "x": 99.95, "n": 3, "unit": "Wh", "out": "100 Wh"}, {"f": "sig", "x": 230, "n": 1, "keep": false, "out": "200"}, {"f": "sig", "x": 230, "n": 2, "keep": false, "out": "230"}, {"f": "sig", "x": 230, "n": 3, "keep": true, "out": "230"}, {"f": "sig", "x": 230, "n": 4, "keep": false, "out": "230"}, {"f": "fixed", "x": 230, "n": 0, "out": "230"}, {"f": "fixed", "x": 230, "n": 1, "out": "230,0"}, {"f": "fixed", "x": 230, "n": 2, "out": "230,00"}, {"f": "fixed", "x": 230, "n": 3, "out": "230,000"}, {"f": "si", "x": 230, "n": 3, "unit": "A", "out": "230 A"}, {"f": "si", "x": 230, "n": 3, "unit": "Ω", "out": "230 Ω"}, {"f": "si", "x": 230, "n": 3, "unit": "Wh", "out": "230 Wh"}, {"f": "sig", "x": 0.35, "n": 1, "keep": false, "out": "0,3"}, {"f": "sig", "x": 0.35, "n": 2, "keep": false, "out": "0,35"}, {"f": "sig", "x": 0.35, "n": 3, "keep": true, "out": "0,350"}, {"f": "sig", "x": 0.35, "n": 4, "keep": false, "out": "0,35"}, {"f": "fixed", "x": 0.35, "n": 0, "out": "0"}, {"f": "fixed", "x": 0.35, "n": 1, "out": "0,3"}, {"f": "fixed", "x": 0.35, "n": 2, "out": "0,35"}, {"f": "fixed", "x": 0.35, "n": 3, "out": "0,350"}, {"f": "si", "x": 0.35, "n": 3, "unit": "A", "out": "350 mA"}, {"f": "si", "x": 0.35, "n": 3, "unit": "Ω", "out": "350 mΩ"}, {"f": "si", "x": 0.35, "n": 3, "unit": "Wh", "out": "350 mWh"}, {"f": "sig", "x": -60, "n": 1, "keep": false, "out": "−60"}, {"f": "sig", "x": -60, "n": 2, "keep": false, "out": "−60"}, {"f": "sig", "x": -60, "n": 3, "keep": true, "out": "−60,0"}, {"f": "sig", "x": -60, "n": 4, "keep": false, "out": "−60"}, {"f": "fixed", "x": -60, "n": 0, "out": "−60"}, {"f": "fixed", "x": -60, "n": 1, "out": "−60,0"}, {"f": "fixed", "x": -60, "n": 2, "out": "−60,00"}, {"f": "fixed", "x": -60, "n": 3, "out": "−60,000"}, {"f": "si", "x": -60, "n": 3, "unit": "A", "out": "−60 A"}, {"f": "si", "x": -60, "n": 3, "unit": "Ω", "out": "−60 Ω"}, {"f": "si", "x": -60, "n": 3, "unit": "Wh", "out": "−60 Wh"}, {"f": "sig", "x": -0.0025, "n": 1, "keep": false, "out": "−0,003"}, {"f": "sig", "x": -0.0025, "n": 2, "keep": false, "out": "−0,0025"}, {"f": "sig", "x": -0.0025, "n": 3, "keep": true, "out": "−0,00250"}, {"f": "sig", "x": -0.0025, "n": 4, "keep": false, "out": "−0,0025"}, {"f": "fixed", "x": -0.0025, "n": 0, "out": "0"}, {"f": "fixed", "x": -0.0025, "n": 1, "out": "0,0"}, {"f": "fixed", "x": -0.0025, "n": 2, "out": "0,00"}, {"f": "fixed", "x": -0.0025, "n": 3, "out": "−0,003"}, {"f": "si", "x": -0.0025, "n": 3, "unit": "A", "out": "−2,5 mA"}, {"f": "si", "x": -0.0025, "n": 3, "unit": "Ω", "out": "−2,5 mΩ"}, {"f": "si", "x": -0.0025, "n": 3, "unit": "Wh", "out": "−2,5 mWh"}], "parse": [{"s": "4,7k", "unit": "Ω", "value": 4700.0}, {"s": "4.7 kΩ", "unit": "Ω", "value": 4700.0}, {"s": "4k7", "unit": "Ω", "value": 4700.0}, {"s": "4,7 kohm", "unit": "Ω", "value": 4700.0}, {"s": "4,7K", "unit": "Ω", "value": 4700.0}, {"s": "470 m", "unit": "A", "value": 0.47}, {"s": "470 mA", "unit": "A", "value": 0.47}, {"s": "0,47", "unit": "A", "value": 0.47}, {"s": "2,2 µF", "unit": "F", "value": 2.2e-06}, {"s": "2,2uF", "unit": "F", "value": 2.2e-06}, {"s": "2,2 μ", "unit": "F", "value": 2.2e-06}, {"s": "0,35 Ω", "unit": "Ω", "value": 0.35}, {"s": "0R35", "unit": "Ω", "value": 0.35}, {"s": "1 200 W", "unit": "W", "value": 1200.0}, {"s": "1,2 kW", "unit": "W", "value": 1200.0}, {"s": "−12,5", "unit": "V", "value": -12.5}, {"s": "- 3", "unit": "A", "value": -3.0}, {"s": "1e3", "unit": "Ω", "value": 1000.0}, {"s": "2,5E-3 A", "unit": "A", "value": 0.0025}, {"s": "≈ 15,3 V", "unit": "V", "value": 15.3}, {"s": "99", "unit": "kWh", "value": 99.0}, {"s": "99 kWh", "unit": "kWh", "value": 99.0}, {"s": "99000 Wh", "unit": "kWh", "value": 99.0}, {"s": "0,099 MWh", "unit": "kWh", "value": 99.0}, {"s": "85 %", "unit": "", "value": 0.85}, {"s": "0,85", "unit": "", "value": 0.85}, {"s": ",5", "unit": "A", "value": 0.5}, {"s": "36,87°", "unit": "°", "value": 36.87}, {"s": "36,87 fok", "unit": "°", "value": 36.87}, {"s": "470 m", "unit": "m", "value": 470.0}, {"s": "5 mm", "unit": "m", "value": 0.005}, {"s": "2,5", "unit": "mm²", "value": 2.5}, {"s": "2,5 mm2", "unit": "mm²", "value": 2.5}, {"s": "5940 Ft", "unit": "Ft", "value": 5940.0}, {"s": "1,5 óra", "unit": "h", "value": 1.5}, {"s": "12 V", "unit": "A", "value": null}, {"s": "4,7 x", "unit": "Ω", "value": null}, {"s": "abc", "unit": "V", "value": null}, {"s": "", "unit": "V", "value": null}, {"s": "1.234,5", "unit": "V", "value": null}, {"s": "5 k", "unit": "Ft", "value": null}, {"s": "4n7", "unit": "F", "value": 4.7e-09}, {"s": "100 nF", "unit": "µF", "value": 0.1}, {"s": "0,1", "unit": "µF", "value": 0.1}], "tasks": [{"task": "csillagdelta", "seed": 1, "level": "A", "params": {"v": "A", "conn": "D", "R": 22}, "values": {"Uf": 400, "If": 18.181818181818183, "Iv": 31.49183286488868, "P": 21818.18181818182}, "nsteps": 5, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 400 V / 22 Ω = 18,2 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 31,5 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 18,2 A · 1 = 21,8 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 31,5 A · 1 = 21,8 kW ✓"], "text": "Három egyforma, R = 22 Ω ellenállású fűtőellenállást deltába kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 2, "level": "A", "params": {"v": "A", "conn": "D", "R": 39}, "values": {"Uf": 400, "If": 10.256410256410257, "Iv": 17.7646236673731, "P": 12307.692307692309}, "nsteps": 5, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 400 V / 39 Ω = 10,3 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 17,8 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 10,3 A · 1 = 12,3 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 17,8 A · 1 = 12,3 kW ✓"], "text": "Három egyforma, R = 39 Ω ellenállású fűtőellenállást deltába kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 3, "level": "A", "params": {"v": "A", "conn": "D", "R": 22}, "values": {"Uf": 400, "If": 18.181818181818183, "Iv": 31.49183286488868, "P": 21818.18181818182}, "nsteps": 5, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 400 V / 22 Ω = 18,2 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 31,5 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 18,2 A · 1 = 21,8 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 31,5 A · 1 = 21,8 kW ✓"], "text": "Három egyforma, R = 22 Ω ellenállású fűtőellenállást deltába kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 4, "level": "A", "params": {"v": "A", "conn": "D", "R": 39}, "values": {"Uf": 400, "If": 10.256410256410257, "Iv": 17.7646236673731, "P": 12307.692307692309}, "nsteps": 5, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 400 V / 39 Ω = 10,3 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 17,8 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 10,3 A · 1 = 12,3 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 17,8 A · 1 = 12,3 kW ✓"], "text": "Három egyforma, R = 39 Ω ellenállású fűtőellenállást deltába kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 5, "level": "A", "params": {"v": "A", "conn": "D", "R": 82}, "values": {"Uf": 400, "If": 4.878048780487805, "Iv": 8.449028329604278, "P": 5853.658536585366}, "nsteps": 5, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 400 V / 82 Ω = 4,88 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 8,45 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 4,88 A · 1 = 5,85 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 8,45 A · 1 = 5,85 kW ✓"], "text": "Három egyforma, R = 82 Ω ellenállású fűtőellenállást deltába kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 6, "level": "A", "params": {"v": "A", "conn": "D", "R": 22}, "values": {"Uf": 400, "If": 18.181818181818183, "Iv": 31.49183286488868, "P": 21818.18181818182}, "nsteps": 5, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 400 V / 22 Ω = 18,2 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 31,5 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 18,2 A · 1 = 21,8 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 31,5 A · 1 = 21,8 kW ✓"], "text": "Három egyforma, R = 22 Ω ellenállású fűtőellenállást deltába kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 1, "level": "B", "params": {"v": "B", "conn": "D", "Z": 22, "cos": 0.8}, "values": {"Uf": 400, "If": 18.181818181818183, "Iv": 31.49183286488868, "P": 17454.545454545456, "Q": 13090.909090909092, "S": 21818.18181818182}, "nsteps": 6, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / Z = 400 V / 22 Ω = 18,2 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 31,5 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 18,2 A · 0,8 = 17,5 kW.", "Látszólagos: S = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> = 21,8 kVA; meddő: Q = √(S<sup>2<\/sup> − P<sup>2<\/sup>) = 13,1 kvar.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 31,5 A · 0,8 = 17,5 kW ✓"], "text": "Három egyforma, Z = 22 Ω impedanciájú, cos φ = 0,8 teljesítménytényezőjű (induktív) fázisterhelést deltába kötünk U<sub>v<\/sub> = 400 V-ra. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub>, P, Q és S?"}, {"task": "csillagdelta", "seed": 2, "level": "B", "params": {"v": "B", "conn": "D", "Z": 39, "cos": 0.7}, "values": {"Uf": 400, "If": 10.256410256410257, "Iv": 17.7646236673731, "P": 8615.384615384615, "Q": 8789.4503735912, "S": 12307.692307692309}, "nsteps": 6, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / Z = 400 V / 39 Ω = 10,3 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 17,8 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 10,3 A · 0,7 = 8,62 kW.", "Látszólagos: S = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> = 12,3 kVA; meddő: Q = √(S<sup>2<\/sup> − P<sup>2<\/sup>) = 8,79 kvar.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 17,8 A · 0,7 = 8,62 kW ✓"], "text": "Három egyforma, Z = 39 Ω impedanciájú, cos φ = 0,7 teljesítménytényezőjű (induktív) fázisterhelést deltába kötünk U<sub>v<\/sub> = 400 V-ra. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub>, P, Q és S?"}, {"task": "csillagdelta", "seed": 3, "level": "B", "params": {"v": "B", "conn": "D", "Z": 22, "cos": 0.8}, "values": {"Uf": 400, "If": 18.181818181818183, "Iv": 31.49183286488868, "P": 17454.545454545456, "Q": 13090.909090909092, "S": 21818.18181818182}, "nsteps": 6, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / Z = 400 V / 22 Ω = 18,2 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 31,5 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 18,2 A · 0,8 = 17,5 kW.", "Látszólagos: S = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> = 21,8 kVA; meddő: Q = √(S<sup>2<\/sup> − P<sup>2<\/sup>) = 13,1 kvar.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 31,5 A · 0,8 = 17,5 kW ✓"], "text": "Három egyforma, Z = 22 Ω impedanciájú, cos φ = 0,8 teljesítménytényezőjű (induktív) fázisterhelést deltába kötünk U<sub>v<\/sub> = 400 V-ra. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub>, P, Q és S?"}, {"task": "csillagdelta", "seed": 4, "level": "B", "params": {"v": "B", "conn": "D", "Z": 39, "cos": 0.7}, "values": {"Uf": 400, "If": 10.256410256410257, "Iv": 17.7646236673731, "P": 8615.384615384615, "Q": 8789.4503735912, "S": 12307.692307692309}, "nsteps": 6, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / Z = 400 V / 39 Ω = 10,3 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 17,8 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 10,3 A · 0,7 = 8,62 kW.", "Látszólagos: S = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> = 12,3 kVA; meddő: Q = √(S<sup>2<\/sup> − P<sup>2<\/sup>) = 8,79 kvar.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 17,8 A · 0,7 = 8,62 kW ✓"], "text": "Három egyforma, Z = 39 Ω impedanciájú, cos φ = 0,7 teljesítménytényezőjű (induktív) fázisterhelést deltába kötünk U<sub>v<\/sub> = 400 V-ra. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub>, P, Q és S?"}, {"task": "csillagdelta", "seed": 5, "level": "B", "params": {"v": "B", "conn": "D", "Z": 82, "cos": 0.7}, "values": {"Uf": 400, "If": 4.878048780487805, "Iv": 8.449028329604278, "P": 4097.5609756097565, "Q": 4180.348348415327, "S": 5853.658536585366}, "nsteps": 6, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / Z = 400 V / 82 Ω = 4,88 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 8,45 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 4,88 A · 0,7 = 4,1 kW.", "Látszólagos: S = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> = 5,85 kVA; meddő: Q = √(S<sup>2<\/sup> − P<sup>2<\/sup>) = 4,18 kvar.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 8,45 A · 0,7 = 4,1 kW ✓"], "text": "Három egyforma, Z = 82 Ω impedanciájú, cos φ = 0,7 teljesítménytényezőjű (induktív) fázisterhelést deltába kötünk U<sub>v<\/sub> = 400 V-ra. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub>, P, Q és S?"}, {"task": "csillagdelta", "seed": 6, "level": "B", "params": {"v": "B", "conn": "D", "Z": 22, "cos": 0.85}, "values": {"Uf": 400, "If": 18.181818181818183, "Iv": 31.49183286488868, "P": 18545.454545454548, "Q": 11493.440457657533, "S": 21818.18181818182}, "nsteps": 6, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / Z = 400 V / 22 Ω = 18,2 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 31,5 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 18,2 A · 0,85 = 18,5 kW.", "Látszólagos: S = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> = 21,8 kVA; meddő: Q = √(S<sup>2<\/sup> − P<sup>2<\/sup>) = 11,5 kvar.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 31,5 A · 0,85 = 18,5 kW ✓"], "text": "Három egyforma, Z = 22 Ω impedanciájú, cos φ = 0,85 teljesítménytényezőjű (induktív) fázisterhelést deltába kötünk U<sub>v<\/sub> = 400 V-ra. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub>, P, Q és S?"}, {"task": "csillagdelta", "seed": 1, "level": "C", "params": {"v": "C", "conn": "D", "P": 1000}, "values": {"R": 480.0, "P2": 333.3333333333333}, "nsteps": 4, "steps": ["Egy fázis teljesítménye: P<sub>f<\/sub> = P / 3 = 1 kW / 3 = 333 W.", "A tekercs feszültsége deltában U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "P<sub>f<\/sub> = U<sub>f<\/sub><sup>2<\/sup> / R-ből R = U<sub>f<\/sub><sup>2<\/sup> / P<sub>f<\/sub> = (400 V)<sup>2<\/sup> / 333 W = 480 Ω.", "Átkötve csillagba a tekercsfeszültség √3-ad részére csökken, a teljesítmény harmadára: 333 W; a vonali áramok aránya I<sub>vΔ<\/sub> / I<sub>vY<\/sub> = 3."], "text": "Egy deltába kötött, ohmos háromfázisú fűtőtest 400 V-on P = 1 kW teljesítményt vesz fel. Mekkora egy fázis ellenállása, és mekkora lenne a teljesítmény, ha ugyanezt csillagba kötnénk át?"}, {"task": "csillagdelta", "seed": 2, "level": "C", "params": {"v": "C", "conn": "D", "P": 4500}, "values": {"R": 106.66666666666667, "P2": 1500.0}, "nsteps": 4, "steps": ["Egy fázis teljesítménye: P<sub>f<\/sub> = P / 3 = 4,5 kW / 3 = 1,5 kW.", "A tekercs feszültsége deltában U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "P<sub>f<\/sub> = U<sub>f<\/sub><sup>2<\/sup> / R-ből R = U<sub>f<\/sub><sup>2<\/sup> / P<sub>f<\/sub> = (400 V)<sup>2<\/sup> / 1,5 kW = 107 Ω.", "Átkötve csillagba a tekercsfeszültség √3-ad részére csökken, a teljesítmény harmadára: 1,5 kW; a vonali áramok aránya I<sub>vΔ<\/sub> / I<sub>vY<\/sub> = 3."], "text": "Egy deltába kötött, ohmos háromfázisú fűtőtest 400 V-on P = 4,5 kW teljesítményt vesz fel. Mekkora egy fázis ellenállása, és mekkora lenne a teljesítmény, ha ugyanezt csillagba kötnénk át?"}, {"task": "csillagdelta", "seed": 3, "level": "C", "params": {"v": "C", "conn": "D", "P": 1000}, "values": {"R": 480.0, "P2": 333.3333333333333}, "nsteps": 4, "steps": ["Egy fázis teljesítménye: P<sub>f<\/sub> = P / 3 = 1 kW / 3 = 333 W.", "A tekercs feszültsége deltában U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "P<sub>f<\/sub> = U<sub>f<\/sub><sup>2<\/sup> / R-ből R = U<sub>f<\/sub><sup>2<\/sup> / P<sub>f<\/sub> = (400 V)<sup>2<\/sup> / 333 W = 480 Ω.", "Átkötve csillagba a tekercsfeszültség √3-ad részére csökken, a teljesítmény harmadára: 333 W; a vonali áramok aránya I<sub>vΔ<\/sub> / I<sub>vY<\/sub> = 3."], "text": "Egy deltába kötött, ohmos háromfázisú fűtőtest 400 V-on P = 1 kW teljesítményt vesz fel. Mekkora egy fázis ellenállása, és mekkora lenne a teljesítmény, ha ugyanezt csillagba kötnénk át?"}, {"task": "csillagdelta", "seed": 4, "level": "C", "params": {"v": "C", "conn": "D", "P": 4500}, "values": {"R": 106.66666666666667, "P2": 1500.0}, "nsteps": 4, "steps": ["Egy fázis teljesítménye: P<sub>f<\/sub> = P / 3 = 4,5 kW / 3 = 1,5 kW.", "A tekercs feszültsége deltában U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "P<sub>f<\/sub> = U<sub>f<\/sub><sup>2<\/sup> / R-ből R = U<sub>f<\/sub><sup>2<\/sup> / P<sub>f<\/sub> = (400 V)<sup>2<\/sup> / 1,5 kW = 107 Ω.", "Átkötve csillagba a tekercsfeszültség √3-ad részére csökken, a teljesítmény harmadára: 1,5 kW; a vonali áramok aránya I<sub>vΔ<\/sub> / I<sub>vY<\/sub> = 3."], "text": "Egy deltába kötött, ohmos háromfázisú fűtőtest 400 V-on P = 4,5 kW teljesítményt vesz fel. Mekkora egy fázis ellenállása, és mekkora lenne a teljesítmény, ha ugyanezt csillagba kötnénk át?"}, {"task": "csillagdelta", "seed": 5, "level": "C", "params": {"v": "C", "conn": "D", "P": 9500}, "values": {"R": 50.526315789473685, "P2": 3166.6666666666665}, "nsteps": 4, "steps": ["Egy fázis teljesítménye: P<sub>f<\/sub> = P / 3 = 9,5 kW / 3 = 3,17 kW.", "A tekercs feszültsége deltában U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "P<sub>f<\/sub> = U<sub>f<\/sub><sup>2<\/sup> / R-ből R = U<sub>f<\/sub><sup>2<\/sup> / P<sub>f<\/sub> = (400 V)<sup>2<\/sup> / 3,17 kW = 50,5 Ω.", "Átkötve csillagba a tekercsfeszültség √3-ad részére csökken, a teljesítmény harmadára: 3,17 kW; a vonali áramok aránya I<sub>vΔ<\/sub> / I<sub>vY<\/sub> = 3."], "text": "Egy deltába kötött, ohmos háromfázisú fűtőtest 400 V-on P = 9,5 kW teljesítményt vesz fel. Mekkora egy fázis ellenállása, és mekkora lenne a teljesítmény, ha ugyanezt csillagba kötnénk át?"}, {"task": "csillagdelta", "seed": 6, "level": "C", "params": {"v": "C", "conn": "D", "P": 1000}, "values": {"R": 480.0, "P2": 333.3333333333333}, "nsteps": 4, "steps": ["Egy fázis teljesítménye: P<sub>f<\/sub> = P / 3 = 1 kW / 3 = 333 W.", "A tekercs feszültsége deltában U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "P<sub>f<\/sub> = U<sub>f<\/sub><sup>2<\/sup> / R-ből R = U<sub>f<\/sub><sup>2<\/sup> / P<sub>f<\/sub> = (400 V)<sup>2<\/sup> / 333 W = 480 Ω.", "Átkötve csillagba a tekercsfeszültség √3-ad részére csökken, a teljesítmény harmadára: 333 W; a vonali áramok aránya I<sub>vΔ<\/sub> / I<sub>vY<\/sub> = 3."], "text": "Egy deltába kötött, ohmos háromfázisú fűtőtest 400 V-on P = 1 kW teljesítményt vesz fel. Mekkora egy fázis ellenállása, és mekkora lenne a teljesítmény, ha ugyanezt csillagba kötnénk át?"}, {"task": "csillagdelta", "seed": 1, "level": "D", "params": {"v": "D", "P": 4, "eta": 0.8, "cos": 0.82, "volt": "400/690"}, "values": {"conn": "D", "Iv": 8.801071176671124, "It": 5.08130081300813}, "nsteps": 4, "steps": ["Az adattábla kisebbik feszültsége a tekercsfeszültség: 400 V. A 400 V-os hálózaton ezért deltába kell kötni (a tekercs a 400 V-os vonali feszültséget kapja).", "Felvett teljesítmény: P<sub>fel<\/sub> = P<sub>le<\/sub> / η = 4 kW / 0,8 = 5 kW.", "Vonali áram: I<sub>v<\/sub> = P<sub>fel<\/sub> / (√3 · U<sub>v<\/sub> · cos φ) = 5 kW / (1,732 · 400 V · 0,82) = 8,8 A.", "Deltában a tekercsáram I<sub>v<\/sub> / √3 = 5,08 A."], "text": "Egy motor adattáblája: P<sub>le<\/sub> = 4 kW, η = 0,8, cos φ = 0,82, 400/690 V Δ/Y. Hogyan kötöd be a 400 V-os hálózatra, mekkora a vonali áram és a tekercsáram?"}, {"task": "csillagdelta", "seed": 2, "level": "D", "params": {"v": "D", "P": 5.5, "eta": 0.82, "cos": 0.8, "volt": "400/690"}, "values": {"conn": "D", "Iv": 12.101472867922796, "It": 6.986788617886179}, "nsteps": 4, "steps": ["Az adattábla kisebbik feszültsége a tekercsfeszültség: 400 V. A 400 V-os hálózaton ezért deltába kell kötni (a tekercs a 400 V-os vonali feszültséget kapja).", "Felvett teljesítmény: P<sub>fel<\/sub> = P<sub>le<\/sub> / η = 5,5 kW / 0,82 = 6,71 kW.", "Vonali áram: I<sub>v<\/sub> = P<sub>fel<\/sub> / (√3 · U<sub>v<\/sub> · cos φ) = 6,71 kW / (1,732 · 400 V · 0,8) = 12,1 A.", "Deltában a tekercsáram I<sub>v<\/sub> / √3 = 6,99 A."], "text": "Egy motor adattáblája: P<sub>le<\/sub> = 5,5 kW, η = 0,82, cos φ = 0,8, 400/690 V Δ/Y. Hogyan kötöd be a 400 V-os hálózatra, mekkora a vonali áram és a tekercsáram?"}, {"task": "csillagdelta", "seed": 3, "level": "D", "params": {"v": "D", "P": 5.5, "eta": 0.8, "cos": 0.82, "volt": "230/400"}, "values": {"conn": "Y", "Iv": 12.101472867922796, "It": 12.101472867922796}, "nsteps": 4, "steps": ["Az adattábla kisebbik feszültsége a tekercsfeszültség: 230 V. A 400 V-os hálózaton ezért csillagba kell kötni (a tekercs 400 / √3 = 230 V-ot kap).", "Felvett teljesítmény: P<sub>fel<\/sub> = P<sub>le<\/sub> / η = 5,5 kW / 0,8 = 6,88 kW.", "Vonali áram: I<sub>v<\/sub> = P<sub>fel<\/sub> / (√3 · U<sub>v<\/sub> · cos φ) = 6,88 kW / (1,732 · 400 V · 0,82) = 12,1 A.", "Csillagban a tekercsáram azonos a vonali árammal: 12,1 A."], "text": "Egy motor adattáblája: P<sub>le<\/sub> = 5,5 kW, η = 0,8, cos φ = 0,82, 230/400 V Δ/Y. Hogyan kötöd be a 400 V-os hálózatra, mekkora a vonali áram és a tekercsáram?"}, {"task": "csillagdelta", "seed": 4, "level": "D", "params": {"v": "D", "P": 7.5, "eta": 0.82, "cos": 0.8, "volt": "230/400"}, "values": {"conn": "Y", "Iv": 16.502008456258356, "It": 16.502008456258356}, "nsteps": 4, "steps": ["Az adattábla kisebbik feszültsége a tekercsfeszültség: 230 V. A 400 V-os hálózaton ezért csillagba kell kötni (a tekercs 400 / √3 = 230 V-ot kap).", "Felvett teljesítmény: P<sub>fel<\/sub> = P<sub>le<\/sub> / η = 7,5 kW / 0,82 = 9,15 kW.", "Vonali áram: I<sub>v<\/sub> = P<sub>fel<\/sub> / (√3 · U<sub>v<\/sub> · cos φ) = 9,15 kW / (1,732 · 400 V · 0,8) = 16,5 A.", "Csillagban a tekercsáram azonos a vonali árammal: 16,5 A."], "text": "Egy motor adattáblája: P<sub>le<\/sub> = 7,5 kW, η = 0,82, cos φ = 0,8, 230/400 V Δ/Y. Hogyan kötöd be a 400 V-os hálózatra, mekkora a vonali áram és a tekercsáram?"}, {"task": "csillagdelta", "seed": 5, "level": "D", "params": {"v": "D", "P": 4, "eta": 0.88, "cos": 0.8, "volt": "400/690"}, "values": {"conn": "D", "Iv": 8.200998141898092, "It": 4.734848484848484}, "nsteps": 4, "steps": ["Az adattábla kisebbik feszültsége a tekercsfeszültség: 400 V. A 400 V-os hálózaton ezért deltába kell kötni (a tekercs a 400 V-os vonali feszültséget kapja).", "Felvett teljesítmény: P<sub>fel<\/sub> = P<sub>le<\/sub> / η = 4 kW / 0,88 = 4,55 kW.", "Vonali áram: I<sub>v<\/sub> = P<sub>fel<\/sub> / (√3 · U<sub>v<\/sub> · cos φ) = 4,55 kW / (1,732 · 400 V · 0,8) = 8,2 A.", "Deltában a tekercsáram I<sub>v<\/sub> / √3 = 4,73 A."], "text": "Egy motor adattáblája: P<sub>le<\/sub> = 4 kW, η = 0,88, cos φ = 0,8, 400/690 V Δ/Y. Hogyan kötöd be a 400 V-os hálózatra, mekkora a vonali áram és a tekercsáram?"}, {"task": "csillagdelta", "seed": 6, "level": "D", "params": {"v": "D", "P": 3, "eta": 0.8, "cos": 0.84, "volt": "230/400"}, "values": {"conn": "Y", "Iv": 6.443641397205645, "It": 6.443641397205645}, "nsteps": 4, "steps": ["Az adattábla kisebbik feszültsége a tekercsfeszültség: 230 V. A 400 V-os hálózaton ezért csillagba kell kötni (a tekercs 400 / √3 = 230 V-ot kap).", "Felvett teljesítmény: P<sub>fel<\/sub> = P<sub>le<\/sub> / η = 3 kW / 0,8 = 3,75 kW.", "Vonali áram: I<sub>v<\/sub> = P<sub>fel<\/sub> / (√3 · U<sub>v<\/sub> · cos φ) = 3,75 kW / (1,732 · 400 V · 0,84) = 6,44 A.", "Csillagban a tekercsáram azonos a vonali árammal: 6,44 A."], "text": "Egy motor adattáblája: P<sub>le<\/sub> = 3 kW, η = 0,8, cos φ = 0,84, 230/400 V Δ/Y. Hogyan kötöd be a 400 V-os hálózatra, mekkora a vonali áram és a tekercsáram?"}, {"task": "csillagdelta", "seed": 0, "level": "A", "params_in": {"v": "A", "conn": "Y", "R": 50}, "values": {"Uf": 230.94010767585033, "If": 4.618802153517007, "Iv": 4.618802153517007, "P": 3200.000000000001}, "nsteps": 5, "steps": ["Csillagban a tekercs a fázisfeszültséget kapja: U<sub>f<\/sub> = U<sub>v<\/sub> / √3 = 400 V / 1,732 = 230,9 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 230,9 V / 50 Ω = 4,62 A.", "Csillagban a vonali áram azonos a fázisárammal: I<sub>v<\/sub> = I<sub>f<\/sub> = 4,62 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 230,9 V · 4,62 A · 1 = 3,2 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 4,62 A · 1 = 3,2 kW ✓"], "text": "Három egyforma, R = 50 Ω ellenállású fűtőellenállást csillagba kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 0, "level": "A", "params_in": {"v": "A", "conn": "D", "R": 50}, "values": {"Uf": 400, "If": 8.0, "Iv": 13.856406460551018, "P": 9600.0}, "nsteps": 5, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 400 V / 50 Ω = 8 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 13,9 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 8 A · 1 = 9,6 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 13,9 A · 1 = 9,6 kW ✓"], "text": "Három egyforma, R = 50 Ω ellenállású fűtőellenállást deltába kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 0, "level": "A", "params_in": {"v": "A", "conn": "Y", "R": 120}, "values": {"Uf": 230.94010767585033, "If": 1.9245008972987527, "Iv": 1.9245008972987527, "P": 1333.3333333333337}, "nsteps": 5, "steps": ["Csillagban a tekercs a fázisfeszültséget kapja: U<sub>f<\/sub> = U<sub>v<\/sub> / √3 = 400 V / 1,732 = 230,9 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 230,9 V / 120 Ω = 1,92 A.", "Csillagban a vonali áram azonos a fázisárammal: I<sub>v<\/sub> = I<sub>f<\/sub> = 1,92 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 230,9 V · 1,92 A · 1 = 1,33 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 1,92 A · 1 = 1,33 kW ✓"], "text": "Három egyforma, R = 120 Ω ellenállású fűtőellenállást csillagba kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 0, "level": "A", "params_in": {"v": "A", "conn": "D", "R": 120}, "values": {"Uf": 400, "If": 3.3333333333333335, "Iv": 5.773502691896257, "P": 4000.0}, "nsteps": 5, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / R = 400 V / 120 Ω = 3,33 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 5,77 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 3,33 A · 1 = 4 kW.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 5,77 A · 1 = 4 kW ✓"], "text": "Három egyforma, R = 120 Ω ellenállású fűtőellenállást deltába kötünk, és U<sub>v<\/sub> = 400 V-os hálózatra kapcsoljuk. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub> és P?"}, {"task": "csillagdelta", "seed": 0, "level": "B", "params_in": {"v": "B", "conn": "Y", "Z": 40, "cos": 0.8}, "values": {"Uf": 230.94010767585033, "If": 5.773502691896258, "Iv": 5.773502691896258, "P": 3200.000000000001, "Q": 2400.0000000000005, "S": 4000.000000000001}, "nsteps": 6, "steps": ["Csillagban a tekercs a fázisfeszültséget kapja: U<sub>f<\/sub> = U<sub>v<\/sub> / √3 = 400 V / 1,732 = 230,9 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / Z = 230,9 V / 40 Ω = 5,77 A.", "Csillagban a vonali áram azonos a fázisárammal: I<sub>v<\/sub> = I<sub>f<\/sub> = 5,77 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 230,9 V · 5,77 A · 0,8 = 3,2 kW.", "Látszólagos: S = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> = 4 kVA; meddő: Q = √(S<sup>2<\/sup> − P<sup>2<\/sup>) = 2,4 kvar.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 5,77 A · 0,8 = 3,2 kW ✓"], "text": "Három egyforma, Z = 40 Ω impedanciájú, cos φ = 0,8 teljesítménytényezőjű (induktív) fázisterhelést csillagba kötünk U<sub>v<\/sub> = 400 V-ra. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub>, P, Q és S?"}, {"task": "csillagdelta", "seed": 0, "level": "B", "params_in": {"v": "B", "conn": "D", "Z": 40, "cos": 0.8}, "values": {"Uf": 400, "If": 10.0, "Iv": 17.32050807568877, "P": 9600.0, "Q": 7200.0, "S": 12000.0}, "nsteps": 6, "steps": ["Deltában a tekercs két fázisvezető közé kerül: U<sub>f<\/sub> = U<sub>v<\/sub> = 400 V.", "Fázisáram: I<sub>f<\/sub> = U<sub>f<\/sub> / Z = 400 V / 40 Ω = 10 A.", "Deltában a vonali áram két fázisáram különbsége: I<sub>v<\/sub> = √3 · I<sub>f<\/sub> = 17,3 A.", "Hatásos teljesítmény: P = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> · cos φ = 3 · 400 V · 10 A · 0,8 = 9,6 kW.", "Látszólagos: S = 3 · U<sub>f<\/sub> · I<sub>f<\/sub> = 12 kVA; meddő: Q = √(S<sup>2<\/sup> − P<sup>2<\/sup>) = 7,2 kvar.", "Ellenőrzés vonali mennyiségekkel: √3 · U<sub>v<\/sub> · I<sub>v<\/sub> · cos φ = 1,732 · 400 V · 17,3 A · 0,8 = 9,6 kW ✓"], "text": "Három egyforma, Z = 40 Ω impedanciájú, cos φ = 0,8 teljesítménytényezőjű (induktív) fázisterhelést deltába kötünk U<sub>v<\/sub> = 400 V-ra. Mekkora U<sub>f<\/sub>, I<sub>f<\/sub>, I<sub>v<\/sub>, P, Q és S?"}, {"task": "csillagdelta", "seed": 0, "level": "C", "params_in": {"v": "C", "conn": "Y", "P": 3000}, "values": {"R": 53.33333333333334, "P2": 9000}, "nsteps": 4, "steps": ["Egy fázis teljesítménye: P<sub>f<\/sub> = P / 3 = 3 kW / 3 = 1 kW.", "A tekercs feszültsége csillagban U<sub>f<\/sub> = 400 V / √3 = 230,9 V.", "P<sub>f<\/sub> = U<sub>f<\/sub><sup>2<\/sup> / R-ből R = U<sub>f<\/sub><sup>2<\/sup> / P<sub>f<\/sub> = (230,9 V)<sup>2<\/sup> / 1 kW = 53,3 Ω.", "Átkötve deltába a tekercsfeszültség √3-szoros, a teljesítmény háromszoros: 9 kW; a vonali áramok aránya I<sub>vΔ<\/sub> / I<sub>vY<\/sub> = 3."], "text": "Egy csillagba kötött, ohmos háromfázisú fűtőtest 400 V-on P = 3 kW teljesítményt vesz fel. Mekkora egy fázis ellenállása, és mekkora lenne a teljesítmény, ha ugyanezt deltába kötnénk át?"}, {"task": "csillagdelta", "seed": 0, "level": "D", "params_in": {"v": "D", "P": 4, "eta": 0.86, "cos": 0.82, "volt": "230/400"}, "values": {"conn": "Y", "Iv": 8.187042955042907, "It": 8.187042955042907}, "nsteps": 4, "steps": ["Az adattábla kisebbik feszültsége a tekercsfeszültség: 230 V. A 400 V-os hálózaton ezért csillagba kell kötni (a tekercs 400 / √3 = 230 V-ot kap).", "Felvett teljesítmény: P<sub>fel<\/sub> = P<sub>le<\/sub> / η = 4 kW / 0,86 = 4,65 kW.", "Vonali áram: I<sub>v<\/sub> = P<sub>fel<\/sub> / (√3 · U<sub>v<\/sub> · cos φ) = 4,65 kW / (1,732 · 400 V · 0,82) = 8,19 A.", "Csillagban a tekercsáram azonos a vonali árammal: 8,19 A."], "text": "Egy motor adattáblája: P<sub>le<\/sub> = 4 kW, η = 0,86, cos φ = 0,82, 230/400 V Δ/Y. Hogyan kötöd be a 400 V-os hálózatra, mekkora a vonali áram és a tekercsáram?"}]}});
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

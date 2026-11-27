@@ -24,7 +24,7 @@ code,.mono{font-family:ui-monospace,Consolas,monospace}</style>
 </head>
 <body>
 <div class="bar"><button id="b1">S1 START</button><button id="b0">S0 STOP (tartsd)</button>
-<button id="bt" aria-pressed="false">F3 túlterhelés-kioldás</button>
+<button id="bt" aria-pressed="false">F1 túlterhelés-kioldás</button>
 <label class="chk">KT átkapcsolási idő <input id="ts" type="range" min="1" max="15" step="0.5" value="5" aria-label="KT átkapcsolási idő"> <output id="ts_o"></output></label></div>
 <div id="st" aria-live="polite"></div>
 <svg id="v" role="img" aria-label="Csillag–delta indítás vezérlőköre: K1, KT, K2 csillag és K3 delta mágneskapcsoló, K2–K3 kölcsönös reteszeléssel"></svg>
@@ -60,7 +60,7 @@ function dev(kind,a,b,o){o=o||{};
   const cx=(A[0]+B[0])/2,cy=(A[1]+B[1])/2,h=30,g=mk("g",{transform:"translate("+cx+","+cy+") rotate("+ang+")"});
   const line=css("--line"),cur=css("--cur"),sw=2.2;
   const seg=(x1,y1,x2,y2,c,w,extra)=>mk("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:c||line,"stroke-width":w||sw,"stroke-linecap":"round"},extra||{}),g);
-  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res")?true:!!o.closed;
+  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res"||kind==="fuse")?true:!!o.closed;
   // áram alatti halo (a kivezetések és a záródott test)
   if(o.l1)seg(-L/2,0,-h,0,cur,6.5,{opacity:.9});
   if(o.l2)seg(h,0,L/2,0,cur,6.5,{opacity:.9});
@@ -75,7 +75,8 @@ function dev(kind,a,b,o){o=o||{};
     if(kind==="pbno"||kind==="pbnc"){const d=o.pressed?9:0;                // nyomógomb-működtető (T-alak)
       seg(0,-8+d,0,-30+d,line,1.8,{"stroke-dasharray":"4 3"});seg(-9,-30+d,9,-30+d,line,3);}
     if(kind==="sw"){seg(0,-12,0,-26,line,1.8,{"stroke-dasharray":"4 3"});seg(-8,-26,8,-26,line,3);}
-    if(kind==="mcb"){seg(-6,-6,6,-18,line,2);seg(6,-6,-6,-18,line,2);}   // kismegszakító: kézi működtetés jele
+    if(kind==="mcb"){const dy=o.closed?12:0;                              // kismegszakító: a túláramkioldó X-e a késsel együtt mozog
+      seg(-6,-6+dy,6,-18+dy,line,2);seg(6,-6+dy,-6,-18+dy,line,2);}
     if(o.delay==="on"||o.delay==="off"){seg(0,-10,0,-28,line,1.8);       // késleltetett érintkező (időrelé): ejtőernyő-ív
       mk("path",{d:"M -9 -28 A 9 9 0 0 "+(o.delay==="on"?1:0)+" 9 -28",fill:"none",stroke:line,"stroke-width":2},g);}
   }else if(kind==="coil"){
@@ -84,6 +85,10 @@ function dev(kind,a,b,o){o=o||{};
   }else if(kind==="thermal"){
     mk("rect",{x:-h,y:-17,width:2*h,height:34,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);
     mk("polyline",{points:"-14,0 -7,-9 0,9 7,-9 14,0",fill:"none",stroke:line,"stroke-width":2},g);
+  }else if(kind==="res"){                                                  // ellenállás (IEC téglalap)
+    mk("rect",{x:-h,y:-9,width:2*h,height:18,fill:o.body?css("--coil"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+  }else if(kind==="fuse"){                                                 // olvadóbiztosító: téglalap, középvonal
+    mk("rect",{x:-h,y:-10,width:2*h,height:20,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);seg(-h,0,h,0,line,2);
   }else if(kind==="lamp"){
     mk("circle",{cx:0,cy:0,r:17,fill:o.body?css("--lamp"):css("--bg"),stroke:line,"stroke-width":2.2},g);
     seg(-12,-12,12,12,line,2);seg(-12,12,12,-12,line,2);
@@ -116,8 +121,8 @@ function hold(el,down,up){let on=false;const d=e=>{if(!on){on=true;down();}},u=e
 function pulse(down,up,ms){down();setTimeout(up,ms||600);}
 
 
-const PARTS=[{"id": "F2", "k": "fuse", "a": [0.6, 9], "b": [2.4, 9], "na": "L", "nb": "n1", "c": null, "lab": "F2", "sub": "2 A"}, {"id": "F3", "k": "nc", "a": [3, 9], "b": [4.8, 9], "na": "n1", "nb": "n2", "c": "F3", "lab": "F3", "sub": "95-96"}, {"id": "S0", "k": "pbnc", "a": [5.4, 9], "b": [7.2, 9], "na": "n2", "nb": "X", "c": "S0", "lab": "S0", "sub": "STOP"}, {"id": "S1", "k": "pbno", "a": [8.4, 9], "b": [10.2, 9], "na": "X", "nb": "B", "c": "S1", "lab": "S1", "sub": "START"}, {"id": "K1h", "k": "no", "a": [8.4, 7.4], "b": [10.2, 7.4], "na": "X", "nb": "B", "c": "K1", "lab": "K1 13-14", "sub": ""}, {"id": "K1", "k": "coil", "a": [15.6, 9], "b": [17.4, 9], "na": "B", "nb": "N", "c": null, "lab": "K1", "sub": "hálózati"}, {"id": "KT", "k": "coil", "a": [15.6, 6.5], "b": [17.4, 6.5], "na": "B", "nb": "N", "c": null, "lab": "KT", "sub": "időrelé"}, {"id": "KTb", "k": "nc", "a": [11.4, 4], "b": [13, 4], "na": "B", "nb": "c1", "c": "KTd", "lab": "KT 55-56", "sub": "késl. bontó"}, {"id": "K3r", "k": "nc", "a": [13.6, 4], "b": [15.2, 4], "na": "c1", "nb": "c2", "c": "K3", "lab": "K3", "sub": "21-22"}, {"id": "K2", "k": "coil", "a": [15.8, 4], "b": [17.4, 4], "na": "c2", "nb": "N", "c": null, "lab": "K2", "sub": "csillag"}, {"id": "KTz", "k": "no", "a": [11.4, 1.6], "b": [13, 1.6], "na": "B", "nb": "d1", "c": "KTd", "lab": "KT 67-68", "sub": "késl. záró"}, {"id": "K2r", "k": "nc", "a": [13.6, 1.6], "b": [15.2, 1.6], "na": "d1", "nb": "d2", "c": "K2", "lab": "K2", "sub": "21-22"}, {"id": "K3", "k": "coil", "a": [15.8, 1.6], "b": [17.4, 1.6], "na": "d2", "nb": "N", "c": null, "lab": "K3", "sub": "delta"}], WIRES=[{"p": [[0, 9], [0.6, 9]], "n": "L"}, {"p": [[2.4, 9], [3, 9]], "n": "n1"}, {"p": [[4.8, 9], [5.4, 9]], "n": "n2"}, {"p": [[7.2, 9], [8.4, 9]], "n": "X"}, {"p": [[8.4, 9], [8.4, 7.4]], "n": "X"}, {"p": [[10.2, 9], [10.2, 7.4]], "n": "B"}, {"p": [[10.2, 9], [15.6, 9]], "n": "B"}, {"p": [[10.8, 9], [10.8, 1.6], [11.4, 1.6]], "n": "B"}, {"p": [[10.8, 6.5], [15.6, 6.5]], "n": "B"}, {"p": [[10.8, 4], [11.4, 4]], "n": "B"}, {"p": [[13, 4], [13.6, 4]], "n": "c1"}, {"p": [[15.2, 4], [15.8, 4]], "n": "c2"}, {"p": [[13, 1.6], [13.6, 1.6]], "n": "d1"}, {"p": [[15.2, 1.6], [15.8, 1.6]], "n": "d2"}, {"p": [[17.4, 9], [18.8, 9]], "n": "N"}, {"p": [[17.4, 6.5], [18.8, 6.5]], "n": "N"}, {"p": [[17.4, 4], [18.8, 4]], "n": "N"}, {"p": [[17.4, 1.6], [18.8, 1.6]], "n": "N"}], DOTS=[[8.4, 9], [10.2, 9], [10.8, 9], [10.8, 6.5], [10.8, 4], [18.8, 9], [18.8, 6.5], [18.8, 4], [18.8, 1.6]], COILS=["K1","KT","K2","K3"];
-const act={S0:false,S1:false,F3:false}, relay={K1:false,KT:false,K2:false,K3:false};
+const PARTS=[{"id": "F2", "k": "fuse", "a": [0.6, 9], "b": [2.4, 9], "na": "L", "nb": "n1", "c": null, "lab": "F2", "sub": "2 A"}, {"id": "F1", "k": "nc", "a": [3, 9], "b": [4.8, 9], "na": "n1", "nb": "n2", "c": "F1", "lab": "F1", "sub": "95-96"}, {"id": "S0", "k": "pbnc", "a": [5.4, 9], "b": [7.2, 9], "na": "n2", "nb": "X", "c": "S0", "lab": "S0", "sub": "STOP"}, {"id": "S1", "k": "pbno", "a": [8.4, 9], "b": [10.2, 9], "na": "X", "nb": "B", "c": "S1", "lab": "S1", "sub": "START"}, {"id": "K1h", "k": "no", "a": [8.4, 7.4], "b": [10.2, 7.4], "na": "X", "nb": "B", "c": "K1", "lab": "K1 13-14", "sub": ""}, {"id": "K1", "k": "coil", "a": [15.6, 9], "b": [17.4, 9], "na": "B", "nb": "N", "c": null, "lab": "K1", "sub": "hálózati"}, {"id": "KT", "k": "coil", "a": [15.6, 6.5], "b": [17.4, 6.5], "na": "B", "nb": "N", "c": null, "lab": "KT", "sub": "időrelé"}, {"id": "KTb", "k": "nc", "a": [11.4, 4], "b": [13, 4], "na": "B", "nb": "c1", "c": "KTd", "lab": "KT 55-56", "sub": "késl. bontó"}, {"id": "K3r", "k": "nc", "a": [13.6, 4], "b": [15.2, 4], "na": "c1", "nb": "c2", "c": "K3", "lab": "K3", "sub": "21-22"}, {"id": "K2", "k": "coil", "a": [15.8, 4], "b": [17.4, 4], "na": "c2", "nb": "N", "c": null, "lab": "K2", "sub": "csillag"}, {"id": "KTz", "k": "no", "a": [11.4, 1.6], "b": [13, 1.6], "na": "B", "nb": "d1", "c": "KTd", "lab": "KT 67-68", "sub": "késl. záró"}, {"id": "K2r", "k": "nc", "a": [13.6, 1.6], "b": [15.2, 1.6], "na": "d1", "nb": "d2", "c": "K2", "lab": "K2", "sub": "21-22"}, {"id": "K3", "k": "coil", "a": [15.8, 1.6], "b": [17.4, 1.6], "na": "d2", "nb": "N", "c": null, "lab": "K3", "sub": "delta"}], WIRES=[{"p": [[0, 9], [0.6, 9]], "n": "L"}, {"p": [[2.4, 9], [3, 9]], "n": "n1"}, {"p": [[4.8, 9], [5.4, 9]], "n": "n2"}, {"p": [[7.2, 9], [8.4, 9]], "n": "X"}, {"p": [[8.4, 9], [8.4, 7.4]], "n": "X"}, {"p": [[10.2, 9], [10.2, 7.4]], "n": "B"}, {"p": [[10.2, 9], [15.6, 9]], "n": "B"}, {"p": [[10.8, 9], [10.8, 1.6], [11.4, 1.6]], "n": "B"}, {"p": [[10.8, 6.5], [15.6, 6.5]], "n": "B"}, {"p": [[10.8, 4], [11.4, 4]], "n": "B"}, {"p": [[13, 4], [13.6, 4]], "n": "c1"}, {"p": [[15.2, 4], [15.8, 4]], "n": "c2"}, {"p": [[13, 1.6], [13.6, 1.6]], "n": "d1"}, {"p": [[15.2, 1.6], [15.8, 1.6]], "n": "d2"}, {"p": [[17.4, 9], [18.8, 9]], "n": "N"}, {"p": [[17.4, 6.5], [18.8, 6.5]], "n": "N"}, {"p": [[17.4, 4], [18.8, 4]], "n": "N"}, {"p": [[17.4, 1.6], [18.8, 1.6]], "n": "N"}], DOTS=[[8.4, 9], [10.2, 9], [10.8, 9], [10.8, 6.5], [10.8, 4], [18.8, 9], [18.8, 6.5], [18.8, 4], [18.8, 1.6]], COILS=["K1","KT","K2","K3"];
+const act={S0:false,S1:false,F1:false}, relay={K1:false,KT:false,K2:false,K3:false};
 let t=0, timer=null;
 function T(){return +document.getElementById("ts").value;}
 function closed(p){if(p.k==="fuse")return true;if(p.k==="coil")return false;
@@ -141,12 +146,12 @@ function render(){solve();if(!relay.KT)t=0;const s=live(),anyK=COILS.some(c=>rel
   mk("rect",{x:a[0],y:a[1]-8,width:(b[0]-a[0])*f,height:16,fill:css("--btnb")});text(0.6+w/2,0.85,"KT: "+fmt(t,1)+" / "+fmt(T(),1)+" s",{size:12});}
  if(relay.K2&&relay.K3)throw new Error("K2 és K3 egyszerre");
  document.getElementById("st").innerHTML="K1: <b>"+(relay.K1?"be":"ki")+"</b> · K2 (csillag): <b>"+(relay.K2?"be":"ki")+"</b> · K3 (delta): <b>"+(relay.K3?"be":"ki")+"</b> · KT: <b>"+(relay.KT?(t>=T()?"lejárt":"méri az időt"):"ki")+"</b> · motor: <b>"+mode+"</b>."+
-  (act.F3?' <span class="bad">F3 kioldott: a 95-96 bont, minden mágneskapcsoló elenged.</span>':"");
+  (act.F1?' <span class="bad">F1 kioldott: a 95-96 bont, minden mágneskapcsoló elenged.</span>':"");
  document.getElementById("ts_o").textContent=fmt(T(),1)+" s";
  if(relay.KT&&!timer)timer=setInterval(tick,100);if(!relay.KT&&timer){clearInterval(timer);timer=null;}}
 hold(document.getElementById("b0"),()=>{act.S0=true;render();},()=>{act.S0=false;render();});
 document.getElementById("b1").addEventListener("click",()=>pulse(()=>{act.S1=true;render();},()=>{act.S1=false;render();}));
-document.getElementById("bt").addEventListener("click",e=>{act.F3=!act.F3;e.target.setAttribute("aria-pressed",act.F3);render();});
+document.getElementById("bt").addEventListener("click",e=>{act.F1=!act.F1;e.target.setAttribute("aria-pressed",act.F1);render();});
 document.getElementById("ts").addEventListener("input",render);
 render();
 

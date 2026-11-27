@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Árajánlat-kalkulátor</title>
+<style>:root{--fg:#111;--bg:#fff;--muted:#666;--hl:#1f4e79;--hl2:#c55a11;--ok:#2e7d32;--bad:#b71c1c;--line:#000;--grid:#d9d9d9}
+@media (prefers-color-scheme:dark){:root{--fg:#eee;--bg:#1b1b1b;--muted:#aaa;--hl:#8fb8e8;--hl2:#f0a060;--ok:#81c784;--bad:#ef9a9a;--line:#ddd;--grid:#4a4a4a}}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;font:14px/1.45 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(90px,150px) 1fr minmax(70px,110px);gap:8px;align-items:center;margin:4px 0}
+.row output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}select{font:inherit;padding:2px 6px}
+#status{margin:8px 0;min-height:3em}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif}
+.small{font-size:12px;color:var(--muted)}</style>
+</head>
+<body>
+<div class="row"><label for="anyag">anyag nettó</label><input id="anyag" type="range" min="20000" max="600000" step="1000" value="120000" aria-label="anyag nettó"><output id="anyag_o" for="anyag"></output></div>
+<div class="row"><label for="seged">segédanyag</label><input id="seged" type="range" min="0" max="15" step="1" value="10" aria-label="segédanyag"><output id="seged_o" for="seged"></output></div>
+<div class="row"><label for="potlek">anyagkezelési pótlék</label><input id="potlek" type="range" min="0" max="15" step="1" value="0" aria-label="anyagkezelési pótlék"><output id="potlek_o" for="potlek"></output></div>
+<div class="row"><label for="ora">munkaóra</label><input id="ora" type="range" min="1" max="80" step="0.25" value="16" aria-label="munkaóra"><output id="ora_o" for="ora"></output></div>
+<div class="row"><label for="oradij">óradíj</label><input id="oradij" type="range" min="4000" max="12000" step="100" value="6000" aria-label="óradíj"><output id="oradij_o" for="oradij"></output></div>
+<div class="row"><label for="rezsi">rezsi</label><input id="rezsi" type="range" min="0" max="25" step="1" value="12" aria-label="rezsi"><output id="rezsi_o" for="rezsi"></output></div>
+<div class="row"><label for="nyer">nyereség</label><input id="nyer" type="range" min="0" max="20" step="1" value="8" aria-label="nyereség"><output id="nyer_o" for="nyer"></output></div>
+<div class="row"><label for="modell">modell</label><select id="modell" aria-label="modell"><option value="A" selected>A – bérköltség + rezsi %</option><option value="B">B – rezsióradíj</option></select></div>
+<div class="row"><label for="adozas">adózás</label><select id="adozas" aria-label="adózás"><option value="afas" selected>áfás (27 %)</option><option value="aam">alanyi adómentes</option><option value="ford">fordított adózás</option></select></div>
+<div id="status" aria-live="polite"></div>
+<svg id="v" viewBox="0 0 640 330" role="img" aria-label="Árajánlat-kalkulátor: halmozott sáv és táblázat az anyag, segédanyag, munkadíj, rezsi, nyereség, kerekítés és áfa összegével"></svg>
+<p class="small">Alapértékek: a 43.2 kidolgozott példája (120 000 Ft anyag, 10 %, 16 h × 6 000 Ft/h, rezsi 12 %, nyereség 8 %) → nettó 275 789 Ft, kerekítve 276 000 Ft, bruttó 350 520 Ft. Alanyi adómentesnél az anyag bruttó beszerzési áron (× 1,27) költség; fordított adózásnál a számlán nincs áfa. Az adózási szabályok ellenőrizendők (Áfa tv., NAV).</p>
+<script>
+const NS="http://www.w3.org/2000/svg", FIG={svg:document.getElementById("v"), st:document.getElementById("status")};
+const S=FIG.svg, ST=FIG.st;
+const UN={"anyag":"Ft", "seged":"%", "potlek":"%", "ora":"h", "oradij":"Ft/h", "rezsi":"%", "nyer":"%"};
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function el(tag,a,t){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;FIG.svg.appendChild(e);return e;}
+function status(h){FIG.st.innerHTML=h;}
+FIG.el=el;FIG.css=css;FIG.status=status;
+const fmt=(x,d=2)=>Number(x).toFixed(d).replace(".",",");
+function values(){const v={};document.querySelectorAll("input[type=range]").forEach(i=>{v[i.id]=+i.value;
+  document.getElementById(i.id+"_o").textContent=fmt(i.value,(+i.step<1?2:0))+" "+UN[i.id];});
+  document.querySelectorAll("select").forEach(i=>{v[i.id]=isNaN(+i.value)?i.value:+i.value;});
+  document.querySelectorAll("input[type=checkbox]").forEach(i=>{v[i.id]=i.checked?1:0;});return v;}
+function draw(){FIG.svg.innerHTML="";const v=values();
+
+const AFA=27, aam=v.adozas==="aam", ford=v.adozas==="ford", mB=v.modell==="B";
+const rz = mB ? 0 : v.rezsi;
+const A = aam ? v.anyag*(100+AFA)/100 : v.anyag;
+const S_ = A*v.seged/100, Pt=A*v.potlek/100, M=v.ora*v.oradij, K=A+S_+Pt+M, R=K*rz/100, P=(K+R)*v.nyer/100, N=K+R+P;
+const Nk=Math.ceil(N/1000)*1000, afa=(aam||ford)?0:Nk*AFA/100, B=Nk+afa;
+const ft=x=>Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g," ")+" Ft";
+const parts=[["anyag"+(aam?" (bruttó beszerzés)":""),A,"p1"],["segédanyag + pótlék",S_+Pt,"p2"],["munkadíj",M,"p3"],
+  ["rezsi",R,"p4"],["nyereség",P,"p5"],["kerekítés",Nk-N,"p6"],["áfa",afa,"p7"]];
+const W=620, x0=10, y0=40, h=46, sc=(W-20)/Math.max(B,1);
+const defs=el("defs",{});
+const pat=(id,d)=>{const p=document.createElementNS(NS,"pattern");p.setAttribute("id",id);p.setAttribute("width","8");p.setAttribute("height","8");
+  p.setAttribute("patternUnits","userSpaceOnUse");if(d){const q=document.createElementNS(NS,"path");q.setAttribute("d",d);q.setAttribute("stroke",css("--fg"));
+  q.setAttribute("stroke-width","1.1");p.appendChild(q);}defs.appendChild(p);};
+pat("p1","");pat("p2","M0,8 L8,0");pat("p3","M0,4 L8,4");pat("p4","M4,0 L4,8");pat("p5","M0,0 L8,8");pat("p6","");pat("p7","M0,0 L8,8 M0,8 L8,0");
+el("text",{x:x0,y:24,fill:css("--fg"),"font-size":15,"font-weight":"bold"},(aam?"Végösszeg (alanyi adómentes, áfa nélkül): ":ford?"Számla: fordított adózás, áfa nélkül: ":"Bruttó ajánlati ár: ")+ft(B));
+let x=x0;
+parts.forEach(([n,val,p],i)=>{ if(val<=0.5) return; const w=val*sc;
+  el("rect",{x:x,y:y0,width:w,height:h,fill:"url(#"+p+")",stroke:css("--fg"),"stroke-width":1.2});
+  if(w>46) el("text",{x:x+w/2,y:y0+h+16,"text-anchor":"middle",fill:css("--fg"),"font-size":11},String(i+1));
+  x+=w;});
+let y=y0+h+40;
+const row=(a,b,bold)=>{el("text",{x:x0,y:y,fill:css("--fg"),"font-size":13,"font-weight":bold?"bold":"normal"},a);
+  el("text",{x:W-10,y:y,fill:css("--fg"),"font-size":13,"text-anchor":"end","font-weight":bold?"bold":"normal"},b);y+=19;};
+parts.slice(0,3).forEach(([n,val],i)=>row((i+1)+". "+n,ft(val)));
+row("   közvetlen költség",ft(K),true);
+row("4. rezsi ("+rz+" %"+(mB?", a rezsióradíj tartalmazza":"")+")",ft(R));
+row("5. nyereség ("+v.nyer+" % a közvetlen + rezsi után)",ft(P));
+row("   nettó (számított)",ft(N),true);
+row("6. kerekítés felfelé ezresre → nettó ajánlati ár",ft(Nk),true);
+row("7. áfa"+(aam?" (alanyi adómentes: nincs)":ford?" (fordított adózás: a számlán 0, a megrendelő fizeti)":" (27 %)"),ft(afa));
+row(aam||ford?"   számla végösszege":"   bruttó ajánlati ár",ft(B),true);
+status("Modell: "+(mB?"B – rezsióradíj (a rezsi az óradíjban van)":"A – bérköltség + rezsi %")+". A százalékok és az áfakulcs tanulási példák (ellenőrizendő: Áfa tv.).");
+
+}
+document.querySelectorAll("input[type=range],select,input[type=checkbox]").forEach(i=>i.addEventListener("input",draw));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
+<script>(function(){function s(){var b=document.body;parent.postMessage({figResize:Math.ceil(b.getBoundingClientRect().height)},"*")}addEventListener("load",s);addEventListener("resize",s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.body);s()})()</script></body>
+</html>

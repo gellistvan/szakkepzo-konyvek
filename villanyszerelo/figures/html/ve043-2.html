@@ -57,7 +57,7 @@ function dev(kind,a,b,o){o=o||{};
   const cx=(A[0]+B[0])/2,cy=(A[1]+B[1])/2,h=30,g=mk("g",{transform:"translate("+cx+","+cy+") rotate("+ang+")"});
   const line=css("--line"),cur=css("--cur"),sw=2.2;
   const seg=(x1,y1,x2,y2,c,w,extra)=>mk("line",Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:c||line,"stroke-width":w||sw,"stroke-linecap":"round"},extra||{}),g);
-  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res")?true:!!o.closed;
+  const closedPath=(kind==="coil"||kind==="lamp"||kind==="thermal"||kind==="res"||kind==="fuse")?true:!!o.closed;
   // áram alatti halo (a kivezetések és a záródott test)
   if(o.l1)seg(-L/2,0,-h,0,cur,6.5,{opacity:.9});
   if(o.l2)seg(h,0,L/2,0,cur,6.5,{opacity:.9});
@@ -72,7 +72,8 @@ function dev(kind,a,b,o){o=o||{};
     if(kind==="pbno"||kind==="pbnc"){const d=o.pressed?9:0;                // nyomógomb-működtető (T-alak)
       seg(0,-8+d,0,-30+d,line,1.8,{"stroke-dasharray":"4 3"});seg(-9,-30+d,9,-30+d,line,3);}
     if(kind==="sw"){seg(0,-12,0,-26,line,1.8,{"stroke-dasharray":"4 3"});seg(-8,-26,8,-26,line,3);}
-    if(kind==="mcb"){seg(-6,-6,6,-18,line,2);seg(6,-6,-6,-18,line,2);}   // kismegszakító: kézi működtetés jele
+    if(kind==="mcb"){const dy=o.closed?12:0;                              // kismegszakító: a túláramkioldó X-e a késsel együtt mozog
+      seg(-6,-6+dy,6,-18+dy,line,2);seg(6,-6+dy,-6,-18+dy,line,2);}
     if(o.delay==="on"||o.delay==="off"){seg(0,-10,0,-28,line,1.8);       // késleltetett érintkező (időrelé): ejtőernyő-ív
       mk("path",{d:"M -9 -28 A 9 9 0 0 "+(o.delay==="on"?1:0)+" 9 -28",fill:"none",stroke:line,"stroke-width":2},g);}
   }else if(kind==="coil"){
@@ -81,6 +82,10 @@ function dev(kind,a,b,o){o=o||{};
   }else if(kind==="thermal"){
     mk("rect",{x:-h,y:-17,width:2*h,height:34,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);
     mk("polyline",{points:"-14,0 -7,-9 0,9 7,-9 14,0",fill:"none",stroke:line,"stroke-width":2},g);
+  }else if(kind==="res"){                                                  // ellenállás (IEC téglalap)
+    mk("rect",{x:-h,y:-9,width:2*h,height:18,fill:o.body?css("--coil"):css("--bg"),stroke:line,"stroke-width":2.2},g);
+  }else if(kind==="fuse"){                                                 // olvadóbiztosító: téglalap, középvonal
+    mk("rect",{x:-h,y:-10,width:2*h,height:20,fill:css("--bg"),stroke:line,"stroke-width":2.2},g);seg(-h,0,h,0,line,2);
   }else if(kind==="lamp"){
     mk("circle",{cx:0,cy:0,r:17,fill:o.body?css("--lamp"):css("--bg"),stroke:line,"stroke-width":2.2},g);
     seg(-12,-12,12,12,line,2);seg(-12,12,12,-12,line,2);
@@ -121,8 +126,8 @@ function render(){initSvg("v",-0.8,0.6,24.6,10.9,44);const C=()=>({BN:css("--bro
  const box=(x0,y0,x1,y1,dash)=>{const a=P(x0,y1),b=P(x1,y0);mk("rect",{x:a[0],y:a[1],width:b[0]-a[0],height:b[1]-a[1],fill:"none",stroke:css("--line"),"stroke-width":dash?1.2:2,"stroke-dasharray":dash?"6 4":""});};
  box(4.2,3.3,10.6,6.3,true);text(4.05,6.0,"kötődoboz -X1",{anchor:"end",size:11});
  box(-0.6,1.2,1.6,3.2);text(0.5,2.85,"elosztó",{size:11});text(0.5,1.5,"F1 B10",{size:11});
- box(4.6,9.4,7.6,10.6);text(6.1,10.2,"Q1 kapcsoló",{size:11});
- box(13,3.9,15,7.1);text(14,6.75,"H1 lámpa",{size:11});
+ box(4.6,9.4,7.6,10.6);text(6.1,10.2,"S1 kapcsoló",{size:11});
+ box(13,3.9,15,7.1);text(14,6.75,"E1 lámpa",{size:11});
  CORES.forEach((c,i)=>{const on=sel===i||(sel>=0&&CORES[sel].seg===c.seg);
   wire(c.pts,on,{color:col[c.code],color2:c.code==="GNYE"?css("--ge2"):null,w:on?8:5});
   const hit=mk("polyline",{points:c.pts.map(q=>P(q[0],q[1]).join(",")).join(" "),fill:"none",stroke:"transparent","stroke-width":16,role:"button",tabindex:0,"aria-label":c.cab+" "+c.code+": "+c.func,style:"cursor:pointer"});
@@ -132,14 +137,14 @@ function render(){initSvg("v",-0.8,0.6,24.6,10.9,44);const C=()=>({BN:css("--bro
  for(const k in TERMS){const t=TERMS[k],q=P(t[0],t[1]);mk("rect",{x:q[0]-30,y:q[1]-11,width:60,height:22,fill:css("--bg"),stroke:css("--line"),"stroke-width":1.6});
   text(t[0],t[1],t[2],{size:10.5});}
  text(2.8,1.25,"W1",{bold:true});text(7.9,9.0,"W2",{bold:true,anchor:"start"});text(12.4,2.6,"W3",{bold:true,anchor:"start"});
- // kapcsolási rajz (jobb oldalon): L1 → Q1 → H1 → N, PE a lámpatesthez
+ // kapcsolási rajz (jobb oldalon): L1 → S1 → E1 → N, PE a lámpatesthez
  const segs={L:[[17,8.5],[19,8.5]],LS:[[21,8.5],[23,8.5],[23,6.3]],N:[[23,3.7],[23,2.5],[17,2.5]],PE:[[17,1.4],[23.9,1.4],[23.9,5],[23.62,5]]};
  const hl=s=>sel>=0&&CORES[sel].seg===s;
  text(20,10.2,"kapcsolási rajz",{bold:true});
  term(17,8.5,"L1",{dy:0.45});term(17,2.5,"N",{dy:0.45});term(17,1.4,"PE",{dy:-0.45});
  wire(segs.L,hl("L"));wire(segs.LS,hl("LS"));wire(segs.N,hl("N"));wire(segs.PE,hl("PE"),{color:col.GNYE,color2:css("--ge2"),w:4});
- dev("sw",[19,8.5],[21,8.5],{closed:false,label:"Q1"});
- dev("lamp",[23,6.3],[23,3.7],{label:"H1",left:true});
+ dev("sw",[19,8.5],[21,8.5],{closed:false,label:"S1"});
+ dev("lamp",[23,6.3],[23,3.7],{label:"E1",left:true});
  const s=document.getElementById("st");
  s.innerHTML=sel<0?"Kattints egy érre a huzalozási rajzon.":"<b>"+CORES[sel].cab+" / "+CORES[sel].code+"</b>: "+CORES[sel].func+" → a kapcsolási rajzon: <b>"+SEGN[CORES[sel].seg]+"</b> (kiemelve; az azonos szakaszhoz tartozó többi ér is).";}
 render();
